@@ -1,9 +1,25 @@
-# macOS
+# ==============================================================================
+# VoxNovel — Git Ignore Configuration
+# ==============================================================================
+
+# Operating System & File System Metadata
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
 .AppleDouble
 .LSOverride
+*.textClipping
 
-# Python
+# Environment Variables & Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python Runtimes, Artifacts & Virtual Environments
 __pycache__/
 *.py[cod]
 *$py.class
@@ -24,16 +40,19 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-
-# Virtual environments
 .venv/
-env/
 venv/
 ENV/
+env/
 env.bak/
 venv.bak/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
 
-# Node / Frontend
+# Node.js & Web Frontend
 node_modules/
 npm-debug.log*
 yarn-debug.log*
@@ -42,15 +61,42 @@ yarn-error.log*
 dist/
 dist-ssr/
 *.local
+.tsbuildinfo
 
-# Model weights & Audio outputs (large binary files)
+# Model Weights, Checkpoints & TTS Voice Caches (Large Binaries)
 models_cache/*
 !models_cache/.gitkeep
+models/
+kokoro-v0_19.onnx
+voices.bin
+
+# Audio Buffers, Raw PCM Caches & Synthesized Outputs
 output/*
 !output/.gitkeep
 chapters/*
+audio_cache/
+*.pcm
+*.raw
+*.wav
+*.opus
+*.mp3
+*.aac
 
-# Environment variables
-.env
-.env.local
-.env.*.local
+# Database Volumes & Local Data Mounts
+pg_data/
+mongo_data/
+swift_data/
+
+# IDE & Editor Configurations
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# Local Scratch, Logs & Diagnostics
+scratch/
+logs/
+*.log

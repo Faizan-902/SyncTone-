@@ -1,0 +1,65 @@
+VOXNOVEL NON-COMMERCIAL SOURCE-AVAILABLE LICENSE & LIABILITY DISCLAIMER
+
+Copyright (c) 2026 Namah Omprakash and Project Contributors.
+All Rights Reserved.
+
+================================================================================
+TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+================================================================================
+
+1. GRANT OF LICENSE
+Subject to the terms and restrictions set forth herein, the Author grants to 
+any person obtaining a copy of this software and associated documentation files 
+(the "Software") a personal, non-exclusive, non-transferable, royalty-free license 
+to view, download, compile, execute, and inspect the code solely for:
+  (a) Non-commercial personal study and experimentation;
+  (b) Academic research, educational demonstration, and capstone evaluation; and
+  (c) Peer code review.
+
+2. COMMERCIAL USE RESTRICTION (STRICTLY PROHIBITED)
+Commercial use of the Software is strictly prohibited without prior express 
+written authorization from the Author. Prohibited commercial activities include, 
+without limitation:
+  (a) Selling, licensing, renting, leasing, or monetizing the Software or any 
+      derivative works;
+  (b) Hosting, deploying, or operating the Software as a paid, sponsored, 
+      ad-supported, or commercial Software-as-a-Service (SaaS), platform, or API;
+  (c) Incorporating the Software or any portion thereof into any commercial 
+      product, service, proprietary code repository, or enterprise workflow;
+  (d) Generating commercial audiobook assets or derivative media intended for 
+      sale, syndication, or revenue generation.
+
+3. CONTENT RIGHTS, COPYRIGHT COMPLIANCE & USER RESPONSIBILITY
+The Software provides automated text processing, speaker parsing, neural voice 
+synthesis, and synchronized playback tools. 
+  (a) The Author does not host, provide, distribute, endorse, or claim ownership 
+      over any literary works, novels, text corpora, or third-party audio assets 
+      processed through the Software.
+  (b) Users are solely and exclusively responsible for ensuring they possess the 
+      legal rights, licenses, public-domain clearances, or fair-use entitlements 
+      for any texts, novels, transcripts, or voice models ingested, processed, 
+      synthesized, or stored using the Software.
+  (c) The Author shall not be held liable, legally or financially, for any copyright 
+      infringement, intellectual property violation, trademark abuse, defamation, 
+      or legal breach committed by users or third parties utilizing the Software.
+
+4. DISCLAIMER OF WARRANTY
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+FITNESS FOR A PARTICULAR PURPOSE, TITLE, ACCURACY, AND NON-INFRINGEMENT. 
+IN NO EVENT SHALL THE AUTHOR OR COPYRIGHT HOLDERS BE OBLIGATED TO PROVIDE 
+MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+
+5. STRICT LIMITATION OF LIABILITY
+TO THE MAXIMUM EXTENT PERMITTED UNDER APPLICABLE LAW, IN NO EVENT SHALL THE 
+AUTHOR, COPYRIGHT HOLDERS, OR CONTRIBUTORS BE LIABLE FOR ANY CLAIM, DAMAGES, 
+OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT (INCLUDING NEGLIGENCE), 
+STRICT LIABILITY, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH 
+THE SOFTWARE, THE REPOSITORY, OR THE USE, MISUSE, INABILITY TO USE, OR OTHER 
+DEALINGS IN THE SOFTWARE, INCLUDING BUT NOT LIMITED TO:
+  (a) ANY ACTIONS, OMISSIONS, OR CONTENT CHOICES MADE BY USERS OF THE SOFTWARE;
+  (b) LOSS OF DATA, REPUTATION, GOODWILL, WORK STOPPAGE, OR SYSTEM MALFUNCTION;
+  (c) THIRD-PARTY CLAIMS OR INTELLECTUAL PROPERTY DISPUTES ARISING FROM USER-INGESTED NOVELS;
+  (d) ANY INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES.
+
+USE OF THIS SOFTWARE CONSTITUTES EXPLICIT AND IRREVOCABLE ACCEPTANCE OF THESE TERMS.
