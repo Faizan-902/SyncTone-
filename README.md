@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🎙️ VoxNovel
+# 🎙️ SyncTone
 ### Automated Multi-Voice Audiobook Synthesis & Synchronized Web Reader
 
 [![License: Non-Commercial](https://img.shields.io/badge/License-Non--Commercial-red.svg)](LICENSE)
@@ -22,7 +22,7 @@
 
 Traditional digital audiobooks rely on single-narrator voice acting, which flattens multi-character dialogue into monotonous narration and lacks visual synchronization. Modern web novel readers (e.g., WTR-Lab, Webnovel) offer extensive text libraries but lack expressive, automated voice immersion. 
 
-**VoxNovel** solves this problem by introducing an end-to-end, multi-agent audiobook generation pipeline paired with an interactive web reader. When a novel or chapter is ingested, VoxNovel strips web scraping artifacts using the client-side [`tts-dom-cleaner`](https://www.npmjs.com/package/tts-dom-cleaner) engine. The system then analyzes character interactions using deterministic grammatical dependency parsing (`nsubj` $\to$ speech verb) combined with a strictly grounded 3-stage Character Profiler. Unlike unconstrained LLM generators, VoxNovel enforces regex substring checks, pronoun distribution validation, and quote verification—guaranteeing **zero hallucinated character names**.
+**SyncTone** solves this problem by introducing an end-to-end, multi-agent audiobook generation pipeline paired with an interactive web reader. When a novel or chapter is ingested, SyncTone strips web scraping artifacts using the client-side [`tts-dom-cleaner`](https://www.npmjs.com/package/tts-dom-cleaner) engine. The system then analyzes character interactions using deterministic grammatical dependency parsing (`nsubj` $\to$ speech verb) combined with a strictly grounded 3-stage Character Profiler. Unlike unconstrained LLM generators, SyncTone enforces regex substring checks, pronoun distribution validation, and quote verification—guaranteeing **zero hallucinated character names**.
 
 Dialogue and narration segments are synthesized in parallel using **Kokoro-ONNX** (82M parameters), stitched with sample-level accuracy (`round(cursor * 1000 / sample_rate)`) to prevent timing drift, and encoded into low-latency Opus audio streamed from **OpenStack Swift**. In the frontend, an optimized `requestAnimationFrame` loop synchronizes playback at 60fps, highlighting words and sentences in real time as each distinct character speaks.
 
@@ -46,7 +46,7 @@ Dialogue and narration segments are synthesized in parallel using **Kokoro-ONNX*
 
 ## 🏗️ Polyglot Architecture & Data Flow
 
-VoxNovel separates concerns across a high-concurrency API gateway, dedicated document/relational databases, an object storage cluster, and a decoupled CPU-efficient neural synthesis daemon.
+SyncTone separates concerns across a high-concurrency API gateway, dedicated document/relational databases, an object storage cluster, and a decoupled CPU-efficient neural synthesis daemon.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -93,7 +93,7 @@ VoxNovel separates concerns across a high-concurrency API gateway, dedicated doc
 
 ```text
 Multi-voice-synthesizer/
-├── LICENSE                        # VoxNovel Non-Commercial Source-Available License
+├── LICENSE                        # SyncTone Non-Commercial Source-Available License
 ├── README.md                      # Comprehensive project documentation
 ├── .gitignore                     # Production Git ignore rules
 │
@@ -169,21 +169,21 @@ cd Multi-voice-synthesizer
 Create a `.env` file in the project root:
 ```ini
 # PostgreSQL
-DATABASE_URL=postgresql://voxuser:voxpass@localhost:5432/voxnovel
+DATABASE_URL=postgresql://synctone_user:synctone_pass@localhost:5432/synctone
 
 # MongoDB
-MONGO_URI=mongodb://localhost:27017/voxnovel
+MONGO_URI=mongodb://localhost:27017/synctone
 
 # OpenStack Swift
 SWIFT_AUTH_URL=http://localhost:5000/v3
 SWIFT_USERNAME=swift_user
 SWIFT_PASSWORD=swift_secret
-SWIFT_PROJECT_NAME=voxnovel_audio
+SWIFT_PROJECT_NAME=synctone_audio
 SWIFT_CONTAINER_AUDIO=novel-chapters
 SWIFT_CONTAINER_COVERS=novel-covers
 
 # JWT & API Secrets
-JWT_SECRET=super_secret_jwt_key_voxnovel_2026
+JWT_SECRET=super_secret_jwt_key_synctone_2026
 PORT=4000
 ```
 
@@ -221,7 +221,7 @@ python3 scratch/verify/test_audio_and_swift.py
 
 ## ⚖️ License & Liability Disclaimer
 
-This software is released under the **VoxNovel Non-Commercial Source-Available License**. 
+This software is released under the **SyncTone Non-Commercial Source-Available License**. 
 
 > **NOTICE**: Commercial use, monetization, and commercial hosting are strictly prohibited without prior written permission. The Software is provided strictly for academic research and personal study.
 > 
