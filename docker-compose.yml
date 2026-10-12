@@ -1,0 +1,165 @@
+services:
+  # ==============================================================================
+  # 1. PostgreSQL 16 — Relational Core, ACID Authority & Task Queue Broker
+  # ==============================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: synctone-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-synctone_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-synctone_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-synctone}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - synctone-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-synctone_user} -d ${POSTGRES_DB:-synctone}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ==============================================================================
+  # 2. MongoDB 7.0 — Document Store for Raw Chapters & Timeline Manifests
+  # ==============================================================================
+  mongo:
+    image: mongo:7.0
+    container_name: synctone-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-synctone_user}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-synctone_pass}
+      MONGO_INITDB_DATABASE: ${MONGO_DB:-synctone}
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - synctone-net
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --eval 'db.runCommand({ ping: 1 })' localhost:27017/test --quiet || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ==============================================================================
+  # 3. OpenStack Swift — Distributed Object Storage (.opus & Cover Images)
+  # ==============================================================================
+  swift:
+    image: bouncestorage/swift-aio:latest
+    container_name: synctone-swift
+    restart: unless-stopped
+    ports:
+      - "${SWIFT_PORT:-8080}:8080"
+    volumes:
+      - swift_data:/srv/node
+    networks:
+      - synctone-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f -s http://localhost:8080/info || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==============================================================================
+  # 4. Express.js REST API & Swift Streaming Proxy (Profile: app / full)
+  # ==============================================================================
+  api:
+    build:
+      context: ./novel-audio-synthesizer/api
+      dockerfile: Dockerfile
+    container_name: synctone-api
+    restart: unless-stopped
+    profiles:
+      - app
+      - full
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      swift:
+        condition: service_started
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: ${PORT:-4000}
+      JWT_SECRET: ${JWT_SECRET:-synctone_super_secret_jwt_key_2026_dev_mode}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-synctone_user}:${POSTGRES_PASSWORD:-synctone_pass}@postgres:5432/${POSTGRES_DB:-synctone}
+      MONGO_URI: mongodb://${MONGO_USER:-synctone_user}:${MONGO_PASSWORD:-synctone_pass}@mongo:27017/${MONGO_DB:-synctone}?authSource=admin
+      SWIFT_AUTH_URL: http://swift:8080/auth/v1.0
+      SWIFT_USERNAME: ${SWIFT_USERNAME:-test:tester}
+      SWIFT_KEY: ${SWIFT_KEY:-testing}
+      SWIFT_CONTAINER_AUDIO: ${SWIFT_CONTAINER_AUDIO:-novel-chapters}
+      SWIFT_CONTAINER_COVERS: ${SWIFT_CONTAINER_COVERS:-novel-covers}
+    ports:
+      - "${PORT:-4000}:4000"
+    networks:
+      - synctone-net
+
+  # ==============================================================================
+  # 5. Python Worker Daemon — NLP & Kokoro-ONNX TTS (Profile: app / full)
+  # ==============================================================================
+  worker:
+    build:
+      context: ./novel-audio-synthesizer/backend
+      dockerfile: Dockerfile
+    container_name: synctone-worker
+    restart: unless-stopped
+    profiles:
+      - app
+      - full
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      swift:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-synctone_user}:${POSTGRES_PASSWORD:-synctone_pass}@postgres:5432/${POSTGRES_DB:-synctone}
+      MONGO_URI: mongodb://${MONGO_USER:-synctone_user}:${MONGO_PASSWORD:-synctone_pass}@mongo:27017/${MONGO_DB:-synctone}?authSource=admin
+      SWIFT_AUTH_URL: http://swift:8080/auth/v1.0
+      SWIFT_USERNAME: ${SWIFT_USERNAME:-test:tester}
+      SWIFT_KEY: ${SWIFT_KEY:-testing}
+      SWIFT_CONTAINER_AUDIO: ${SWIFT_CONTAINER_AUDIO:-novel-chapters}
+      WORKER_ID: ${WORKER_ID:-synctone-worker-1}
+      WORKER_POLL_INTERVAL_SEC: ${WORKER_POLL_INTERVAL_SEC:-3}
+    volumes:
+      - pcm_cache:/app/output/pcm_cache
+    networks:
+      - synctone-net
+
+  # ==============================================================================
+  # 6. React + Vite Frontend Web Reader (Profile: app / full)
+  # ==============================================================================
+  frontend:
+    build:
+      context: ./novel-audio-synthesizer/frontend
+      dockerfile: Dockerfile
+    container_name: synctone-frontend
+    restart: unless-stopped
+    profiles:
+      - app
+      - full
+    ports:
+      - "5173:5173"
+    networks:
+      - synctone-net
+
+volumes:
+  postgres_data:
+    driver: local
+  mongo_data:
+    driver: local
+  swift_data:
+    driver: local
+  pcm_cache:
+    driver: local
+
+networks:
+  synctone-net:
+    driver: bridge
