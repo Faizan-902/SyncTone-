@@ -1,13 +1,18 @@
 -- ==============================================================================
--- SyncTone — PostgreSQL Database Initialization Script
+-- SyncTone — PostgreSQL Database Container Pre-Flight Initialization Script
+-- Auto-executed by the Postgres official entrypoint during first container boot.
+-- ==============================================================================
+-- NOTE: Application tables, indexes, views, and seed data are canonically
+-- managed and migrated by Alembic (novel-audio-synthesizer/backend/alembic).
+-- This script ONLY installs required system extensions prior to Alembic migrations.
 -- ==============================================================================
 
--- Enable UUID generation support extensions
+-- 0. Enable UUID generation and cryptographic hashing extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- Log successful initialization
+-- Log readiness for Alembic migrations
 DO $$
 BEGIN
-    RAISE NOTICE 'SyncTone PostgreSQL initialized with UUID extensions.';
+    RAISE NOTICE 'SyncTone PostgreSQL container initialized with uuid-ossp and pgcrypto extensions. Ready for Alembic migrations.';
 END $$;
