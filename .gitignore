@@ -66,7 +66,8 @@ dist-ssr/
 # Model Weights, Checkpoints & TTS Voice Caches (Large Binaries)
 models_cache/*
 !models_cache/.gitkeep
-models/
+/models/
+!novel-audio-synthesizer/backend/src/models/
 kokoro-v0_19.onnx
 voices.bin
 

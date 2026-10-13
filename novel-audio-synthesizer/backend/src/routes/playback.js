@@ -1,11 +1,13 @@
 const { Router } = require('express');
 const { pool } = require('../db');
+const { optionalAuth } = require('../middleware/auth');
 
 const router = Router();
 
 // POST /api/playback/progress
-router.post('/playback/progress', async (req, res) => {
-  const { user_id, novel_id, chapter_id, segment_order = 0, position_ms = 0 } = req.body;
+router.post('/playback/progress', optionalAuth, async (req, res) => {
+  const { novel_id, chapter_id, segment_order = 0, position_ms = 0 } = req.body;
+  const user_id = req.body.user_id || req.user?.id;
 
   if (!user_id || !novel_id || !chapter_id) {
     return res.status(400).json({ error: 'user_id, novel_id, and chapter_id are required' });

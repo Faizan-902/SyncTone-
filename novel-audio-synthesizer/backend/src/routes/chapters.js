@@ -1,8 +1,8 @@
 const { Router } = require('express');
 const fs = require('fs');
 const path = require('path');
-const { v4: uuidv4 } = require('uuid');
-
+const { pool } = require('../db');
+const { Chapter } = require('../models');
 const { parseChapter } = require('../engine/textParser');
 const { attributionEngine } = require('../engine/attribution');
 const { voiceProfiler } = require('../engine/voiceProfiler');
@@ -10,182 +10,479 @@ const { ttsEngine } = require('../engine/ttsEngine');
 const { audioStitcher } = require('../engine/audioStitcher');
 const { broadcastProgress } = require('../websocket');
 const { config } = require('../config');
+const { optionalAuth } = require('../middleware/auth');
 
 const router = Router();
-const chaptersStore = new Map();
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function persistChapterToDisk(chapterId, title, text) {
-  const chapterDir = path.join(config.paths.chaptersDir, chapterId);
-  if (!fs.existsSync(chapterDir)) {
-    fs.mkdirSync(chapterDir, { recursive: true });
+  try {
+    const chapterDir = path.join(config.paths.chaptersDir, chapterId);
+    if (!fs.existsSync(chapterDir)) {
+      fs.mkdirSync(chapterDir, { recursive: true });
+    }
+    fs.writeFileSync(path.join(chapterDir, 'raw.txt'), text, 'utf-8');
+    fs.writeFileSync(
+      path.join(chapterDir, 'metadata.json'),
+      JSON.stringify({ title, chapter_id: chapterId }),
+      'utf-8'
+    );
+  } catch (err) {
+    console.warn('[Chapters] Failed to write disk backup:', err.message);
   }
-  fs.writeFileSync(path.join(chapterDir, 'raw.txt'), text, 'utf-8');
-  fs.writeFileSync(
-    path.join(chapterDir, 'metadata.json'),
-    JSON.stringify({ title, chapter_id: chapterId }),
-    'utf-8'
-  );
 }
 
-// 1. POST /api/upload
-router.post('/upload', (req, res) => {
-  const { text, title = 'Untitled Chapter' } = req.body;
-  if (!text || typeof text !== 'string') {
+async function getOrCreateDefaultNovel() {
+  const existing = await pool.query('SELECT id FROM novels ORDER BY created_at ASC LIMIT 1');
+  if (existing.rows.length > 0) {
+    return existing.rows[0].id;
+  }
+  let userRes = await pool.query("SELECT id FROM users WHERE role IN ('writer', 'admin') LIMIT 1");
+  if (userRes.rows.length === 0) {
+    userRes = await pool.query(`
+      INSERT INTO users (username, email, password_hash, role)
+      VALUES ('synctone_author', 'author@synctone.internal', crypt('author123', gen_salt('bf')), 'writer')
+      ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email
+      RETURNING id;
+    `);
+  }
+  const authorId = userRes.rows[0].id;
+  const novelRes = await pool.query(
+    `
+    INSERT INTO novels (title, synopsis, channel, added_by)
+    VALUES ('Demo Novel', 'Default novel for direct chapter uploads.', 'verified', $1)
+    RETURNING id;
+  `,
+    [authorId]
+  );
+  return novelRes.rows[0].id;
+}
+
+/**
+ * Common ingestion helper: performs atomic PostgreSQL transaction and MongoDB document creation.
+ */
+async function ingestChapter({ novelId, title, text, chapterNumber, requestedBy }) {
+  const client = await pool.connect();
+  let createdPgChapter = null;
+
+  try {
+    await client.query('BEGIN');
+
+    // 1. Verify novel exists and lock parent novel row with FOR UPDATE when auto-numbering
+    // to serialize concurrent insertions and prevent chapter numbering race conditions
+    const novelQuery = (!chapterNumber || chapterNumber < 1)
+      ? 'SELECT id FROM novels WHERE id = $1 FOR UPDATE'
+      : 'SELECT id FROM novels WHERE id = $1';
+    const novelCheck = await client.query(novelQuery, [novelId]);
+    if (novelCheck.rows.length === 0) {
+      throw { status: 404, message: `Novel with id '${novelId}' not found.` };
+    }
+
+    // 2. Determine chapter_number if not provided
+    let num = chapterNumber;
+    if (!num || num < 1) {
+      const numRes = await client.query(
+        'SELECT COALESCE(MAX(chapter_number), 0) + 1 AS next_num FROM chapters WHERE novel_id = $1',
+        [novelId]
+      );
+      num = parseInt(numRes.rows[0].next_num, 10);
+    }
+
+    const chapterTitle = title && typeof title === 'string' && title.trim().length > 0
+      ? title.trim()
+      : `Chapter ${num}`;
+
+    // 3. Insert relational chapter record into PostgreSQL
+    const insertChapterQuery = `
+      INSERT INTO chapters (novel_id, chapter_number, title, status, audio_version, total_duration_ms)
+      VALUES ($1, $2, $3, 'draft', 1, 0)
+      RETURNING id, novel_id, chapter_number, title, status, audio_version, total_duration_ms, created_at, updated_at;
+    `;
+    const chapterRes = await client.query(insertChapterQuery, [novelId, num, chapterTitle]);
+    createdPgChapter = chapterRes.rows[0];
+
+    // 4. Enqueue synthesis job into PostgreSQL
+    const insertJobQuery = `
+      INSERT INTO synthesis_jobs (novel_id, chapter_id, requested_by, job_type, status, progress_pct)
+      VALUES ($1, $2, $3, 'synthesize_chapter', 'queued', 0.0)
+      RETURNING id, novel_id, chapter_id, requested_by, job_type, status, progress_pct, created_at;
+    `;
+    const jobRes = await client.query(insertJobQuery, [
+      novelId,
+      createdPgChapter.id,
+      requestedBy || null,
+    ]);
+    const job = jobRes.rows[0];
+
+    // 5. Create document in MongoDB (linked via pg_chapter_id)
+    const mongoDoc = new Chapter({
+      pg_chapter_id: createdPgChapter.id,
+      novel_id: createdPgChapter.novel_id,
+      chapter_number: createdPgChapter.chapter_number,
+      title: createdPgChapter.title,
+      raw_text: text,
+      audio_version: 1,
+      manifest: {
+        total_duration_ms: 0,
+        audio_url: '',
+        timeline: [],
+      },
+      segments: [],
+    });
+    await mongoDoc.save();
+
+    // 6. Commit transaction
+    await client.query('COMMIT');
+    client.release();
+
+    persistChapterToDisk(createdPgChapter.id, createdPgChapter.title, text);
+
+    return {
+      chapter: createdPgChapter,
+      job,
+      mongo_id: mongoDoc._id,
+    };
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    client.release();
+
+    // Compensating cleanup: remove orphan MongoDB document if created
+    if (createdPgChapter && createdPgChapter.id) {
+      await Chapter.deleteOne({ pg_chapter_id: createdPgChapter.id }).catch(() => {});
+    }
+
+    throw err;
+  }
+}
+
+/**
+ * 1. POST /api/novels/:id/chapters
+ * Official Polyglot Chapter Ingestion route (saves text to Mongo, enqueues job in Postgres).
+ */
+router.post('/novels/:id/chapters', optionalAuth, async (req, res) => {
+  const novelId = req.params.id;
+  const { text, title, chapter_number, requested_by } = req.body;
+
+  if (!novelId || !UUID_REGEX.test(novelId)) {
+    return res.status(400).json({ error: 'Invalid novel UUID in route parameter.' });
+  }
+
+  if (!text || typeof text !== 'string' || text.trim().length === 0) {
+    return res.status(400).json({ error: 'Missing or empty chapter "text" field.' });
+  }
+
+  const effectiveRequestedBy = requested_by || req.user?.id || null;
+
+  try {
+    const result = await ingestChapter({
+      novelId,
+      title,
+      text,
+      chapterNumber: chapter_number ? parseInt(chapter_number, 10) : undefined,
+      requestedBy: effectiveRequestedBy,
+    });
+
+    return res.status(201).json({
+      message: 'Chapter ingested successfully',
+      chapter_id: result.chapter.id,
+      chapter: result.chapter,
+      job: result.job,
+    });
+  } catch (err) {
+    if (err.status) {
+      return res.status(err.status).json({ error: err.message });
+    }
+    if (err.code === '23505') {
+      return res.status(409).json({ error: 'Chapter number already exists for this novel.' });
+    }
+    console.error('[Chapter Ingestion Error]:', err);
+    return res.status(500).json({ error: 'Failed to ingest chapter.' });
+  }
+});
+
+/**
+ * 2. POST /api/upload
+ * Backwards-compatible upload route: ingests into specified novel or default novel.
+ */
+router.post('/upload', optionalAuth, async (req, res) => {
+  const { text, title = 'Untitled Chapter', novel_id, requested_by } = req.body;
+
+  if (!text || typeof text !== 'string' || text.trim().length === 0) {
     return res.status(400).json({ error: 'Missing or invalid "text" field' });
   }
 
-  const chapterId = uuidv4().slice(0, 8);
-  chaptersStore.set(chapterId, {
-    text,
-    title,
-    parsed: null,
-    manifest: null,
-  });
+  try {
+    let effectiveNovelId = novel_id;
+    if (!effectiveNovelId || !UUID_REGEX.test(effectiveNovelId)) {
+      effectiveNovelId = await getOrCreateDefaultNovel();
+    }
 
-  persistChapterToDisk(chapterId, title, text);
-  console.log(`[Chapters] Uploaded '${title}' as ${chapterId}`);
+    const effectiveRequestedBy = requested_by || req.user?.id || null;
 
-  return res.json({ chapter_id: chapterId });
-});
-
-// 2. GET /api/chapters
-router.get('/chapters', (_req, res) => {
-  const list = [];
-  for (const [cid, data] of chaptersStore.entries()) {
-    list.push({
-      chapter_id: cid,
-      title: data.title,
-      has_parsed: data.parsed !== null,
-      has_manifest: data.manifest !== null,
+    const result = await ingestChapter({
+      novelId: effectiveNovelId,
+      title,
+      text,
+      requestedBy: effectiveRequestedBy,
     });
+
+    console.log(`[Chapters] Uploaded '${result.chapter.title}' as ${result.chapter.id}`);
+    return res.json({
+      chapter_id: result.chapter.id,
+      chapter: result.chapter,
+      job: result.job,
+    });
+  } catch (err) {
+    console.error('[Upload Error]:', err);
+    return res.status(500).json({ error: 'Failed to upload chapter.' });
   }
-  return res.json({ chapters: list });
 });
 
-// 3. POST /api/parse/:chapter_id
+/**
+ * 3. GET /api/chapters
+ * Retrieves chapters from PostgreSQL joined with novels.
+ */
+router.get('/chapters', async (_req, res) => {
+  try {
+    const query = `
+      SELECT 
+        c.id AS chapter_id,
+        c.id,
+        c.novel_id,
+        c.chapter_number,
+        c.title,
+        c.status,
+        c.audio_version,
+        c.swift_audio_object,
+        c.total_duration_ms,
+        c.created_at,
+        c.updated_at,
+        n.title AS novel_title
+      FROM chapters c
+      LEFT JOIN novels n ON c.novel_id = n.id
+      ORDER BY c.created_at DESC;
+    `;
+    const result = await pool.query(query);
+
+    const list = result.rows.map((row) => ({
+      chapter_id: row.id,
+      title: row.title,
+      chapter_number: row.chapter_number,
+      novel_id: row.novel_id,
+      novel_title: row.novel_title,
+      status: row.status,
+      has_parsed: row.status !== 'draft',
+      has_manifest: row.status === 'completed' || row.total_duration_ms > 0,
+      total_duration_ms: row.total_duration_ms,
+    }));
+
+    return res.json({ chapters: list });
+  } catch (err) {
+    console.error('[Get Chapters Error]:', err.message);
+    return res.status(500).json({ error: 'Failed to fetch chapters list.' });
+  }
+});
+
+/**
+ * 4. POST /api/parse/:chapter_id
+ * Reads chapter text from MongoDB, runs parsing & attribution, updates MongoDB & PostgreSQL.
+ */
 router.post('/parse/:chapter_id', async (req, res) => {
   const { chapter_id } = req.params;
-  const chapterData = chaptersStore.get(chapter_id);
-  if (!chapterData) {
-    return res.status(404).json({ detail: 'Chapter not found' });
-  }
 
-  broadcastProgress(chapter_id, {
-    chapter_id,
-    current_segment: 0,
-    total_segments: 0,
-    percent_complete: 10,
-    status: 'parsing',
-  });
+  try {
+    const chapterDoc = await Chapter.findOne({ pg_chapter_id: chapter_id });
+    if (!chapterDoc) {
+      return res.status(404).json({ detail: 'Chapter not found in document store.' });
+    }
 
-  const parsed = parseChapter(chapterData.text, chapterData.title, chapter_id);
-
-  broadcastProgress(chapter_id, {
-    chapter_id,
-    current_segment: 0,
-    total_segments: parsed.segments.length,
-    percent_complete: 40,
-    status: 'attributing',
-  });
-
-  const knownChars = Array.from(
-    new Set(
-      parsed.segments
-        .filter((s) => s.speaker_name && s.speaker_id !== 'unresolved' && s.speaker_id !== 'narrator')
-        .map((s) => s.speaker_name)
-    )
-  );
-
-  parsed.segments = await attributionEngine.resolveUnattributed(parsed.segments, knownChars);
-  parsed.segments = voiceProfiler.applyVoicesToSegments(parsed.segments);
-  chapterData.parsed = parsed;
-
-  const chapterDir = path.join(config.paths.chaptersDir, chapter_id);
-  if (!fs.existsSync(chapterDir)) fs.mkdirSync(chapterDir, { recursive: true });
-  fs.writeFileSync(path.join(chapterDir, 'parsed.json'), JSON.stringify(parsed, null, 2), 'utf-8');
-
-  broadcastProgress(chapter_id, {
-    chapter_id,
-    current_segment: parsed.segments.length,
-    total_segments: parsed.segments.length,
-    percent_complete: 100,
-    status: 'complete',
-  });
-
-  console.log(`[Chapters] Parsed ${chapter_id} with ${parsed.segments.length} segments`);
-  return res.json(parsed);
-});
-
-// 4. POST /api/synthesize/:chapter_id
-router.post('/synthesize/:chapter_id', async (req, res) => {
-  const { chapter_id } = req.params;
-  const chapterData = chaptersStore.get(chapter_id);
-  if (!chapterData) {
-    return res.status(404).json({ detail: 'Chapter not found' });
-  }
-
-  const parsed = chapterData.parsed;
-  if (!parsed) {
-    return res.status(400).json({ detail: 'Chapter not yet parsed. Call /parse first.' });
-  }
-
-  const total = parsed.segments.length;
-  const segmentAudios = [];
-
-  for (let i = 0; i < total; i++) {
-    const seg = parsed.segments[i];
     broadcastProgress(chapter_id, {
       chapter_id,
-      current_segment: i + 1,
-      total_segments: total,
-      percent_complete: Math.round(((i + 1) / total) * 90),
-      status: 'synthesizing',
+      current_segment: 0,
+      total_segments: 0,
+      percent_complete: 10,
+      status: 'parsing',
     });
 
-    const result = await ttsEngine.synthesizeSegment(
-      seg.text,
-      seg.assigned_voice_id
+    const parsed = parseChapter(chapterDoc.raw_text, chapterDoc.title, chapter_id);
+
+    broadcastProgress(chapter_id, {
+      chapter_id,
+      current_segment: 0,
+      total_segments: parsed.segments.length,
+      percent_complete: 40,
+      status: 'attributing',
+    });
+
+    const knownChars = Array.from(
+      new Set(
+        parsed.segments
+          .filter((s) => s.speaker_name && s.speaker_id !== 'unresolved' && s.speaker_id !== 'narrator')
+          .map((s) => s.speaker_name)
+      )
     );
 
-    segmentAudios.push({
-      segment_id: seg.segment_id,
-      voice_id: seg.assigned_voice_id,
-      speaker_name: seg.speaker_name,
-      audio_buffer: result.audio_buffer,
-      duration_ms: result.duration_ms,
-      format: result.format,
-      engine: result.engine,
+    parsed.segments = await attributionEngine.resolveUnattributed(parsed.segments, knownChars);
+    parsed.segments = voiceProfiler.applyVoicesToSegments(parsed.segments);
+
+    // Save parsed segments into MongoDB
+    chapterDoc.segments = parsed.segments.map((seg, idx) => ({
+      order: idx + 1,
+      type: seg.speaker_id === 'narrator' ? 'narration' : 'dialogue',
+      text: seg.text,
+      character_id: seg.speaker_id || null,
+      voice_id: seg.assigned_voice_id || 'am_adam',
+      start_ms: 0,
+      end_ms: 0,
+      confidence: seg.confidence || 1.0,
+      source: seg.attribution_source || 'narrator_default',
+      needs_review: seg.needs_review || false,
+    }));
+    await chapterDoc.save();
+
+    // Update PostgreSQL status
+    await pool.query(
+      "UPDATE chapters SET status = 'parsed', updated_at = now() WHERE id = $1",
+      [chapter_id]
+    );
+
+    const chapterDir = path.join(config.paths.chaptersDir, chapter_id);
+    if (!fs.existsSync(chapterDir)) fs.mkdirSync(chapterDir, { recursive: true });
+    fs.writeFileSync(path.join(chapterDir, 'parsed.json'), JSON.stringify(parsed, null, 2), 'utf-8');
+
+    broadcastProgress(chapter_id, {
+      chapter_id,
+      current_segment: parsed.segments.length,
+      total_segments: parsed.segments.length,
+      percent_complete: 100,
+      status: 'complete',
     });
+
+    console.log(`[Chapters] Parsed ${chapter_id} with ${parsed.segments.length} segments`);
+    return res.json(parsed);
+  } catch (err) {
+    console.error('[Parse Chapter Error]:', err.message);
+    return res.status(500).json({ error: 'Failed to parse chapter.' });
   }
-
-  broadcastProgress(chapter_id, {
-    chapter_id,
-    current_segment: total,
-    total_segments: total,
-    percent_complete: 95,
-    status: 'stitching',
-  });
-
-  const manifest = audioStitcher.stitch(segmentAudios, chapter_id);
-  chapterData.manifest = manifest;
-
-  const chapterDir = path.join(config.paths.chaptersDir, chapter_id);
-  if (!fs.existsSync(chapterDir)) fs.mkdirSync(chapterDir, { recursive: true });
-  fs.writeFileSync(path.join(chapterDir, 'manifest.json'), JSON.stringify(manifest, null, 2), 'utf-8');
-
-  broadcastProgress(chapter_id, {
-    chapter_id,
-    current_segment: total,
-    total_segments: total,
-    percent_complete: 100,
-    status: 'complete',
-  });
-
-  console.log(`[Chapters] Synthesized ${chapter_id} (${manifest.total_duration_ms}ms, format: ${manifest.audio_format})`);
-  return res.json(manifest);
 });
 
-// 5. GET /api/stream/:chapter_id
+/**
+ * 5. POST /api/synthesize/:chapter_id
+ * Synthesizes segment audio via Edge TTS (Kokoro fallback), stitches PCM/MP3, updates MongoDB manifest & PostgreSQL chapters/jobs.
+ */
+router.post('/synthesize/:chapter_id', async (req, res) => {
+  const { chapter_id } = req.params;
+
+  try {
+    const chapterDoc = await Chapter.findOne({ pg_chapter_id: chapter_id });
+    if (!chapterDoc) {
+      return res.status(404).json({ detail: 'Chapter not found in document store.' });
+    }
+
+    if (!chapterDoc.segments || chapterDoc.segments.length === 0) {
+      return res.status(400).json({ detail: 'Chapter not yet parsed. Call /parse first.' });
+    }
+
+    const total = chapterDoc.segments.length;
+    const segmentAudios = [];
+
+    for (let i = 0; i < total; i++) {
+      const seg = chapterDoc.segments[i];
+      broadcastProgress(chapter_id, {
+        chapter_id,
+        current_segment: i + 1,
+        total_segments: total,
+        percent_complete: Math.round(((i + 1) / total) * 90),
+        status: 'synthesizing',
+      });
+
+      const result = await ttsEngine.synthesizeSegment(
+        seg.text,
+        seg.voice_id
+      );
+
+      segmentAudios.push({
+        segment_id: `seg_${seg.order}`,
+        voice_id: seg.voice_id,
+        speaker_name: seg.character_id,
+        audio_buffer: result.audio_buffer || result.pcm_buffer,
+        pcm_buffer: result.pcm_buffer || result.audio_buffer,
+        duration_ms: result.duration_ms,
+        format: result.format || 'mp3',
+        engine: result.engine || 'msedge-tts',
+      });
+    }
+
+    broadcastProgress(chapter_id, {
+      chapter_id,
+      current_segment: total,
+      total_segments: total,
+      percent_complete: 95,
+      status: 'stitching',
+    });
+
+    const manifest = audioStitcher.stitch(segmentAudios, chapter_id);
+
+    // Save manifest in MongoDB
+    chapterDoc.manifest = {
+      total_duration_ms: manifest.total_duration_ms,
+      audio_url: manifest.audio_url || `${chapter_id}.${manifest.audio_format || 'mp3'}`,
+      timeline: manifest.timeline.map((t) => ({
+        order: t.order || 0,
+        start_ms: t.start_ms,
+        end_ms: t.end_ms,
+        character_id: t.character_id || t.speaker_name,
+        voice_id: t.voice_id,
+        text: t.text || '',
+      })),
+    };
+    await chapterDoc.save();
+
+    // Update PostgreSQL chapters table
+    await pool.query(
+      `
+      UPDATE chapters 
+      SET status = 'completed', total_duration_ms = $1, updated_at = now() 
+      WHERE id = $2;
+    `,
+      [manifest.total_duration_ms, chapter_id]
+    );
+
+    // Update PostgreSQL synthesis_jobs queue
+    await pool.query(
+      `
+      UPDATE synthesis_jobs 
+      SET status = 'completed', progress_pct = 1.0, completed_at = now() 
+      WHERE chapter_id = $1;
+    `,
+      [chapter_id]
+    );
+
+    const chapterDir = path.join(config.paths.chaptersDir, chapter_id);
+    if (!fs.existsSync(chapterDir)) fs.mkdirSync(chapterDir, { recursive: true });
+    fs.writeFileSync(path.join(chapterDir, 'manifest.json'), JSON.stringify(manifest, null, 2), 'utf-8');
+
+    broadcastProgress(chapter_id, {
+      chapter_id,
+      current_segment: total,
+      total_segments: total,
+      percent_complete: 100,
+      status: 'complete',
+    });
+
+    console.log(`[Chapters] Synthesized ${chapter_id} (${manifest.total_duration_ms}ms, format: ${manifest.audio_format})`);
+    manifest.audio_stream_url = manifest.audio_url || manifest.audio_stream_url || '';
+    return res.json(manifest);
+  } catch (err) {
+    console.error('[Synthesize Chapter Error]:', err.message);
+    return res.status(500).json({ error: 'Failed to synthesize chapter.' });
+  }
+});
+
+/**
+ * 6. GET /api/stream/:chapter_id
+ * Audio stream proxy: supports both Edge TTS MP3 and Kokoro WAV fallback.
+ */
 router.get('/stream/:chapter_id', (req, res) => {
   const { chapter_id } = req.params;
   const audioPathMp3 = path.join(config.paths.outputDir, `${chapter_id}.mp3`);
@@ -226,53 +523,74 @@ router.get('/stream/:chapter_id', (req, res) => {
   }
 });
 
-// 6. GET /api/manifest/:chapter_id
-router.get('/manifest/:chapter_id', (req, res) => {
+/**
+ * 7. GET /api/manifest/:chapter_id
+ * Reads manifest from MongoDB Chapter document.
+ */
+router.get('/manifest/:chapter_id', async (req, res) => {
   const { chapter_id } = req.params;
-  const chapterData = chaptersStore.get(chapter_id);
-  if (!chapterData) {
-    return res.status(404).json({ detail: 'Chapter not found' });
-  }
 
-  if (!chapterData.manifest) {
-    return res.status(400).json({ detail: 'Chapter not yet synthesized. Call /synthesize first.' });
-  }
+  try {
+    const chapterDoc = await Chapter.findOne({ pg_chapter_id: chapter_id });
+    if (!chapterDoc) {
+      return res.status(404).json({ detail: 'Chapter not found' });
+    }
 
-  return res.json(chapterData.manifest);
+    if (!chapterDoc.manifest || !chapterDoc.manifest.timeline || chapterDoc.manifest.timeline.length === 0) {
+      return res.status(400).json({ detail: 'Chapter not yet synthesized. Call /synthesize first.' });
+    }
+
+    const manifestObj = chapterDoc.manifest.toObject ? chapterDoc.manifest.toObject() : chapterDoc.manifest;
+    manifestObj.audio_stream_url = manifestObj.audio_url || manifestObj.audio_stream_url || '';
+
+    return res.json(manifestObj);
+  } catch (err) {
+    console.error('[Manifest Error]:', err.message);
+    return res.status(500).json({ error: 'Failed to retrieve manifest.' });
+  }
 });
 
-// 7. GET /api/characters/:chapter_id
-router.get('/characters/:chapter_id', (req, res) => {
+/**
+ * 8. GET /api/characters/:chapter_id
+ * Returns characters and segment counts from MongoDB segments array.
+ */
+router.get('/characters/:chapter_id', async (req, res) => {
   const { chapter_id } = req.params;
-  const chapterData = chaptersStore.get(chapter_id);
-  if (!chapterData || !chapterData.parsed) {
-    return res.status(404).json({ detail: 'Chapter not found or not yet parsed.' });
-  }
 
-  const charCounts = new Map();
-  for (const seg of chapterData.parsed.segments) {
-    if (seg.speaker_id && seg.speaker_id !== 'narrator') {
-      const prev = charCounts.get(seg.speaker_id) || {
-        name: seg.speaker_name,
-        voice: seg.assigned_voice_id,
-        count: 0,
-      };
-      prev.count += 1;
-      charCounts.set(seg.speaker_id, prev);
+  try {
+    const chapterDoc = await Chapter.findOne({ pg_chapter_id: chapter_id });
+    if (!chapterDoc || !chapterDoc.segments || chapterDoc.segments.length === 0) {
+      return res.status(404).json({ detail: 'Chapter not found or not yet parsed.' });
     }
-  }
 
-  const characters = [];
-  for (const [cid, val] of charCounts.entries()) {
-    characters.push({
-      character_id: cid,
-      character_name: val.name,
-      assigned_voice_id: val.voice,
-      segment_count: val.count,
-    });
-  }
+    const charCounts = new Map();
+    for (const seg of chapterDoc.segments) {
+      if (seg.character_id && seg.character_id !== 'narrator') {
+        const prev = charCounts.get(seg.character_id) || {
+          name: seg.character_id,
+          voice: seg.voice_id,
+          count: 0,
+        };
+        prev.count += 1;
+        charCounts.set(seg.character_id, prev);
+      }
+    }
 
-  return res.json({ characters });
+    const characters = [];
+    for (const [cid, val] of charCounts.entries()) {
+      characters.push({
+        character_id: cid,
+        character_name: val.name,
+        assigned_voice_id: val.voice,
+        segment_count: val.count,
+      });
+    }
+
+    return res.json({ characters });
+  } catch (err) {
+    console.error('[Chapter Characters Error]:', err.message);
+    return res.status(500).json({ error: 'Failed to fetch characters for chapter.' });
+  }
 });
 
 module.exports = router;

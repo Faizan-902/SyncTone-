@@ -3,6 +3,8 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 
+const authRouter = require('./routes/auth');
+const novelsRouter = require('./routes/novels');
 const chaptersRouter = require('./routes/chapters');
 const voicesRouter = require('./routes/voices');
 const statusRouter = require('./routes/status');
@@ -38,6 +40,8 @@ function createApp() {
   });
 
   // API Routes
+  app.use('/api', authRouter);
+  app.use('/api', novelsRouter);
   app.use('/api', chaptersRouter);
   app.use('/api', voicesRouter);
   app.use('/api', statusRouter);
