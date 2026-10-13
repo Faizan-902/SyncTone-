@@ -100,3 +100,10 @@ swift_data/
 scratch/
 logs/
 *.log
+
+# Private Team Development, Agent Prompts & Planning Artifacts
+private/
+.internal/
+PARTNER_*.md
+docs/*.pdf
+scripts/generate_partner_plan_pdf.py
