@@ -6,13 +6,14 @@ const { config } = require('../config');
 const router = Router();
 
 let cachedSwiftToken = null;
+let cachedStorageUrl = null;
 let tokenExpiresAt = 0;
 let refreshPromise = null;
 
-async function getSwiftToken() {
+async function getSwiftAuth() {
   const now = Date.now();
-  if (cachedSwiftToken && now < tokenExpiresAt - 300000) {
-    return cachedSwiftToken;
+  if (cachedSwiftToken && cachedStorageUrl && now < tokenExpiresAt - 300000) {
+    return { token: cachedSwiftToken, storageUrl: cachedStorageUrl };
   }
   if (!refreshPromise) {
     refreshPromise = (async () => {
@@ -23,9 +24,10 @@ async function getSwiftToken() {
         },
       });
       cachedSwiftToken = res.headers['x-auth-token'];
+      cachedStorageUrl = res.headers['x-storage-url'] || 'http://localhost:8080/v1/AUTH_test';
       tokenExpiresAt = Date.now() + 3600000;
       refreshPromise = null;
-      return cachedSwiftToken;
+      return { token: cachedSwiftToken, storageUrl: cachedStorageUrl };
     })();
   }
   return refreshPromise;
@@ -50,8 +52,8 @@ router.get('/chapters/:id/audio', async (req, res) => {
       return res.status(400).json({ error: 'Audio not synthesized yet' });
     }
 
-    const token = await getSwiftToken();
-    const swiftUrl = `http://localhost:8080/v1/AUTH_test/${config.swift.containerAudio}/${swift_audio_object}`;
+    const { token, storageUrl } = await getSwiftAuth();
+    const swiftUrl = `${storageUrl}/${config.swift.containerAudio}/${swift_audio_object}`;
 
     const rangeHeader = req.headers.range;
     const swiftHeaders = { 'X-Auth-Token': token };

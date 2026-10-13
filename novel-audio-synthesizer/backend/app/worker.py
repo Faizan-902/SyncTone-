@@ -13,16 +13,27 @@ import asyncio
 from datetime import datetime, timezone
 from pathlib import Path
 
+# Ensure backend root is always on sys.path for direct script execution
+BACKEND_ROOT = Path(__file__).resolve().parent.parent
+if str(BACKEND_ROOT) not in sys.path:
+    sys.path.insert(0, str(BACKEND_ROOT))
+
 from sqlalchemy import select, update, func
 from sqlalchemy.orm import Session
 
 from app.db.session import SessionLocal
 from app.db.models import SynthesisJob, Chapter, Character, Voice
-from app.engine.tts_engine import TTSEngine
-from app.engine.audio_stitcher import AudioStitcher
 from app.core.logger import get_logger
 
 logger = get_logger("synctone.worker")
+
+try:
+    from app.engine.tts_engine import TTSEngine
+    from app.engine.audio_stitcher import AudioStitcher
+except ImportError as e:
+    TTSEngine = None
+    AudioStitcher = None
+    logger.warning(f"Audio/TTS engine dependencies not fully installed ({e}). Running in queue worker mode.")
 
 RUNNING = True
 
@@ -43,8 +54,8 @@ class HeadlessWorker:
 
     def __init__(self, worker_id: str = "worker-1"):
         self.worker_id = worker_id
-        self.tts = TTSEngine()
-        self.stitcher = AudioStitcher()
+        self.tts = TTSEngine() if TTSEngine is not None else None
+        self.stitcher = AudioStitcher() if AudioStitcher is not None else None
 
     def claim_next_job(self, db: Session) -> SynthesisJob | None:
         """Atomically claim the next queued job using FOR UPDATE SKIP LOCKED."""

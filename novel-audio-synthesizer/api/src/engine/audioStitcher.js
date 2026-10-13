@@ -82,6 +82,7 @@ class AudioStitcher {
     return {
       chapter_id: chapterId,
       audio_stream_url: `/api/stream/${chapterId}`,
+      audio_url: `/api/stream/${chapterId}`,
       audio_format: 'wav',
       total_duration_ms: currentMs,
       timeline,
