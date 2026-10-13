@@ -19,18 +19,23 @@ const SPEECH_TAG_AFTER = new RegExp(
   'i'
 );
 
+const SPEECH_TAG_AFTER_INVERTED = new RegExp(
+  `["\\u201d]\\s*[,.]?\\s*(?:${SPEECH_VERBS})\\s+(\\w[\\w\\s]{0,30})`,
+  'i'
+);
+
 const SPEECH_TAG_BEFORE = new RegExp(
   `(\\w[\\w\\s]{0,30})\\s+(?:${SPEECH_VERBS})\\s*[,:]?\\s*["\\u201c]`,
   'i'
 );
 
 function cleanSpeakerName(raw) {
-  const noiseWords = new Set(['the', 'a', 'an', 'then', 'and', 'but', 'as', 'when', 'while']);
+  const noiseWords = new Set(['the', 'a', 'an', 'then', 'and', 'but', 'as', 'when', 'while', 'to']);
   const words = raw.trim().split(/\s+/);
   while (words.length > 0 && noiseWords.has(words[0].toLowerCase())) {
     words.shift();
   }
-  const name = words.join(' ').trim();
+  const name = words.join(' ').trim().replace(/[.,!?;:]+$/, '');
   if (!name || words.length > 3) return '';
   if (name[0] === name[0].toLowerCase()) return '';
   return name;
@@ -40,6 +45,12 @@ function extractSpeakerRegex(paragraph) {
   const matchAfter = paragraph.match(SPEECH_TAG_AFTER);
   if (matchAfter) {
     const name = cleanSpeakerName(matchAfter[1]);
+    if (name) return { name, source: 'regex_rule' };
+  }
+
+  const matchAfterInv = paragraph.match(SPEECH_TAG_AFTER_INVERTED);
+  if (matchAfterInv) {
+    const name = cleanSpeakerName(matchAfterInv[1]);
     if (name) return { name, source: 'regex_rule' };
   }
 
@@ -54,7 +65,7 @@ function extractSpeakerRegex(paragraph) {
 
 function parseChapter(rawText, title = 'Untitled Chapter', chapterId = 'ch-1') {
   const paragraphs = rawText
-    .split(/\n\s*\n/)
+    .split(/\r?\n+/)
     .map((p) => p.trim())
     .filter((p) => p.length > 0);
 

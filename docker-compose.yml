@@ -70,7 +70,7 @@ services:
   # ==============================================================================
   api:
     build:
-      context: ./novel-audio-synthesizer/api
+      context: ./novel-audio-synthesizer/backend
       dockerfile: Dockerfile
     container_name: synctone-api
     restart: unless-stopped
@@ -105,7 +105,7 @@ services:
   # ==============================================================================
   worker:
     build:
-      context: ./novel-audio-synthesizer/backend
+      context: ./novel-audio-synthesizer/kokoro-tts-backend
       dockerfile: Dockerfile
     container_name: synctone-worker
     restart: unless-stopped

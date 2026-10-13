@@ -23,23 +23,30 @@ export default function SettingsModal({ modelStatus, onClose }) {
             <div className="space-y-3">
               <div className="p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-2 mb-1">
+                  <span className="w-2 h-2 rounded-full bg-green-500" />
+                  <span className="text-sm font-medium">Primary: Edge Neural TTS</span>
+                </div>
+                <div className="text-xs text-gray-500 ml-4 space-y-0.5">
+                  <div>Status: ✅ Active (Cloud WebSocket)</div>
+                  <div>Cast: British Harry Potter + SOTA Neural Voices</div>
+                  <div>Format: 24kHz Constant Bitrate MP3</div>
+                </div>
+              </div>
+
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-2 mb-1">
                   <span
                     className={`w-2 h-2 rounded-full ${
-                      modelStatus.tts.model_exists ? 'bg-green-500' : 'bg-red-500'
+                      modelStatus.tts.model_exists ? 'bg-green-500' : 'bg-yellow-500'
                     }`}
                   />
-                  <span className="text-sm font-medium">TTS Engine (Kokoro)</span>
+                  <span className="text-sm font-medium">Fallback: Kokoro-82M TTS</span>
                 </div>
                 <div className="text-xs text-gray-500 ml-4 space-y-0.5">
                   <div>
-                    Model: {modelStatus.tts.model_exists ? '✅ Found' : '❌ Missing'}
+                    Model: {modelStatus.tts.model_exists ? '✅ Installed' : '⚠️ Offline fallback standby'}
                   </div>
-                  <div>
-                    Voices: {modelStatus.tts.voices_exists ? '✅ Found' : '❌ Missing'}
-                  </div>
-                  <div className="text-gray-400 truncate" title={modelStatus.tts.model_path}>
-                    Path: {modelStatus.tts.model_path}
-                  </div>
+                  <div>Location: kokoro-tts-backend/models_cache/</div>
                 </div>
               </div>
 

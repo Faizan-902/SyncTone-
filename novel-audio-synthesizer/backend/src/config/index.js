@@ -36,7 +36,7 @@ const config = {
     root: ROOT_DIR,
     outputDir: path.resolve(ROOT_DIR, 'output'),
     chaptersDir: path.resolve(ROOT_DIR, 'chapters'),
-    modelsDir: path.resolve(ROOT_DIR, 'backend/models_cache'),
+    modelsDir: path.resolve(ROOT_DIR, 'kokoro-tts-backend/models_cache'),
   },
 
   audio: {

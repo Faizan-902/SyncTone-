@@ -148,7 +148,7 @@ erDiagram
 | **Real-Time Stream** | **Server-Sent Events (SSE) & WebSocket** | Express holds persistent connections streaming synthesis progress events from PostgreSQL `pg_notify` / worker event bus. |
 | **Background Worker** | **Python Daemon Process** | Decoupled worker container that claims jobs from PostgreSQL, runs NLP parsing, executes Kokoro-ONNX TTS, and stitches audio using FFmpeg. |
 | **NLP & Parsing** | **Regex Engine + SpaCy (`en_core_web_sm`)** | Fast deterministic quote boundary extraction and grammatical dependency parsing (`nsubj` $\to$ speech verb) for reliable speaker attribution without LLM hallucinations. |
-| **TTS & Audio Engine** | **Kokoro-ONNX (82M params) + FFmpeg** | Multi-speaker voice synthesis on CPU via ONNX Runtime (wrapped in `asyncio.to_thread`). Stitches raw PCM with cumulative sample-count accuracy and encodes to Opus in a single pass. |
+| **TTS & Audio Engine** | **Microsoft Edge Neural TTS (Primary) + Kokoro-ONNX (Fallback)** | Multi-speaker neural voice synthesis with authentic British voices (Harry, Hermione, Ron, Dumbledore, Snape) streamed via Edge WebSocket API (48kbps MP3), with Kokoro-82M offline daemon fallback. |
 | **Storage & Deployment**| **Docker Compose (4 Containers) + Shared Volumes** | Multi-container stack (`frontend`, `api`, `worker`, `db`). Shared volumes store model weights, 16-bit PCM cache files, and final chapter `.opus` files. |
 
 ---

@@ -32,7 +32,7 @@ class AudioStitcher {
     return header;
   }
 
-  createSilenceBuffer(durationMs) {
+  createPcmSilenceBuffer(durationMs) {
     const sampleCount = Math.floor((this.sampleRate * durationMs) / 1000);
     return Buffer.alloc(sampleCount * 2);
   }
@@ -44,21 +44,25 @@ class AudioStitcher {
     }
 
     const timeline = [];
-    const pcmChunks = [];
+    const audioChunks = [];
     let currentMs = 0;
-    let prevVoice = null;
+    let isAllMp3 = true;
 
     for (const seg of segments) {
-      if (prevVoice !== null && seg.voice_id !== prevVoice) {
-        const silence = this.createSilenceBuffer(this.pauseMs);
-        pcmChunks.push(silence);
-        currentMs += this.pauseMs;
+      if (seg.format !== 'mp3') {
+        isAllMp3 = false;
       }
+    }
+
+    for (let i = 0; i < segments.length; i++) {
+      const seg = segments[i];
+      const buffer = seg.audio_buffer || seg.pcm_buffer || Buffer.alloc(0);
+      const durationMs = seg.duration_ms || 0;
 
       const startMs = currentMs;
-      const endMs = startMs + seg.duration_ms;
+      const endMs = startMs + durationMs;
 
-      pcmChunks.push(seg.pcm_buffer);
+      audioChunks.push(buffer);
       currentMs = endMs;
 
       timeline.push({
@@ -68,22 +72,33 @@ class AudioStitcher {
         speaker_name: seg.speaker_name,
         voice_id: seg.voice_id,
       });
-
-      prevVoice = seg.voice_id;
     }
 
-    const allPcm = Buffer.concat(pcmChunks);
-    const wavHeader = this.createWavHeader(allPcm.length);
-    const fullWav = Buffer.concat([wavHeader, allPcm]);
+    let finalAudioBuffer;
+    let audioFormat = 'mp3';
+    let outputFilename = `${chapterId}.mp3`;
 
-    const audioFilePath = path.join(outputDir, `${chapterId}.wav`);
-    fs.writeFileSync(audioFilePath, fullWav);
+    if (isAllMp3) {
+      finalAudioBuffer = Buffer.concat(audioChunks);
+      audioFormat = 'mp3';
+      outputFilename = `${chapterId}.mp3`;
+    } else {
+      // PCM Fallback (WAV)
+      const allPcm = Buffer.concat(audioChunks);
+      const wavHeader = this.createWavHeader(allPcm.length);
+      finalAudioBuffer = Buffer.concat([wavHeader, allPcm]);
+      audioFormat = 'wav';
+      outputFilename = `${chapterId}.wav`;
+    }
+
+    const audioFilePath = path.join(outputDir, outputFilename);
+    fs.writeFileSync(audioFilePath, finalAudioBuffer);
 
     return {
       chapter_id: chapterId,
       audio_stream_url: `/api/stream/${chapterId}`,
       audio_url: `/api/stream/${chapterId}`,
-      audio_format: 'wav',
+      audio_format: audioFormat,
       total_duration_ms: currentMs,
       timeline,
     };

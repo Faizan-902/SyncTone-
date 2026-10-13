@@ -142,7 +142,7 @@ router.post('/synthesize/:chapter_id', async (req, res) => {
       status: 'synthesizing',
     });
 
-    const { pcm_buffer, duration_ms } = await ttsEngine.synthesizeSegment(
+    const result = await ttsEngine.synthesizeSegment(
       seg.text,
       seg.assigned_voice_id
     );
@@ -151,8 +151,10 @@ router.post('/synthesize/:chapter_id', async (req, res) => {
       segment_id: seg.segment_id,
       voice_id: seg.assigned_voice_id,
       speaker_name: seg.speaker_name,
-      pcm_buffer,
-      duration_ms,
+      audio_buffer: result.audio_buffer,
+      duration_ms: result.duration_ms,
+      format: result.format,
+      engine: result.engine,
     });
   }
 
@@ -179,14 +181,17 @@ router.post('/synthesize/:chapter_id', async (req, res) => {
     status: 'complete',
   });
 
-  console.log(`[Chapters] Synthesized ${chapter_id} (${manifest.total_duration_ms}ms)`);
+  console.log(`[Chapters] Synthesized ${chapter_id} (${manifest.total_duration_ms}ms, format: ${manifest.audio_format})`);
   return res.json(manifest);
 });
 
 // 5. GET /api/stream/:chapter_id
 router.get('/stream/:chapter_id', (req, res) => {
   const { chapter_id } = req.params;
-  const audioPath = path.join(config.paths.outputDir, `${chapter_id}.wav`);
+  const audioPathMp3 = path.join(config.paths.outputDir, `${chapter_id}.mp3`);
+  const audioPathWav = path.join(config.paths.outputDir, `${chapter_id}.wav`);
+  const isMp3 = fs.existsSync(audioPathMp3);
+  const audioPath = isMp3 ? audioPathMp3 : audioPathWav;
 
   if (!fs.existsSync(audioPath)) {
     return res.status(404).json({ detail: 'Audio file not found' });
@@ -195,6 +200,7 @@ router.get('/stream/:chapter_id', (req, res) => {
   const stat = fs.statSync(audioPath);
   const fileSize = stat.size;
   const range = req.headers.range;
+  const contentType = isMp3 ? 'audio/mpeg' : 'audio/wav';
 
   if (range) {
     const parts = range.replace(/bytes=/, '').split('-');
@@ -207,13 +213,13 @@ router.get('/stream/:chapter_id', (req, res) => {
       'Content-Range': `bytes ${start}-${end}/${fileSize}`,
       'Accept-Ranges': 'bytes',
       'Content-Length': chunksize,
-      'Content-Type': 'audio/wav',
+      'Content-Type': contentType,
     });
     file.pipe(res);
   } else {
     res.writeHead(200, {
       'Content-Length': fileSize,
-      'Content-Type': 'audio/wav',
+      'Content-Type': contentType,
       'Accept-Ranges': 'bytes',
     });
     fs.createReadStream(audioPath).pipe(res);

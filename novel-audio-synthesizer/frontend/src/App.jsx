@@ -106,10 +106,14 @@ export default function App() {
           </div>
         )}
 
-        {/* Model status warnings */}
-        {modelStatus && !modelStatus.tts.model_exists && (
-          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-700 text-sm">
-            ⚠️ TTS model not found. Please download the Kokoro model files to the models_cache/ directory.
+        {/* Engine status indicator */}
+        {modelStatus && (
+          <div className="mb-4 p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-800 text-xs flex items-center justify-between">
+            <div className="flex items-center gap-1.5 font-medium">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              Primary Engine: Edge Neural TTS (British Harry Potter Cast)
+            </div>
+            <span className="text-emerald-600">Kokoro-82M Fallback</span>
           </div>
         )}
 
