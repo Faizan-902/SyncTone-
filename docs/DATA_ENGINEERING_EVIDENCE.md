@@ -266,8 +266,8 @@ To independently run and verify all database tests and data engineering evidence
 
 ```bash
 # 1. Run core API Gateway and persistence test suite
-npm --prefix novel-audio-synthesizer/api test
+npm --prefix novel-audio-synthesizer/backend test
 
 # 2. Run dedicated Data Engineering integrity & constraint validation suite
-npm --prefix novel-audio-synthesizer/api run test:de
+npm --prefix novel-audio-synthesizer/backend run test:de
 ```
