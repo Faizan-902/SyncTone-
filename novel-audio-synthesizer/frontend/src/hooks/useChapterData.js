@@ -1,31 +1,9 @@
-/**
- * useChapterData — Fetches and caches chapter data from the backend API.
- */
-
 import { useState, useCallback } from 'react';
-import type { ParsedChapter, PlaybackManifest, ModelStatus } from '../types';
 
 const API_BASE = '/api';
 
-export interface ChapterState {
-  chapterId: string | null;
-  parsed: ParsedChapter | null;
-  manifest: PlaybackManifest | null;
-  isLoading: boolean;
-  error: string | null;
-  progress: string;
-}
-
-export interface ChapterActions {
-  uploadText: (text: string, title?: string) => Promise<string | null>;
-  parseChapter: (chapterId: string) => Promise<ParsedChapter | null>;
-  synthesizeChapter: (chapterId: string) => Promise<PlaybackManifest | null>;
-  checkModels: () => Promise<ModelStatus | null>;
-  reset: () => void;
-}
-
-export function useChapterData(): [ChapterState, ChapterActions] {
-  const [state, setState] = useState<ChapterState>({
+export function useChapterData() {
+  const [state, setState] = useState({
     chapterId: null,
     parsed: null,
     manifest: null,
@@ -34,13 +12,13 @@ export function useChapterData(): [ChapterState, ChapterActions] {
     progress: '',
   });
 
-  const setLoading = (progress: string) =>
+  const setLoading = (progress) =>
     setState((prev) => ({ ...prev, isLoading: true, error: null, progress }));
 
-  const setError = (error: string) =>
+  const setError = (error) =>
     setState((prev) => ({ ...prev, isLoading: false, error, progress: '' }));
 
-  const uploadText = useCallback(async (text: string, title = 'Untitled Chapter') => {
+  const uploadText = useCallback(async (text, title = 'Untitled Chapter') => {
     setLoading('Uploading chapter...');
     try {
       const res = await fetch(`${API_BASE}/upload`, {
@@ -58,14 +36,14 @@ export function useChapterData(): [ChapterState, ChapterActions] {
         isLoading: false,
         progress: '',
       }));
-      return data.chapter_id as string;
+      return data.chapter_id;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed');
       return null;
     }
   }, []);
 
-  const parseChapter = useCallback(async (chapterId: string) => {
+  const parseChapter = useCallback(async (chapterId) => {
     setLoading('Parsing text & attributing dialogue...');
     try {
       const res = await fetch(`${API_BASE}/parse/${chapterId}`, {
@@ -74,7 +52,7 @@ export function useChapterData(): [ChapterState, ChapterActions] {
 
       if (!res.ok) throw new Error(`Parse failed: ${res.statusText}`);
 
-      const parsed: ParsedChapter = await res.json();
+      const parsed = await res.json();
       setState((prev) => ({ ...prev, parsed, isLoading: false, progress: '' }));
       return parsed;
     } catch (err) {
@@ -83,7 +61,7 @@ export function useChapterData(): [ChapterState, ChapterActions] {
     }
   }, []);
 
-  const synthesizeChapter = useCallback(async (chapterId: string) => {
+  const synthesizeChapter = useCallback(async (chapterId) => {
     setLoading('Synthesizing audio...');
     try {
       const res = await fetch(`${API_BASE}/synthesize/${chapterId}`, {
@@ -92,7 +70,7 @@ export function useChapterData(): [ChapterState, ChapterActions] {
 
       if (!res.ok) throw new Error(`Synthesis failed: ${res.statusText}`);
 
-      const manifest: PlaybackManifest = await res.json();
+      const manifest = await res.json();
       setState((prev) => ({ ...prev, manifest, isLoading: false, progress: '' }));
       return manifest;
     } catch (err) {
@@ -105,7 +83,7 @@ export function useChapterData(): [ChapterState, ChapterActions] {
     try {
       const res = await fetch(`${API_BASE}/status/models`);
       if (!res.ok) return null;
-      return (await res.json()) as ModelStatus;
+      return await res.json();
     } catch {
       return null;
     }
@@ -122,5 +100,8 @@ export function useChapterData(): [ChapterState, ChapterActions] {
     });
   }, []);
 
-  return [state, { uploadText, parseChapter, synthesizeChapter, checkModels, reset }];
+  return [
+    state,
+    { uploadText, parseChapter, synthesizeChapter, checkModels, reset },
+  ];
 }

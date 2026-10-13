@@ -1,37 +1,15 @@
-/**
- * useAudioSync — requestAnimationFrame-based audio-text synchronization.
- *
- * Runs a 60fps loop that binary-searches the timeline array to find the
- * active segment based on the current audio playback position.
- */
-
 import { useRef, useState, useCallback, useEffect } from 'react';
-import type { TimelineEntry } from '../types';
 
-export interface AudioSyncState {
-  audioRef: React.RefObject<HTMLAudioElement | null>;
-  activeSegmentId: number;
-  isPlaying: boolean;
-  currentTimeMs: number;
-  duration: number;
-  seekToSegment: (segmentId: number) => void;
-  play: () => void;
-  pause: () => void;
-  toggle: () => void;
-  setPlaybackRate: (rate: number) => void;
-}
-
-export function useAudioSync(timeline: TimelineEntry[]): AudioSyncState {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const rafRef = useRef<number>(0);
-  const [activeSegmentId, setActiveSegmentId] = useState<number>(-1);
+export function useAudioSync(timeline = []) {
+  const audioRef = useRef(null);
+  const rafRef = useRef(0);
+  const [activeSegmentId, setActiveSegmentId] = useState(-1);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTimeMs, setCurrentTimeMs] = useState(0);
   const [duration, setDuration] = useState(0);
 
-  // Binary search for the active segment at a given timestamp
   const findActiveSegment = useCallback(
-    (timeMs: number): number => {
+    (timeMs) => {
       if (timeline.length === 0) return -1;
 
       let lo = 0;
@@ -50,12 +28,11 @@ export function useAudioSync(timeline: TimelineEntry[]): AudioSyncState {
         }
       }
 
-      return -1; // In a gap between segments
+      return -1;
     },
-    [timeline],
+    [timeline]
   );
 
-  // The sync loop — runs every animation frame while audio is playing
   const syncLoop = useCallback(() => {
     if (!audioRef.current) return;
 
@@ -68,7 +45,6 @@ export function useAudioSync(timeline: TimelineEntry[]): AudioSyncState {
     rafRef.current = requestAnimationFrame(syncLoop);
   }, [findActiveSegment]);
 
-  // Start/stop the sync loop based on play state
   useEffect(() => {
     if (isPlaying) {
       rafRef.current = requestAnimationFrame(syncLoop);
@@ -79,7 +55,6 @@ export function useAudioSync(timeline: TimelineEntry[]): AudioSyncState {
     return () => cancelAnimationFrame(rafRef.current);
   }, [isPlaying, syncLoop]);
 
-  // Listen for play/pause/ended events on the audio element
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -105,40 +80,41 @@ export function useAudioSync(timeline: TimelineEntry[]): AudioSyncState {
     };
   }, []);
 
-  // Seek to a specific segment (click-to-seek)
   const seekToSegment = useCallback(
-    (segmentId: number) => {
+    (segmentId) => {
       const entry = timeline.find((t) => t.segment_id === segmentId);
       if (entry && audioRef.current) {
         audioRef.current.currentTime = entry.start_ms / 1000;
-        setActiveSegmentId(segmentId);
-
-        // Auto-play on seek if not already playing
-        if (audioRef.current.paused) {
-          audioRef.current.play().catch(() => {});
-        }
+        audioRef.current.play().catch(() => {});
+        setIsPlaying(true);
       }
     },
-    [timeline],
+    [timeline]
   );
 
   const play = useCallback(() => {
-    audioRef.current?.play().catch(() => {});
+    if (audioRef.current) {
+      audioRef.current.play().catch(() => {});
+      setIsPlaying(true);
+    }
   }, []);
 
   const pause = useCallback(() => {
-    audioRef.current?.pause();
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    }
   }, []);
 
   const toggle = useCallback(() => {
-    if (audioRef.current?.paused) {
-      play();
-    } else {
+    if (isPlaying) {
       pause();
+    } else {
+      play();
     }
-  }, [play, pause]);
+  }, [isPlaying, play, pause]);
 
-  const setPlaybackRate = useCallback((rate: number) => {
+  const setPlaybackRate = useCallback((rate) => {
     if (audioRef.current) {
       audioRef.current.playbackRate = rate;
     }

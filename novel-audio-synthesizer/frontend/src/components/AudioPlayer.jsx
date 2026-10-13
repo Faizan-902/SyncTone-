@@ -1,23 +1,6 @@
-/**
- * AudioPlayer — HTML5 audio controller with timeline seeking.
- *
- * Renders play/pause, progress bar, time display, and speed controls.
- * The audio element is controlled via the ref from useAudioSync.
- */
-
 import React, { useState } from 'react';
 
-interface AudioPlayerProps {
-  audioRef: React.RefObject<HTMLAudioElement | null>;
-  audioUrl: string;
-  isPlaying: boolean;
-  currentTimeMs: number;
-  totalDurationMs: number;
-  onToggle: () => void;
-  onSetPlaybackRate: (rate: number) => void;
-}
-
-function formatTime(ms: number): string {
+function formatTime(ms) {
   const totalSeconds = Math.floor(ms / 1000);
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
@@ -34,12 +17,12 @@ export default function AudioPlayer({
   totalDurationMs,
   onToggle,
   onSetPlaybackRate,
-}: AudioPlayerProps) {
+}) {
   const [speed, setSpeed] = useState(1.0);
 
   const progress = totalDurationMs > 0 ? (currentTimeMs / totalDurationMs) * 100 : 0;
 
-  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleSeek = (e) => {
     if (!audioRef.current || totalDurationMs === 0) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const percent = (e.clientX - rect.left) / rect.width;
@@ -99,11 +82,10 @@ export default function AudioPlayer({
           {formatTime(totalDurationMs)}
         </span>
 
-        {/* Speed control */}
+        {/* Speed button */}
         <button
           onClick={handleSpeedChange}
-          className="px-2 py-1 text-xs font-mono bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition flex-shrink-0"
-          title="Playback speed"
+          className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition flex-shrink-0"
         >
           {speed}x
         </button>

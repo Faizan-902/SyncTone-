@@ -140,12 +140,12 @@ erDiagram
 
 | Layer | Technology | Role & Academic / Engineering Justification |
 |---|---|---|
-| **Frontend Framework** | **React 18 + Vite + TypeScript + Tailwind CSS** | Fast reactive SPA. Uses a continuous `requestAnimationFrame` loop that polls the HTML `<audio>` clock for smooth 60fps text highlighting without UI stutter. |
+| **Frontend Framework** | **React 18 + Vite + JavaScript (JSX) + Tailwind CSS** | Fast reactive SPA. Uses a continuous `requestAnimationFrame` loop that polls the HTML `<audio>` clock for smooth 60fps text highlighting without UI stutter. |
 | **Input Sanitization** | **`tts-dom-cleaner` (npm)** | Your published npm package. Runs client-side in the browser to strip ads, author notes, site navigation, and ruby tags from pasted web novels/EPUBs before upload. |
-| **Backend API Framework**| **FastAPI (Python 3.11+)** | High-concurrency async REST framework for auth, chapter ingestion, and Server-Sent Events (SSE). Auto-generates interactive OpenAPI/Swagger docs for the viva. |
+| **Backend API Framework**| **Express.js (JavaScript / Node.js 20+)** | High-concurrency async REST API Gateway for auth, chapter ingestion, OpenStack Swift range streaming, and WebSocket / SSE event streaming. |
 | **Primary DBMS** | **PostgreSQL 16** | The core relational database (3NF). Also serves as the **task queue broker** using `FOR UPDATE SKIP LOCKED` (eliminating Redis/Celery) and broadcasts real-time progress via `pg_notify`. |
 | **ORM & Migrations** | **SQLAlchemy 2.0 Async + Alembic** | Type-safe async queries using `asyncpg`; reproducible, version-controlled database migrations. |
-| **Real-Time Stream** | **Server-Sent Events (SSE) via `asyncpg LISTEN`** | FastAPI holds an isolated, persistent `asyncpg` connection that subscribes directly to PostgreSQL's `synthesis_progress` channel without database polling. |
+| **Real-Time Stream** | **Server-Sent Events (SSE) & WebSocket** | Express holds persistent connections streaming synthesis progress events from PostgreSQL `pg_notify` / worker event bus. |
 | **Background Worker** | **Python Daemon Process** | Decoupled worker container that claims jobs from PostgreSQL, runs NLP parsing, executes Kokoro-ONNX TTS, and stitches audio using FFmpeg. |
 | **NLP & Parsing** | **Regex Engine + SpaCy (`en_core_web_sm`)** | Fast deterministic quote boundary extraction and grammatical dependency parsing (`nsubj` $\to$ speech verb) for reliable speaker attribution without LLM hallucinations. |
 | **TTS & Audio Engine** | **Kokoro-ONNX (82M params) + FFmpeg** | Multi-speaker voice synthesis on CPU via ONNX Runtime (wrapped in `asyncio.to_thread`). Stitches raw PCM with cumulative sample-count accuracy and encodes to Opus in a single pass. |

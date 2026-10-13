@@ -71,9 +71,10 @@ kokoro-v0_19.onnx
 voices.bin
 
 # Audio Buffers, Raw PCM Caches & Synthesized Outputs
-output/*
-!output/.gitkeep
-chapters/*
+output/
+chapters/
+novel-audio-synthesizer/output/
+novel-audio-synthesizer/chapters/
 audio_cache/
 *.pcm
 *.raw

@@ -1,20 +1,5 @@
-/**
- * ReaderView — Displays chapter text with segment highlighting and click-to-seek.
- *
- * Each segment is rendered as a paragraph (narration) or blockquote (dialogue).
- * The active segment is highlighted and auto-scrolled into view.
- */
-
 import React, { useEffect, useRef } from 'react';
-import type { Segment } from '../types';
 
-interface ReaderViewProps {
-  segments: Segment[];
-  activeSegmentId: number;
-  onSegmentClick: (segmentId: number) => void;
-}
-
-// Consistent color mapping based on speaker_id hash
 const SPEAKER_COLORS = [
   { bg: 'bg-yellow-50', border: 'border-yellow-300', text: 'text-yellow-800' },
   { bg: 'bg-green-50', border: 'border-green-300', text: 'text-green-800' },
@@ -26,22 +11,20 @@ const SPEAKER_COLORS = [
   { bg: 'bg-red-50', border: 'border-red-300', text: 'text-red-800' },
 ];
 
-function getSpeakerColor(speakerId: string) {
+function getSpeakerColor(speakerId) {
   if (speakerId === 'narrator') {
     return { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-800' };
   }
-  // Simple hash for consistent color assignment
   let hash = 0;
-  for (let i = 0; i < speakerId.length; i++) {
+  for (let i = 0; i < (speakerId || '').length; i++) {
     hash = ((hash << 5) - hash + speakerId.charCodeAt(i)) | 0;
   }
   return SPEAKER_COLORS[Math.abs(hash) % SPEAKER_COLORS.length];
 }
 
-export default function ReaderView({ segments, activeSegmentId, onSegmentClick }: ReaderViewProps) {
-  const activeRef = useRef<HTMLDivElement>(null);
+export default function ReaderView({ segments, activeSegmentId, onSegmentClick }) {
+  const activeRef = useRef(null);
 
-  // Auto-scroll to active segment
   useEffect(() => {
     if (activeRef.current && activeSegmentId >= 0) {
       activeRef.current.scrollIntoView({
@@ -69,7 +52,6 @@ export default function ReaderView({ segments, activeSegmentId, onSegmentClick }
               ${isActive ? 'segment-active ring-2 ring-blue-400 ring-opacity-50 scale-[1.01]' : 'hover:shadow-sm'}
             `}
           >
-            {/* Speaker label */}
             {seg.type === 'dialogue' && seg.speaker_name && (
               <div className={`text-xs font-semibold ${color.text} mb-1 uppercase tracking-wide`}>
                 {seg.speaker_name}
@@ -81,14 +63,12 @@ export default function ReaderView({ segments, activeSegmentId, onSegmentClick }
               </div>
             )}
 
-            {/* Segment text */}
             <p className={`text-gray-800 leading-relaxed ${
               seg.type === 'dialogue' ? 'italic' : ''
             }`}>
               {seg.type === 'dialogue' ? `"${seg.text}"` : seg.text}
             </p>
 
-            {/* Narration label */}
             {seg.type === 'narration' && (
               <div className="text-xs text-gray-400 mt-1">Narrator</div>
             )}

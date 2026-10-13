@@ -1,16 +1,6 @@
-/**
- * SettingsModal — Shows model status and app settings.
- */
-
 import React from 'react';
-import type { ModelStatus } from '../types';
 
-interface SettingsModalProps {
-  modelStatus: ModelStatus | null;
-  onClose: () => void;
-}
-
-export default function SettingsModal({ modelStatus, onClose }: SettingsModalProps) {
+export default function SettingsModal({ modelStatus, onClose }) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
@@ -24,7 +14,6 @@ export default function SettingsModal({ modelStatus, onClose }: SettingsModalPro
           </button>
         </div>
 
-        {/* Model Status */}
         <div className="space-y-4">
           <h3 className="text-sm font-medium text-gray-700 uppercase tracking-wide">
             Model Status
@@ -32,7 +21,6 @@ export default function SettingsModal({ modelStatus, onClose }: SettingsModalPro
 
           {modelStatus ? (
             <div className="space-y-3">
-              {/* TTS Status */}
               <div className="p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-2 mb-1">
                   <span
@@ -55,7 +43,6 @@ export default function SettingsModal({ modelStatus, onClose }: SettingsModalPro
                 </div>
               </div>
 
-              {/* LLM Status */}
               <div className="p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-2 mb-1">
                   <span
@@ -78,7 +65,6 @@ export default function SettingsModal({ modelStatus, onClose }: SettingsModalPro
             <p className="text-sm text-gray-500">Checking model status...</p>
           )}
 
-          {/* Instructions */}
           <div className="p-3 bg-blue-50 rounded-lg text-xs text-blue-700">
             <p className="font-medium mb-1">Missing models?</p>
             <p>

@@ -1,12 +1,3 @@
-/**
- * App.tsx — Main application component.
- *
- * Three-stage flow:
- * 1. Upload: User pastes/types chapter text
- * 2. Parse: Text is segmented and attributed
- * 3. Play: Audio is synthesized and played with synchronized text
- */
-
 import React, { useState, useEffect } from 'react';
 import { useChapterData } from './hooks/useChapterData';
 import { useAudioSync } from './hooks/useAudioSync';
@@ -14,15 +5,12 @@ import ReaderView from './components/ReaderView';
 import AudioPlayer from './components/AudioPlayer';
 import CharacterRoster from './components/CharacterRoster';
 import SettingsModal from './components/SettingsModal';
-import type { ModelStatus } from './types';
-
-type Stage = 'upload' | 'parsed' | 'playing';
 
 export default function App() {
-  const [stage, setStage] = useState<Stage>('upload');
+  const [stage, setStage] = useState('upload'); // 'upload' | 'parsed' | 'playing'
   const [textInput, setTextInput] = useState('');
   const [titleInput, setTitleInput] = useState('');
-  const [modelStatus, setModelStatus] = useState<ModelStatus | null>(null);
+  const [modelStatus, setModelStatus] = useState(null);
   const [showRoster, setShowRoster] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
@@ -147,87 +135,84 @@ export default function App() {
               <textarea
                 value={textInput}
                 onChange={(e) => setTextInput(e.target.value)}
-                placeholder="Paste your chapter text here...\n\nThe parser will detect dialogue (quoted text) and narration, and attribute speakers automatically."
-                rows={16}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm"
+                placeholder={"Paste your chapter text here...\n\nThe parser will detect dialogue (quoted text) and narration, and attribute speakers automatically."}
+                rows={12}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-serif leading-relaxed"
               />
             </div>
             <button
               onClick={handleUploadAndParse}
-              disabled={!textInput.trim() || chapterState.isLoading}
-              className="w-full py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
+              disabled={chapterState.isLoading || !textInput.trim()}
+              className="w-full py-2.5 px-4 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
-              📝 Parse & Attribute
+              Parse & Attribute Chapter
             </button>
           </div>
         )}
 
-        {/* Stage 2: Parsed — show segments and synthesize button */}
-        {stage === 'parsed' && chapterState.parsed && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-800">
-                {chapterState.parsed.title}
-              </h2>
-              <span className="text-sm text-gray-500">
-                {chapterState.parsed.segments.length} segments
-              </span>
+        {/* Stage 2 & 3: Parsed / Playing */}
+        {(stage === 'parsed' || stage === 'playing') && chapterState.parsed && (
+          <div className="space-y-6 pb-24">
+            {/* Action bar */}
+            <div className="flex items-center justify-between bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-800">
+                  {chapterState.parsed.title}
+                </h2>
+                <p className="text-sm text-gray-500">
+                  {chapterState.parsed.segments.length} segments •{' '}
+                  {chapterState.parsed.segments.filter((s) => s.type === 'dialogue').length}{' '}
+                  dialogue lines
+                </p>
+              </div>
+              {stage === 'parsed' && (
+                <button
+                  onClick={handleSynthesize}
+                  disabled={chapterState.isLoading}
+                  className="py-2 px-5 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 transition flex items-center gap-2"
+                >
+                  🔊 Synthesize Audio
+                </button>
+              )}
             </div>
 
-            <ReaderView
-              segments={chapterState.parsed.segments}
-              activeSegmentId={-1}
-              onSegmentClick={() => {}}
-            />
-
-            <button
-              onClick={handleSynthesize}
-              disabled={chapterState.isLoading}
-              className="w-full py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
-            >
-              🎙️ Synthesize Audio
-            </button>
-          </div>
-        )}
-
-        {/* Stage 3: Playing — reader + audio player */}
-        {stage === 'playing' && chapterState.parsed && chapterState.manifest && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-800">
-                {chapterState.parsed.title}
-              </h2>
-            </div>
-
+            {/* Reader view with active segment highlighting */}
             <ReaderView
               segments={chapterState.parsed.segments}
               activeSegmentId={audioSync.activeSegmentId}
-              onSegmentClick={audioSync.seekToSegment}
-            />
-
-            <AudioPlayer
-              audioRef={audioSync.audioRef}
-              audioUrl={chapterState.manifest.audio_stream_url}
-              isPlaying={audioSync.isPlaying}
-              currentTimeMs={audioSync.currentTimeMs}
-              totalDurationMs={chapterState.manifest.total_duration_ms}
-              onToggle={audioSync.toggle}
-              onSetPlaybackRate={audioSync.setPlaybackRate}
+              onSegmentClick={(segmentId) => {
+                if (stage === 'playing') {
+                  audioSync.seekToSegment(segmentId);
+                }
+              }}
             />
           </div>
         )}
       </main>
 
-      {/* Character Roster Drawer */}
+      {/* Audio player bar (visible when playing) */}
+      {stage === 'playing' && chapterState.manifest && (
+        <AudioPlayer
+          audioRef={audioSync.audioRef}
+          audioUrl={chapterState.manifest.audio_stream_url}
+          isPlaying={audioSync.isPlaying}
+          currentTimeMs={audioSync.currentTimeMs}
+          totalDurationMs={chapterState.manifest.total_duration_ms}
+          onToggle={audioSync.toggle}
+          onSetPlaybackRate={audioSync.setPlaybackRate}
+        />
+      )}
+
+      {/* Character roster sidebar */}
       {showRoster && chapterState.parsed && (
         <CharacterRoster
-          chapterId={chapterState.chapterId!}
+          chapterId={chapterState.chapterId || ''}
           segments={chapterState.parsed.segments}
           onClose={() => setShowRoster(false)}
         />
       )}
 
-      {/* Settings Modal */}
+      {/* Settings modal */}
       {showSettings && (
         <SettingsModal
           modelStatus={modelStatus}
