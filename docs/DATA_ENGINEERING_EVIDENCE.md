@@ -141,40 +141,65 @@ erDiagram
 
 ---
 
-## 2. DBMS Normalization Proof (1NF to BCNF)
+## 2. DBMS Relational Normalization Proof (1NF to BCNF)
+
+> [!NOTE]
+> **Polyglot Scope Note**: Relational normalization (1NF through BCNF) applies strictly to the PostgreSQL schema. MongoDB chapter documents (`chapters.segments[]`, `chapters.manifest`) are purposefully non-relational document stores optimized for 60fps audio clock polling and hierarchical prose arrays, and are therefore outside relational 3NF analysis.
 
 ### 2.1 First Normal Form (1NF)
-* **Atomic Attributes**: All relational columns contain strictly scalar atomic types (`UUID`, `VARCHAR`, `INT`, `BOOLEAN`, `TIMESTAMPTZ`, `REAL`). No repeating groups or delimited strings.
-* **Alias Decomposition**: Rather than comma-delimited arrays, character aliases are decomposed into a dedicated relation:
+* **Atomic Attributes**: All PostgreSQL attributes contain strictly scalar, non-decomposable types (`UUID`, `VARCHAR`, `INT`, `BOOLEAN`, `TIMESTAMPTZ`, `REAL`). No multi-valued attributes, repeating groups, or delimited strings.
+* **Decomposition of Aliases**: Rather than comma-delimited arrays, character aliases are decomposed into a dedicated relation:
   $$\text{CHARACTER\_ALIASES}(\underline{\text{id}}, \text{novel\_id}, \text{character\_id}, \text{alias})$$
   enforcing `UNIQUE(novel_id, alias)`.
-* **Polyglot Persistence Design**: Ordered segments and audio timestamps reside in MongoDB (`chapters.segments[]`) to eliminate index bloat and multi-table joins during 60fps audio clock polling.
+* $\mathbf{1NF\text{ Satisfied}}$ across all 9 PostgreSQL tables.
 
 ### 2.2 Second Normal Form (2NF)
-* Every non-prime attribute depends on the *whole* of every candidate key.
-* **Single-Column Candidate Keys**: Relations with surrogate keys (`users`, `voices`, `novels`, `chapters`, `characters`, `character_aliases`, `synthesis_jobs`) trivially satisfy 2NF as no proper subset of a single attribute exists.
+* A relation is in 2NF if it is in 1NF and no non-prime attribute is partially dependent on any candidate key (every non-prime attribute depends on the *whole* of every candidate key).
+* **Single-Attribute Candidate Keys**: Relations where all candidate keys are single-column (`USERS`, `VOICES`, `NOVELS`, `SYNTHESIS_JOBS`) trivially satisfy 2NF as no proper subset of a single attribute can exist.
 * **Composite Candidate Keys**:
-  * `PLAYBACK_HISTORY`: Candidate Key $K = \{\text{user\_id}, \text{novel\_id}\}$. Non-prime attributes (`chapter_id`, `segment_order`, `position_ms`, `updated_at`) depend on the complete composite key. Reading position cannot be determined by user alone or novel alone. $\implies \mathbf{2NF\text{ Satisfied}}$.
-  * `SEGMENT_AUDIO_CACHE`: Candidate Key $K = \{\text{text\_hash}, \text{voice\_hash}\}$. Non-prime attributes depend simultaneously on text content and speaker parameters. $\implies \mathbf{2NF\text{ Satisfied}}$.
+  * `CHAPTERS`: Candidate keys $CK_1 = \{\text{id}\}$, $CK_2 = \{\text{novel\_id}, \text{chapter\_number}\}$. Non-prime attributes (`title`, `status`, `audio_version`, `swift_audio_object`, `total_duration_ms`, `created_at`, `updated_at`) depend on the specific chapter of that specific novel, not on `novel_id` alone or `chapter_number` alone. $\implies \mathbf{2NF\text{ Satisfied}}$.
+  * `CHARACTERS`: Candidate keys $CK_1 = \{\text{id}\}$, $CK_2 = \{\text{novel\_id}, \text{canonical\_name}\}$. Non-prime attributes (`gender`, `age_band`, `temperament`, `sample_quote`, `voice_id`, `speed_multiplier`, `is_narrator`, `needs_review`, `source`) describe the character entity within the novel and do not depend on `novel_id` alone. $\implies \mathbf{2NF\text{ Satisfied}}$.
+  * `CHARACTER_ALIASES`: Candidate keys $CK_1 = \{\text{id}\}$, $CK_2 = \{\text{novel\_id}, \text{alias}\}$, $CK_3 = \{\text{character\_id}, \text{alias}\}$. All attributes are prime (part of at least one candidate key). With zero non-prime attributes, no partial dependencies can exist. $\implies \mathbf{2NF\text{ Satisfied}}$.
+  * `SEGMENT_AUDIO_CACHE`: Candidate key $CK_1 = \{\text{text\_hash}, \text{voice\_hash}\}$. Audio waveform metadata (`local_pcm_path`, `n_samples`, `sample_rate`) requires both the text spoken and voice parameters. $\implies \mathbf{2NF\text{ Satisfied}}$.
+  * `PLAYBACK_HISTORY`: Candidate keys $CK_1 = \{\text{id}\}$, $CK_2 = \{\text{user\_id}, \text{novel\_id}\}$, $CK_3 = \{\text{user\_id}, \text{chapter\_id}\}$. Non-prime attributes (`segment_order`, `position_ms`, `updated_at`) represent the specific playback bookmark and cannot be determined by `user_id` alone, `novel_id` alone, or `chapter_id` alone. $\implies \mathbf{2NF\text{ Satisfied}}$.
 
-### 2.3 Third Normal Form (3NF)
-* No non-prime attribute is transitively dependent on any candidate key ($X \to Y \implies X$ is a superkey or $Y$ is prime).
-* **Elimination of Voice Transitive Dependency**: Storing voice properties (label, gender, language) on characters would induce the transitive dependency: $\text{character\_id} \to \text{voice\_id} \to \{\text{label}, \text{gender}, \text{language}\}$. Decomposing `VOICES` into an independent reference table eliminates transitive dependency and update anomalies.
-* **Novels & Users**: User profile attributes are not duplicated in `NOVELS`; all novel attributes depend directly on $\text{novel\_id}$. $\implies \mathbf{3NF\text{ Satisfied}}$.
+### 2.3 Third Normal Form (3NF) vs. Boyce-Codd Normal Form (BCNF)
+A relation is in **3NF** if for every non-trivial functional dependency $X \to Y$:
+1. $X$ is a superkey, **OR**
+2. Each attribute in $Y \setminus X$ is a **prime attribute** (member of some candidate key).
 
-### 2.4 Boyce-Codd Normal Form (BCNF) Verification Table
+A relation is in **BCNF** if for every non-trivial functional dependency $X \to Y$, $X$ is strictly a **superkey**.
 
-| Relation | Candidate Keys | Functional Dependencies ($X \to Y$) | Determinant $X$ is Superkey? | Normal Form Achieved |
-|:---|:---|:---|:---:|:---:|
-| `USERS` | $\{\text{id}\}$, $\{\text{username}\}$, $\{\text{email}\}$ | $\text{id} \to \text{all}$, $\text{username} \to \text{all}$, $\text{email} \to \text{all}$ | **Yes** | **BCNF** |
-| `VOICES` | $\{\text{id}\}$ | $\text{id} \to \{\text{label}, \text{gender}, \text{age\_band}, \text{language}, \text{reserved}\}$ | **Yes** | **BCNF** |
-| `NOVELS` | $\{\text{id}\}$ | $\text{id} \to \text{all}$ | **Yes** | **BCNF** |
-| `CHAPTERS` | $\{\text{id}\}$, $\{\text{novel\_id}, \text{chapter\_number}\}$ | $\text{id} \to \text{all}$, $\{\text{novel\_id}, \text{chapter\_number}\} \to \text{all}$ | **Yes** | **BCNF** |
-| `CHARACTERS` | $\{\text{id}\}$, $\{\text{novel\_id}, \text{canonical\_name}\}$ | $\text{id} \to \text{all}$, $\{\text{novel\_id}, \text{canonical\_name}\} \to \text{all}$ | **Yes** | **BCNF** |
-| `CHARACTER_ALIASES` | $\{\text{id}\}$, $\{\text{novel\_id}, \text{alias}\}$ | $\text{id} \to \text{all}$, $\{\text{novel\_id}, \text{alias}\} \to \text{all}$ | **Yes** | **BCNF** |
-| `SYNTHESIS_JOBS` | $\{\text{id}\}$ | $\text{id} \to \text{all}$ | **Yes** | **BCNF** |
-| `SEGMENT_AUDIO_CACHE` | $\{\text{text\_hash}, \text{voice\_hash}\}$ | $\{\text{text\_hash}, \text{voice\_hash}\} \to \text{all}$ | **Yes** | **BCNF** |
-| `PLAYBACK_HISTORY` | $\{\text{id}\}$, $\{\text{user\_id}, \text{novel\_id}\}$ | $\text{id} \to \text{all}$, $\{\text{user\_id}, \text{novel\_id}\} \to \text{all}$ | **Yes** | **BCNF** |
+* **Elimination of Transitive Voice Metadata**: Storing voice properties (label, gender, language) on characters would induce the transitive dependency: $\text{character\_id} \to \text{voice\_id} \to \{\text{label}, \text{gender}, \text{language}\}$. Factoring `VOICES` into an independent reference table eliminates this transitive dependency and update anomalies.
+* **Controlled Denormalization & 3NF in `CHARACTER_ALIASES`**:
+  * Inherited FD: $\text{character\_id} \to \text{novel\_id}$ (since each character belongs to a single novel).
+  * In `CHARACTER_ALIASES`, `character_id` is not a superkey (one character can have multiple aliases).
+  * However, $\text{novel\_id}$ is a **prime attribute** in candidate key $\{\text{novel\_id}, \text{alias}\}$.
+  * **Result**: Satisfies **3NF** (condition 2 met), but **violates BCNF**.
+  * **Architectural Rationale**: Storing `novel_id` directly in `CHARACTER_ALIASES` allows PostgreSQL to enforce `UNIQUE(novel_id, alias)` via a native declarative unique constraint, ensuring no alias collisions within a novel without requiring complex cross-table triggers.
+* **Controlled Denormalization & 3NF in `PLAYBACK_HISTORY`**:
+  * Inherited FD: $\text{chapter\_id} \to \text{novel\_id}$ (each chapter belongs to a single novel).
+  * In `PLAYBACK_HISTORY`, `chapter_id` is not a superkey (multiple users read the same chapter).
+  * However, $\text{novel\_id}$ is a **prime attribute** in candidate key $\{\text{user\_id}, \text{novel\_id}\}$.
+  * **Result**: Satisfies **3NF** (condition 2 met), but **violates BCNF**.
+  * **Architectural Rationale**: Retaining `novel_id` enables the business constraint `UNIQUE(user_id, novel_id)` (one playback bookmark per novel per user) and high-throughput query filtering `WHERE user_id = $1 AND novel_id = $2` without executing a join to `chapters`.
+* **Polymorphic Design in `SYNTHESIS_JOBS`**:
+  * `chapter_id` is nullable (NULL for `profile_novel` jobs, non-NULL for `synthesize_chapter` jobs).
+  * When `chapter_id IS NOT NULL`, $\text{chapter\_id} \to \text{novel\_id}$ exists, but `novel_id` is mandatory for whole-novel profiling jobs. Storing `novel_id` across all job types provides a unified polymorphic queue structure. Satisfies **3NF**.
+
+### 2.4 Table-by-Table Normalization & Constraint Verification Table
+
+| Relation | Candidate Keys (CK) | Prime Attributes | Functional Dependencies ($X \to Y$) | Determinant $X$ is Superkey? | Normal Form Achieved | Design Classification |
+|:---|:---|:---|:---|:---:|:---:|:---|
+| `USERS` | $\{\text{id}\}$, $\{\text{username}\}$, $\{\text{email}\}$ | $\text{id}, \text{username}, \text{email}$ | $\text{id} \to \text{all}$, $\text{username} \to \text{all}$, $\text{email} \to \text{all}$ | **Yes** | **BCNF** | Normalized |
+| `VOICES` | $\{\text{id}\}$ | $\text{id}$ | $\text{id} \to \text{all}$ | **Yes** | **BCNF** | Reference Catalog |
+| `NOVELS` | $\{\text{id}\}$ | $\text{id}$ | $\text{id} \to \text{all}$ | **Yes** | **BCNF** | Normalized |
+| `CHAPTERS` | $\{\text{id}\}$, $\{\text{novel\_id}, \text{chapter\_number}\}$ | $\text{id}, \text{novel\_id}, \text{chapter\_number}$ | $\text{id} \to \text{all}$, $\{\text{novel\_id}, \text{chapter\_number}\} \to \text{all}$ | **Yes** | **BCNF** | Normalized |
+| `CHARACTERS` | $\{\text{id}\}$, $\{\text{novel\_id}, \text{canonical\_name}\}$ | $\text{id}, \text{novel\_id}, \text{canonical\_name}$ | $\text{id} \to \text{all}$, $\{\text{novel\_id}, \text{canonical\_name}\} \to \text{all}$ | **Yes** | **BCNF** | Normalized |
+| `CHARACTER_ALIASES` | $\{\text{id}\}$, $\{\text{novel\_id}, \text{alias}\}$, $\{\text{character\_id}, \text{alias}\}$ | All attributes are prime | $\text{id} \to \text{all}$, $\{\text{novel\_id}, \text{alias}\} \to \text{all}$, $\text{character\_id} \to \text{novel\_id}$ | **No** (for $\text{char\_id} \to \text{novel\_id}$) | **3NF** | Controlled Denormalization for `UNIQUE(novel_id, alias)` |
+| `SYNTHESIS_JOBS` | $\{\text{id}\}$ | $\text{id}$ | $\text{id} \to \text{all}$ (transitive when $\text{chapter\_id} \ne \text{NULL}$) | **Yes** (on $\text{id}$) | **3NF** | Polymorphic Task Queue |
+| `SEGMENT_AUDIO_CACHE` | $\{\text{text\_hash}, \text{voice\_hash}\}$ | $\text{text\_hash}, \text{voice\_hash}$ | $\{\text{text\_hash}, \text{voice\_hash}\} \to \text{all}$ | **Yes** | **BCNF** | Derived Waveform Cache |
+| `PLAYBACK_HISTORY` | $\{\text{id}\}$, $\{\text{user\_id}, \text{novel\_id}\}$, $\{\text{user\_id}, \text{chapter\_id}\}$ | $\text{id}, \text{user\_id}, \text{novel\_id}, \text{chapter\_id}$ | $\text{id} \to \text{all}$, $\{\text{user\_id}, \text{novel\_id}\} \to \text{all}$, $\text{chapter\_id} \to \text{novel\_id}$ | **No** (for $\text{chap\_id} \to \text{novel\_id}$) | **3NF** | Controlled Denormalization for `UNIQUE(user_id, novel_id)` |
 
 ---
 
