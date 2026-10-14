@@ -55,30 +55,33 @@ export function useAudioSync(timeline = []) {
     return () => cancelAnimationFrame(rafRef.current);
   }, [isPlaying, syncLoop]);
 
+  const handlePlay = useCallback(() => setIsPlaying(true), []);
+  const handlePause = useCallback(() => setIsPlaying(false), []);
+  const handleEnded = useCallback(() => {
+    setIsPlaying(false);
+    setActiveSegmentId(-1);
+  }, []);
+  const handleLoadedMetadata = useCallback((eOrDur) => {
+    const dur = typeof eOrDur === 'number' ? eOrDur : (eOrDur?.currentTarget?.duration || 0);
+    if (dur > 0) setDuration(dur * 1000);
+  }, []);
+
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    const onPlay = () => setIsPlaying(true);
-    const onPause = () => setIsPlaying(false);
-    const onEnded = () => {
-      setIsPlaying(false);
-      setActiveSegmentId(-1);
-    };
-    const onLoadedMetadata = () => setDuration(audio.duration * 1000);
-
-    audio.addEventListener('play', onPlay);
-    audio.addEventListener('pause', onPause);
-    audio.addEventListener('ended', onEnded);
-    audio.addEventListener('loadedmetadata', onLoadedMetadata);
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('pause', handlePause);
+    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
 
     return () => {
-      audio.removeEventListener('play', onPlay);
-      audio.removeEventListener('pause', onPause);
-      audio.removeEventListener('ended', onEnded);
-      audio.removeEventListener('loadedmetadata', onLoadedMetadata);
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
     };
-  }, []);
+  }, [timeline, handlePlay, handlePause, handleEnded, handleLoadedMetadata]);
 
   const seekToSegment = useCallback(
     (segmentId) => {
@@ -131,5 +134,9 @@ export function useAudioSync(timeline = []) {
     pause,
     toggle,
     setPlaybackRate,
+    handlePlay,
+    handlePause,
+    handleEnded,
+    handleLoadedMetadata,
   };
 }

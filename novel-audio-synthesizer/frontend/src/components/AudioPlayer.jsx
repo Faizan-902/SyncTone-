@@ -17,6 +17,10 @@ export default function AudioPlayer({
   totalDurationMs,
   onToggle,
   onSetPlaybackRate,
+  onPlay,
+  onPause,
+  onEnded,
+  onLoadedMetadata,
 }) {
   const [speed, setSpeed] = useState(1.0);
 
@@ -40,7 +44,15 @@ export default function AudioPlayer({
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg px-4 py-3">
       {/* Hidden audio element */}
-      <audio ref={audioRef} src={audioUrl} preload="auto" />
+      <audio
+        ref={audioRef}
+        src={audioUrl}
+        preload="auto"
+        onPlay={onPlay}
+        onPause={onPause}
+        onEnded={onEnded}
+        onLoadedMetadata={onLoadedMetadata}
+      />
 
       <div className="max-w-4xl mx-auto flex items-center gap-4">
         {/* Play/Pause button */}

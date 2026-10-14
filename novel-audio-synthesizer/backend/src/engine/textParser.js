@@ -31,12 +31,16 @@ const SPEECH_TAG_BEFORE = new RegExp(
 
 function cleanSpeakerName(raw) {
   const noiseWords = new Set(['the', 'a', 'an', 'then', 'and', 'but', 'as', 'when', 'while', 'to']);
+  const pronouns = new Set(['he', 'she', 'they', 'it']);
   const words = raw.trim().split(/\s+/);
   while (words.length > 0 && noiseWords.has(words[0].toLowerCase())) {
     words.shift();
   }
   const name = words.join(' ').trim().replace(/[.,!?;:]+$/, '');
   if (!name || words.length > 3) return '';
+  if (pronouns.has(name.toLowerCase())) {
+    return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+  }
   if (name[0] === name[0].toLowerCase()) return '';
   return name;
 }

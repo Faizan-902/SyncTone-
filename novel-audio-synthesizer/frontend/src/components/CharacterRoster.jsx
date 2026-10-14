@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-export default function CharacterRoster({ chapterId, segments, onClose }) {
+export default function CharacterRoster({ chapterId, segments, onClose, onVoiceChange }) {
   const [characters, setCharacters] = useState([]);
   const [availableVoices, setAvailableVoices] = useState({});
 
@@ -34,7 +34,11 @@ export default function CharacterRoster({ chapterId, segments, onClose }) {
       await fetch('/api/voices/assign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ character_id: characterId, new_voice_id: newVoiceId }),
+        body: JSON.stringify({
+          character_id: characterId,
+          new_voice_id: newVoiceId,
+          chapter_id: chapterId,
+        }),
       });
 
       setCharacters((prev) =>
@@ -42,6 +46,10 @@ export default function CharacterRoster({ chapterId, segments, onClose }) {
           c.id === characterId ? { ...c, voiceId: newVoiceId } : c,
         ),
       );
+
+      if (onVoiceChange) {
+        onVoiceChange(characterId, newVoiceId);
+      }
     } catch (err) {
       console.error('Failed to assign voice:', err);
     }
@@ -82,7 +90,7 @@ export default function CharacterRoster({ chapterId, segments, onClose }) {
                   className="flex-1 text-xs px-2 py-1 bg-white border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500"
                 >
                   {Object.entries(availableVoices).map(([archetype, voiceId]) => (
-                    <option key={voiceId} value={voiceId}>
+                    <option key={archetype} value={voiceId}>
                       {archetype} ({voiceId})
                     </option>
                   ))}

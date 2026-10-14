@@ -225,7 +225,7 @@ def upgrade() -> None:
     # 10. Compatibility View: reading_progress -> playback_history
     op.execute("CREATE OR REPLACE VIEW reading_progress AS SELECT * FROM playback_history;")
 
-    # 11. Seed Default Kokoro-82M Voice Catalog
+    # 11. Seed Default Voice Catalog (Edge Neural + Kokoro Fallback)
     op.execute("""
         INSERT INTO voices (id, label, gender, age_band, language, reserved_narrator) VALUES
         ('am_adam', 'Adam (Narrator Default)', 'male', 'adult', 'en-us', true),
@@ -237,7 +237,15 @@ def upgrade() -> None:
         ('am_george', 'George (Deep & Mature)', 'male', 'elder', 'en-us', false),
         ('bm_george', 'George (British Received)', 'male', 'adult', 'en-gb', false),
         ('bf_emma', 'Emma (British Refined)', 'female', 'young', 'en-gb', false),
-        ('bm_daniel', 'Daniel (British Expressive)', 'male', 'young', 'en-gb', false)
+        ('bm_daniel', 'Daniel (British Expressive)', 'male', 'young', 'en-gb', false),
+        ('en-GB-RyanNeural', 'Ryan Neural (British Narrator)', 'male', 'adult', 'en-gb', true),
+        ('en-GB-ThomasNeural', 'Thomas Neural (Harry Potter)', 'male', 'young', 'en-gb', false),
+        ('en-GB-LibbyNeural', 'Libby Neural (Hermione Granger)', 'female', 'young', 'en-gb', false),
+        ('en-GB-AlfieNeural', 'Alfie Neural (Ron Weasley)', 'male', 'young', 'en-gb', false),
+        ('en-GB-ArthurNeural', 'Arthur Neural (Albus Dumbledore)', 'male', 'elder', 'en-gb', false),
+        ('en-GB-NoahNeural', 'Noah Neural (Severus Snape)', 'male', 'adult', 'en-gb', false),
+        ('en-GB-SoniaNeural', 'Sonia Neural (Prof. McGonagall)', 'female', 'adult', 'en-gb', false),
+        ('en-GB-OliverNeural', 'Oliver Neural (Draco Malfoy)', 'male', 'young', 'en-gb', false)
         ON CONFLICT (id) DO NOTHING;
     """)
 

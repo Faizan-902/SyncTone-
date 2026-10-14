@@ -39,4 +39,30 @@ router.post('/playback/progress', optionalAuth, async (req, res) => {
   }
 });
 
+// GET /api/playback/progress
+router.get('/playback/progress', optionalAuth, async (req, res) => {
+  const novel_id = req.query.novel_id;
+  const user_id = req.query.user_id || req.user?.id;
+
+  if (!user_id || !novel_id) {
+    return res.status(400).json({ error: 'user_id and novel_id query parameters are required' });
+  }
+
+  try {
+    const result = await pool.query(
+      'SELECT * FROM playback_history WHERE user_id = $1 AND novel_id = $2',
+      [user_id, novel_id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'No playback history found' });
+    }
+
+    return res.json({ progress: result.rows[0] });
+  } catch (err) {
+    console.error('[Playback] Error retrieving progress:', err.message);
+    return res.status(500).json({ error: 'Failed to retrieve playback progress' });
+  }
+});
+
 module.exports = router;

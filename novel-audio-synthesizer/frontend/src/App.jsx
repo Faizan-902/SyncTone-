@@ -20,7 +20,7 @@ export default function App() {
   // Check model availability on mount
   useEffect(() => {
     chapterActions.checkModels().then(setModelStatus);
-  }, [chapterActions]);
+  }, []);
 
   const handleUploadAndParse = async () => {
     if (!textInput.trim()) return;
@@ -204,6 +204,10 @@ export default function App() {
           totalDurationMs={chapterState.manifest.total_duration_ms}
           onToggle={audioSync.toggle}
           onSetPlaybackRate={audioSync.setPlaybackRate}
+          onPlay={audioSync.handlePlay}
+          onPause={audioSync.handlePause}
+          onEnded={audioSync.handleEnded}
+          onLoadedMetadata={audioSync.handleLoadedMetadata}
         />
       )}
 
@@ -213,6 +217,18 @@ export default function App() {
           chapterId={chapterState.chapterId || ''}
           segments={chapterState.parsed.segments}
           onClose={() => setShowRoster(false)}
+          onVoiceChange={(charId, newVoiceId) => {
+            chapterActions.setState((prev) => {
+              if (!prev.parsed?.segments) return prev;
+              const updatedSegments = prev.parsed.segments.map((s) =>
+                s.speaker_id === charId ? { ...s, assigned_voice_id: newVoiceId } : s
+              );
+              return {
+                ...prev,
+                parsed: { ...prev.parsed, segments: updatedSegments },
+              };
+            });
+          }}
         />
       )}
 

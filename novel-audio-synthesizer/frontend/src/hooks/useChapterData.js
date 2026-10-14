@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 const API_BASE = '/api';
 
@@ -100,8 +100,10 @@ export function useChapterData() {
     });
   }, []);
 
-  return [
-    state,
-    { uploadText, parseChapter, synthesizeChapter, checkModels, reset },
-  ];
+  const actions = useMemo(
+    () => ({ uploadText, parseChapter, synthesizeChapter, checkModels, reset, setState }),
+    [uploadText, parseChapter, synthesizeChapter, checkModels, reset]
+  );
+
+  return [state, actions];
 }

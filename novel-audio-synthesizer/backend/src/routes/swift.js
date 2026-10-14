@@ -116,7 +116,48 @@ router.get('/chapters/:id/audio', async (req, res) => {
     if (err.response && err.response.status === 401) {
       cachedSwiftToken = null;
     }
-    console.error('[SwiftProxy] Error streaming chapter audio:', err.message);
+    console.warn('[SwiftProxy] Swift unavailable or returned error, checking local fallback:', err.message);
+
+    // Fallback to local audio file if available
+    const fs = require('fs');
+    const path = require('path');
+    const audioPathMp3 = path.join(config.paths.outputDir, `${id}.mp3`);
+    const audioPathWav = path.join(config.paths.outputDir, `${id}.wav`);
+    const fallbackPath = fs.existsSync(audioPathMp3)
+      ? audioPathMp3
+      : (fs.existsSync(audioPathWav) ? audioPathWav : null);
+
+    if (fallbackPath) {
+      const stat = fs.statSync(fallbackPath);
+      const fileSize = stat.size;
+      const range = req.headers.range;
+      const contentType = fallbackPath.endsWith('.mp3') ? 'audio/mpeg' : 'audio/wav';
+
+      if (range) {
+        const parts = range.replace(/bytes=/, '').split('-');
+        const start = parseInt(parts[0], 10);
+        const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+        if (isNaN(start) || start >= fileSize || end >= fileSize || start > end) {
+          res.writeHead(416, { 'Content-Range': `bytes */${fileSize}` });
+          return res.end();
+        }
+        res.writeHead(206, {
+          'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+          'Accept-Ranges': 'bytes',
+          'Content-Length': end - start + 1,
+          'Content-Type': contentType,
+        });
+        return fs.createReadStream(fallbackPath, { start, end }).pipe(res);
+      } else {
+        res.writeHead(200, {
+          'Content-Length': fileSize,
+          'Content-Type': contentType,
+          'Accept-Ranges': 'bytes',
+        });
+        return fs.createReadStream(fallbackPath).pipe(res);
+      }
+    }
+
     return res.status(500).json({ error: 'Failed to stream audio from object storage' });
   }
 });

@@ -71,7 +71,7 @@ const SegmentSchema = new Schema(
     },
     source: {
       type: String,
-      enum: ['regex_rule', 'dependency_tree', 'llm_fallback', 'narrator_default', 'manual'],
+      enum: ['regex_rule', 'dependency_tree', 'llm_fallback', 'narrator_default', 'manual', 'unresolved'],
       default: 'narrator_default',
       alias: 'attribution_source',
     },
@@ -86,11 +86,12 @@ const SegmentSchema = new Schema(
 const TimelineEntrySchema = new Schema(
   {
     order: { type: Number, required: true },
+    segment_id: { type: Number, default: function () { return this.order; } },
     start_ms: { type: Number, required: true },
     end_ms: { type: Number, required: true },
     character_id: { type: String, default: null },
     voice_id: { type: String, required: true },
-    text: { type: String, required: true },
+    text: { type: String, default: '' },
   },
   { _id: false }
 );

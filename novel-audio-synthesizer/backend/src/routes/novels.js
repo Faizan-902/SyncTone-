@@ -88,13 +88,14 @@ router.post('/novels', optionalAuth, async (req, res) => {
     }
 
     // Verify added_by user exists in PostgreSQL
-    const userCheck = await pool.query('SELECT id FROM users WHERE id = $1', [added_by]);
+    const userCheck = await pool.query('SELECT id, role FROM users WHERE id = $1', [added_by]);
     if (userCheck.rows.length === 0) {
       return res.status(400).json({ error: `User with id '${added_by}' does not exist.` });
     }
 
-    // Role check if authenticated
-    if (req.user && req.user.role === 'reader') {
+    // Role check: neither authenticated readers nor target reader users may create novels
+    const effectiveRole = req.user?.role || userCheck.rows[0].role;
+    if (effectiveRole === 'reader') {
       return res.status(403).json({
         error: "Forbidden: role 'reader' cannot create novels. Only writers and admins may create novels.",
       });
