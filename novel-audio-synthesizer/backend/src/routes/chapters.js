@@ -386,8 +386,12 @@ router.post('/synthesize/:chapter_id', async (req, res) => {
     const total = chapterDoc.segments.length;
     const segmentAudios = [];
 
+    const activeAssignments = voiceProfiler.getAllAssignments();
+
     for (let i = 0; i < total; i++) {
       const seg = chapterDoc.segments[i];
+      const effectiveVoiceId = activeAssignments[seg.character_id] || seg.voice_id;
+
       broadcastProgress(chapter_id, {
         chapter_id,
         current_segment: i + 1,
@@ -398,12 +402,12 @@ router.post('/synthesize/:chapter_id', async (req, res) => {
 
       const result = await ttsEngine.synthesizeSegment(
         seg.text,
-        seg.voice_id
+        effectiveVoiceId
       );
 
       segmentAudios.push({
-        segment_id: `seg_${seg.order}`,
-        voice_id: seg.voice_id,
+        segment_id: seg.order,
+        voice_id: effectiveVoiceId,
         speaker_name: seg.character_id,
         audio_buffer: result.audio_buffer || result.pcm_buffer,
         pcm_buffer: result.pcm_buffer || result.audio_buffer,

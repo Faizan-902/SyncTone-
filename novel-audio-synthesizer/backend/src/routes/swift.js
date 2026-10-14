@@ -10,24 +10,32 @@ let cachedStorageUrl = null;
 let tokenExpiresAt = 0;
 let refreshPromise = null;
 
-async function getSwiftAuth() {
+async function getSwiftAuth(forceRefresh = false) {
   const now = Date.now();
-  if (cachedSwiftToken && cachedStorageUrl && now < tokenExpiresAt - 300000) {
+  if (!forceRefresh && cachedSwiftToken && cachedStorageUrl && now < tokenExpiresAt - 300000) {
     return { token: cachedSwiftToken, storageUrl: cachedStorageUrl };
   }
   if (!refreshPromise) {
     refreshPromise = (async () => {
-      const res = await axios.get(config.swift.authUrl, {
-        headers: {
-          'X-Storage-User': config.swift.username,
-          'X-Storage-Pass': config.swift.key,
-        },
-      });
-      cachedSwiftToken = res.headers['x-auth-token'];
-      cachedStorageUrl = res.headers['x-storage-url'] || 'http://localhost:8080/v1/AUTH_test';
-      tokenExpiresAt = Date.now() + 3600000;
-      refreshPromise = null;
-      return { token: cachedSwiftToken, storageUrl: cachedStorageUrl };
+      try {
+        const res = await axios.get(config.swift.authUrl, {
+          headers: {
+            'X-Storage-User': config.swift.username,
+            'X-Storage-Pass': config.swift.key,
+          },
+          timeout: 5000,
+        });
+        cachedSwiftToken = res.headers['x-auth-token'];
+        cachedStorageUrl = res.headers['x-storage-url'] || 'http://localhost:8080/v1/AUTH_test';
+        const ttlSec = parseInt(
+          res.headers['x-auth-token-expires'] || res.headers['x-token-expires'] || '3600',
+          10
+        );
+        tokenExpiresAt = Date.now() + ttlSec * 1000;
+        return { token: cachedSwiftToken, storageUrl: cachedStorageUrl };
+      } finally {
+        refreshPromise = null;
+      }
     })();
   }
   return refreshPromise;
@@ -52,20 +60,47 @@ router.get('/chapters/:id/audio', async (req, res) => {
       return res.status(400).json({ error: 'Audio not synthesized yet' });
     }
 
-    const { token, storageUrl } = await getSwiftAuth();
-    const swiftUrl = `${storageUrl}/${config.swift.containerAudio}/${swift_audio_object}`;
+    const fetchSwiftStream = async (forceTokenRefresh = false) => {
+      const { token, storageUrl } = await getSwiftAuth(forceTokenRefresh);
+      const swiftUrl = `${storageUrl}/${config.swift.containerAudio}/${swift_audio_object}`;
 
-    const rangeHeader = req.headers.range;
-    const swiftHeaders = { 'X-Auth-Token': token };
-    if (rangeHeader) swiftHeaders['Range'] = rangeHeader;
+      const rangeHeader = req.headers.range;
+      const swiftHeaders = { 'X-Auth-Token': token };
+      if (rangeHeader) swiftHeaders['Range'] = rangeHeader;
 
-    const swiftRes = await axios.get(swiftUrl, {
-      headers: swiftHeaders,
-      responseType: 'stream',
-      validateStatus: (s) => s === 200 || s === 206,
-    });
+      return axios.get(swiftUrl, {
+        headers: swiftHeaders,
+        responseType: 'stream',
+        validateStatus: (s) => s === 200 || s === 206 || s === 416,
+      });
+    };
+
+    let swiftRes;
+    try {
+      swiftRes = await fetchSwiftStream(false);
+    } catch (err) {
+      if (err.response && err.response.status === 401) {
+        cachedSwiftToken = null;
+        swiftRes = await fetchSwiftStream(true);
+      } else {
+        throw err;
+      }
+    }
+
+    // If Swift returns 401 directly without throwing
+    if (swiftRes.status === 401) {
+      cachedSwiftToken = null;
+      swiftRes = await fetchSwiftStream(true);
+    }
 
     res.status(swiftRes.status);
+    if (swiftRes.status === 416) {
+      if (swiftRes.headers['content-range']) {
+        res.setHeader('Content-Range', String(swiftRes.headers['content-range']));
+      }
+      return res.end();
+    }
+
     if (swiftRes.headers['content-range']) {
       res.setHeader('Content-Range', String(swiftRes.headers['content-range']));
     }
