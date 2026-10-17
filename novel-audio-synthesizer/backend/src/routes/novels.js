@@ -87,14 +87,25 @@ router.post('/novels', optionalAuth, async (req, res) => {
       });
     }
 
-    // Verify added_by user exists in PostgreSQL
-    const userCheck = await pool.query('SELECT id, role FROM users WHERE id = $1', [added_by]);
-    if (userCheck.rows.length === 0) {
+    // Verify added_by user exists in PostgreSQL (via Prisma ORM layered over PG, with pg pool fallback)
+    const { prisma } = require('../db');
+    let targetUser = null;
+    if (prisma.user) {
+      targetUser = await prisma.user.findUnique({
+        where: { id: added_by },
+        select: { id: true, role: true },
+      }).catch(() => null);
+    }
+    if (!targetUser) {
+      const userCheck = await pool.query('SELECT id, role FROM users WHERE id = $1', [added_by]);
+      targetUser = userCheck.rows[0] || null;
+    }
+    if (!targetUser) {
       return res.status(400).json({ error: `User with id '${added_by}' does not exist.` });
     }
 
     // Role check: neither authenticated readers nor target reader users may create novels
-    const effectiveRole = req.user?.role || userCheck.rows[0].role;
+    const effectiveRole = req.user?.role || targetUser.role;
     if (effectiveRole === 'reader') {
       return res.status(403).json({
         error: "Forbidden: role 'reader' cannot create novels. Only writers and admins may create novels.",

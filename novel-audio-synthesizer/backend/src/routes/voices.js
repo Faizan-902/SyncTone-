@@ -50,10 +50,16 @@ router.post('/voices/assign', async (req, res) => {
     }
   }
 
-  // Update PostgreSQL characters if connected
+  // Update PostgreSQL characters if connected (Prisma ORM + pg pool expression match)
   try {
-    const { pool } = require('../db');
+    const { pool, prisma } = require('../db');
     try {
+      if (prisma.character) {
+        await prisma.character.updateMany({
+          where: { canonical_name: character_id },
+          data: { voice_id: effectiveVoiceId, updated_at: new Date() },
+        }).catch(() => {});
+      }
       await pool.query(
         'UPDATE characters SET voice_id = $1, updated_at = now() WHERE id::text = $2 OR canonical_name = $2 OR LOWER(REPLACE(canonical_name, \' \', \'_\')) = LOWER($2)',
         [effectiveVoiceId, character_id]
