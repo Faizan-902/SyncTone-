@@ -313,14 +313,19 @@ async function runTests() {
        VALUES ($1, $2, 'Atomic Rollback Test Novel', 'Must rollback', 'verified');`,
       [testOrphanNovelId, writerUser.id]
     );
-    // Violate check constraint on synthesis_jobs: profile_novel must have chapter_id IS NULL
+    // Violate target subtype trigger: assign synthesize_chapter target to profile_novel job
+    const badJobRes = await testClient.query(
+      `INSERT INTO synthesis_jobs (requested_by, job_type)
+       VALUES ($1, 'profile_novel') RETURNING id;`,
+      [writerUser.id]
+    );
     await testClient.query(
-      `INSERT INTO synthesis_jobs (novel_id, chapter_id, requested_by, job_type)
-       VALUES ($1, '00000000-0000-0000-0000-000000000000', $2, 'profile_novel');`,
-      [testOrphanNovelId, writerUser.id]
+      `INSERT INTO chapter_synthesis_job_targets (job_id, chapter_id)
+       VALUES ($1, '00000000-0000-0000-0000-000000000000');`,
+      [badJobRes.rows[0].id]
     );
     await testClient.query('COMMIT');
-    throw new Error('Expected invalid synthesis job to fail transaction');
+    throw new Error('Expected invalid synthesis job target to fail transaction');
   } catch (err) {
     await testClient.query('ROLLBACK').catch(() => {});
   } finally {
@@ -376,10 +381,11 @@ async function runTests() {
   // Cross-store verification
   const pgChapterCheck = await pool.query('SELECT * FROM chapters WHERE id = $1', [ingestedChapterId]);
   if (pgChapterCheck.rows.length === 0) throw new Error('PostgreSQL chapter record missing');
-  const pgJobCheck = await pool.query('SELECT * FROM synthesis_jobs WHERE chapter_id = $1', [
-    ingestedChapterId,
-  ]);
-  if (pgJobCheck.rows.length === 0) throw new Error('PostgreSQL synthesis_jobs record missing');
+  const pgJobCheck = await pool.query(
+    'SELECT j.*, cs.chapter_id FROM synthesis_jobs j JOIN chapter_synthesis_job_targets cs ON j.id = cs.job_id WHERE cs.chapter_id = $1',
+    [ingestedChapterId]
+  );
+  if (pgJobCheck.rows.length === 0) throw new Error('PostgreSQL synthesis_jobs / chapter target record missing');
   const mongoDocCheck = await Chapter.findOne({ pg_chapter_id: ingestedChapterId });
   if (!mongoDocCheck) throw new Error('MongoDB chapter document missing');
   if (mongoDocCheck.raw_text !== chapterText) throw new Error('MongoDB raw text mismatch');
@@ -474,7 +480,10 @@ async function runTests() {
     position_ms: 6500,
   });
   const histCheck = await pool.query(
-    'SELECT * FROM playback_history WHERE user_id = $1 AND novel_id = $2',
+    `SELECT h.id, h.user_id, h.novel_id, p.chapter_id, p.position_ms
+     FROM playback_history h
+     JOIN playback_positions p ON h.id = p.history_id
+     WHERE h.user_id = $1 AND h.novel_id = $2`,
     [writerUser.id, createdNovel.id]
   );
   if (histCheck.rows.length !== 1 || histCheck.rows[0].position_ms !== 6500) {

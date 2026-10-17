@@ -128,14 +128,24 @@ router.post('/novels', optionalAuth, async (req, res) => {
 
       const createdNovel = result.rows[0];
 
-      // Enqueue profile_novel job into synthesis_jobs within the same transaction
+      // Enqueue profile_novel job into synthesis_jobs and novel_profile_job_targets within the same transaction
       const jobRes = await client.query(
         `
-        INSERT INTO synthesis_jobs (novel_id, chapter_id, requested_by, job_type, status, progress_pct)
-        VALUES ($1, NULL, $2, 'profile_novel', 'queued', 0.0)
+        INSERT INTO synthesis_jobs (requested_by, job_type, status, progress_pct)
+        VALUES ($1, 'profile_novel', 'queued', 0.0)
         RETURNING id, status, job_type;
       `,
-        [createdNovel.id, added_by]
+        [added_by]
+      );
+
+      const createdJob = jobRes.rows[0];
+
+      await client.query(
+        `
+        INSERT INTO novel_profile_job_targets (job_id, novel_id)
+        VALUES ($1, $2);
+      `,
+        [createdJob.id, createdNovel.id]
       );
 
       await client.query('COMMIT');
@@ -143,7 +153,10 @@ router.post('/novels', optionalAuth, async (req, res) => {
       return res.status(201).json({
         message: 'Novel created successfully',
         novel: createdNovel,
-        job: jobRes.rows[0],
+        job: {
+          ...createdJob,
+          novel_id: createdNovel.id,
+        },
       });
     } catch (err) {
       await client.query('ROLLBACK').catch(() => {});
