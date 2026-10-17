@@ -1,10 +1,10 @@
-"""0003_enforce_4nf_5nf
+"""0003_enforce_4nf
 
-Revision ID: 0003_enforce_4nf_5nf
+Revision ID: 0003_enforce_4nf
 Revises: 0002_enforce_strict_3nf
 Create Date: 2026-10-14 14:20:00.000000
 
-Decomposes relations to achieve 4NF and 5NF across the entire schema:
+Decomposes relations to enforce Fourth Normal Form (4NF) across the entire schema:
 1. Decomposes playback_history into:
    - playback_history (id PK, user_id FK, novel_id FK, created_at) with UNIQUE(user_id, novel_id)
    - playback_positions (history_id PK FK, chapter_id FK, segment_order, position_ms, updated_at)
@@ -26,7 +26,7 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-revision: str = "0003_enforce_4nf_5nf"
+revision: str = "0003_enforce_4nf"
 down_revision: Union[str, None] = "0002_enforce_strict_3nf"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None

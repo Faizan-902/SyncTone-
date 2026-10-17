@@ -299,12 +299,12 @@
   <text x="1516.6239500000001" y="1044.6999999999998" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="1516.6239500000001" dy="-3.9000000000000012">D7: Segment Audio Cache</tspan><tspan x="1516.6239500000001" dy="16.900000000000002">(Postgres Index + PCM Volume)</tspan></text>
 </g>
 <g class="node" data-id="D8" data-label="D8: Playback History &amp; Positions
-(PostgreSQL 16 - 5NF)" data-shape="cylinder">
+(PostgreSQL 16 - 4NF)" data-shape="cylinder">
   <rect x="766.5480000000003" y="578.3000000000001" width="164.95600000000002" height="53.80000000000001" fill="var(--_node-fill)" stroke="none" />
   <line x1="766.5480000000003" y1="578.3000000000001" x2="766.5480000000003" y2="632.1000000000001" stroke="var(--_node-stroke)" stroke-width="0.75" />
   <line x1="931.5040000000004" y1="578.3000000000001" x2="931.5040000000004" y2="632.1000000000001" stroke="var(--_node-stroke)" stroke-width="0.75" />
   <ellipse cx="849.0260000000003" cy="632.1000000000001" rx="82.47800000000001" ry="7" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
   <ellipse cx="849.0260000000003" cy="578.3000000000001" rx="82.47800000000001" ry="7" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-  <text x="849.0260000000003" y="605.2" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="849.0260000000003" dy="-3.9000000000000012">D8: Playback History &amp; Positions</tspan><tspan x="849.0260000000003" dy="16.900000000000002">(PostgreSQL 16 - 5NF)</tspan></text>
+  <text x="849.0260000000003" y="605.2" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="849.0260000000003" dy="-3.9000000000000012">D8: Playback History &amp; Positions</tspan><tspan x="849.0260000000003" dy="16.900000000000002">(PostgreSQL 16 - 4NF)</tspan></text>
 </g>
 </svg>

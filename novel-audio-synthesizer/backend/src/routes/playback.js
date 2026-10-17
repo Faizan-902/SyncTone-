@@ -23,7 +23,7 @@ router.post('/playback/progress', optionalAuth, async (req, res) => {
   try {
     await client.query('BEGIN');
 
-    // 1. Atomic bookmark upsert in playback_history (5NF)
+    // 1. Atomic bookmark upsert in playback_history (4NF)
     const historyRes = await client.query(
       `
       INSERT INTO playback_history (user_id, novel_id)
@@ -36,7 +36,7 @@ router.post('/playback/progress', optionalAuth, async (req, res) => {
     );
     const historyRow = historyRes.rows[0];
 
-    // 2. Atomic position upsert in playback_positions (5NF)
+    // 2. Atomic position upsert in playback_positions (4NF)
     const positionRes = await client.query(
       `
       INSERT INTO playback_positions (history_id, chapter_id, segment_order, position_ms, updated_at)

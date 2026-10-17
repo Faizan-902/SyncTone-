@@ -343,10 +343,10 @@ class Character(Base):
 
 
 # ==============================================================================
-# 6. Character Aliases Table (Normalization for Attribution Resolution - 5NF)
+# 6. Character Aliases Table (Normalization for Attribution Resolution - 4NF)
 # ==============================================================================
 class CharacterAlias(Base):
-    """Maps name variations (e.g., 'Harry', 'Potter', 'Mr Potter') to canonical character (Strict 5NF)."""
+    """Maps name variations (e.g., 'Harry', 'Potter', 'Mr Potter') to canonical character (Strict 4NF)."""
     __tablename__ = "character_aliases"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -534,10 +534,10 @@ class SegmentAudioCache(Base):
 
 
 # ==============================================================================
-# 9. Playback History Table (User Resume Progress Bookmark - 5NF)
+# 9. Playback History Table (User Resume Progress Bookmark - 4NF)
 # ==============================================================================
 class PlaybackHistory(Base):
-    """Persistent playback state bookmark tracked per user per novel (Strict 5NF)."""
+    """Persistent playback state bookmark tracked per user per novel (Strict 4NF)."""
     __tablename__ = "playback_history"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -594,7 +594,7 @@ class PlaybackHistory(Base):
 
 
 class PlaybackPosition(Base):
-    """Fine-grained playback position offset scoped to a bookmark (Strict 5NF)."""
+    """Fine-grained playback position offset scoped to a bookmark (Strict 4NF)."""
     __tablename__ = "playback_positions"
 
     history_id: Mapped[uuid.UUID] = mapped_column(

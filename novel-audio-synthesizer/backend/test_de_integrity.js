@@ -317,7 +317,7 @@ async function runDEIntegrityTests() {
     [char1Id, testNovelId, char2Id]
   );
 
-  // 4NF/5NF Normalized character_aliases (novel_id removed, FK character_id -> characters.id)
+  // 4NF Normalized character_aliases (novel_id removed, FK character_id -> characters.id)
   await pool.query(
     `INSERT INTO character_aliases (character_id, alias)
      VALUES ($1, 'The Consulting Detective');`,
@@ -372,7 +372,7 @@ async function runDEIntegrityTests() {
   }
 
   // Cross-novel playback rejection:
-  // In 4NF/5NF, playback_positions references chapter_id, validated against playback_history.novel_id
+  // In 4NF, playback_positions references chapter_id, validated against playback_history.novel_id
   const pbNovel2 = await pool.query(
     `INSERT INTO playback_history (user_id, novel_id) VALUES ($1, $2) RETURNING id;`,
     [testUserId, testNovel2Id]
@@ -1052,8 +1052,8 @@ async function runDEIntegrityTests() {
   const catalogRes = await pool.query(catalogQuery, [testNovelId]);
   console.table(catalogRes.rows);
 
-  // 4.2 Playback History & Position Atomic Upsert Query (4NF/5NF Decomposed)
-  console.log('  --- [Query 2: Playback History & Position Atomic Upsert (4NF/5NF Decomposed)] ---');
+  // 4.2 Playback History & Position Atomic Upsert Query (4NF Decomposed)
+  console.log('  --- [Query 2: Playback History & Position Atomic Upsert (4NF Decomposed)] ---');
   async function upsertPlayback(uid, nid, cid, seg, pos) {
     const c = await pool.connect();
     try {
@@ -1103,7 +1103,7 @@ async function runDEIntegrityTests() {
   console.log('  Atomic Upsert Update:');
   console.table([upsertRes2]);
 
-  // Read through 5NF projection view v_playback_history
+  // Read through 4NF projection view v_playback_history
   const viewRes = await pool.query('SELECT * FROM v_playback_history WHERE user_id = $1 AND novel_id = $2', [testUserId, testNovelId]);
   console.log('  Read from v_playback_history projection view:');
   console.table(viewRes.rows);

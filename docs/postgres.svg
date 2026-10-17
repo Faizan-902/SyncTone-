@@ -346,7 +346,7 @@
   <text x="1707.61" y="689.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">uuid</tspan></text>
   <text x="1856.3" y="689.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">character_id</tspan></text>
   </g>
-  <g><title>UK(character_id, alias) (4NF/5NF Normalized)</title>
+  <g><title>UK(character_id, alias) (4NF Normalized)</title>
   <text x="1679.3" y="711.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar</tspan></text>
   <text x="1856.3" y="711.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">alias</tspan></text>
   </g>

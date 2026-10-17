@@ -1,4 +1,4 @@
-# SyncTone — Data Engineering Evidence & 4NF / 5NF Normalization Specification
+# SyncTone — Data Engineering Evidence & 4NF Normalization Specification
 **Authoritative Architectural Proof & Higher Normal Form Normalization Artifact**
 
 ---
@@ -6,7 +6,7 @@
 ## 1. Polyglot Architecture & Entity-Relationship (ER) Model
 
 SyncTone implements a **Polyglot Persistence Architecture**:
-* **PostgreSQL 16**: Sole relational authority enforcing strict Fourth Normal Form (4NF) and Fifth Normal Form (5NF) across **all 12 application relations**, transactional atomicity, referential integrity across decomposed hierarchies, and high-concurrency queue claims via `FOR UPDATE SKIP LOCKED`.
+* **PostgreSQL 16**: Sole relational authority enforcing strict Fourth Normal Form (4NF) across **all 12 application relations**, transactional atomicity, referential integrity across decomposed hierarchies, and high-concurrency queue claims via `FOR UPDATE SKIP LOCKED`.
 * **MongoDB 7.0**: Document store optimized for deep hierarchical chapter prose, phoneme arrays, and derived gapless playback timeline manifests. Linked strictly via `pg_chapter_id` (UUID unique index).
 
 ```mermaid
@@ -167,7 +167,7 @@ erDiagram
 
 ---
 
-## 2. Formal Normalization Theory & Definitions (1NF to 5NF)
+## 2. Formal Normalization Theory & Definitions (1NF to 4NF)
 
 ### 2.1 Theoretical Framework
 
@@ -185,11 +185,7 @@ erDiagram
   * An MVD $X \twoheadrightarrow Y$ is **trivial** if $Y \subseteq X$ or $X \cup Y = R$.
   * Every functional dependency $X \to Y$ is an MVD ($X \twoheadrightarrow Y$).
 * **Fourth Normal Form (4NF)**: A relation $R$ is in 4NF if and only if for every non-trivial multivalued dependency $X \twoheadrightarrow Y$ holding on $R$, $X$ is a **superkey** of $R$.
-* **Join Dependency (JD)**: A join dependency $\bowtie [R_1, R_2, \dots, R_k]$ holds on $R$ (where $\bigcup_{i=1}^k R_i = R$) if and only if:
-  $$R = \pi_{R_1}(R) \bowtie \pi_{R_2}(R) \bowtie \dots \bowtie \pi_{R_k}(R)$$
-  * A JD is **trivial** if some $R_i = R$.
-* **Fifth Normal Form (5NF / Project-Join Normal Form)**: A relation $R$ is in 5NF if and only if every non-trivial join dependency $\bowtie [R_1, R_2, \dots, R_k]$ holding on $R$ is **implied by the candidate keys** of $R$ (i.e., every projection $R_i$ contains a candidate key/superkey of $R$, or no lossless multi-way decomposition exists that does not include a candidate key).
-  * **Critical Methodological Distinction**: BCNF does **not** automatically prove 5NF. Even in BCNF, relations with composite candidate keys or non-trivial cyclic constraints can fail 5NF if they are losslessly decomposable into 3 or more projections without any projection containing a candidate key. Therefore, every relation below is explicitly analyzed for non-trivial MVDs and multi-way JDs.
+* **Scope Boundary**: 4NF is the rigorous terminal standard for the SyncTone relational architecture, ensuring that all non-trivial multivalued dependencies (MVDs) are functional dependencies onto candidate keys, eliminating redundant multi-attribute associations.
 
 ---
 
@@ -210,7 +206,7 @@ erDiagram
   * $\text{email} \to R$
 * **MVD Analysis**: In the user account domain, each user tuple possesses exactly one scalar value for role, password hash, created timestamp, and updated timestamp. There are no independent multi-valued facts (e.g. no repeating lists of roles or addresses). Any potential MVD $X \twoheadrightarrow Y$ is a degenerate functional dependency whose determinant $X \in \{\text{id}, \text{username}, \text{email}\}$ is a superkey of $R$. Thus, no non-trivial MVD violates 4NF.
 * **JD Analysis**: Consider any proposed 3-way or $k$-way decomposition $\bowtie [R_1, \dots, R_k]$. If no projection $R_i$ contains a candidate key ($\text{id}$, $\text{username}$, or $\text{email}$), then joining across non-key attributes (`role`, `password_hash`, etc.) produces Cartesian cross-products and spurious user rows. Therefore, every lossless join dependency requires projecting onto a candidate key. Every non-trivial JD is implied by candidate keys.
-* **Highest Normal Form Proven**: **5NF** (and BCNF, 4NF).
+* **Highest Normal Form Proven**: **4NF** (and BCNF).
 
 ---
 
@@ -223,7 +219,7 @@ erDiagram
 * **Functional Dependencies**: $\text{id} \to R$.
 * **MVD Analysis**: A TTS voice identity uniquely determines its acoustic metadata. Non-key attributes are mutually dependent single-valued facts. No independent multivalued dependencies exist. The determinant $\{\text{id}\}$ is a superkey. Satisfies 4NF.
 * **JD Analysis**: Any decomposition of `voices` omitting `id` cannot reconstruct the voice catalog without generating invalid combinations of label, gender, and language. Every lossless decomposition requires `id`. All JDs are implied by $CK_1$.
-* **Highest Normal Form Proven**: **5NF** (and BCNF, 4NF).
+* **Highest Normal Form Proven**: **4NF** (and BCNF).
 
 ---
 
@@ -236,7 +232,7 @@ erDiagram
 * **Functional Dependencies**: $\text{id} \to R$.
 * **MVD Analysis**: Related collections (chapters, cast characters, and queue jobs) are normalized into external relations. Within `novels`, all attributes describe the novel entity itself with single-valued scalars. There are no independent multivalued facts. Satisfies 4NF.
 * **JD Analysis**: No non-trivial cyclic join dependency $\bowtie [R_1, R_2, R_3]$ exists among author, title, channel, and status. Reconstructing a novel losslessly requires the unique identifier `id`. Every JD is implied by $CK_1$.
-* **Highest Normal Form Proven**: **5NF** (and BCNF, 4NF).
+* **Highest Normal Form Proven**: **4NF** (and BCNF).
 
 ---
 
@@ -255,7 +251,7 @@ erDiagram
 * **JD Analysis**: Consider a candidate 3-way decomposition:
   $R_1(\text{novel\_id}, \text{chapter\_number}, \text{title})$, $R_2(\text{chapter\_number}, \text{status}, \text{total\_duration\_ms})$, $R_3(\text{novel\_id}, \text{status}, \text{total\_duration\_ms})$.
   In domain semantics, multiple novels have chapter number 1. Joining $R_1 \bowtie R_2$ on `chapter_number` generates cross-novel spurious combinations of titles and durations. The composite candidate key $\{\text{novel\_id}, \text{chapter\_number}\}$ cannot be separated without loss of information. Every lossless decomposition requires projecting onto $CK_1$ or $CK_2$. Hence, all JDs are implied by candidate keys.
-* **Highest Normal Form Proven**: **5NF** (and BCNF, 4NF).
+* **Highest Normal Form Proven**: **4NF** (and BCNF).
 
 ---
 
@@ -272,11 +268,11 @@ erDiagram
   * $\{\text{novel\_id}, \text{canonical\_name}\} \to R$
 * **MVD Analysis**: Character aliases were isolated into `character_aliases`. Within `characters`, each character entity possesses a single voice assignment, single speed multiplier, single temperament, and single narrator flag. No independent multivalued facts exist. Every MVD determinant is a superkey. Satisfies 4NF.
 * **JD Analysis**: Any projection omitting `id` or `(novel_id, canonical_name)` fails to preserve character identity across different novels that share common character names (e.g. "Doctor"). Any lossless join requires projecting onto a candidate key. All JDs are implied by candidate keys.
-* **Highest Normal Form Proven**: **5NF** (and BCNF, 4NF).
+* **Highest Normal Form Proven**: **4NF** (and BCNF).
 
 ---
 
-### 6. `character_aliases` (Decomposed for 4NF & 5NF)
+### 6. `character_aliases` (Decomposed for 4NF)
 * **Attributes**: `id` (UUID, NOT NULL), `character_id` (UUID, NOT NULL, FK to `characters`), `alias` (VARCHAR(100), NOT NULL).
 * **Declared Constraints**:
   * `PRIMARY KEY (id)`
@@ -286,7 +282,7 @@ erDiagram
   * Update Trigger: `fn_check_character_novel_update()` on `characters` verifying no alias collision occurs in target novel upon character reassignment.
 * **Decomposition Justification**:
   * In Sprint 1 (3NF), `character_aliases` contained redundant attribute `novel_id`. The FD $\text{character\_id} \to \text{novel\_id}$ violated BCNF because $\text{character\_id}$ is not a superkey of `character_aliases`.
-  * In 4NF/5NF, `novel_id` is **dropped entirely** from `character_aliases`.
+  * In 4NF, `novel_id` is **dropped entirely** from `character_aliases`.
 * **Candidate Keys**:
   * $CK_1 = \{\text{id}\}$
   * $CK_2 = \{\text{character\_id}, \text{alias}\}$
@@ -299,7 +295,7 @@ erDiagram
 * **JD Analysis**: Any ternary decomposition:
   $R_1(\text{id}, \text{character\_id})$, $R_2(\text{character\_id}, \text{alias})$, $R_3(\text{id}, \text{alias})$.
   Notice that $R_2$ is the candidate key $CK_2$, and $R_1, R_3$ contain candidate key $CK_1$ (`id`). Any lossless join requires projecting onto either $CK_1$ or $CK_2$. No join dependency exists that is not implied by candidate keys.
-* **Highest Normal Form Proven**: **5NF** (and BCNF, 4NF).
+* **Highest Normal Form Proven**: **4NF** (and BCNF).
 
 ---
 
@@ -312,7 +308,7 @@ erDiagram
 * **Functional Dependencies**: $\text{id} \to R$.
 * **MVD Analysis**: Target attributes were decomposed into subtype relations (`novel_profile_job_targets` and `chapter_synthesis_job_targets`). `synthesis_jobs` exclusively tracks the lifecycle of an asynchronous queue task. All non-key attributes are single-valued status indicators. No independent multivalued facts exist. Satisfies 4NF.
 * **JD Analysis**: No subset of execution attributes exhibits an independent cyclic relationship. Lossless reconstruction strictly requires `id`. Every non-trivial JD is implied by candidate keys.
-* **Highest Normal Form Proven**: **5NF** (and BCNF, 4NF).
+* **Highest Normal Form Proven**: **4NF** (and BCNF).
 
 ---
 
@@ -324,8 +320,8 @@ erDiagram
 * **Non-Prime Attributes**: $\{\text{novel\_id}\}$
 * **Functional Dependencies**: $\text{job\_id} \to \text{novel\_id}$.
 * **MVD Analysis**: Binary relation. In any binary relation $R(A, B)$, all MVDs are trivial ($A \twoheadrightarrow B$ is trivial because $A \cup B = R$). Trivially satisfies 4NF.
-* **JD Analysis**: Binary relations cannot be decomposed into 3 or more non-trivial projections. Trivially satisfies 5NF.
-* **Highest Normal Form Proven**: **5NF** (and BCNF, 4NF).
+* **JD Analysis**: Binary relations cannot be decomposed into 3 or more non-trivial projections. Trivially satisfies 4NF.
+* **Highest Normal Form Proven**: **4NF** (and BCNF).
 
 ---
 
@@ -337,8 +333,8 @@ erDiagram
 * **Non-Prime Attributes**: $\{\text{chapter\_id}\}$
 * **Functional Dependencies**: $\text{job\_id} \to \text{chapter\_id}$.
 * **MVD Analysis**: Binary relation. All MVDs are trivial. Trivially satisfies 4NF.
-* **JD Analysis**: Binary relation. Trivially satisfies 5NF.
-* **Highest Normal Form Proven**: **5NF** (and BCNF, 4NF).
+* **JD Analysis**: Binary relation. Trivially satisfies 4NF.
+* **Highest Normal Form Proven**: **4NF** (and BCNF).
 
 ---
 
@@ -350,8 +346,8 @@ erDiagram
 * **Non-Prime Attributes**: All other 4 attributes.
 * **Functional Dependencies**: $\{\text{text\_hash}, \text{voice\_hash}\} \to R$.
 * **MVD Analysis**: Audio waveform synthesis requires both text and voice jointly. Non-key caching attributes (`local_pcm_path`, `n_samples`, `sample_rate`, `last_used_at`) depend on the compound pair $(\text{text\_hash}, \text{voice\_hash})$. There are no independent multivalued dependencies. Satisfies 4NF.
-* **JD Analysis**: Decomposing into projections $(\text{text\_hash}, \text{local\_pcm\_path})$ and $(\text{voice\_hash}, \text{local\_pcm\_path})$ would generate spurious cache hits because the PCM audio path is valid ONLY for that specific text AND voice combination. The candidate key must be present in any lossless join. Satisfies 5NF.
-* **Highest Normal Form Proven**: **5NF** (and BCNF, 4NF).
+* **JD Analysis**: Decomposing into projections $(\text{text\_hash}, \text{local\_pcm\_path})$ and $(\text{voice\_hash}, \text{local\_pcm\_path})$ would generate spurious cache hits because the PCM audio path is valid ONLY for that specific text AND voice combination. The candidate key must be present in any lossless join. Satisfies 4NF.
+* **Highest Normal Form Proven**: **4NF** (and BCNF).
 
 ---
 
@@ -365,7 +361,7 @@ erDiagram
   * Update Trigger: `fn_check_playback_history_novel_update()` rejects updating `novel_id` if any existing child position chapter belongs to a different novel.
 * **Decomposition Justification**:
   * In Sprint 1 (3NF), `playback_history` stored `(user_id, novel_id, chapter_id, segment_order, position_ms, updated_at)`. The dependency $\text{chapter\_id} \to \text{novel\_id}$ existed where $\text{chapter\_id}$ was not a superkey, violating BCNF and 4NF.
-  * In 4NF/5NF, `chapter_id`, `segment_order`, `position_ms`, and `updated_at` are **decomposed into `playback_positions`**.
+  * In 4NF, `chapter_id`, `segment_order`, `position_ms`, and `updated_at` are **decomposed into `playback_positions`**.
   * `playback_history` exclusively models the **bookmark identity**: a user's bookmark on a novel.
   * `updated_at` was removed from `playback_history` to eliminate duplicated, ambiguous timestamp semantics: `created_at` records bookmark creation, while `playback_positions.updated_at` records playback progress.
 * **Candidate Keys**:
@@ -378,8 +374,8 @@ erDiagram
   * $\{\text{user\_id}, \text{novel\_id}\} \to R$
 * **MVD Analysis**: Progress position has been decomposed into `playback_positions`. What remains in `playback_history` is the bookmark entity. Each user has at most one bookmark record per novel (`UNIQUE(user_id, novel_id)`). For a given user and novel, `created_at` is a single scalar timestamp. No independent multivalued facts exist. Every determinant is a candidate key ($CK_1$ or $CK_2$). Satisfies 4NF.
 * **JD Analysis**: Any ternary projection: $R_1(\text{id}, \text{user\_id})$, $R_2(\text{user\_id}, \text{novel\_id})$, $R_3(\text{id}, \text{novel\_id})$.
-  $R_2$ is candidate key $CK_2$, and $R_1, R_3$ contain candidate key $CK_1$. Any projection-join that losslessly recovers `playback_history` requires projecting onto a candidate key. Every non-trivial JD is implied by candidate keys. Satisfies 5NF.
-* **Highest Normal Form Proven**: **5NF** (and BCNF, 4NF).
+  $R_2$ is candidate key $CK_2$, and $R_1, R_3$ contain candidate key $CK_1$. Any projection-join that losslessly recovers `playback_history` requires projecting onto a candidate key. Every non-trivial JD is implied by candidate keys. Satisfies 4NF.
+* **Highest Normal Form Proven**: **4NF** (and BCNF).
 
 ---
 
@@ -398,8 +394,8 @@ erDiagram
   * $\text{history\_id} \to R$
 * **MVD Analysis**: For a given bookmark (`history_id`), the playback position represents a single point in the audio stream: one chapter, one segment order, one millisecond offset, and one timestamp when that position was reached (`updated_at`). There are no independent multivalued lists. The sole determinant is the candidate key $\{\text{history\_id}\}$. Satisfies 4NF.
 * **JD Analysis**: Can `playback_positions` be decomposed into $(\text{history\_id}, \text{chapter\_id})$, $(\text{chapter\_id}, \text{segment\_order})$, $(\text{history\_id}, \text{segment\_order}, \text{position\_ms})$?
-  Different bookmarks can listen to the same chapter at different segments, so $(\text{chapter\_id}, \text{segment\_order})$ is not independent. Any lossless reconstruction requires `history_id`. Every non-trivial JD is implied by $\{\text{history\_id}\}$. Satisfies 5NF.
-* **Highest Normal Form Proven**: **5NF** (and BCNF, 4NF).
+  Different bookmarks can listen to the same chapter at different segments, so $(\text{chapter\_id}, \text{segment\_order})$ is not independent. Any lossless reconstruction requires `history_id`. Every non-trivial JD is implied by $\{\text{history\_id}\}$. Satisfies 4NF.
+* **Highest Normal Form Proven**: **4NF** (and BCNF).
 
 ---
 
@@ -407,20 +403,20 @@ erDiagram
 
 | Table | Candidate Keys | Prime Attributes | Non-Prime Attributes | Non-Trivial FDs | MVDs Determinant Superkey? | JDs Implied by Keys? | Proven Normal Form |
 |:---|:---|:---|:---|:---|:---:|:---:|:---:|
-| `users` | $\{\text{id}\}$, $\{\text{username}\}$, $\{\text{email}\}$ | $\text{id}, \text{username}, \text{email}$ | 4 non-prime | $\text{id}\to R$, $\text{usr}\to R$, $\text{em}\to R$ | **Yes** | **Yes** | **5NF** |
-| `voices` | $\{\text{id}\}$ | $\text{id}$ | 6 non-prime | $\text{id} \to R$ | **Yes** | **Yes** | **5NF** |
-| `novels` | $\{\text{id}\}$ | $\text{id}$ | 10 non-prime | $\text{id} \to R$ | **Yes** | **Yes** | **5NF** |
-| `chapters` | $\{\text{id}\}$, $\{\text{novel\_id}, \text{num}\}$ | $\text{id}, \text{novel\_id}, \text{num}$ | 7 non-prime | $\text{id} \to R$, $\{\text{nov}, \text{num}\} \to R$ | **Yes** | **Yes** | **5NF** |
-| `characters` | $\{\text{id}\}$, $\{\text{novel\_id}, \text{name}\}$ | $\text{id}, \text{novel\_id}, \text{name}$ | 11 non-prime | $\text{id} \to R$, $\{\text{nov}, \text{name}\} \to R$ | **Yes** | **Yes** | **5NF** |
-| `character_aliases` | $\{\text{id}\}$, $\{\text{char\_id}, \text{alias}\}$ | All 3 attributes are prime | $\emptyset$ (none) | $\text{id} \to R$, $\{\text{char}, \text{alias}\} \to R$ | **Yes** | **Yes** | **5NF** |
-| `synthesis_jobs` | $\{\text{id}\}$ | $\text{id}$ | 12 non-prime | $\text{id} \to R$ | **Yes** | **Yes** | **5NF** |
-| `novel_profile_job_targets` | $\{\text{job\_id}\}$ | $\text{job\_id}$ | $\text{novel\_id}$ | $\text{job\_id} \to \text{novel\_id}$ | **Yes** | **Yes** | **5NF** |
-| `chapter_synthesis_job_targets` | $\{\text{job\_id}\}$ | $\text{job\_id}$ | $\text{chapter\_id}$ | $\text{job\_id} \to \text{chapter\_id}$ | **Yes** | **Yes** | **5NF** |
-| `segment_audio_cache` | $\{\text{text\_hash}, \text{voice\_hash}\}$ | $\text{text\_hash}, \text{voice\_hash}$ | 4 non-prime | $\{\text{txt}, \text{vc}\} \to R$ | **Yes** | **Yes** | **5NF** |
-| `playback_history` | $\{\text{id}\}$, $\{\text{user\_id}, \text{novel\_id}\}$ | $\text{id}, \text{user\_id}, \text{novel\_id}$ | 1 non-prime (`created_at`) | $\text{id} \to R$, $\{\text{usr}, \text{nov}\} \to R$ | **Yes** | **Yes** | **5NF** |
-| `playback_positions` | $\{\text{history\_id}\}$ | $\text{history\_id}$ | 4 non-prime | $\text{history\_id} \to R$ | **Yes** | **Yes** | **5NF** |
+| `users` | $\{\text{id}\}$, $\{\text{username}\}$, $\{\text{email}\}$ | $\text{id}, \text{username}, \text{email}$ | 4 non-prime | $\text{id}\to R$, $\text{usr}\to R$, $\text{em}\to R$ | **Yes** | **Yes** | **4NF** |
+| `voices` | $\{\text{id}\}$ | $\text{id}$ | 6 non-prime | $\text{id} \to R$ | **Yes** | **Yes** | **4NF** |
+| `novels` | $\{\text{id}\}$ | $\text{id}$ | 10 non-prime | $\text{id} \to R$ | **Yes** | **Yes** | **4NF** |
+| `chapters` | $\{\text{id}\}$, $\{\text{novel\_id}, \text{num}\}$ | $\text{id}, \text{novel\_id}, \text{num}$ | 7 non-prime | $\text{id} \to R$, $\{\text{nov}, \text{num}\} \to R$ | **Yes** | **Yes** | **4NF** |
+| `characters` | $\{\text{id}\}$, $\{\text{novel\_id}, \text{name}\}$ | $\text{id}, \text{novel\_id}, \text{name}$ | 11 non-prime | $\text{id} \to R$, $\{\text{nov}, \text{name}\} \to R$ | **Yes** | **Yes** | **4NF** |
+| `character_aliases` | $\{\text{id}\}$, $\{\text{char\_id}, \text{alias}\}$ | All 3 attributes are prime | $\emptyset$ (none) | $\text{id} \to R$, $\{\text{char}, \text{alias}\} \to R$ | **Yes** | **Yes** | **4NF** |
+| `synthesis_jobs` | $\{\text{id}\}$ | $\text{id}$ | 12 non-prime | $\text{id} \to R$ | **Yes** | **Yes** | **4NF** |
+| `novel_profile_job_targets` | $\{\text{job\_id}\}$ | $\text{job\_id}$ | $\text{novel\_id}$ | $\text{job\_id} \to \text{novel\_id}$ | **Yes** | **Yes** | **4NF** |
+| `chapter_synthesis_job_targets` | $\{\text{job\_id}\}$ | $\text{job\_id}$ | $\text{chapter\_id}$ | $\text{job\_id} \to \text{chapter\_id}$ | **Yes** | **Yes** | **4NF** |
+| `segment_audio_cache` | $\{\text{text\_hash}, \text{voice\_hash}\}$ | $\text{text\_hash}, \text{voice\_hash}$ | 4 non-prime | $\{\text{txt}, \text{vc}\} \to R$ | **Yes** | **Yes** | **4NF** |
+| `playback_history` | $\{\text{id}\}$, $\{\text{user\_id}, \text{novel\_id}\}$ | $\text{id}, \text{user\_id}, \text{novel\_id}$ | 1 non-prime (`created_at`) | $\text{id} \to R$, $\{\text{usr}, \text{nov}\} \to R$ | **Yes** | **Yes** | **4NF** |
+| `playback_positions` | $\{\text{history\_id}\}$ | $\text{history\_id}$ | 4 non-prime | $\text{history\_id} \to R$ | **Yes** | **Yes** | **4NF** |
 
-**Summary**: **12/12 Relations Satisfy 5NF (100%)**. Every application relation satisfies BCNF, 4NF, and 5NF. Zero 3NF-only or 4NF-only compromises remain.
+**Summary**: **12/12 Relations Satisfy 4NF (100%)**. Every application relation satisfies BCNF and 4NF. Zero 3NF-only or 4NF-only compromises remain.
 
 ---
 
@@ -462,14 +458,14 @@ In the legacy 3NF schema, `updated_at` ambiguously served two orthogonal roles: 
 #### Rigorous Distinction: Existing Progress Preservation vs. Deliberate 1:0..1 Optionality:
 1. **Preservation of Existing Pre-Migration Progress Records**:
    - In the pre-migration database (Sprint 1 / 3NF), every existing row in `playback_history` possessed non-null playback progress (`chapter_id`, `segment_order`, `position_ms`, `updated_at`).
-   - Alembic migration `0003_enforce_4nf_5nf` migrates 100% of these existing rows losslessly:
+   - Alembic migration `0003_enforce_4nf` migrates 100% of these existing rows losslessly:
      ```sql
      INSERT INTO playback_positions (history_id, chapter_id, segment_order, position_ms, updated_at)
      SELECT id, chapter_id, segment_order, position_ms, updated_at FROM playback_history;
      ```
    - For every existing record, a corresponding child row exists in $R_2$ ($1:1$). The inner equi-join $R_1 \bowtie_{R_1.\text{id} = R_2.\text{history\_id}} R_2$ reconstructs the exact original relation without loss of a single tuple or timestamp attribute.
 2. **Deliberate Addition of Bookmarks Without Progress (1:0..1 Optionality)**:
-   - In 4NF/5NF, `playback_history` models **bookmark identity** ($1$) while `playback_positions` models **active playback progress** ($0..1$).
+   - In 4NF, `playback_history` models **bookmark identity** ($1$) while `playback_positions` models **active playback progress** ($0..1$).
    - A user can deliberately create a bookmark for a novel before listening to any audio ($0$ rows in `playback_positions`).
    - The read-compatible projection view `v_playback_history` uses an outer join (`LEFT JOIN`):
      $$R_1 \leftouterjoin_{R_1.\text{id} = R_2.\text{history\_id}} R_2$$
@@ -509,13 +505,13 @@ Cross-table consistency between bookmarks, positions, chapters, and novels is en
 
 #### State-Dependent Downgrade Limitation & Representation Guard:
 - **Theoretical Root Cause**:
-  In 4NF/5NF, `playback_history` to `playback_positions` models an optional $1:0..1$ relationship (a user can bookmark a novel without having started audio playback).
+  In 4NF, `playback_history` to `playback_positions` models an optional $1:0..1$ relationship (a user can bookmark a novel without having started audio playback).
   In the legacy 3NF schema (`0002_enforce_strict_3nf`), `playback_history.chapter_id` is declared `NOT NULL` with composite foreign key `FOREIGN KEY (novel_id, chapter_id) REFERENCES chapters(novel_id, id)`.
   An unplayed bookmark without a playback position **cannot be represented** in the legacy 3NF schema without either:
   1. Fabricating synthetic playback progress (e.g. arbitrarily assigning the novel's first chapter), which invents false user history and violates data engineering audit standards.
   2. Silently dropping the unplayed bookmark, which causes unrecoverable data loss.
 - **Enforcement Mechanism**:
-  Alembic migration `0003_enforce_4nf_5nf.py` implements an authoritative pre-downgrade representation guard:
+  Alembic migration `0003_enforce_4nf.py` implements an authoritative pre-downgrade representation guard:
   ```python
   unrepresentable_count = bind.execute(sa.text("""
       SELECT count(*) FROM playback_history h
@@ -623,9 +619,9 @@ LEFT JOIN voices v ON c.voice_id = v.id;
 └───────────┴─────────────────────┴────────────┴─────────┴────────────┴─────────────────┴───────────────────────────┘
 ```
 
-### 6.2 5NF Playback History & Position Atomic Upsert
+### 6.2 4NF Playback History & Position Atomic Upsert
 ```sql
--- Transactional Upsert across decomposed 5NF relations:
+-- Transactional Upsert across decomposed 4NF relations:
 BEGIN;
 INSERT INTO playback_history (user_id, novel_id)
 VALUES ($1, $2)
@@ -687,11 +683,11 @@ FOR UPDATE SKIP LOCKED;
 | **DE-9** | Target `job_id` Immutability | Trigger `fn_prevent_job_target_reassignment` | Updating `job_id` on target rejected | **PASS** |
 | **DE-10**| Deferred Target Completeness | Trigger `trg_synthesis_job_target_completeness` | Orphan `synthesis_jobs` row rejected on commit | **PASS** |
 | **DE-11**| Same-Transaction Delete | Trigger `fn_check_synthesis_job_target_completeness` | Job created and deleted in same TX commits cleanly | **PASS** |
-| **DE-12**| 4NF/5NF `character_aliases` | Omitted `novel_id`, FK `character_id -> characters.id` | Alias inserted without redundant attribute | **PASS** |
+| **DE-12**| 4NF `character_aliases` | Omitted `novel_id`, FK `character_id -> characters.id` | Alias inserted without redundant attribute | **PASS** |
 | **DE-13**| Same-Novel Duplicate Alias | Trigger `fn_check_character_alias_novel_uniqueness` | Duplicate alias in same novel rejected | **PASS** |
 | **DE-14**| Cross-Novel Duplicate Alias | Trigger `fn_check_character_alias_novel_uniqueness` | Same alias in different novel allowed | **PASS** |
 | **DE-15**| Orphan Character Alias | Trigger / FK `fk_character_aliases_character` | Alias with invalid character_id rejected | **PASS** |
-| **DE-16**| 5NF Decomposed Playback History | `playback_positions` chapter validation trigger | Chapter mismatch with bookmark novel rejected | **PASS** |
+| **DE-16**| 4NF Decomposed Playback History | `playback_positions` chapter validation trigger | Chapter mismatch with bookmark novel rejected | **PASS** |
 | **DE-17**| Bookmark `novel_id` Update Guard | Trigger `fn_check_playback_history_novel_update` | Updating bookmark novel with mismatching chapter rejected | **PASS** |
 | **DE-18**| Chapter `novel_id` Update Guard | Trigger `fn_check_chapter_novel_update` | Updating chapter novel with active playback position rejected | **PASS** |
 | **DE-19**| 1:0..1 Optionality: Unplayed Bookmark | `v_playback_history` LEFT JOIN projection | Bookmark created without position projects null position | **PASS** |
@@ -719,7 +715,7 @@ FOR UPDATE SKIP LOCKED;
 To execute and verify all migrations and integrity suites locally:
 
 ```bash
-# 1. Apply Alembic additive migration 0003 (4NF & 5NF)
+# 1. Apply Alembic additive migration 0003 (4NF)
 cd novel-audio-synthesizer/kokoro-tts-backend
 .venv/bin/alembic upgrade head
 
@@ -727,7 +723,7 @@ cd novel-audio-synthesizer/kokoro-tts-backend
 cd ../backend
 npm test
 
-# 3. Run dedicated Data Engineering 4NF/5NF integrity test suite
+# 3. Run dedicated Data Engineering 4NF integrity test suite
 npm run test:de
 
 # 4. Verify state-dependent downgrade guard & migration reversibility
