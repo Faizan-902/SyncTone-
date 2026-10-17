@@ -3,7 +3,7 @@
 -- ==============================================================================
 -- IMPORTANT NOTICE:
 -- The canonical source of schema truth and migration runner for SyncTone is 
--- Alembic (located at: novel-audio-synthesizer/backend/alembic).
+-- Alembic (located at: novel-audio-synthesizer/kokoro-tts-backend/alembic).
 --
 -- This raw SQL file is provided SOLELY as an alternative reference for manual 
 -- inspection or standalone psql execution where Python is not available.
@@ -186,6 +186,8 @@ INSERT INTO voices (id, label, gender, age_band, language, reserved_narrator) VA
 ('af_sarah', 'Sarah (Mature)', 'female', 'elder', 'en-us', false),
 ('am_michael', 'Michael (Strong & Resonant)', 'male', 'adult', 'en-us', false),
 ('am_george', 'George (Deep & Mature)', 'male', 'elder', 'en-us', false),
+('am_onyx', 'Onyx (Deep Male)', 'male', 'adult', 'en-us', false),
+('af_sky', 'Sky (Calm Female)', 'female', 'adult', 'en-us', false),
 ('bm_george', 'George (British Received)', 'male', 'adult', 'en-gb', false),
 ('bf_emma', 'Emma (British Refined)', 'female', 'young', 'en-gb', false),
 ('bm_daniel', 'Daniel (British Expressive)', 'male', 'young', 'en-gb', false),

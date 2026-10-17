@@ -4,6 +4,8 @@ const { optionalAuth } = require('../middleware/auth');
 
 const router = Router();
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 // POST /api/playback/progress
 router.post('/playback/progress', optionalAuth, async (req, res) => {
   const { novel_id, chapter_id, segment_order = 0, position_ms = 0 } = req.body;
@@ -11,6 +13,10 @@ router.post('/playback/progress', optionalAuth, async (req, res) => {
 
   if (!user_id || !novel_id || !chapter_id) {
     return res.status(400).json({ error: 'user_id, novel_id, and chapter_id are required' });
+  }
+
+  if (!UUID_REGEX.test(user_id) || !UUID_REGEX.test(novel_id) || !UUID_REGEX.test(chapter_id)) {
+    return res.status(400).json({ error: 'Invalid UUID format for user_id, novel_id, or chapter_id' });
   }
 
   try {

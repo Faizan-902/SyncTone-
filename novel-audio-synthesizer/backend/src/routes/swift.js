@@ -44,6 +44,8 @@ async function getSwiftAuth(forceRefresh = false) {
 // GET /api/chapters/:id/audio (Swift audio streaming proxy)
 router.get('/chapters/:id/audio', async (req, res) => {
   const { id } = req.params;
+  const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!UUID_REGEX.test(id)) return res.status(400).json({ error: 'Invalid chapter UUID format.' });
 
   try {
     const dbRes = await pool.query(
@@ -108,7 +110,13 @@ router.get('/chapters/:id/audio', async (req, res) => {
       res.setHeader('Content-Length', String(swiftRes.headers['content-length']));
     }
     res.setHeader('Accept-Ranges', 'bytes');
-    res.setHeader('Content-Type', 'audio/opus');
+    let swiftContentType = 'audio/opus';
+    if (swift_audio_object.endsWith('.mp3')) {
+      swiftContentType = 'audio/mpeg';
+    } else if (swift_audio_object.endsWith('.wav')) {
+      swiftContentType = 'audio/wav';
+    }
+    res.setHeader('Content-Type', swiftContentType);
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
 
     swiftRes.data.pipe(res);
@@ -161,5 +169,7 @@ router.get('/chapters/:id/audio', async (req, res) => {
     return res.status(500).json({ error: 'Failed to stream audio from object storage' });
   }
 });
+
+router.getSwiftAuth = getSwiftAuth;
 
 module.exports = router;

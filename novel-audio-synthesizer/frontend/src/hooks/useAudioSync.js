@@ -66,22 +66,6 @@ export function useAudioSync(timeline = []) {
     if (dur > 0) setDuration(dur * 1000);
   }, []);
 
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    audio.addEventListener('play', handlePlay);
-    audio.addEventListener('pause', handlePause);
-    audio.addEventListener('ended', handleEnded);
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-
-    return () => {
-      audio.removeEventListener('play', handlePlay);
-      audio.removeEventListener('pause', handlePause);
-      audio.removeEventListener('ended', handleEnded);
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-    };
-  }, [timeline, handlePlay, handlePause, handleEnded, handleLoadedMetadata]);
 
   const seekToSegment = useCallback(
     (segmentId) => {

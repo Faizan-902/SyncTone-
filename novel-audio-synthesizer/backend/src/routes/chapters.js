@@ -11,6 +11,7 @@ const { audioStitcher } = require('../engine/audioStitcher');
 const { broadcastProgress } = require('../websocket');
 const { config } = require('../config');
 const { optionalAuth } = require('../middleware/auth');
+const { getSwiftAuth } = require('./swift');
 
 const router = Router();
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -160,6 +161,10 @@ async function ingestChapter({ novelId, title, text, chapterNumber, requestedBy 
  * Official Polyglot Chapter Ingestion route (saves text to Mongo, enqueues job in Postgres).
  */
 router.post('/novels/:id/chapters', optionalAuth, async (req, res) => {
+  if (req.user && req.user.role === 'reader') {
+    return res.status(403).json({ error: "Forbidden: role 'reader' cannot ingest chapters." });
+  }
+
   const novelId = req.params.id;
   const { text, title, chapter_number, requested_by } = req.body;
 
@@ -328,10 +333,14 @@ router.post('/parse/:chapter_id', async (req, res) => {
     // Save parsed segments into MongoDB
     chapterDoc.segments = parsed.segments.map((seg, idx) => ({
       order: idx + 1,
+      segment_id: idx + 1,
       type: seg.speaker_id === 'narrator' ? 'narration' : 'dialogue',
       text: seg.text,
       character_id: seg.speaker_id || null,
+      speaker_id: seg.speaker_id || null,
+      speaker_name: seg.speaker_name || seg.speaker_id || 'Narrator',
       voice_id: seg.assigned_voice_id || 'am_adam',
+      assigned_voice_id: seg.assigned_voice_id || 'am_adam',
       start_ms: 0,
       end_ms: 0,
       confidence: typeof seg.attribution_confidence === 'number'
@@ -398,7 +407,7 @@ router.post('/synthesize/:chapter_id', async (req, res) => {
         [chapter_id]
       );
       await pool.query(
-        "UPDATE synthesis_jobs SET status = 'processing', updated_at = now() WHERE chapter_id = $1",
+        "UPDATE synthesis_jobs SET status = 'processing' WHERE chapter_id = $1",
         [chapter_id]
       );
     } catch (_dbErr) {}
@@ -467,6 +476,31 @@ router.post('/synthesize/:chapter_id', async (req, res) => {
     await chapterDoc.save();
 
     const swiftAudioObject = `${chapter_id}.${manifest.audio_format || 'mp3'}`;
+    const audioFilePath = path.join(config.paths.outputDir, swiftAudioObject);
+
+    // Optional non-blocking upload of synthesized audio to OpenStack Swift
+    try {
+      if (getSwiftAuth && fs.existsSync(audioFilePath)) {
+        const { token, storageUrl } = await getSwiftAuth();
+        if (token && storageUrl) {
+          const audioData = fs.readFileSync(audioFilePath);
+          const axios = require('axios');
+          await axios.put(
+            `${storageUrl}/${config.swift.containerAudio}/${swiftAudioObject}`,
+            audioData,
+            {
+              headers: {
+                'X-Auth-Token': token,
+                'Content-Type': swiftAudioObject.endsWith('.mp3') ? 'audio/mpeg' : 'audio/wav',
+              },
+              timeout: 5000,
+            }
+          );
+        }
+      }
+    } catch (swiftErr) {
+      console.warn('[Synthesize Swift Upload Warning]: Swift offline or upload failed, continuing locally:', swiftErr.message);
+    }
 
     // Update PostgreSQL chapters table
     await pool.query(
@@ -583,14 +617,19 @@ router.get('/stream/:chapter_id', (req, res) => {
 router.get('/chapters/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    const pgRes = await pool.query('SELECT * FROM chapters WHERE id = $1', [id]);
+    let pgData = {};
+    if (UUID_REGEX.test(id)) {
+      const pgRes = await pool.query('SELECT * FROM chapters WHERE id = $1', [id]);
+      if (pgRes.rows.length > 0) {
+        pgData = pgRes.rows[0];
+      }
+    }
     const chapterDoc = await Chapter.findOne({ pg_chapter_id: id });
 
-    if (pgRes.rows.length === 0 && !chapterDoc) {
+    if (Object.keys(pgData).length === 0 && !chapterDoc) {
       return res.status(404).json({ error: 'Chapter not found' });
     }
 
-    const pgData = pgRes.rows[0] || {};
     const docData = chapterDoc ? (chapterDoc.toObject ? chapterDoc.toObject() : chapterDoc) : {};
 
     return res.json({
@@ -670,8 +709,8 @@ router.get('/characters/:chapter_id', async (req, res) => {
     for (const seg of chapterDoc.segments) {
       if (seg.character_id && seg.character_id !== 'narrator') {
         const prev = charCounts.get(seg.character_id) || {
-          name: seg.character_id,
-          voice: seg.voice_id,
+          name: seg.speaker_name || seg.character_id,
+          voice: seg.assigned_voice_id || seg.voice_id,
           count: 0,
         };
         prev.count += 1;

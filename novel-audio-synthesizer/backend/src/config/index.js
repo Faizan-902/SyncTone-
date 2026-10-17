@@ -5,6 +5,7 @@ const fs = require('fs');
 const BACKEND_DIR = path.resolve(__dirname, '../..');
 const PARENT_DIR = path.resolve(BACKEND_DIR, '..');
 const REPO_ROOT = path.resolve(PARENT_DIR, '..');
+const ROOT_DIR = REPO_ROOT;
 
 const envCandidates = [
   path.resolve(REPO_ROOT, '.env'),

@@ -24,6 +24,7 @@ router.post('/voices/assign', async (req, res) => {
     ...Object.keys(VOICE_PALETTE),
     'am_adam', 'af_heart', 'af_bella', 'af_nicole', 'af_sarah',
     'am_michael', 'am_george', 'bm_george', 'bf_emma', 'bm_daniel',
+    'am_onyx', 'af_sky',
   ]);
 
   if (!validVoices.has(new_voice_id)) {
@@ -54,14 +55,14 @@ router.post('/voices/assign', async (req, res) => {
     const { pool } = require('../db');
     try {
       await pool.query(
-        'UPDATE characters SET voice_id = $1, updated_at = now() WHERE id::text = $2 OR canonical_name = $2',
+        'UPDATE characters SET voice_id = $1, updated_at = now() WHERE id::text = $2 OR canonical_name = $2 OR LOWER(REPLACE(canonical_name, \' \', \'_\')) = LOWER($2)',
         [effectiveVoiceId, character_id]
       );
     } catch (pgErr) {
       if (pgErr.code === '23503') {
         const kokoroFallback = EDGE_TO_KOKORO_MAP[effectiveVoiceId] || 'am_adam';
         await pool.query(
-          'UPDATE characters SET voice_id = $1, updated_at = now() WHERE id::text = $2 OR canonical_name = $2',
+          'UPDATE characters SET voice_id = $1, updated_at = now() WHERE id::text = $2 OR canonical_name = $2 OR LOWER(REPLACE(canonical_name, \' \', \'_\')) = LOWER($2)',
           [kokoroFallback, character_id]
         );
       } else {

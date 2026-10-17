@@ -19,6 +19,12 @@ const SegmentSchema = new Schema(
       required: [true, 'Segment order is required'],
       min: [1, 'Segment order must be >= 1'],
     },
+    segment_id: {
+      type: Number,
+      default: function () {
+        return this.order;
+      },
+    },
     type: {
       type: String,
       enum: ['narration', 'dialogue'],
@@ -35,10 +41,26 @@ const SegmentSchema = new Schema(
       default: null,
       trim: true,
     },
+    speaker_id: {
+      type: String,
+      default: function () {
+        return this.character_id;
+      },
+    },
+    speaker_name: {
+      type: String,
+      default: null,
+    },
     voice_id: {
       type: String,
       required: [true, 'Voice ID is required for audio playback synthesis'],
       trim: true,
+    },
+    assigned_voice_id: {
+      type: String,
+      default: function () {
+        return this.voice_id;
+      },
     },
     start_ms: {
       type: Number,

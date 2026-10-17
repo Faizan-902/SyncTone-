@@ -235,6 +235,8 @@ def upgrade() -> None:
         ('af_sarah', 'Sarah (Mature)', 'female', 'elder', 'en-us', false),
         ('am_michael', 'Michael (Strong & Resonant)', 'male', 'adult', 'en-us', false),
         ('am_george', 'George (Deep & Mature)', 'male', 'elder', 'en-us', false),
+        ('am_onyx', 'Onyx (Deep Male)', 'male', 'adult', 'en-us', false),
+        ('af_sky', 'Sky (Calm Female)', 'female', 'adult', 'en-us', false),
         ('bm_george', 'George (British Received)', 'male', 'adult', 'en-gb', false),
         ('bf_emma', 'Emma (British Refined)', 'female', 'young', 'en-gb', false),
         ('bm_daniel', 'Daniel (British Expressive)', 'male', 'young', 'en-gb', false),

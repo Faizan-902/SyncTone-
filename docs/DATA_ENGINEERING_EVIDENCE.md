@@ -117,24 +117,33 @@ erDiagram
     }
 
     PLAYBACK_HISTORY {
-        uuid id PK "Surrogate Key"
+        uuid id PK "Surrogate Key (reading_progress view compatibility)"
         uuid user_id FK "references users(id)"
         uuid novel_id FK "references novels(id)"
         uuid chapter_id FK "references chapters(id)"
-        int segment_order
-        int position_ms
+        int segment_order "Atomic seek position"
+        int position_ms "Playback timestamp offset in ms"
         timestamptz updated_at
+    }
+
+    SEGMENT_AUDIO_CACHE {
+        varchar text_hash PK "SHA-256 text fingerprint"
+        varchar voice_hash PK "Voice ID + speed multiplier hash"
+        varchar local_pcm_path "File path to 24kHz raw PCM"
+        int n_samples "Audio sample count"
+        int sample_rate "Default: 24000 Hz"
+        timestamptz last_used_at "LRU eviction index"
     }
 
     MONGO_CHAPTER_DOC {
         ObjectId _id PK
         string pg_chapter_id UK "Unique Link to chapters.id"
-        string novel_id
+        string novel_id "Indexed foreign reference"
         int chapter_number
         string title
         string raw_text "Full Chapter Prose"
         int audio_version
-        array segments "Subdocuments: timing, voice, speaker"
+        array segments "Subdocuments: order, type, character_id, speaker_name, voice_id, confidence, source, needs_review, start_ms, end_ms"
         object manifest "Derived timeline and audio_url"
     }
 ```
