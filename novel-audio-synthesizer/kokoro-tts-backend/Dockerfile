@@ -25,4 +25,4 @@ COPY app ./app
 # Create cache directories
 RUN mkdir -p /app/output/pcm_cache /app/models_cache
 
-CMD ["python", "-m", "app.worker"]
+CMD ["sh", "-c", "alembic upgrade head && python -m app.worker"]

@@ -1268,6 +1268,10 @@ async function runDEIntegrityTests() {
   // 6. Downgrade Correctness & State-Dependent Representation Verification
   console.log('\n▶ [DE-6] Testing State-Dependent Downgrade Guard & Data Preservation...');
   const kokoroDir = path.resolve(__dirname, '../kokoro-tts-backend');
+  const fs = require('fs');
+  const alembicBin = fs.existsSync(path.join(kokoroDir, '.venv/bin/alembic'))
+    ? '.venv/bin/alembic'
+    : 'alembic';
 
   // Test 6A: Unrepresentable state: Unplayed bookmark exists without playback_positions
   console.log('  ▶ Test 6A: Unrepresentable state: Downgrade must abort and preserve data...');
@@ -1294,7 +1298,7 @@ async function runDEIntegrityTests() {
   let unrepDowngradeFailed = false;
   let unrepErrorMessage = '';
   try {
-    execSync('.venv/bin/alembic downgrade -1', { cwd: kokoroDir, stdio: 'pipe' });
+    execSync(`${alembicBin} downgrade -1`, { cwd: kokoroDir, stdio: 'pipe' });
   } catch (err) {
     unrepDowngradeFailed = true;
     unrepErrorMessage = (err.stderr || err.stdout || err.message).toString();
@@ -1328,8 +1332,8 @@ async function runDEIntegrityTests() {
   // Test 6B: Representable state: All bookmarks have playback_positions
   console.log('  ▶ Test 6B: Representable state: Downgrade and Upgrade must succeed cleanly...');
   try {
-    execSync('.venv/bin/alembic downgrade -1', { cwd: kokoroDir, encoding: 'utf8' });
-    execSync('.venv/bin/alembic upgrade head', { cwd: kokoroDir, encoding: 'utf8' });
+    execSync(`${alembicBin} downgrade -1`, { cwd: kokoroDir, encoding: 'utf8' });
+    execSync(`${alembicBin} upgrade head`, { cwd: kokoroDir, encoding: 'utf8' });
     console.log('    ✔ Representable state downgrade to 0002 and upgrade to 0003 succeeded cleanly');
   } catch (err) {
     throw new Error(`Representable downgrade/upgrade cycle failed: ${err.stderr || err.message}`);

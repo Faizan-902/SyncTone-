@@ -14,17 +14,17 @@ SyncTone is deployed as a 6-service polyglot architecture orchestrated via Docke
 | **Input Sanitization** | **`tts-dom-cleaner`** | npm package | Client-side DOM and text cleaner that strips web novel artifacts (site navigation, author notes, sponsor links, ruby tags) before server submission. |
 | **API Gateway & Primary Synthesis** | **Node.js 20+ & Express.js** | CommonJS + Prisma ORM | High-throughput asynchronous REST API Gateway and primary orchestration engine. Implements `httpOnly` cookie JWT authentication with `pgcrypto` bcrypt hashing, role-based access control (RBAC: `reader`, `writer`, `admin`), **Prisma ORM** (`prisma/schema.prisma` + `@prisma/client`) layered over PostgreSQL alongside connection-pooled queries (`pg`), MongoDB ODM (`mongoose`), dialogue parsing (`textParser.js`), speaker attribution (`attribution.js`), voice profiling (`voiceProfiler.js`), audio stitching (`audioStitcher.js`), and RFC 7233 OpenStack Swift Range Streaming Proxy. |
 | **Primary Cloud TTS Engine** | **Microsoft Edge Neural TTS** | `msedge-tts` (24kHz 48kbps MP3) | Primary multi-voice neural synthesis engine providing authentic, expressive character casting (e.g., British voices for Harry Potter: `en-GB-ThomasNeural`, `en-GB-LibbyNeural`, `en-GB-AlfieNeural`, `en-GB-ArthurNeural`, `en-GB-NoahNeural`, `en-GB-RyanNeural`). Yields natural prosody with sub-second per-segment latency. |
-| **Offline Worker Daemon & Schema Authority** | **Python 3.11 (`kokoro-tts-backend`)** | SQLAlchemy 2.0, Alembic, SpaCy | Decoupled background worker daemon and authoritative schema migration runner (`alembic/versions/0001_initial_schema.py`). Uses SpaCy (`en_core_web_sm`) dependency parsing for offline speaker resolution and Kokoro-82M ONNX / PyTorch TTS for zero-network, local harmonic fallback synthesis. Worker claims background jobs atomically via `SELECT ... FOR UPDATE SKIP LOCKED`. |
-| **Relational Database (Core Authority)** | **PostgreSQL 16 (`synctone-postgres`)** | Alpine Docker container, Port 5432 | Strict 3NF/BCNF relational DBMS serving as the authoritative single source of truth for identity, RBAC, novel catalog metadata, character portfolios, aliases, voice catalog (20 seeded voices: 12 Kokoro + 8 Edge Neural), transactional job queue (`synthesis_jobs`), LRU segment audio cache (`segment_audio_cache`), and atomic playback resume (`playback_history` + `reading_progress` view). |
+| **Offline Worker Daemon & Schema Authority** | **Python 3.11 (`kokoro-tts-backend`)** | SQLAlchemy 2.0, Alembic, SpaCy | Decoupled background worker daemon and authoritative schema migration runner (`0001_initial_schema.py` $\rightarrow$ `0003_enforce_4nf.py`). Uses SpaCy (`en_core_web_sm`) dependency parsing for offline speaker resolution and Kokoro-82M ONNX / PyTorch TTS for zero-network, local harmonic fallback synthesis. Worker claims background jobs atomically via `SELECT ... FOR UPDATE SKIP LOCKED`. |
+| **Relational Database (Core Authority)** | **PostgreSQL 16 (`synctone-postgres`)** | Alpine Docker container, Port 5432 | **Strict Fourth Normal Form (4NF)** relational DBMS (12 normalized tables) serving as the authoritative single source of truth for identity, RBAC, novel catalog metadata, character portfolios, aliases, voice catalog (20 seeded voices: 12 Kokoro + 8 Edge Neural), subtype-decomposed transactional job queue (`synthesis_jobs`, `novel_profile_job_targets`, `chapter_synthesis_job_targets`), LRU segment audio cache (`segment_audio_cache`), and decomposed atomic playback resume (`playback_history` + `playback_positions` + `reading_progress` view). |
 | **Document Database (Chapter Prose & Timelines)** | **MongoDB 7.0 (`synctone-mongo`)** | Official Docker container, Port 27017 | High-performance document store (`chapters` collection via Mongoose `Chapter` model) linked to PostgreSQL via `pg_chapter_id` (UUID unique index). Stores full raw prose, attributed dialogue/narration segment arrays (with `order`, `segment_id`, `type`, `text`, `character_id`, `speaker_id`, `speaker_name`, `voice_id`, `confidence`, `source`, `needs_review`), and pre-calculated playback manifest timelines (`total_duration_ms`, `audio_url`, `timeline[]`). |
 | **Distributed Object Storage** | **OpenStack Swift (`synctone-swift`)** | `bouncestorage/swift-aio`, Port 8080 | Multi-tenant distributed object store managing binary audio blobs in container `novel-chapters` and book artwork in `novel-covers`. Streamed directly to browser `<audio>` elements via the Express Range Proxy (`GET /api/chapters/:id/audio` and `GET /api/stream/:chapter_id`) with HTTP 206 Partial Content, automatic 401 token refresh retry, and 416 range validation. |
 
 ---
 
-## 2. Verified Entity-Relationship (ER) Diagram
+## 2. Verified Entity-Relationship (ER) Diagram (Strict 4NF)
 
 The data layer follows a **Polyglot Persistence Model** with a strict boundary between relational metadata in PostgreSQL and rich hierarchical documents in MongoDB:
-* **PostgreSQL 16** enforces 9 normalized 3NF/BCNF tables with referential integrity, foreign key cascading, and row-level locking.
+* **PostgreSQL 16** enforces **12 normalized Strict 4NF tables** with referential integrity, foreign key cascading, subtype target decomposition, and row-level locking.
 * **MongoDB 7.0** encapsulates ordered, multi-second segment arrays and playback manifests per chapter, avoiding relational join overhead and high-frequency lock contention.
 
 ```mermaid
@@ -35,15 +35,19 @@ erDiagram
 
     NOVELS ||--o{ CHAPTERS : "contains (1:N)"
     NOVELS ||--o{ CHARACTERS : "defines cast (1:N)"
-    NOVELS ||--o{ SYNTHESIS_JOBS : "profiled by (1:N)"
+    NOVELS ||--o{ NOVEL_PROFILE_JOB_TARGETS : "targets (1:N)"
     NOVELS ||--o{ PLAYBACK_HISTORY : "tracked in (1:N)"
 
     CHARACTERS ||--o{ CHARACTER_ALIASES : "known as (1:N)"
     VOICES ||--o{ CHARACTERS : "assigned to (1:N)"
 
-    CHAPTERS ||--o{ SYNTHESIS_JOBS : "synthesizes (1:N)"
-    CHAPTERS ||--o{ PLAYBACK_HISTORY : "last chapter (1:N)"
+    CHAPTERS ||--o{ CHAPTER_SYNTHESIS_JOB_TARGETS : "targets (1:N)"
+    CHAPTERS ||--o{ PLAYBACK_POSITIONS : "current chapter (1:N)"
     CHAPTERS ||..|| MONGO_CHAPTER_DOC : "content link [pg_chapter_id] (1:1)"
+
+    PLAYBACK_HISTORY ||--o| PLAYBACK_POSITIONS : "tracks offset (1:0..1)"
+    SYNTHESIS_JOBS ||--o| NOVEL_PROFILE_JOB_TARGETS : "novel subtype (1:0..1)"
+    SYNTHESIS_JOBS ||--o| CHAPTER_SYNTHESIS_JOB_TARGETS : "chapter subtype (1:0..1)"
 
     USERS {
         uuid id PK "gen_random_uuid()"
@@ -111,15 +115,12 @@ erDiagram
 
     CHARACTER_ALIASES {
         uuid id PK "gen_random_uuid()"
-        uuid novel_id FK "references novels(id)"
         uuid character_id FK "references characters(id)"
-        varchar alias "Composite UK (novel_id, alias)"
+        varchar alias "Composite UK (character_id, alias)"
     }
 
     SYNTHESIS_JOBS {
         uuid id PK "gen_random_uuid()"
-        uuid novel_id FK "references novels(id)"
-        uuid chapter_id FK "references chapters(id) [nullable]"
         uuid requested_by FK "references users(id) [nullable]"
         varchar job_type "profile_novel, synthesize_chapter"
         varchar status "queued, processing, completed, failed"
@@ -132,6 +133,16 @@ erDiagram
         text error_message "Failure diagnostics"
         timestamptz created_at
         timestamptz completed_at
+    }
+
+    NOVEL_PROFILE_JOB_TARGETS {
+        uuid job_id PK_FK "references synthesis_jobs(id)"
+        uuid novel_id FK "references novels(id)"
+    }
+
+    CHAPTER_SYNTHESIS_JOB_TARGETS {
+        uuid job_id PK_FK "references synthesis_jobs(id)"
+        uuid chapter_id FK "references chapters(id)"
     }
 
     SEGMENT_AUDIO_CACHE {
@@ -147,6 +158,11 @@ erDiagram
         uuid id PK "gen_random_uuid()"
         uuid user_id FK "references users(id)"
         uuid novel_id FK "references novels(id)"
+        timestamptz created_at "Composite UK (user_id, novel_id)"
+    }
+
+    PLAYBACK_POSITIONS {
+        uuid history_id PK_FK "references playback_history(id)"
         uuid chapter_id FK "references chapters(id)"
         int segment_order "Last active segment sequence"
         int position_ms "Playback timestamp offset in ms"
@@ -166,13 +182,14 @@ erDiagram
     }
 ```
 
-### Key Database Architectural Rules & Constraints
+### Key Database Architectural Rules & Constraints (Strict 4NF)
 1. **Separation of Concerns**: Relational tables in PostgreSQL hold zero unparsed long prose or large JSON blobs; MongoDB holds no identity, billing, or cross-novel relational constraints.
 2. **Deterministic Chapter & Character Ordering**: `UNIQUE(novel_id, chapter_number)` prevents duplicate chapters. `UNIQUE(novel_id, canonical_name)` guarantees character uniqueness per novel.
 3. **Single Narrator Guarantee**: Partial unique index `CREATE UNIQUE INDEX uq_characters_narrator_per_novel ON characters(novel_id) WHERE is_narrator = true;` guarantees at most one narrator per book at the database engine level.
-4. **Attribution Normalization**: `CHARACTER_ALIASES` normalizes multi-valued aliases ("Harry", "Potter", "The Boy Who Lived") into atomic records with `UNIQUE(novel_id, alias)`.
-5. **Atomic Playback Upsert**: `UNIQUE(user_id, novel_id)` on `playback_history` enables atomic `ON CONFLICT (user_id, novel_id) DO UPDATE` operations on high-speed user seeks. The view `reading_progress` is provided as an SQL compatibility layer.
-6. **Direct Reader Playback Optimization**: In `MONGO_CHAPTER_DOC`, each item in `segments[]` contains pre-resolved `voice_id` and `speaker_name` alongside `start_ms` and `end_ms`. This allows the React reader to highlight and display active dialogue instantly without making relational joins to PostgreSQL during playback.
+4. **3NF/4NF Alias Normalization (`CHARACTER_ALIASES`)**: Eliminates transitive `novel_id` redundancy (`character_id -> novel_id`) and enforces `UNIQUE(character_id, alias)` alongside a serialized database trigger (`fn_check_character_alias_novel_uniqueness`) preventing cross-character alias collisions within the same novel.
+5. **4NF Job Subtype Decomposition (`SYNTHESIS_JOBS`)**: `synthesis_jobs` acts as a pure queue broker without nullable target columns, decomposing target bindings into `novel_profile_job_targets` and `chapter_synthesis_job_targets` enforced by deferred constraint triggers.
+6. **4NF Playback Bookmark & Position Decomposition (`PLAYBACK_HISTORY` + `PLAYBACK_POSITIONS`)**: Separates user-novel bookmark identity (`playback_history`, `UNIQUE(user_id, novel_id)`) from mutable chapter/millisecond offset state (`playback_positions`, `1:0..1`), with compatibility views `v_playback_history` and `reading_progress`.
+7. **Direct Reader Playback Optimization**: In `MONGO_CHAPTER_DOC`, each item in `segments[]` contains pre-resolved `voice_id` and `speaker_name` alongside `start_ms` and `end_ms`. This allows the React reader to highlight and display active dialogue instantly without making relational joins to PostgreSQL during playback.
 
 ---
 
@@ -295,20 +312,23 @@ flowchart LR
     P3 --> P4
 ```
 
-### Phase 1: Polyglot Infrastructure, 9-Table PG Schema & Mongoose Contract `[DONE]`
+### Phase 1: Polyglot Infrastructure, 12-Table 4NF PG Schema & Mongoose Contract `[DONE]`
 - [x] **6-Service Docker Compose Setup**: Configured and initialized `synctone-postgres` (PostgreSQL 16), `synctone-mongo` (MongoDB 7.0), `synctone-swift` (OpenStack Swift `bouncestorage/swift-aio`), `synctone-api` (Express Gateway), `synctone-worker` (Python Daemon), and `synctone-frontend` (React + Vite).
-- [x] **Relational Schema Authority (PostgreSQL 16)**: Implemented Alembic migration `0001_initial_schema.py` and standalone verification reference `0001_initial_schema.sql` defining all 9 tables in strict 3NF/BCNF:
+- [x] **Relational Schema Authority (PostgreSQL 16 — Strict 4NF)**: Implemented Alembic migrations (`0001_initial_schema.py` $\rightarrow$ `0002_enforce_strict_3nf.py` $\rightarrow$ `0003_enforce_4nf.py`) and Prisma ORM schema (`prisma/schema.prisma`) defining all **12 tables in Strict Fourth Normal Form (4NF)**:
   1. `users`: Identity and RBAC (`reader`, `writer`, `admin`) with unique constraints on `username` and `email`.
   2. `voices`: Master voice catalog with 20 pre-seeded voices (12 Kokoro + 8 Microsoft Edge Neural).
   3. `novels`: Catalog records with channel segmentation (`verified`, `community`) and lifecycle statuses.
   4. `chapters`: Relational metadata storing `total_duration_ms`, `swift_audio_object`, and `audio_version`.
   5. `characters`: Character cast portfolio with partial unique index ensuring at most one narrator per novel.
-  6. `character_aliases`: Multi-valued alias normalization enforcing `UNIQUE(novel_id, alias)`.
-  7. `synthesis_jobs`: Transactional job queue supporting `SELECT ... FOR UPDATE SKIP LOCKED` and exponential backoff retry.
-  8. `segment_audio_cache`: LRU-indexed lookup table keyed by `(text_hash, voice_hash)` for 24kHz raw PCM buffers.
-  9. `playback_history`: High-speed atomic seek table with `UNIQUE(user_id, novel_id)` and compatibility view `reading_progress`.
+  6. `character_aliases`: 3NF/4NF alias normalization (`UNIQUE(character_id, alias)`) with trigger-enforced novel-scoped alias uniqueness.
+  7. `synthesis_jobs`: Pure queue broker table supporting `SELECT ... FOR UPDATE SKIP LOCKED` and exponential backoff retry.
+  8. `novel_profile_job_targets`: 4NF subtype target table binding `profile_novel` jobs to `novels(id)`.
+  9. `chapter_synthesis_job_targets`: 4NF subtype target table binding `synthesize_chapter` jobs to `chapters(id)`.
+  10. `segment_audio_cache`: LRU-indexed lookup table keyed by `(text_hash, voice_hash)` for 24kHz raw PCM buffers.
+  11. `playback_history`: 4NF user-novel bookmark identity table (`UNIQUE(user_id, novel_id)`).
+  12. `playback_positions`: 4NF mutable chapter/millisecond offset table (`history_id` PK) with compatibility views `v_playback_history` and `reading_progress`.
 - [x] **Document Schema Contract (MongoDB 7.0)**: Defined Mongoose `Chapter` model in `novel-audio-synthesizer/backend/src/models/Chapter.js` keyed by unique `pg_chapter_id` UUID, storing full prose in `raw_text`, ordered `segments[]` (with `order`, `segment_id`, `type`, `text`, `character_id`, `speaker_id`, `speaker_name`, `voice_id`, `confidence`, `source`, `needs_review`), and `manifest` (`total_duration_ms`, `audio_url`, `timeline[]`).
-- [x] **Database Verification Suite**: Created automated data engineering tests (`npm run test:de`) verifying check constraints, partial indexes, foreign key cascading, and BCNF compliance.
+- [x] **Database Verification Suite**: Created automated data engineering tests (`npm run test:de`) verifying check constraints, partial indexes, foreign key cascading, 3NF/4NF triggers, and state-dependent downgrade safety.
 
 ### Phase 2: Express Gateway, Auth/RBAC, Polyglot Ingestion, Multi-Voice Engine & Swift Range Proxy `[DONE]`
 - [x] **Express.js API Gateway**: Implemented pure JavaScript (CommonJS, Node.js 20+) backend in `novel-audio-synthesizer/backend/` with zero transpilation build step.
