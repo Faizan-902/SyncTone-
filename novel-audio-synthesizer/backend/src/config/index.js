@@ -1,7 +1,59 @@
 const path = require('path');
+const fs = require('fs');
+
+// Robust .env resolution: checks repo root, parent dir, and backend dir
+const BACKEND_DIR = path.resolve(__dirname, '../..');
+const PARENT_DIR = path.resolve(BACKEND_DIR, '..');
+const REPO_ROOT = path.resolve(PARENT_DIR, '..');
+const ROOT_DIR = REPO_ROOT;
+
+const envCandidates = [
+  path.resolve(REPO_ROOT, '.env'),
+  path.resolve(PARENT_DIR, '.env'),
+  path.resolve(BACKEND_DIR, '.env'),
+];
+for (const envPath of envCandidates) {
+  if (fs.existsSync(envPath)) {
+    require('dotenv').config({ path: envPath });
+    break;
+  }
+}
 require('dotenv').config();
 
-const ROOT_DIR = path.resolve(__dirname, '../../..');
+function findFirstExistingDir(candidates, fallback) {
+  for (const c of candidates) {
+    if (fs.existsSync(c)) return c;
+  }
+  return fallback;
+}
+
+// Storage Directories: safely resolves output, chapters, and models both locally and in Docker container
+const outputDir = findFirstExistingDir(
+  [
+    path.resolve(REPO_ROOT, 'output'),
+    path.resolve(PARENT_DIR, 'output'),
+    path.resolve(BACKEND_DIR, 'output'),
+  ],
+  path.resolve(PARENT_DIR, 'output')
+);
+
+const chaptersDir = findFirstExistingDir(
+  [
+    path.resolve(REPO_ROOT, 'chapters'),
+    path.resolve(PARENT_DIR, 'chapters'),
+    path.resolve(BACKEND_DIR, 'chapters'),
+  ],
+  path.resolve(PARENT_DIR, 'chapters')
+);
+
+const modelsDir = findFirstExistingDir(
+  [
+    path.resolve(PARENT_DIR, 'kokoro-tts-backend/models_cache'),
+    path.resolve(REPO_ROOT, 'novel-audio-synthesizer/kokoro-tts-backend/models_cache'),
+    path.resolve(BACKEND_DIR, 'models_cache'),
+  ],
+  path.resolve(PARENT_DIR, 'kokoro-tts-backend/models_cache')
+);
 
 const config = {
   port: parseInt(process.env.PORT || '4000', 10),
@@ -34,9 +86,9 @@ const config = {
   // Storage Directories
   paths: {
     root: ROOT_DIR,
-    outputDir: path.resolve(ROOT_DIR, 'output'),
-    chaptersDir: path.resolve(ROOT_DIR, 'chapters'),
-    modelsDir: path.resolve(ROOT_DIR, 'novel-audio-synthesizer/kokoro-tts-backend/models_cache'),
+    outputDir,
+    chaptersDir,
+    modelsDir,
   },
 
   audio: {

@@ -64,6 +64,7 @@ class HeadlessWorker:
             select(SynthesisJob)
             .where(
                 SynthesisJob.status == "queued",
+                SynthesisJob.job_type.in_(["synthesize_chapter", "profile_novel"]),
                 SynthesisJob.run_after <= now,
                 SynthesisJob.attempts < SynthesisJob.max_attempts,
             )

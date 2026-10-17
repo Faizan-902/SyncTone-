@@ -6,6 +6,8 @@ import AudioPlayer from './components/AudioPlayer';
 import CharacterRoster from './components/CharacterRoster';
 import SettingsModal from './components/SettingsModal';
 
+const EMPTY_TIMELINE = [];
+
 export default function App() {
   const [stage, setStage] = useState('upload'); // 'upload' | 'parsed' | 'playing'
   const [textInput, setTextInput] = useState('');
@@ -15,12 +17,12 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
 
   const [chapterState, chapterActions] = useChapterData();
-  const audioSync = useAudioSync(chapterState.manifest?.timeline ?? []);
+  const audioSync = useAudioSync(chapterState.manifest?.timeline ?? EMPTY_TIMELINE);
 
   // Check model availability on mount
   useEffect(() => {
     chapterActions.checkModels().then(setModelStatus);
-  }, [chapterActions]);
+  }, []);
 
   const handleUploadAndParse = async () => {
     if (!textInput.trim()) return;
@@ -169,13 +171,13 @@ export default function App() {
                   dialogue lines
                 </p>
               </div>
-              {stage === 'parsed' && (
+              {(stage === 'parsed' || stage === 'playing') && (
                 <button
                   onClick={handleSynthesize}
                   disabled={chapterState.isLoading}
                   className="py-2 px-5 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 transition flex items-center gap-2"
                 >
-                  🔊 Synthesize Audio
+                  {stage === 'playing' ? '🔊 Re-Synthesize Audio' : '🔊 Synthesize Audio'}
                 </button>
               )}
             </div>
@@ -204,6 +206,10 @@ export default function App() {
           totalDurationMs={chapterState.manifest.total_duration_ms}
           onToggle={audioSync.toggle}
           onSetPlaybackRate={audioSync.setPlaybackRate}
+          onPlay={audioSync.handlePlay}
+          onPause={audioSync.handlePause}
+          onEnded={audioSync.handleEnded}
+          onLoadedMetadata={audioSync.handleLoadedMetadata}
         />
       )}
 
@@ -213,6 +219,18 @@ export default function App() {
           chapterId={chapterState.chapterId || ''}
           segments={chapterState.parsed.segments}
           onClose={() => setShowRoster(false)}
+          onVoiceChange={(charId, newVoiceId) => {
+            chapterActions.setState((prev) => {
+              if (!prev.parsed?.segments) return prev;
+              const updatedSegments = prev.parsed.segments.map((s) =>
+                s.speaker_id === charId ? { ...s, assigned_voice_id: newVoiceId } : s
+              );
+              return {
+                ...prev,
+                parsed: { ...prev.parsed, segments: updatedSegments },
+              };
+            });
+          }}
         />
       )}
 

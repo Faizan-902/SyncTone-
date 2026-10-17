@@ -79,24 +79,24 @@ class AudioStitcher:
 
         timeline: list[TimelineEntry] = []
         all_samples: list[np.ndarray] = []
-        current_ms = 0
+        total_samples = 0
         prev_voice: Optional[str] = None
+        current_ms = 0
 
         for seg in segments:
             pcm = seg["pcm_samples"]
 
             # Insert pause between different speakers
             if prev_voice is not None and seg["voice_id"] != prev_voice:
-                pause_samples = np.zeros(
-                    int(self.sample_rate * self.pause_ms / 1000),
-                    dtype=np.float32,
-                )
+                pause_n = int(round(self.sample_rate * self.pause_ms / 1000))
+                pause_samples = np.zeros(pause_n, dtype=np.float32)
                 all_samples.append(pause_samples)
-                current_ms += self.pause_ms
+                total_samples += pause_n
 
-            start_ms = current_ms
-            duration_ms = int(len(pcm) / self.sample_rate * 1000)
-            end_ms = start_ms + duration_ms
+            start_ms = int(round(total_samples * 1000 / self.sample_rate))
+            total_samples += len(pcm)
+            end_ms = int(round(total_samples * 1000 / self.sample_rate))
+            duration_ms = end_ms - start_ms
 
             timeline.append(
                 TimelineEntry(

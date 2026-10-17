@@ -55,30 +55,17 @@ export function useAudioSync(timeline = []) {
     return () => cancelAnimationFrame(rafRef.current);
   }, [isPlaying, syncLoop]);
 
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    const onPlay = () => setIsPlaying(true);
-    const onPause = () => setIsPlaying(false);
-    const onEnded = () => {
-      setIsPlaying(false);
-      setActiveSegmentId(-1);
-    };
-    const onLoadedMetadata = () => setDuration(audio.duration * 1000);
-
-    audio.addEventListener('play', onPlay);
-    audio.addEventListener('pause', onPause);
-    audio.addEventListener('ended', onEnded);
-    audio.addEventListener('loadedmetadata', onLoadedMetadata);
-
-    return () => {
-      audio.removeEventListener('play', onPlay);
-      audio.removeEventListener('pause', onPause);
-      audio.removeEventListener('ended', onEnded);
-      audio.removeEventListener('loadedmetadata', onLoadedMetadata);
-    };
+  const handlePlay = useCallback(() => setIsPlaying(true), []);
+  const handlePause = useCallback(() => setIsPlaying(false), []);
+  const handleEnded = useCallback(() => {
+    setIsPlaying(false);
+    setActiveSegmentId(-1);
   }, []);
+  const handleLoadedMetadata = useCallback((eOrDur) => {
+    const dur = typeof eOrDur === 'number' ? eOrDur : (eOrDur?.currentTarget?.duration || 0);
+    if (dur > 0) setDuration(dur * 1000);
+  }, []);
+
 
   const seekToSegment = useCallback(
     (segmentId) => {
@@ -131,5 +118,9 @@ export function useAudioSync(timeline = []) {
     pause,
     toggle,
     setPlaybackRate,
+    handlePlay,
+    handlePause,
+    handleEnded,
+    handleLoadedMetadata,
   };
 }

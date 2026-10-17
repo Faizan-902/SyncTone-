@@ -260,10 +260,22 @@ class VoiceProfiler {
   }
 }
 
+const EDGE_TO_KOKORO_MAP = {
+  'en-GB-RyanNeural': 'bm_george',
+  'en-GB-ThomasNeural': 'am_adam',
+  'en-GB-LibbyNeural': 'bf_emma',
+  'en-GB-AlfieNeural': 'bm_daniel',
+  'en-GB-ArthurNeural': 'am_george',
+  'en-GB-NoahNeural': 'am_michael',
+  'en-GB-SoniaNeural': 'af_sarah',
+  'en-GB-OliverNeural': 'bm_george',
+};
+
 const voiceProfiler = new VoiceProfiler();
 
 module.exports = {
   voiceProfiler,
   VOICE_PALETTE,
   VOICE_CATALOG,
+  EDGE_TO_KOKORO_MAP,
 };

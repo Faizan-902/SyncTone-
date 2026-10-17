@@ -1,4 +1,36 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+
+function connectProgressWebSocket(chapterId, onProgress) {
+  try {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host;
+    const ws = new WebSocket(`${protocol}//${host}/api/ws/progress/${chapterId}`);
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data && typeof data === 'object') {
+          const parts = [];
+          if (data.status) {
+            const statusLabel = data.status.charAt(0).toUpperCase() + data.status.slice(1);
+            parts.push(statusLabel);
+          }
+          if (typeof data.percent_complete === 'number') {
+            parts.push(`${data.percent_complete}%`);
+          }
+          if (data.current_segment !== undefined && data.total_segments) {
+            parts.push(`(${data.current_segment}/${data.total_segments} segments)`);
+          }
+          if (parts.length > 0) {
+            onProgress(parts.join(' '));
+          }
+        }
+      } catch (_e) {}
+    };
+    return ws;
+  } catch (_err) {
+    return null;
+  }
+}
 
 const API_BASE = '/api';
 
@@ -45,7 +77,12 @@ export function useChapterData() {
 
   const parseChapter = useCallback(async (chapterId) => {
     setLoading('Parsing text & attributing dialogue...');
+    let ws = null;
     try {
+      ws = connectProgressWebSocket(chapterId, (msg) => {
+        setState((prev) => ({ ...prev, progress: msg }));
+      });
+
       const res = await fetch(`${API_BASE}/parse/${chapterId}`, {
         method: 'POST',
       });
@@ -58,12 +95,21 @@ export function useChapterData() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Parse failed');
       return null;
+    } finally {
+      if (ws) {
+        try { ws.close(); } catch (_) {}
+      }
     }
   }, []);
 
   const synthesizeChapter = useCallback(async (chapterId) => {
     setLoading('Synthesizing audio...');
+    let ws = null;
     try {
+      ws = connectProgressWebSocket(chapterId, (msg) => {
+        setState((prev) => ({ ...prev, progress: msg }));
+      });
+
       const res = await fetch(`${API_BASE}/synthesize/${chapterId}`, {
         method: 'POST',
       });
@@ -76,6 +122,10 @@ export function useChapterData() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Synthesis failed');
       return null;
+    } finally {
+      if (ws) {
+        try { ws.close(); } catch (_) {}
+      }
     }
   }, []);
 
@@ -100,8 +150,10 @@ export function useChapterData() {
     });
   }, []);
 
-  return [
-    state,
-    { uploadText, parseChapter, synthesizeChapter, checkModels, reset },
-  ];
+  const actions = useMemo(
+    () => ({ uploadText, parseChapter, synthesizeChapter, checkModels, reset, setState }),
+    [uploadText, parseChapter, synthesizeChapter, checkModels, reset]
+  );
+
+  return [state, actions];
 }

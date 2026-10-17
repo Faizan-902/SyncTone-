@@ -11,6 +11,7 @@ const { audioStitcher } = require('../engine/audioStitcher');
 const { broadcastProgress } = require('../websocket');
 const { config } = require('../config');
 const { optionalAuth } = require('../middleware/auth');
+const { getSwiftAuth } = require('./swift');
 
 const router = Router();
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -160,6 +161,10 @@ async function ingestChapter({ novelId, title, text, chapterNumber, requestedBy 
  * Official Polyglot Chapter Ingestion route (saves text to Mongo, enqueues job in Postgres).
  */
 router.post('/novels/:id/chapters', optionalAuth, async (req, res) => {
+  if (req.user && req.user.role === 'reader') {
+    return res.status(403).json({ error: "Forbidden: role 'reader' cannot ingest chapters." });
+  }
+
   const novelId = req.params.id;
   const { text, title, chapter_number, requested_by } = req.body;
 
@@ -328,14 +333,20 @@ router.post('/parse/:chapter_id', async (req, res) => {
     // Save parsed segments into MongoDB
     chapterDoc.segments = parsed.segments.map((seg, idx) => ({
       order: idx + 1,
+      segment_id: idx + 1,
       type: seg.speaker_id === 'narrator' ? 'narration' : 'dialogue',
       text: seg.text,
       character_id: seg.speaker_id || null,
+      speaker_id: seg.speaker_id || null,
+      speaker_name: seg.speaker_name || seg.speaker_id || 'Narrator',
       voice_id: seg.assigned_voice_id || 'am_adam',
+      assigned_voice_id: seg.assigned_voice_id || 'am_adam',
       start_ms: 0,
       end_ms: 0,
-      confidence: seg.confidence || 1.0,
-      source: seg.attribution_source || 'narrator_default',
+      confidence: typeof seg.attribution_confidence === 'number'
+        ? seg.attribution_confidence
+        : (typeof seg.confidence === 'number' ? seg.confidence : 1.0),
+      source: seg.attribution_source || seg.source || 'narrator_default',
       needs_review: seg.needs_review || false,
     }));
     await chapterDoc.save();
@@ -362,7 +373,13 @@ router.post('/parse/:chapter_id', async (req, res) => {
     return res.json(parsed);
   } catch (err) {
     console.error('[Parse Chapter Error]:', err.message);
-    return res.status(500).json({ error: 'Failed to parse chapter.' });
+    try {
+      await pool.query(
+        "UPDATE chapters SET status = 'failed', updated_at = now() WHERE id = $1",
+        [chapter_id]
+      );
+    } catch (_dbErr) {}
+    return res.status(500).json({ error: 'Failed to parse chapter.', detail: err.message });
   }
 });
 
@@ -383,11 +400,27 @@ router.post('/synthesize/:chapter_id', async (req, res) => {
       return res.status(400).json({ detail: 'Chapter not yet parsed. Call /parse first.' });
     }
 
+    // Mark as synthesizing in PostgreSQL
+    try {
+      await pool.query(
+        "UPDATE chapters SET status = 'synthesizing', updated_at = now() WHERE id = $1",
+        [chapter_id]
+      );
+      await pool.query(
+        "UPDATE synthesis_jobs SET status = 'processing' WHERE chapter_id = $1",
+        [chapter_id]
+      );
+    } catch (_dbErr) {}
+
     const total = chapterDoc.segments.length;
     const segmentAudios = [];
 
+    const activeAssignments = voiceProfiler.getAllAssignments();
+
     for (let i = 0; i < total; i++) {
       const seg = chapterDoc.segments[i];
+      const effectiveVoiceId = activeAssignments[seg.character_id] || seg.voice_id;
+
       broadcastProgress(chapter_id, {
         chapter_id,
         current_segment: i + 1,
@@ -398,13 +431,16 @@ router.post('/synthesize/:chapter_id', async (req, res) => {
 
       const result = await ttsEngine.synthesizeSegment(
         seg.text,
-        seg.voice_id
+        effectiveVoiceId
       );
 
       segmentAudios.push({
-        segment_id: `seg_${seg.order}`,
-        voice_id: seg.voice_id,
+        segment_id: seg.order,
+        order: seg.order,
+        text: seg.text,
+        voice_id: effectiveVoiceId,
         speaker_name: seg.character_id,
+        character_id: seg.character_id,
         audio_buffer: result.audio_buffer || result.pcm_buffer,
         pcm_buffer: result.pcm_buffer || result.audio_buffer,
         duration_ms: result.duration_ms,
@@ -429,6 +465,7 @@ router.post('/synthesize/:chapter_id', async (req, res) => {
       audio_url: manifest.audio_url || `${chapter_id}.${manifest.audio_format || 'mp3'}`,
       timeline: manifest.timeline.map((t) => ({
         order: t.order || 0,
+        segment_id: t.segment_id || t.order || 0,
         start_ms: t.start_ms,
         end_ms: t.end_ms,
         character_id: t.character_id || t.speaker_name,
@@ -438,14 +475,41 @@ router.post('/synthesize/:chapter_id', async (req, res) => {
     };
     await chapterDoc.save();
 
+    const swiftAudioObject = `${chapter_id}.${manifest.audio_format || 'mp3'}`;
+    const audioFilePath = path.join(config.paths.outputDir, swiftAudioObject);
+
+    // Optional non-blocking upload of synthesized audio to OpenStack Swift
+    try {
+      if (getSwiftAuth && fs.existsSync(audioFilePath)) {
+        const { token, storageUrl } = await getSwiftAuth();
+        if (token && storageUrl) {
+          const audioData = fs.readFileSync(audioFilePath);
+          const axios = require('axios');
+          await axios.put(
+            `${storageUrl}/${config.swift.containerAudio}/${swiftAudioObject}`,
+            audioData,
+            {
+              headers: {
+                'X-Auth-Token': token,
+                'Content-Type': swiftAudioObject.endsWith('.mp3') ? 'audio/mpeg' : 'audio/wav',
+              },
+              timeout: 5000,
+            }
+          );
+        }
+      }
+    } catch (swiftErr) {
+      console.warn('[Synthesize Swift Upload Warning]: Swift offline or upload failed, continuing locally:', swiftErr.message);
+    }
+
     // Update PostgreSQL chapters table
     await pool.query(
       `
       UPDATE chapters 
-      SET status = 'completed', total_duration_ms = $1, updated_at = now() 
-      WHERE id = $2;
+      SET status = 'completed', total_duration_ms = $1, swift_audio_object = $2, updated_at = now() 
+      WHERE id = $3;
     `,
-      [manifest.total_duration_ms, chapter_id]
+      [manifest.total_duration_ms, swiftAudioObject, chapter_id]
     );
 
     // Update PostgreSQL synthesis_jobs queue
@@ -475,7 +539,22 @@ router.post('/synthesize/:chapter_id', async (req, res) => {
     return res.json(manifest);
   } catch (err) {
     console.error('[Synthesize Chapter Error]:', err.message);
-    return res.status(500).json({ error: 'Failed to synthesize chapter.' });
+    try {
+      await pool.query(
+        "UPDATE chapters SET status = 'failed', updated_at = now() WHERE id = $1",
+        [chapter_id]
+      );
+      await pool.query(
+        "UPDATE synthesis_jobs SET status = 'failed', error_message = $1, completed_at = now() WHERE chapter_id = $2",
+        [err.message || 'Synthesis failed', chapter_id]
+      );
+    } catch (_dbErr) {}
+    broadcastProgress(chapter_id, {
+      chapter_id,
+      status: 'failed',
+      error: err.message,
+    });
+    return res.status(500).json({ error: 'Failed to synthesize chapter.', detail: err.message });
   }
 });
 
@@ -503,6 +582,14 @@ router.get('/stream/:chapter_id', (req, res) => {
     const parts = range.replace(/bytes=/, '').split('-');
     const start = parseInt(parts[0], 10);
     const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+
+    if (isNaN(start) || start >= fileSize || end >= fileSize || start > end) {
+      res.writeHead(416, {
+        'Content-Range': `bytes */${fileSize}`,
+      });
+      return res.end();
+    }
+
     const chunksize = end - start + 1;
 
     const file = fs.createReadStream(audioPath, { start, end });
@@ -520,6 +607,61 @@ router.get('/stream/:chapter_id', (req, res) => {
       'Accept-Ranges': 'bytes',
     });
     fs.createReadStream(audioPath).pipe(res);
+  }
+});
+
+/**
+ * 6b. GET /api/chapters/:id
+ * Fetches combined PostgreSQL metadata and MongoDB document details.
+ */
+router.get('/chapters/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    let pgData = {};
+    if (UUID_REGEX.test(id)) {
+      const pgRes = await pool.query('SELECT * FROM chapters WHERE id = $1', [id]);
+      if (pgRes.rows.length > 0) {
+        pgData = pgRes.rows[0];
+      }
+    }
+    const chapterDoc = await Chapter.findOne({ pg_chapter_id: id });
+
+    if (Object.keys(pgData).length === 0 && !chapterDoc) {
+      return res.status(404).json({ error: 'Chapter not found' });
+    }
+
+    const docData = chapterDoc ? (chapterDoc.toObject ? chapterDoc.toObject() : chapterDoc) : {};
+
+    return res.json({
+      ...pgData,
+      ...docData,
+      id: pgData.id || docData.pg_chapter_id,
+      pg_chapter_id: pgData.id || docData.pg_chapter_id,
+    });
+  } catch (err) {
+    console.error('[Get Chapter Error]:', err.message);
+    return res.status(500).json({ error: 'Failed to retrieve chapter details.' });
+  }
+});
+
+/**
+ * 6c. GET /api/chapters/:id/segments
+ * Fetches parsed dialogue segments from MongoDB Chapter document.
+ */
+router.get('/chapters/:id/segments', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const chapterDoc = await Chapter.findOne({ pg_chapter_id: id });
+    if (!chapterDoc || !chapterDoc.segments || chapterDoc.segments.length === 0) {
+      return res.status(404).json({ error: 'Chapter segments not found or not yet parsed.' });
+    }
+    return res.json({
+      chapter_id: id,
+      segments: chapterDoc.segments,
+    });
+  } catch (err) {
+    console.error('[Get Chapter Segments Error]:', err.message);
+    return res.status(500).json({ error: 'Failed to retrieve chapter segments.' });
   }
 });
 
@@ -567,8 +709,8 @@ router.get('/characters/:chapter_id', async (req, res) => {
     for (const seg of chapterDoc.segments) {
       if (seg.character_id && seg.character_id !== 'narrator') {
         const prev = charCounts.get(seg.character_id) || {
-          name: seg.character_id,
-          voice: seg.voice_id,
+          name: seg.speaker_name || seg.character_id,
+          voice: seg.assigned_voice_id || seg.voice_id,
           count: 0,
         };
         prev.count += 1;

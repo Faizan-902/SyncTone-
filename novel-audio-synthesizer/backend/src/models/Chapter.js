@@ -19,6 +19,12 @@ const SegmentSchema = new Schema(
       required: [true, 'Segment order is required'],
       min: [1, 'Segment order must be >= 1'],
     },
+    segment_id: {
+      type: Number,
+      default: function () {
+        return this.order;
+      },
+    },
     type: {
       type: String,
       enum: ['narration', 'dialogue'],
@@ -35,10 +41,26 @@ const SegmentSchema = new Schema(
       default: null,
       trim: true,
     },
+    speaker_id: {
+      type: String,
+      default: function () {
+        return this.character_id;
+      },
+    },
+    speaker_name: {
+      type: String,
+      default: null,
+    },
     voice_id: {
       type: String,
       required: [true, 'Voice ID is required for audio playback synthesis'],
       trim: true,
+    },
+    assigned_voice_id: {
+      type: String,
+      default: function () {
+        return this.voice_id;
+      },
     },
     start_ms: {
       type: Number,
@@ -71,7 +93,7 @@ const SegmentSchema = new Schema(
     },
     source: {
       type: String,
-      enum: ['regex_rule', 'dependency_tree', 'llm_fallback', 'narrator_default', 'manual'],
+      enum: ['regex_rule', 'dependency_tree', 'llm_fallback', 'narrator_default', 'manual', 'unresolved'],
       default: 'narrator_default',
       alias: 'attribution_source',
     },
@@ -86,11 +108,12 @@ const SegmentSchema = new Schema(
 const TimelineEntrySchema = new Schema(
   {
     order: { type: Number, required: true },
+    segment_id: { type: Number, default: function () { return this.order; } },
     start_ms: { type: Number, required: true },
     end_ms: { type: Number, required: true },
     character_id: { type: String, default: null },
     voice_id: { type: String, required: true },
-    text: { type: String, required: true },
+    text: { type: String, default: '' },
   },
   { _id: false }
 );

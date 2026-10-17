@@ -3,7 +3,7 @@
 -- ==============================================================================
 -- IMPORTANT NOTICE:
 -- The canonical source of schema truth and migration runner for SyncTone is 
--- Alembic (located at: novel-audio-synthesizer/backend/alembic).
+-- Alembic (located at: novel-audio-synthesizer/kokoro-tts-backend/alembic).
 --
 -- This raw SQL file is provided SOLELY as an alternative reference for manual 
 -- inspection or standalone psql execution where Python is not available.
@@ -177,7 +177,7 @@ CREATE INDEX IF NOT EXISTS ix_playback_history_chapter_id ON playback_history(ch
 -- 10. Compatibility View: reading_progress -> playback_history
 CREATE OR REPLACE VIEW reading_progress AS SELECT * FROM playback_history;
 
--- 11. Seed Kokoro-82M Voice Catalog
+-- 11. Seed Unified Voice Catalog (Edge Neural + Kokoro Fallback)
 INSERT INTO voices (id, label, gender, age_band, language, reserved_narrator) VALUES
 ('am_adam', 'Adam (Narrator Default)', 'male', 'adult', 'en-us', true),
 ('af_heart', 'Heart (Warm & Expressive)', 'female', 'adult', 'en-us', false),
@@ -186,7 +186,18 @@ INSERT INTO voices (id, label, gender, age_band, language, reserved_narrator) VA
 ('af_sarah', 'Sarah (Mature)', 'female', 'elder', 'en-us', false),
 ('am_michael', 'Michael (Strong & Resonant)', 'male', 'adult', 'en-us', false),
 ('am_george', 'George (Deep & Mature)', 'male', 'elder', 'en-us', false),
+('am_onyx', 'Onyx (Deep Male)', 'male', 'adult', 'en-us', false),
+('af_sky', 'Sky (Calm Female)', 'female', 'adult', 'en-us', false),
 ('bm_george', 'George (British Received)', 'male', 'adult', 'en-gb', false),
 ('bf_emma', 'Emma (British Refined)', 'female', 'young', 'en-gb', false),
-('bm_daniel', 'Daniel (British Expressive)', 'male', 'young', 'en-gb', false)
+('bm_daniel', 'Daniel (British Expressive)', 'male', 'young', 'en-gb', false),
+('en-GB-RyanNeural', 'Ryan Neural (British Narrator)', 'male', 'adult', 'en-gb', true),
+('en-GB-ThomasNeural', 'Thomas Neural (Harry Potter)', 'male', 'young', 'en-gb', false),
+('en-GB-LibbyNeural', 'Libby Neural (Hermione Granger)', 'female', 'young', 'en-gb', false),
+('en-GB-AlfieNeural', 'Alfie Neural (Ron Weasley)', 'male', 'young', 'en-gb', false),
+('en-GB-ArthurNeural', 'Arthur Neural (Albus Dumbledore)', 'male', 'elder', 'en-gb', false),
+('en-GB-NoahNeural', 'Noah Neural (Severus Snape)', 'male', 'adult', 'en-gb', false),
+('en-GB-SoniaNeural', 'Sonia Neural (Prof. McGonagall)', 'female', 'adult', 'en-gb', false),
+('en-GB-OliverNeural', 'Oliver Neural (Draco Malfoy)', 'male', 'young', 'en-gb', false)
 ON CONFLICT (id) DO NOTHING;
+
