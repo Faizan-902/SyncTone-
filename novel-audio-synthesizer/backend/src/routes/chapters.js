@@ -102,18 +102,27 @@ async function ingestChapter({ novelId, title, text, chapterNumber, requestedBy 
     const chapterRes = await client.query(insertChapterQuery, [novelId, num, chapterTitle]);
     createdPgChapter = chapterRes.rows[0];
 
-    // 4. Enqueue synthesis job into PostgreSQL
+    // 4. Enqueue synthesis job into PostgreSQL within the same transaction
     const insertJobQuery = `
-      INSERT INTO synthesis_jobs (novel_id, chapter_id, requested_by, job_type, status, progress_pct)
-      VALUES ($1, $2, $3, 'synthesize_chapter', 'queued', 0.0)
-      RETURNING id, novel_id, chapter_id, requested_by, job_type, status, progress_pct, created_at;
+      INSERT INTO synthesis_jobs (requested_by, job_type, status, progress_pct)
+      VALUES ($1, 'synthesize_chapter', 'queued', 0.0)
+      RETURNING id, requested_by, job_type, status, progress_pct, created_at;
     `;
     const jobRes = await client.query(insertJobQuery, [
-      novelId,
-      createdPgChapter.id,
       requestedBy || null,
     ]);
     const job = jobRes.rows[0];
+
+    await client.query(
+      `
+      INSERT INTO chapter_synthesis_job_targets (job_id, chapter_id)
+      VALUES ($1, $2);
+      `,
+      [job.id, createdPgChapter.id]
+    );
+
+    job.novel_id = novelId;
+    job.chapter_id = createdPgChapter.id;
 
     // 5. Create document in MongoDB (linked via pg_chapter_id)
     const mongoDoc = new Chapter({
@@ -407,7 +416,8 @@ router.post('/synthesize/:chapter_id', async (req, res) => {
         [chapter_id]
       );
       await pool.query(
-        "UPDATE synthesis_jobs SET status = 'processing' WHERE chapter_id = $1",
+        `UPDATE synthesis_jobs SET status = 'processing'
+         WHERE id IN (SELECT job_id FROM chapter_synthesis_job_targets WHERE chapter_id = $1)`,
         [chapter_id]
       );
     } catch (_dbErr) {}
@@ -512,12 +522,14 @@ router.post('/synthesize/:chapter_id', async (req, res) => {
       [manifest.total_duration_ms, swiftAudioObject, chapter_id]
     );
 
-    // Update PostgreSQL synthesis_jobs queue
+    // Update PostgreSQL synthesis_jobs queue via target relation
     await pool.query(
       `
       UPDATE synthesis_jobs 
       SET status = 'completed', progress_pct = 1.0, completed_at = now() 
-      WHERE chapter_id = $1;
+      WHERE id IN (
+        SELECT job_id FROM chapter_synthesis_job_targets WHERE chapter_id = $1
+      );
     `,
       [chapter_id]
     );
@@ -545,7 +557,8 @@ router.post('/synthesize/:chapter_id', async (req, res) => {
         [chapter_id]
       );
       await pool.query(
-        "UPDATE synthesis_jobs SET status = 'failed', error_message = $1, completed_at = now() WHERE chapter_id = $2",
+        `UPDATE synthesis_jobs SET status = 'failed', error_message = $1, completed_at = now()
+         WHERE id IN (SELECT job_id FROM chapter_synthesis_job_targets WHERE chapter_id = $2)`,
         [err.message || 'Synthesis failed', chapter_id]
       );
     } catch (_dbErr) {}

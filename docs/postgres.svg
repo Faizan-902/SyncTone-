@@ -1,0 +1,466 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1960.0 1320.0" width="1960.0" height="1320.0" style="--bg:#1F1F1F;--fg:#CCCCCC;--line:#CCCCCC;--accent:#0078D4;--muted:#CCCCCCCC;--surface:#181818;--border:#CCCCCC;background:var(--bg)">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&amp;display=swap');
+  text { font-family: 'Inter', system-ui, sans-serif; }
+  .mono { font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', ui-monospace, monospace; }
+  svg {
+    --_text:          var(--fg);
+    --_text-sec:      var(--muted, color-mix(in srgb, var(--fg) 60%, var(--bg)));
+    --_text-muted:    var(--muted, color-mix(in srgb, var(--fg) 40%, var(--bg)));
+    --_text-faint:    color-mix(in srgb, var(--fg) 25%, var(--bg));
+    --_line:          var(--line, color-mix(in srgb, var(--fg) 50%, var(--bg)));
+    --_arrow:         var(--accent, color-mix(in srgb, var(--fg) 85%, var(--bg)));
+    --_node-fill:     var(--surface, color-mix(in srgb, var(--fg) 3%, var(--bg)));
+    --_node-stroke:   var(--border, color-mix(in srgb, var(--fg) 20%, var(--bg)));
+    --_group-fill:    var(--bg);
+    --_group-hdr:     color-mix(in srgb, var(--fg) 5%, var(--bg));
+    --_inner-stroke:  color-mix(in srgb, var(--fg) 12%, var(--bg));
+    --_key-badge:     color-mix(in srgb, var(--fg) 10%, var(--bg));
+  }
+</style>
+<defs>
+</defs>
+
+<polyline class="er-relationship" data-entity1="USERS" data-entity2="NOVELS" data-cardinality1="one" data-cardinality2="zero-many" data-label="adds (1:N)" points="432.8,134 452.8,134 452.8,236 671.1,236" fill="none" stroke="var(--_line)" stroke-width="1" />
+<polyline class="er-relationship" data-entity1="USERS" data-entity2="PLAYBACK_HISTORY" data-cardinality1="one" data-cardinality2="zero-many" data-label="maintains (1:N)" points="432.8,87 550.0,87 550.0,30 1630.0,30 1630.0,60 1671.3,60" fill="none" stroke="var(--_line)" stroke-width="1" />
+<polyline class="er-relationship" data-entity1="USERS" data-entity2="SYNTHESIS_JOBS" data-cardinality1="one" data-cardinality2="zero-many" data-label="requests (1:N)" points="432.8,181 442.8,181 442.8,1020 1640.0,1020 1640.0,810 1671.3,810" fill="none" stroke="var(--_line)" stroke-width="1" />
+<polyline class="er-relationship" data-entity1="NOVELS" data-entity2="CHAPTERS" data-cardinality1="one" data-cardinality2="zero-many" data-label="contains (1:N)" points="864.1,208.4 895.4,208.4 895.4,374.5 1131.1,374.5" fill="none" stroke="var(--_line)" stroke-width="1" />
+<polyline class="er-relationship" data-entity1="NOVELS" data-entity2="CHARACTERS" data-cardinality1="one" data-cardinality2="zero-many" data-label="defines cast (1:N)" points="864.1,263.6 885.4,263.6 885.4,685.5 1139.9,685.5" fill="none" stroke="var(--_line)" stroke-width="1" />
+<polyline class="er-relationship" data-entity1="NOVELS" data-entity2="PLAYBACK_HISTORY" data-cardinality1="one" data-cardinality2="zero-many" data-label="tracks in (1:N)" points="864.1,153.2 1000.0,153.2 1000.0,110 1671.3,110" fill="none" stroke="var(--_line)" stroke-width="1" />
+<polyline class="er-relationship" data-entity1="NOVELS" data-entity2="NOVEL_PROFILE_JOB_TARGETS" data-cardinality1="one" data-cardinality2="zero-many" data-label="targets (1:N)" points="864.1,320.0 875.0,320.0 875.0,1160.0 1390.0,1160.0" fill="none" stroke="var(--_line)" stroke-width="1" />
+<polyline class="er-relationship" data-entity1="CHARACTERS" data-entity2="CHARACTER_ALIASES" data-cardinality1="one" data-cardinality2="zero-many" data-label="known as (1:N)" points="1319.7,742.5 1450.0,742.5 1450.0,680.0 1671.3,680.0" fill="none" stroke="var(--_line)" stroke-width="1" />
+<polyline class="er-relationship" data-entity1="VOICES" data-entity2="CHARACTERS" data-cardinality1="one" data-cardinality2="zero-many" data-label="assigned to (1:N)" points="865.4,799.5 1139.9,799.5" fill="none" stroke="var(--_line)" stroke-width="1" />
+<polyline class="er-relationship" data-entity1="CHAPTERS" data-entity2="MONGO_CHAPTER_DOC" data-cardinality1="one" data-cardinality2="zero-many" data-label="content link [pg_chapter_id] (1:1)" points="1337.3,374.5 1357.3,374.5 1357.3,440.0 1671.3,440.0" fill="none" stroke="var(--_line)" stroke-width="1" stroke-dasharray="6 4" />
+<polyline class="er-relationship" data-entity1="CHAPTERS" data-entity2="PLAYBACK_POSITIONS" data-cardinality1="one" data-cardinality2="zero-many" data-label="current chapter (1:N)" points="1337.3,310.0 1480.0,310.0 1480.0,240.0 1671.3,240.0" fill="none" stroke="var(--_line)" stroke-width="1" />
+<polyline class="er-relationship" data-entity1="CHAPTERS" data-entity2="CHAPTER_SYNTHESIS_JOB_TARGETS" data-cardinality1="one" data-cardinality2="zero-many" data-label="targets (1:N)" points="1337.3,440.0 1350.0,440.0 1350.0,1170.0 1671.3,1170.0" fill="none" stroke="var(--_line)" stroke-width="1" />
+<polyline class="er-relationship" data-entity1="PLAYBACK_HISTORY" data-entity2="PLAYBACK_POSITIONS" data-cardinality1="one" data-cardinality2="zero-many" data-label="tracks progress (1:0..1)" points="1760.0,162.0 1760.0,190.0" fill="none" stroke="var(--_line)" stroke-width="1" />
+<polyline class="er-relationship" data-entity1="SYNTHESIS_JOBS" data-entity2="NOVEL_PROFILE_JOB_TARGETS" data-cardinality1="one" data-cardinality2="zero-many" data-label="specializes to (1:0..1)" points="1690.0,1092.0 1690.0,1110.0 1610.0,1110.0 1610.0,1140.0" fill="none" stroke="var(--_line)" stroke-width="1" />
+<polyline class="er-relationship" data-entity1="SYNTHESIS_JOBS" data-entity2="CHAPTER_SYNTHESIS_JOB_TARGETS" data-cardinality1="one" data-cardinality2="zero-many" data-label="specializes to (1:0..1)" points="1790.0,1092.0 1790.0,1120.0" fill="none" stroke="var(--_line)" stroke-width="1" />
+<g class="entity" data-id="SEGMENT_AUDIO_CACHE" data-label="SEGMENT_AUDIO_CACHE">
+  <rect x="40.0" y="40.0" width="193.0" height="166" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="40.0" y="40.0" width="193.0" height="34" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="136.5" y="57.0" text-anchor="middle" font-size="12" font-weight="700" fill="var(--_text)" dy="4.55">SEGMENT_AUDIO_CACHE</text>
+  <line x1="40.0" y1="74.0" x2="233.0" y2="74.0" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <rect x="46.0" y="78.0" width="22.31" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+  <text x="57.155" y="85.0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">PK</text>
+  <text x="76.31" y="85.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar</tspan></text>
+  <text x="225.0" y="85.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">text_hash</tspan></text>
+  <rect x="46.0" y="100.0" width="22.31" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+  <text x="57.155" y="107.0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">PK</text>
+  <text x="76.31" y="107.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar</tspan></text>
+  <text x="225.0" y="107.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">voice_hash</tspan></text>
+  <text x="48.0" y="129.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar</tspan></text>
+  <text x="225.0" y="129.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">local_pcm_path</tspan></text>
+  <text x="48.0" y="151.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">int</tspan></text>
+  <text x="225.0" y="151.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">n_samples</tspan></text>
+  <text x="48.0" y="173.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">int</tspan></text>
+  <text x="225.0" y="173.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">sample_rate</tspan></text>
+  <text x="48.0" y="195.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">timestamptz</tspan></text>
+  <text x="225.0" y="195.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">last_used_at</tspan></text>
+</g>
+<g class="entity" data-id="USERS" data-label="USERS">
+  <rect x="253.0" y="40.0" width="179.8" height="188" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="253.0" y="40.0" width="179.8" height="34" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="342.9" y="57.0" text-anchor="middle" font-size="12" font-weight="700" fill="var(--_text)" dy="4.55">USERS</text>
+  <line x1="253.0" y1="74.0" x2="432.8" y2="74.0" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <rect x="259.0" y="78.0" width="22.31" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+  <text x="270.155" y="85.0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">PK</text>
+  <text x="289.31" y="85.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">uuid</tspan></text>
+  <text x="424.8" y="85.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">id</tspan></text>
+  <rect x="259.0" y="100.0" width="22.31" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+  <text x="270.155" y="107.0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">UK</text>
+  <text x="289.31" y="107.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar</tspan></text>
+  <text x="424.8" y="107.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">username</tspan></text>
+  <rect x="259.0" y="122.0" width="22.31" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+  <text x="270.155" y="129.0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">UK</text>
+  <text x="289.31" y="129.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar</tspan></text>
+  <text x="424.8" y="129.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">email</tspan></text>
+  <text x="261.0" y="151.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar</tspan></text>
+  <text x="424.8" y="151.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">password_hash</tspan></text>
+  <g><title>reader | writer | admin</title>
+  <text x="261.0" y="173.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar</tspan></text>
+  <text x="424.8" y="173.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">role</tspan></text>
+  </g>
+  <text x="261.0" y="195.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">timestamptz</tspan></text>
+  <text x="424.8" y="195.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">created_at</tspan></text>
+  <text x="261.0" y="217.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">timestamptz</tspan></text>
+  <text x="424.8" y="217.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">updated_at</tspan></text>
+</g>
+<g class="entity" data-id="NOVELS" data-label="NOVELS">
+  <rect x="671.1" y="98.0" width="193.0" height="276" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="671.1" y="98.0" width="193.0" height="34" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="767.6" y="115.0" text-anchor="middle" font-size="12" font-weight="700" fill="var(--_text)" dy="4.55">NOVELS</text>
+  <line x1="671.1" y1="132.0" x2="864.1" y2="132.0" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <rect x="677.1" y="136.0" width="22.31" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+  <text x="688.255" y="143.0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">PK</text>
+  <text x="707.4100000000001" y="143.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">uuid</tspan></text>
+  <text x="856.1" y="143.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">id</tspan></text>
+  <rect x="677.1" y="158.0" width="22.31" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+  <text x="688.255" y="165.0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">FK</text>
+  <text x="707.4100000000001" y="165.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">uuid</tspan></text>
+  <text x="856.1" y="165.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">added_by</tspan></text>
+  <text x="679.1" y="187.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar</tspan></text>
+  <text x="856.1" y="187.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">title</tspan></text>
+  <text x="679.1" y="209.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">text</tspan></text>
+  <text x="856.1" y="209.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">synopsis</tspan></text>
+  <g><title>verified | community</title>
+  <text x="679.1" y="231.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar</tspan></text>
+  <text x="856.1" y="231.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">channel</tspan></text>
+  </g>
+  <g><title>draft | profiling | published | archived</title>
+  <text x="679.1" y="253.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar</tspan></text>
+  <text x="856.1" y="253.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">status</tspan></text>
+  </g>
+  <text x="679.1" y="275.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar</tspan></text>
+  <text x="856.1" y="275.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">global_tone</tspan></text>
+  <g><title>manual | ai</title>
+  <text x="679.1" y="297.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar</tspan></text>
+  <text x="856.1" y="297.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">portfolio_source</tspan></text>
+  </g>
+  <text x="679.1" y="319.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar</tspan></text>
+  <text x="856.1" y="319.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">cover_object</tspan></text>
+  <text x="679.1" y="341.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">timestamptz</tspan></text>
+  <text x="856.1" y="341.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">created_at</tspan></text>
+  <text x="679.1" y="363.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">timestamptz</tspan></text>
+  <text x="856.1" y="363.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">updated_at</tspan></text>
+</g>
+<g class="entity" data-id="VOICES" data-label="VOICES">
+  <rect x="665.8" y="705.5" width="199.6" height="188" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="665.8" y="705.5" width="199.6" height="34" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="765.5999999999999" y="722.5" text-anchor="middle" font-size="12" font-weight="700" fill="var(--_text)" dy="4.55">VOICES</text>
+  <line x1="665.8" y1="739.5" x2="865.4" y2="739.5" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <rect x="671.8" y="743.5" width="22.31" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+  <text x="682.9549999999999" y="750.5" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">PK</text>
+  <text x="702.1099999999999" y="750.5" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar</tspan></text>
+  <text x="857.4" y="750.5" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">id</tspan></text>
+  <text x="673.8" y="772.5" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar</tspan></text>
+  <text x="857.4" y="772.5" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">label</tspan></text>
+  <g><title>male | female</title>
+  <text x="673.8" y="794.5" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar</tspan></text>
+  <text x="857.4" y="794.5" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">gender</tspan></text>
+  </g>
+  <g><title>child | young | adult | elder</title>
+  <text x="673.8" y="816.5" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar</tspan></text>
+  <text x="857.4" y="816.5" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">age_band</tspan></text>
+  </g>
+  <g><title>en-us | en-gb</title>
+  <text x="673.8" y="838.5" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar</tspan></text>
+  <text x="857.4" y="838.5" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">language</tspan></text>
+  </g>
+  <text x="673.8" y="860.5" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">boolean</tspan></text>
+  <text x="857.4" y="860.5" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">reserved_narrator</tspan></text>
+  <text x="673.8" y="882.5" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">timestamptz</tspan></text>
+  <text x="857.4" y="882.5" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">created_at</tspan></text>
+</g>
+<g class="entity" data-id="CHAPTERS" data-label="CHAPTERS">
+  <rect x="1131.1" y="247.5" width="206.2" height="254" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="1131.1" y="247.5" width="206.2" height="34" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="1234.1999999999998" y="264.5" text-anchor="middle" font-size="12" font-weight="700" fill="var(--_text)" dy="4.55">CHAPTERS</text>
+  <line x1="1131.1" y1="281.5" x2="1337.3" y2="281.5" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <rect x="1137.1" y="285.5" width="22.31" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+  <text x="1148.2549999999999" y="292.5" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">PK</text>
+  <text x="1167.4099999999999" y="292.5" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">uuid</tspan></text>
+  <text x="1329.3" y="292.5" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">id</tspan></text>
+  <rect x="1137.1" y="307.5" width="22.31" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+  <text x="1148.2549999999999" y="314.5" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">FK</text>
+  <text x="1167.4099999999999" y="314.5" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">uuid</tspan></text>
+  <text x="1329.3" y="314.5" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">novel_id</tspan></text>
+  <g><title>UK(novel_id, chapter_number)</title>
+  <text x="1139.1" y="336.5" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">int</tspan></text>
+  <text x="1329.3" y="336.5" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">chapter_number</tspan></text>
+  </g>
+  <text x="1139.1" y="358.5" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar</tspan></text>
+  <text x="1329.3" y="358.5" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">title</tspan></text>
+  <g><title>draft | parsed | synthesizing | completed | outdated | failed</title>
+  <text x="1139.1" y="380.5" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar</tspan></text>
+  <text x="1329.3" y="380.5" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">status</tspan></text>
+  </g>
+  <text x="1139.1" y="402.5" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">int</tspan></text>
+  <text x="1329.3" y="402.5" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">audio_version</tspan></text>
+  <text x="1139.1" y="424.5" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar</tspan></text>
+  <text x="1329.3" y="424.5" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">swift_audio_object</tspan></text>
+  <text x="1139.1" y="446.5" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">int</tspan></text>
+  <text x="1329.3" y="446.5" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">total_duration_ms</tspan></text>
+  <text x="1139.1" y="468.5" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">timestamptz</tspan></text>
+  <text x="1329.3" y="468.5" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">created_at</tspan></text>
+  <text x="1139.1" y="490.5" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">timestamptz</tspan></text>
+  <text x="1329.3" y="490.5" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">updated_at</tspan></text>
+</g>
+<g class="entity" data-id="CHARACTERS" data-label="CHARACTERS">
+  <rect x="1139.9" y="571.5" width="179.8" height="342" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="1139.9" y="571.5" width="179.8" height="34" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="1229.8000000000002" y="588.5" text-anchor="middle" font-size="12" font-weight="700" fill="var(--_text)" dy="4.55">CHARACTERS</text>
+  <line x1="1139.9" y1="605.5" x2="1319.7" y2="605.5" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <rect x="1145.9" y="609.5" width="22.31" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+  <text x="1157.055" y="616.5" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">PK</text>
+  <text x="1176.21" y="616.5" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">uuid</tspan></text>
+  <text x="1311.7" y="616.5" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">id</tspan></text>
+  <rect x="1145.9" y="631.5" width="22.31" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+  <text x="1157.055" y="638.5" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">FK</text>
+  <text x="1176.21" y="638.5" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">uuid</tspan></text>
+  <text x="1311.7" y="638.5" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">novel_id</tspan></text>
+  <g><title>UK(novel_id, canonical_name)</title>
+  <text x="1147.9" y="660.5" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar</tspan></text>
+  <text x="1311.7" y="660.5" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">canonical_name</tspan></text>
+  </g>
+  <g><title>male | female | unknown</title>
+  <text x="1147.9" y="682.5" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar</tspan></text>
+  <text x="1311.7" y="682.5" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">gender</tspan></text>
+  </g>
+  <g><title>child | young | adult | elder</title>
+  <text x="1147.9" y="704.5" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar</tspan></text>
+  <text x="1311.7" y="704.5" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">age_band</tspan></text>
+  </g>
+  <text x="1147.9" y="726.5" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar</tspan></text>
+  <text x="1311.7" y="726.5" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">temperament</tspan></text>
+  <text x="1147.9" y="748.5" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">text</tspan></text>
+  <text x="1311.7" y="748.5" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">sample_quote</tspan></text>
+  <rect x="1145.9" y="763.5" width="22.31" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+  <text x="1157.055" y="770.5" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">FK</text>
+  <text x="1176.21" y="770.5" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar</tspan></text>
+  <text x="1311.7" y="770.5" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">voice_id</tspan></text>
+  <g><title>0.5 to 2.0</title>
+  <text x="1147.9" y="792.5" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">real</tspan></text>
+  <text x="1311.7" y="792.5" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">speed_multiplier</tspan></text>
+  </g>
+  <g><title>Partial UK on novel_id WHERE is_narrator</title>
+  <text x="1147.9" y="814.5" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">boolean</tspan></text>
+  <text x="1311.7" y="814.5" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">is_narrator</tspan></text>
+  </g>
+  <text x="1147.9" y="836.5" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">boolean</tspan></text>
+  <text x="1311.7" y="836.5" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">needs_review</tspan></text>
+  <g><title>manual | ai</title>
+  <text x="1147.9" y="858.5" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar</tspan></text>
+  <text x="1311.7" y="858.5" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">source</tspan></text>
+  </g>
+  <text x="1147.9" y="880.5" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">timestamptz</tspan></text>
+  <text x="1311.7" y="880.5" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">created_at</tspan></text>
+  <text x="1147.9" y="902.5" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">timestamptz</tspan></text>
+  <text x="1311.7" y="902.5" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">updated_at</tspan></text>
+</g>
+<g class="entity" data-id="PLAYBACK_HISTORY" data-label="PLAYBACK_HISTORY">
+  <rect x="1671.3" y="40.0" width="193.0" height="122" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="1671.3" y="40.0" width="193.0" height="34" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="1767.8" y="57.0" text-anchor="middle" font-size="12" font-weight="700" fill="var(--_text)" dy="4.55">PLAYBACK_HISTORY</text>
+  <line x1="1671.3" y1="74.0" x2="1864.3" y2="74.0" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <rect x="1677.3" y="78.0" width="22.31" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+  <text x="1688.455" y="85.0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">PK</text>
+  <text x="1707.61" y="85.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">uuid</tspan></text>
+  <text x="1856.3" y="85.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">id</tspan></text>
+  <g><title>UK(user_id, novel_id)</title>
+  <rect x="1677.3" y="100.0" width="22.31" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+  <text x="1688.455" y="107.0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">FK</text>
+  <text x="1707.61" y="107.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">uuid</tspan></text>
+  <text x="1856.3" y="107.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">user_id</tspan></text>
+  </g>
+  <g><title>UK(user_id, novel_id)</title>
+  <rect x="1677.3" y="122.0" width="22.31" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+  <text x="1688.455" y="129.0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">FK</text>
+  <text x="1707.61" y="129.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">uuid</tspan></text>
+  <text x="1856.3" y="129.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">novel_id</tspan></text>
+  </g>
+  <g><title>Bookmark creation timestamp</title>
+  <text x="1679.3" y="151.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">timestamptz</tspan></text>
+  <text x="1856.3" y="151.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">created_at</tspan></text>
+  </g>
+</g>
+<g class="entity" data-id="PLAYBACK_POSITIONS" data-label="PLAYBACK_POSITIONS">
+  <rect x="1671.3" y="190.0" width="193.0" height="144" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="1671.3" y="190.0" width="193.0" height="34" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="1767.8" y="207.0" text-anchor="middle" font-size="12" font-weight="700" fill="var(--_text)" dy="4.55">PLAYBACK_POSITIONS</text>
+  <line x1="1671.3" y1="224.0" x2="1864.3" y2="224.0" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <g><title>PK FK references playback_history(id)</title>
+  <rect x="1677.3" y="228.0" width="22.31" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+  <text x="1688.455" y="235.0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">PK</text>
+  <text x="1707.61" y="235.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">uuid</tspan></text>
+  <text x="1856.3" y="235.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">history_id</tspan></text>
+  </g>
+  <g><title>references chapters(id)</title>
+  <rect x="1677.3" y="250.0" width="22.31" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+  <text x="1688.455" y="257.0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">FK</text>
+  <text x="1707.61" y="257.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">uuid</tspan></text>
+  <text x="1856.3" y="257.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">chapter_id</tspan></text>
+  </g>
+  <g><title>Active segment index</title>
+  <text x="1679.3" y="279.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">int</tspan></text>
+  <text x="1856.3" y="279.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">segment_order</tspan></text>
+  </g>
+  <g><title>Audio offset in milliseconds</title>
+  <text x="1679.3" y="301.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">int</tspan></text>
+  <text x="1856.3" y="301.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">position_ms</tspan></text>
+  </g>
+  <g><title>Progress last saved</title>
+  <text x="1679.3" y="323.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">timestamptz</tspan></text>
+  <text x="1856.3" y="323.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">updated_at</tspan></text>
+  </g>
+</g>
+<g class="entity" data-id="MONGO_CHAPTER_DOC" data-label="MONGO_CHAPTER_DOC">
+  <rect x="1671.3" y="362.0" width="193.0" height="232" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="1671.3" y="362.0" width="193.0" height="34" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="1767.8" y="379.0" text-anchor="middle" font-size="12" font-weight="700" fill="var(--_text)" dy="4.55">MONGO_CHAPTER_DOC</text>
+  <line x1="1671.3" y1="396.0" x2="1864.3" y2="396.0" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <rect x="1677.3" y="400.0" width="22.31" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+  <text x="1688.455" y="407.0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">PK</text>
+  <text x="1707.61" y="407.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">ObjectId</tspan></text>
+  <text x="1856.3" y="407.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">_id</tspan></text>
+  <g><title>1:1 reference to CHAPTERS.id</title>
+  <rect x="1677.3" y="422.0" width="22.31" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+  <text x="1688.455" y="429.0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">UK</text>
+  <text x="1707.61" y="429.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">string</tspan></text>
+  <text x="1856.3" y="429.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">pg_chapter_id</tspan></text>
+  </g>
+  <g><title>UK(novel_id, chapter_number)</title>
+  <text x="1679.3" y="451.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">string</tspan></text>
+  <text x="1856.3" y="451.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">novel_id</tspan></text>
+  </g>
+  <text x="1679.3" y="473.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">int</tspan></text>
+  <text x="1856.3" y="473.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">chapter_number</tspan></text>
+  <text x="1679.3" y="495.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">string</tspan></text>
+  <text x="1856.3" y="495.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">title</tspan></text>
+  <text x="1679.3" y="517.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">string</tspan></text>
+  <text x="1856.3" y="517.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">raw_text</tspan></text>
+  <text x="1679.3" y="539.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">int</tspan></text>
+  <text x="1856.3" y="539.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">audio_version</tspan></text>
+  <g><title>Ordered dialogue &amp; narration subdocuments</title>
+  <text x="1679.3" y="561.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">array</tspan></text>
+  <text x="1856.3" y="561.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">segments</tspan></text>
+  </g>
+  <g><title>total_duration_ms, audio_url, timeline[]</title>
+  <text x="1679.3" y="583.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">object</tspan></text>
+  <text x="1856.3" y="583.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">manifest</tspan></text>
+  </g>
+</g>
+<g class="entity" data-id="CHARACTER_ALIASES" data-label="CHARACTER_ALIASES">
+  <rect x="1671.3" y="622.0" width="193.0" height="122" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="1671.3" y="622.0" width="193.0" height="34" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="1767.8" y="639.0" text-anchor="middle" font-size="12" font-weight="700" fill="var(--_text)" dy="4.55">CHARACTER_ALIASES</text>
+  <line x1="1671.3" y1="656.0" x2="1864.3" y2="656.0" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <rect x="1677.3" y="660.0" width="22.31" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+  <text x="1688.455" y="667.0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">PK</text>
+  <text x="1707.61" y="667.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">uuid</tspan></text>
+  <text x="1856.3" y="667.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">id</tspan></text>
+  <g><title>references characters(id)</title>
+  <rect x="1677.3" y="682.0" width="22.31" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+  <text x="1688.455" y="689.0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">FK</text>
+  <text x="1707.61" y="689.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">uuid</tspan></text>
+  <text x="1856.3" y="689.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">character_id</tspan></text>
+  </g>
+  <g><title>UK(character_id, alias) (4NF Normalized)</title>
+  <text x="1679.3" y="711.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar</tspan></text>
+  <text x="1856.3" y="711.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">alias</tspan></text>
+  </g>
+  <text x="1679.3" y="733.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">timestamptz</tspan></text>
+  <text x="1856.3" y="733.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">created_at</tspan></text>
+</g>
+<g class="entity" data-id="SYNTHESIS_JOBS" data-label="SYNTHESIS_JOBS">
+  <rect x="1671.3" y="772.0" width="193.0" height="320" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="1671.3" y="772.0" width="193.0" height="34" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="1767.8" y="789.0" text-anchor="middle" font-size="12" font-weight="700" fill="var(--_text)" dy="4.55">SYNTHESIS_JOBS</text>
+  <line x1="1671.3" y1="806.0" x2="1864.3" y2="806.0" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <rect x="1677.3" y="810.0" width="22.31" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+  <text x="1688.455" y="817.0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">PK</text>
+  <text x="1707.61" y="817.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">uuid</tspan></text>
+  <text x="1856.3" y="817.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">id</tspan></text>
+  <g><title>nullable</title>
+  <rect x="1677.3" y="832.0" width="22.31" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+  <text x="1688.455" y="839.0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">FK</text>
+  <text x="1707.61" y="839.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">uuid</tspan></text>
+  <text x="1856.3" y="839.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">requested_by</tspan></text>
+  </g>
+  <g><title>profile_novel | synthesize_chapter</title>
+  <text x="1679.3" y="861.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar</tspan></text>
+  <text x="1856.3" y="861.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">job_type</tspan></text>
+  </g>
+  <g><title>queued | processing | completed | failed</title>
+  <text x="1679.3" y="883.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar</tspan></text>
+  <text x="1856.3" y="883.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">status</tspan></text>
+  </g>
+  <g><title>0.0 to 100.0</title>
+  <text x="1679.3" y="905.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">real</tspan></text>
+  <text x="1856.3" y="905.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">progress_pct</tspan></text>
+  </g>
+  <text x="1679.3" y="927.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">int</tspan></text>
+  <text x="1856.3" y="927.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">attempts</tspan></text>
+  <text x="1679.3" y="949.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">int</tspan></text>
+  <text x="1856.3" y="949.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">max_attempts</tspan></text>
+  <text x="1679.3" y="971.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">timestamptz</tspan></text>
+  <text x="1856.3" y="971.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">run_after</tspan></text>
+  <text x="1679.3" y="993.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">varchar</tspan></text>
+  <text x="1856.3" y="993.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">worker_id</tspan></text>
+  <text x="1679.3" y="1015.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">timestamptz</tspan></text>
+  <text x="1856.3" y="1015.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">locked_at</tspan></text>
+  <text x="1679.3" y="1037.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">text</tspan></text>
+  <text x="1856.3" y="1037.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">error_message</tspan></text>
+  <text x="1679.3" y="1059.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">timestamptz</tspan></text>
+  <text x="1856.3" y="1059.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">created_at</tspan></text>
+  <text x="1679.3" y="1081.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">timestamptz</tspan></text>
+  <text x="1856.3" y="1081.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">completed_at</tspan></text>
+</g>
+<g class="entity" data-id="NOVEL_PROFILE_JOB_TARGETS" data-label="NOVEL_PROFILE_JOB_TARGETS">
+  <rect x="1390.0" y="1120.0" width="220.0" height="78" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="1390.0" y="1120.0" width="220.0" height="34" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="1500.0" y="1137.0" text-anchor="middle" font-size="12" font-weight="700" fill="var(--_text)" dy="4.55">NOVEL_PROFILE_JOB_TARGETS</text>
+  <line x1="1390.0" y1="1154.0" x2="1610.0" y2="1154.0" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <g><title>PK FK references synthesis_jobs(id)</title>
+  <rect x="1396.0" y="1158.0" width="22.31" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+  <text x="1407.155" y="1165.0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">PK</text>
+  <text x="1426.31" y="1165.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">uuid</tspan></text>
+  <text x="1602.0" y="1165.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">job_id</tspan></text>
+  </g>
+  <g><title>FK references novels(id)</title>
+  <rect x="1396.0" y="1180.0" width="22.31" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+  <text x="1407.155" y="1187.0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">FK</text>
+  <text x="1426.31" y="1187.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">uuid</tspan></text>
+  <text x="1602.0" y="1187.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">novel_id</tspan></text>
+  </g>
+</g>
+<g class="entity" data-id="CHAPTER_SYNTHESIS_JOB_TARGETS" data-label="CHAPTER_SYNTHESIS_JOB_TARGETS">
+  <rect x="1671.3" y="1120.0" width="240.0" height="78" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="1671.3" y="1120.0" width="240.0" height="34" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="1791.3" y="1137.0" text-anchor="middle" font-size="12" font-weight="700" fill="var(--_text)" dy="4.55">CHAPTER_SYNTHESIS_JOB_TARGETS</text>
+  <line x1="1671.3" y1="1154.0" x2="1911.3" y2="1154.0" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <g><title>PK FK references synthesis_jobs(id)</title>
+  <rect x="1677.3" y="1158.0" width="22.31" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+  <text x="1688.455" y="1165.0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">PK</text>
+  <text x="1707.61" y="1165.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">uuid</tspan></text>
+  <text x="1903.3" y="1165.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">job_id</tspan></text>
+  </g>
+  <g><title>FK references chapters(id)</title>
+  <rect x="1677.3" y="1180.0" width="22.31" height="14" rx="2" ry="2" fill="var(--_key-badge)" />
+  <text x="1688.455" y="1187.0" text-anchor="middle" dy="0.35em" font-size="9" font-weight="600" fill="var(--_text-sec)">FK</text>
+  <text x="1707.61" y="1187.0" class="mono" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-muted)">uuid</tspan></text>
+  <text x="1903.3" y="1187.0" class="mono" text-anchor="end" dy="0.35em" font-size="11" font-weight="400"><tspan fill="var(--_text-sec)">chapter_id</tspan></text>
+  </g>
+</g>
+<rect x="412.3" y="174.85" width="81.0" height="20.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="0.5" />
+<text x="452.8" y="185.0" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-muted)" dy="3.85">adds (1:N)</text>
+<rect x="1033.25" y="19.85" width="113.5" height="20.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="0.5" />
+<text x="1090.0" y="30.0" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-muted)" dy="3.85">maintains (1:N)</text>
+<rect x="987.9000000000001" y="1009.85" width="107.0" height="20.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="0.5" />
+<text x="1041.4" y="1020.0" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-muted)" dy="3.85">requests (1:N)</text>
+<rect x="841.9" y="281.3" width="107.0" height="20.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="0.5" />
+<text x="895.4" y="291.45" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-muted)" dy="3.85">contains (1:N)</text>
+<rect x="818.9" y="464.40000000000003" width="133.0" height="20.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="0.5" />
+<text x="885.4" y="474.55" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-muted)" dy="3.85">defines cast (1:N)</text>
+<rect x="943.25" y="121.44999999999999" width="113.5" height="20.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="0.5" />
+<text x="1000.0" y="131.6" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-muted)" dy="3.85">tracks in (1:N)</text>
+<rect x="824.75" y="729.85" width="100.5" height="20.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="0.5" />
+<text x="875.0" y="740.0" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-muted)" dy="3.85">targets (1:N)</text>
+<rect x="1396.5" y="701.1" width="107.0" height="20.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="0.5" />
+<text x="1450.0" y="711.25" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-muted)" dy="3.85">known as (1:N)</text>
+<rect x="939.4000000000001" y="789.35" width="126.5" height="20.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="0.5" />
+<text x="1002.6500000000001" y="799.5" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-muted)" dy="3.85">assigned to (1:N)</text>
+<rect x="1238.8" y="397.1" width="237.0" height="20.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="0.5" />
+<text x="1357.3" y="407.25" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-muted)" dy="3.85">content link [pg_chapter_id] (1:1)</text>
+<rect x="1403.75" y="264.85" width="152.5" height="20.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="0.5" />
+<text x="1480.0" y="275.0" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-muted)" dy="3.85">current chapter (1:N)</text>
+<rect x="1299.75" y="794.85" width="100.5" height="20.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="0.5" />
+<text x="1350.0" y="805.0" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-muted)" dy="3.85">targets (1:N)</text>
+<rect x="1674.0" y="165.85" width="172.0" height="20.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="0.5" />
+<text x="1760.0" y="176.0" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-muted)" dy="3.85">tracks progress (1:0..1)</text>
+<rect x="1567.25" y="1099.85" width="165.5" height="20.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="0.5" />
+<text x="1650.0" y="1110.0" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-muted)" dy="3.85">specializes to (1:0..1)</text>
+<rect x="1707.25" y="1095.85" width="165.5" height="20.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="0.5" />
+<text x="1790.0" y="1106.0" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-muted)" dy="3.85">specializes to (1:0..1)</text>
+</svg>
