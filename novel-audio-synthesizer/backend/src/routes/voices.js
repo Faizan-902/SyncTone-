@@ -1,6 +1,6 @@
 const { Router } = require('express');
 const { voiceProfiler, VOICE_PALETTE } = require('../engine/voiceProfiler');
-const { optionalAuth } = require('../middleware/auth');
+const { authenticateUser, requireRole } = require('../middleware/auth');
 
 const router = Router();
 
@@ -13,12 +13,7 @@ router.get('/voices', (_req, res) => {
 });
 
 // POST /api/voices/assign
-router.post('/voices/assign', optionalAuth, async (req, res) => {
-  if (req.user && req.user.role === 'reader') {
-    return res.status(403).json({
-      error: "Forbidden: role 'reader' cannot reassign voices. Only writers and admins may reassign voices.",
-    });
-  }
+router.post('/voices/assign', authenticateUser, requireRole('writer', 'admin'), async (req, res) => {
 
   const { character_id, new_voice_id, chapter_id } = req.body;
   if (!character_id || !new_voice_id) {

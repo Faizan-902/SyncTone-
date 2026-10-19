@@ -170,10 +170,6 @@ async function ingestChapter({ novelId, title, text, chapterNumber, requestedBy 
  * Official Polyglot Chapter Ingestion route (saves text to Mongo, enqueues job in Postgres).
  */
 router.post('/novels/:id/chapters', optionalAuth, async (req, res) => {
-  if (req.user && req.user.role === 'reader') {
-    return res.status(403).json({ error: "Forbidden: role 'reader' cannot ingest chapters." });
-  }
-
   const novelId = req.params.id;
   const { text, title, chapter_number, requested_by } = req.body;
 
@@ -183,6 +179,34 @@ router.post('/novels/:id/chapters', optionalAuth, async (req, res) => {
 
   if (!text || typeof text !== 'string' || text.trim().length === 0) {
     return res.status(400).json({ error: 'Missing or empty chapter "text" field.' });
+  }
+
+  // Verify novel exists in PostgreSQL before authorization checks
+  const novelCheck = await pool.query('SELECT id FROM novels WHERE id = $1', [novelId]);
+  if (novelCheck.rows.length === 0) {
+    return res.status(404).json({ error: `Novel with id '${novelId}' not found.` });
+  }
+
+  // Verify caller has authorized writer/admin role
+  if (req.user) {
+    if (req.user.role === 'reader') {
+      return res.status(403).json({ error: "Forbidden: role 'reader' cannot ingest chapters." });
+    }
+  } else if (requested_by) {
+    if (!UUID_REGEX.test(requested_by)) {
+      return res.status(400).json({ error: 'Invalid requested_by user UUID.' });
+    }
+    const userRoleCheck = await pool.query('SELECT role FROM users WHERE id = $1', [requested_by]);
+    if (userRoleCheck.rows.length === 0) {
+      return res.status(404).json({ error: `User with id '${requested_by}' does not exist.` });
+    }
+    if (userRoleCheck.rows[0].role === 'reader') {
+      return res.status(403).json({ error: "Forbidden: role 'reader' cannot ingest chapters." });
+    }
+  } else {
+    return res.status(401).json({
+      error: 'Authentication required. Please log in or provide an authorized writer user ID.',
+    });
   }
 
   const effectiveRequestedBy = requested_by || req.user?.id || null;

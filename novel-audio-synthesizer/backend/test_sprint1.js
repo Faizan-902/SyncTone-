@@ -399,6 +399,7 @@ async function runTests() {
       title: 'Duplicate Chapter 1',
       text: 'Duplicate chapter prose',
       chapter_number: 1, // Violates UNIQUE(novel_id, chapter_number)
+      requested_by: writerUser.id,
     });
     throw new Error('Expected duplicate chapter number to fail');
   } catch (err) {
@@ -491,7 +492,122 @@ async function runTests() {
   }
   console.log('  ✔ Playback history atomic upsert & idempotence verified (position_ms: 6500)');
 
-  // Cleanup test fixtures
+  // ==============================================================================
+  // Task 7: Security Audit & Role-Based Access Control Regression Verification
+  // ==============================================================================
+  console.log('\n▶ [Task 7] Running Security Audit & RBAC Regression Checks...');
+
+  // 7.1 Prevent public registration from self-assigning admin privileges (Role Escalation)
+  try {
+    await axios.post(`${BASE_URL}/auth/register`, {
+      username: `admin_attacker_${uniqueId}`,
+      email: `admin_attacker_${uniqueId}@example.com`,
+      password: 'AttackerPassword123!',
+      role: 'admin',
+    });
+    throw new Error('Expected admin registration to be rejected');
+  } catch (err) {
+    if (err.response?.status !== 403) {
+      throw new Error(`Expected 403 Forbidden for admin registration, got ${err.response?.status}`);
+    }
+    console.log('  ✔ Role Escalation Check: Public admin registration rejected with 403 Forbidden');
+  }
+
+  // 7.2 Anonymous access to POST /api/voices/assign must be rejected with 401
+  try {
+    await axios.post(`${BASE_URL}/voices/assign`, {
+      character_id: 'Sherlock Holmes',
+      new_voice_id: 'am_adam',
+      chapter_id: ingestedChapterId,
+    });
+    throw new Error('Expected anonymous voice assignment to fail');
+  } catch (err) {
+    if (err.response?.status !== 401) {
+      throw new Error(`Expected 401 Unauthorized for anonymous voice assignment, got ${err.response?.status}`);
+    }
+    console.log('  ✔ Security Check: Anonymous voice assignment rejected with 401 Unauthorized');
+  }
+
+  // 7.3 Reader access to POST /api/voices/assign must be rejected with 403
+  try {
+    await axios.post(
+      `${BASE_URL}/voices/assign`,
+      {
+        character_id: 'Sherlock Holmes',
+        new_voice_id: 'am_adam',
+        chapter_id: ingestedChapterId,
+      },
+      { headers: { Cookie: readerTokenCookie } }
+    );
+    throw new Error('Expected reader voice assignment to fail');
+  } catch (err) {
+    if (err.response?.status !== 403) {
+      throw new Error(`Expected 403 Forbidden for reader voice assignment, got ${err.response?.status}`);
+    }
+    console.log('  ✔ RBAC Check: Reader voice assignment rejected with 403 Forbidden');
+  }
+
+  // 7.4 Writer access to POST /api/voices/assign succeeds with 200
+  const assignWriterRes = await axios.post(
+    `${BASE_URL}/voices/assign`,
+    {
+      character_id: 'Dr. John Watson',
+      new_voice_id: 'bm_george',
+      chapter_id: ingestedChapterId,
+    },
+    { headers: { Cookie: writerTokenCookie } }
+  );
+  if (assignWriterRes.status !== 200) {
+    throw new Error(`Expected 200 for writer voice assignment, got ${assignWriterRes.status}`);
+  }
+  console.log('  ✔ RBAC Check: Writer voice assignment succeeded with 200 OK');
+
+  // 7.5 Anonymous access to POST /api/novels/:id/chapters must be rejected with 401
+  try {
+    await axios.post(`${BASE_URL}/novels/${createdNovel.id}/chapters`, {
+      title: 'Anonymous Chapter Ingestion',
+      text: 'Sample unauthorized text from an anonymous source.',
+    });
+    throw new Error('Expected anonymous chapter ingestion to fail');
+  } catch (err) {
+    if (err.response?.status !== 401) {
+      throw new Error(`Expected 401 Unauthorized for anonymous chapter ingestion, got ${err.response?.status}`);
+    }
+    console.log('  ✔ Security Check: Anonymous chapter ingestion rejected with 401 Unauthorized');
+  }
+
+  // 7.6 Reader access to POST /api/novels/:id/chapters must be rejected with 403
+  try {
+    await axios.post(
+      `${BASE_URL}/novels/${createdNovel.id}/chapters`,
+      {
+        title: 'Reader Chapter Ingestion',
+        text: 'Sample unauthorized text from a reader session.',
+      },
+      { headers: { Cookie: readerTokenCookie } }
+    );
+    throw new Error('Expected reader chapter ingestion to fail');
+  } catch (err) {
+    if (err.response?.status !== 403) {
+      throw new Error(`Expected 403 Forbidden for reader chapter ingestion, got ${err.response?.status}`);
+    }
+    console.log('  ✔ RBAC Check: Reader chapter ingestion rejected with 403 Forbidden');
+  }
+
+  // 7.7 Reader requested_by to POST /api/novels/:id/chapters must be rejected with 403
+  try {
+    await axios.post(`${BASE_URL}/novels/${createdNovel.id}/chapters`, {
+      title: 'Reader Requested Chapter Ingestion',
+      text: 'Sample unauthorized text from a reader requested_by.',
+      requested_by: readerUser.id,
+    });
+    throw new Error('Expected reader requested_by chapter ingestion to fail');
+  } catch (err) {
+    if (err.response?.status !== 403) {
+      throw new Error(`Expected 403 Forbidden for reader requested_by chapter ingestion, got ${err.response?.status}`);
+    }
+    console.log('  ✔ RBAC Check: Reader requested_by chapter ingestion rejected with 403 Forbidden');
+  }
   await Chapter.deleteMany({ novel_id: createdNovel.id });
   await pool.query('DELETE FROM users WHERE id IN ($1, $2)', [writerUser.id, readerUser.id]);
   console.log('  ✔ Test database fixtures cleanly removed');

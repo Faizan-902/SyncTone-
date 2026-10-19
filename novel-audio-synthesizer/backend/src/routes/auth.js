@@ -39,9 +39,14 @@ router.post('/auth/register', async (req, res) => {
     if (normalizedRole === 'author') {
       normalizedRole = 'writer';
     }
-    if (!ALLOWED_ROLES.includes(normalizedRole)) {
+    if (normalizedRole === 'admin') {
+      return res.status(403).json({
+        error: 'Forbidden: public registration cannot grant admin privileges. Privileged roles must be assigned through an authorized backend workflow.',
+      });
+    }
+    if (!['reader', 'writer'].includes(normalizedRole)) {
       return res.status(400).json({
-        error: `Invalid role. Allowed roles are: reader, writer (author), admin.`,
+        error: `Invalid role. Allowed public roles are: reader, writer (author).`,
       });
     }
 

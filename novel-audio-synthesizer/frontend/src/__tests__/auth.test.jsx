@@ -158,6 +158,14 @@ describe('Milestone 1 — API Client & Cookie Authentication', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Create Account' }));
       expect(screen.getByText('Join SyncTone')).toBeInTheDocument();
       expect(screen.getByPlaceholderText('e.g. synctone_reader')).toBeInTheDocument();
+
+      // Verify role selection defaults to reader and does NOT offer admin escalation
+      const roleSelect = screen.getByRole('combobox');
+      expect(roleSelect).toHaveValue('reader');
+      const options = Array.from(roleSelect.querySelectorAll('option')).map((o) => o.value);
+      expect(options).toContain('reader');
+      expect(options).toContain('writer');
+      expect(options).not.toContain('admin');
     });
   });
 });

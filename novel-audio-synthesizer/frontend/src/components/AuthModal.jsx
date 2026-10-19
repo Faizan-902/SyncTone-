@@ -223,10 +223,9 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
               >
                 <option value="reader">Reader (Browse & Listen)</option>
                 <option value="writer">Writer / Author (Upload Novels & Chapters)</option>
-                <option value="admin">Admin (Full Control)</option>
               </select>
               <p className="mt-1 text-[11px] text-gray-400">
-                Writers and Admins are permitted to create novels and assign custom voices.
+                Writers can create novels and manage character voice assignments.
               </p>
             </div>
           )}
