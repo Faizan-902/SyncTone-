@@ -1,0 +1,140 @@
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { api, ApiError } from '../services/api';
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const THROTTLE_INTERVAL_MS = 8000; // Throttle periodic progress writes to every 8s
+
+export function usePlaybackProgress({
+  novelId,
+  chapterId,
+  user,
+  audioSync,
+  timeline = [],
+}) {
+  const [resumedAtMs, setResumedAtMs] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const lastSavedPositionMsRef = useRef(0);
+  const lastSavedTimeRef = useRef(0);
+  const hasAttemptedResumeRef = useRef(false);
+
+  const isValidNovel = novelId && UUID_REGEX.test(novelId);
+  const isValidChapter = chapterId && UUID_REGEX.test(chapterId);
+  const isAuthenticated = !!(user?.id && UUID_REGEX.test(user.id));
+
+  // 1. Save progress helper with throttling and duplicate write guards
+  const saveCurrentProgress = useCallback(
+    async (overrideMs = null, force = false) => {
+      if (!isValidNovel || !isValidChapter || !isAuthenticated) return;
+
+      const currentMs =
+        overrideMs !== null
+          ? overrideMs
+          : Math.round(audioSync.audioRef.current?.currentTime * 1000 || audioSync.currentTimeMs || 0);
+
+      const now = Date.now();
+      const timeSinceLastSave = now - lastSavedTimeRef.current;
+      const positionDiff = Math.abs(currentMs - lastSavedPositionMsRef.current);
+
+      // Guard: skip if unchanged position or too frequent unless forced (e.g. pause/seek)
+      if (!force && timeSinceLastSave < THROTTLE_INTERVAL_MS && positionDiff < 3000) {
+        return;
+      }
+
+      // Determine segment order for 4NF playback_positions
+      const activeSeg = timeline.find((t) => currentMs >= t.start_ms && currentMs < t.end_ms);
+      const segmentOrder = activeSeg?.order ?? activeSeg?.segment_id ?? 0;
+
+      lastSavedTimeRef.current = now;
+      lastSavedPositionMsRef.current = currentMs;
+
+      setIsSaving(true);
+      try {
+        await api.playback.saveProgress({
+          novel_id: novelId,
+          chapter_id: chapterId,
+          segment_order: segmentOrder,
+          position_ms: currentMs,
+          user_id: user.id,
+        });
+      } catch (err) {
+        // Safe logging without interrupting playback
+        console.warn('[PlaybackProgress] Could not persist progress:', err.message);
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [isValidNovel, isValidChapter, isAuthenticated, novelId, chapterId, user?.id, audioSync, timeline]
+  );
+
+  // 2. Resume progress on chapter open
+  useEffect(() => {
+    if (!isValidNovel || !isValidChapter || !isAuthenticated || hasAttemptedResumeRef.current) {
+      return;
+    }
+
+    hasAttemptedResumeRef.current = true;
+    let isMounted = true;
+
+    async function loadProgress() {
+      try {
+        const res = await api.playback.getProgress(novelId, user.id);
+        const prog = res?.progress;
+
+        if (isMounted && prog && prog.chapter_id === chapterId && prog.position_ms > 500) {
+          // Resume position in audio element
+          audioSync.seekToTimeMs(prog.position_ms, false);
+          lastSavedPositionMsRef.current = prog.position_ms;
+          setResumedAtMs(prog.position_ms);
+        }
+      } catch (err) {
+        // 404 simply means first-time reader, start from beginning
+        if (err.status !== 404) {
+          console.warn('[PlaybackProgress] Resume check warning:', err.message);
+        }
+      }
+    }
+
+    loadProgress();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isValidNovel, isValidChapter, isAuthenticated, novelId, chapterId, user?.id, audioSync]);
+
+  // 3. Periodic timer to save progress every 8 seconds while playing
+  useEffect(() => {
+    if (!audioSync.isPlaying || !isAuthenticated) return;
+
+    const intervalId = setInterval(() => {
+      saveCurrentProgress(null, false);
+    }, THROTTLE_INTERVAL_MS);
+
+    return () => clearInterval(intervalId);
+  }, [audioSync.isPlaying, isAuthenticated, saveCurrentProgress]);
+
+  // 4. Save progress on pause or unmount
+  useEffect(() => {
+    if (!audioSync.isPlaying && hasAttemptedResumeRef.current) {
+      // Audio just paused, immediately save
+      saveCurrentProgress(null, true);
+    }
+  }, [audioSync.isPlaying, saveCurrentProgress]);
+
+  // Save on cleanup/unmount
+  useEffect(() => {
+    return () => {
+      if (hasAttemptedResumeRef.current && lastSavedPositionMsRef.current > 0) {
+        saveCurrentProgress(null, true);
+      }
+    };
+  }, [saveCurrentProgress]);
+
+  return {
+    resumedAtMs,
+    isSaving,
+    saveCurrentProgress,
+    dismissResumeBanner: () => setResumedAtMs(null),
+  };
+}
+
+export default usePlaybackProgress;
