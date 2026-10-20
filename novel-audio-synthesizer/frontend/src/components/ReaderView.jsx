@@ -1,77 +1,112 @@
 import React, { useEffect, useRef } from 'react';
+import { getSpeakerColor } from '../utils/speakerColors';
 
-const SPEAKER_COLORS = [
-  { bg: 'bg-yellow-50', border: 'border-yellow-300', text: 'text-yellow-800' },
-  { bg: 'bg-green-50', border: 'border-green-300', text: 'text-green-800' },
-  { bg: 'bg-pink-50', border: 'border-pink-300', text: 'text-pink-800' },
-  { bg: 'bg-indigo-50', border: 'border-indigo-300', text: 'text-indigo-800' },
-  { bg: 'bg-orange-50', border: 'border-orange-300', text: 'text-orange-800' },
-  { bg: 'bg-teal-50', border: 'border-teal-300', text: 'text-teal-800' },
-  { bg: 'bg-purple-50', border: 'border-purple-300', text: 'text-purple-800' },
-  { bg: 'bg-red-50', border: 'border-red-300', text: 'text-red-800' },
-];
+export default function ReaderView({ segments = [], activeSegmentId = -1, onSegmentClick }) {
+  const activeElementRef = useRef(null);
+  const prevActiveIdRef = useRef(-1);
 
-function getSpeakerColor(speakerId) {
-  if (speakerId === 'narrator') {
-    return { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-800' };
-  }
-  let hash = 0;
-  for (let i = 0; i < (speakerId || '').length; i++) {
-    hash = ((hash << 5) - hash + speakerId.charCodeAt(i)) | 0;
-  }
-  return SPEAKER_COLORS[Math.abs(hash) % SPEAKER_COLORS.length];
-}
-
-export default function ReaderView({ segments, activeSegmentId, onSegmentClick }) {
-  const activeRef = useRef(null);
-
+  // Auto-center active line only when activeSegmentId actually changes
   useEffect(() => {
-    if (activeRef.current && activeSegmentId >= 0) {
-      activeRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-      });
+    if (activeSegmentId !== -1 && activeSegmentId !== prevActiveIdRef.current) {
+      prevActiveIdRef.current = activeSegmentId;
+      if (typeof activeElementRef.current?.scrollIntoView === 'function') {
+        activeElementRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+        });
+      }
     }
   }, [activeSegmentId]);
 
+  if (!segments || segments.length === 0) {
+    return (
+      <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center text-gray-500 text-sm">
+        No chapter prose segments loaded.
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-3.5 max-w-3xl mx-auto py-4">
       {segments.map((seg) => {
-        const isActive = seg.segment_id === activeSegmentId;
-        const color = getSpeakerColor(seg.speaker_id);
+        const segId = seg.segment_id !== undefined ? seg.segment_id : seg.order;
+        const isActive = segId === activeSegmentId;
+        const isDialogue = seg.type === 'dialogue';
+        const speakerKey = seg.character_id || seg.speaker_id || (isDialogue ? seg.speaker_name : 'narrator');
+        const color = getSpeakerColor(speakerKey);
 
         return (
           <div
-            key={seg.segment_id}
-            ref={isActive ? activeRef : null}
-            onClick={() => onSegmentClick(seg.segment_id)}
+            key={segId}
+            ref={isActive ? activeElementRef : null}
+            onClick={() => onSegmentClick && onSegmentClick(segId)}
+            onKeyDown={(e) => {
+              if ((e.key === 'Enter' || e.key === ' ') && onSegmentClick) {
+                e.preventDefault();
+                onSegmentClick(segId);
+              }
+            }}
+            tabIndex={0}
+            role="button"
+            aria-pressed={isActive}
+            aria-label={`${isDialogue ? `${seg.speaker_name || 'Character'}: ` : 'Narrator: '}${seg.text}`}
             className={`
-              segment-highlight
-              p-3 rounded-lg border-l-4 cursor-pointer transition-all duration-200
+              group relative p-4 rounded-2xl border transition-all duration-300 cursor-pointer outline-none select-text
               ${color.bg} ${color.border}
-              ${isActive ? 'segment-active ring-2 ring-blue-400 ring-opacity-50 scale-[1.01]' : 'hover:shadow-sm'}
+              ${
+                isActive
+                  ? `shadow-lg ring-2 ${color.ring} ring-opacity-60 scale-[1.01] bg-white border-indigo-400 z-10`
+                  : 'hover:border-gray-300 hover:shadow-sm hover:scale-[1.002]'
+              }
             `}
           >
-            {seg.type === 'dialogue' && seg.speaker_name && (
-              <div className={`text-xs font-semibold ${color.text} mb-1 uppercase tracking-wide`}>
-                {seg.speaker_name}
-                {seg.attribution_confidence < 0.8 && (
-                  <span className="ml-1 text-gray-400 normal-case" title={`Source: ${seg.attribution_source}`}>
-                    (uncertain)
+            {/* Speaker Header (for Dialogue) */}
+            {isDialogue && (
+              <div className="flex items-center justify-between mb-1.5">
+                <span
+                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider border shadow-2xs ${color.badge}`}
+                >
+                  <span>🗣️</span>
+                  <span>{seg.speaker_name || 'Dialogue'}</span>
+                </span>
+
+                {isActive && (
+                  <span className="flex items-center gap-1 text-[10px] font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full animate-pulse">
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-600"></span>
+                    <span>Playing</span>
                   </span>
                 )}
               </div>
             )}
 
-            <p className={`text-gray-800 leading-relaxed ${
-              seg.type === 'dialogue' ? 'italic' : ''
-            }`}>
-              {seg.type === 'dialogue' ? `"${seg.text}"` : seg.text}
+            {/* Narrator Indicator */}
+            {!isDialogue && (
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
+                  Narrator
+                </span>
+                {isActive && (
+                  <span className="flex items-center gap-1 text-[10px] font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full animate-pulse">
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-600"></span>
+                    <span>Playing</span>
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Prose Text Content */}
+            <p
+              className={`text-gray-900 leading-relaxed font-serif text-[15px] sm:text-base ${
+                isDialogue ? 'italic font-medium text-slate-900' : 'text-slate-800'
+              }`}
+            >
+              {isDialogue ? `"${seg.text.replace(/^["“”]|["“”]$/g, '')}"` : seg.text}
             </p>
 
-            {seg.type === 'narration' && (
-              <div className="text-xs text-gray-400 mt-1">Narrator</div>
-            )}
+            {/* Hover Tooltip / Hint */}
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute right-3 bottom-2 text-[10px] text-gray-400 font-sans pointer-events-none">
+              Click to seek
+            </div>
           </div>
         );
       })}

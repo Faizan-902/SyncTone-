@@ -1,5 +1,6 @@
 const { Router } = require('express');
 const { voiceProfiler, VOICE_PALETTE } = require('../engine/voiceProfiler');
+const { authenticateUser, requireRole } = require('../middleware/auth');
 
 const router = Router();
 
@@ -12,7 +13,8 @@ router.get('/voices', (_req, res) => {
 });
 
 // POST /api/voices/assign
-router.post('/voices/assign', async (req, res) => {
+router.post('/voices/assign', authenticateUser, requireRole('writer', 'admin'), async (req, res) => {
+
   const { character_id, new_voice_id, chapter_id } = req.body;
   if (!character_id || !new_voice_id) {
     return res.status(400).json({ detail: 'character_id and new_voice_id are required' });
@@ -41,9 +43,29 @@ router.post('/voices/assign', async (req, res) => {
     try {
       const { Chapter } = require('../models');
       await Chapter.updateOne(
-        { pg_chapter_id: chapter_id, 'segments.character_id': character_id },
-        { $set: { 'segments.$[elem].voice_id': effectiveVoiceId } },
-        { arrayFilters: [{ 'elem.character_id': character_id }] }
+        {
+          pg_chapter_id: chapter_id,
+          $or: [
+            { 'segments.character_id': character_id },
+            { 'segments.speaker_id': character_id },
+          ],
+        },
+        {
+          $set: {
+            'segments.$[elem].voice_id': effectiveVoiceId,
+            'segments.$[elem].assigned_voice_id': effectiveVoiceId,
+          },
+        },
+        {
+          arrayFilters: [
+            {
+              $or: [
+                { 'elem.character_id': character_id },
+                { 'elem.speaker_id': character_id },
+              ],
+            },
+          ],
+        }
       );
     } catch (err) {
       console.warn('[Voices] Could not update chapter doc in Mongo:', err.message);
