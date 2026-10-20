@@ -155,6 +155,10 @@ class AudioStitcher {
       timeline,
     };
   }
+
+  stitchAudioSegments(segments, chapterId) {
+    return this.stitch(segments, chapterId);
+  }
 }
 
 const audioStitcher = new AudioStitcher();

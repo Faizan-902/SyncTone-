@@ -17,6 +17,11 @@ const TEST_PORT = 4999;
 const BASE_URL = `http://127.0.0.1:${TEST_PORT}/api`;
 
 let server;
+const cleanupState = {
+  writerId: null,
+  readerId: null,
+  novelId: null,
+};
 
 async function runTests() {
   console.log('================================================================');
@@ -111,6 +116,7 @@ async function runTests() {
   });
   if (registerWriterRes.status !== 201) throw new Error(`Registration failed: ${registerWriterRes.status}`);
   const writerUser = registerWriterRes.data.user;
+  cleanupState.writerId = writerUser.id;
   if (!writerUser.id || writerUser.role !== 'writer') throw new Error('Invalid writer payload');
   console.log(`  ✔ POST /api/auth/register created writer (${writerUser.username}, role: ${writerUser.role})`);
 
@@ -122,6 +128,7 @@ async function runTests() {
     role: 'reader',
   });
   const readerUser = registerReaderRes.data.user;
+  cleanupState.readerId = readerUser.id;
   console.log(`  ✔ POST /api/auth/register created reader (${readerUser.username}, role: ${readerUser.role})`);
 
   // 3.3 Duplicate registration check
@@ -262,6 +269,7 @@ async function runTests() {
   );
   if (createNovelRes.status !== 201) throw new Error('Failed to create novel');
   const createdNovel = createNovelRes.data.novel;
+  cleanupState.novelId = createdNovel.id;
   const profileJob = createNovelRes.data.job;
   if (!profileJob || profileJob.job_type !== 'profile_novel') {
     throw new Error('profile_novel job was not enqueued in synthesis_jobs');
@@ -608,8 +616,22 @@ async function runTests() {
     }
     console.log('  ✔ RBAC Check: Reader requested_by chapter ingestion rejected with 403 Forbidden');
   }
+  // 7.8 Verify /api/health and /api/chapters/:id/progress endpoints
+  const healthRes = await axios.get(`${BASE_URL}/health`);
+  if (healthRes.status !== 200 || healthRes.data.status !== 'healthy') {
+    throw new Error('Expected /api/health to return healthy');
+  }
+  const progRes = await axios.get(`${BASE_URL}/chapters/${ingestedChapterId}/progress`);
+  if (progRes.status !== 200 || progRes.data.chapter_id !== ingestedChapterId) {
+    throw new Error('Expected /api/chapters/:id/progress to return progress state');
+  }
+  console.log('  ✔ Phase 3 Check: /api/health & /api/chapters/:id/progress verified');
+
   await Chapter.deleteMany({ novel_id: createdNovel.id });
   await pool.query('DELETE FROM users WHERE id IN ($1, $2)', [writerUser.id, readerUser.id]);
+  cleanupState.novelId = null;
+  cleanupState.writerId = null;
+  cleanupState.readerId = null;
   console.log('  ✔ Test database fixtures cleanly removed');
 
   console.log('\n================================================================');
@@ -626,6 +648,15 @@ runTests()
     process.exitCode = 1;
   })
   .finally(async () => {
+    try {
+      if (cleanupState.novelId) {
+        await Chapter.deleteMany({ novel_id: cleanupState.novelId }).catch(() => {});
+      }
+      const userIds = [cleanupState.writerId, cleanupState.readerId].filter(Boolean);
+      if (userIds.length > 0) {
+        await pool.query('DELETE FROM users WHERE id = ANY($1::uuid[])', [userIds]).catch(() => {});
+      }
+    } catch (_) {}
     if (server) server.close();
     await pool.end();
     await mongoose.disconnect();

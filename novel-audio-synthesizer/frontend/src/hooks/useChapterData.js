@@ -55,6 +55,7 @@ export function useChapterData() {
     try {
       const res = await fetch(`${API_BASE}/upload`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, title }),
       });
@@ -85,6 +86,7 @@ export function useChapterData() {
 
       const res = await fetch(`${API_BASE}/parse/${chapterId}`, {
         method: 'POST',
+        credentials: 'include',
       });
 
       if (!res.ok) throw new Error(`Parse failed: ${res.statusText}`);
@@ -112,6 +114,7 @@ export function useChapterData() {
 
       const res = await fetch(`${API_BASE}/synthesize/${chapterId}`, {
         method: 'POST',
+        credentials: 'include',
       });
 
       if (!res.ok) throw new Error(`Synthesis failed: ${res.statusText}`);
@@ -129,9 +132,31 @@ export function useChapterData() {
     }
   }, []);
 
+  const overrideVoice = useCallback(async (characterId, newVoiceId, chapterId) => {
+    try {
+      const res = await fetch(`${API_BASE}/voices/assign`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          character_id: characterId,
+          new_voice_id: newVoiceId,
+          chapter_id: chapterId,
+        }),
+      });
+      if (!res.ok) throw new Error(`Voice override failed: ${res.statusText}`);
+      return await res.json();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Voice override failed');
+      return null;
+    }
+  }, []);
+
   const checkModels = useCallback(async () => {
     try {
-      const res = await fetch(`${API_BASE}/status/models`);
+      const res = await fetch(`${API_BASE}/status/models`, {
+        credentials: 'include',
+      });
       if (!res.ok) return null;
       return await res.json();
     } catch {
@@ -150,9 +175,11 @@ export function useChapterData() {
     });
   }, []);
 
+  const uploadChapter = uploadText;
+
   const actions = useMemo(
-    () => ({ uploadText, parseChapter, synthesizeChapter, checkModels, reset, setState }),
-    [uploadText, parseChapter, synthesizeChapter, checkModels, reset]
+    () => ({ uploadText, uploadChapter, parseChapter, synthesizeChapter, overrideVoice, checkModels, reset, setState }),
+    [uploadText, uploadChapter, parseChapter, synthesizeChapter, overrideVoice, checkModels, reset]
   );
 
   return [state, actions];

@@ -25,6 +25,21 @@ function createApp() {
         'http://10.0.2.2:5173',
       ],
       credentials: true,
+      allowedHeaders: [
+        'Content-Type',
+        'Authorization',
+        'Range',
+        'Cookie',
+        'X-Requested-With',
+        'Accept',
+        'Origin',
+      ],
+      exposedHeaders: [
+        'Content-Range',
+        'Accept-Ranges',
+        'Content-Length',
+        'Content-Type',
+      ],
     })
   );
   app.use(express.json({ limit: '50mb' }));
@@ -34,8 +49,8 @@ function createApp() {
   // Static audio file serving
   app.use('/static/audio', express.static(config.paths.outputDir));
 
-  // Health check endpoint
-  app.get('/health', (_req, res) => {
+  // Health check endpoint (root & /api alias)
+  app.get(['/health', '/api/health'], (_req, res) => {
     return res.json({ status: 'healthy', version: '0.1.0' });
   });
 

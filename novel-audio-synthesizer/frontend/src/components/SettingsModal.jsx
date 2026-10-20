@@ -37,14 +37,14 @@ export default function SettingsModal({ modelStatus, onClose }) {
                 <div className="flex items-center gap-2 mb-1">
                   <span
                     className={`w-2 h-2 rounded-full ${
-                      modelStatus.tts.model_exists ? 'bg-green-500' : 'bg-yellow-500'
+                      modelStatus?.tts?.model_exists ? 'bg-green-500' : 'bg-yellow-500'
                     }`}
                   />
                   <span className="text-sm font-medium">Fallback: Kokoro-82M TTS</span>
                 </div>
                 <div className="text-xs text-gray-500 ml-4 space-y-0.5">
                   <div>
-                    Model: {modelStatus.tts.model_exists ? '✅ Installed' : '⚠️ Offline fallback standby'}
+                    Model: {modelStatus?.tts?.model_exists ? '✅ Installed' : '⚠️ Offline fallback standby'}
                   </div>
                   <div>Location: kokoro-tts-backend/models_cache/</div>
                 </div>
@@ -54,17 +54,17 @@ export default function SettingsModal({ modelStatus, onClose }) {
                 <div className="flex items-center gap-2 mb-1">
                   <span
                     className={`w-2 h-2 rounded-full ${
-                      modelStatus.llm.available ? 'bg-green-500' : 'bg-yellow-500'
+                      modelStatus?.llm?.available ? 'bg-green-500' : 'bg-yellow-500'
                     }`}
                   />
                   <span className="text-sm font-medium">LLM (Ollama)</span>
                 </div>
                 <div className="text-xs text-gray-500 ml-4 space-y-0.5">
                   <div>
-                    Status: {modelStatus.llm.available ? '✅ Connected' : '⚠️ Not available'}
+                    Status: {modelStatus?.llm?.available ? '✅ Connected' : '⚠️ Not available'}
                   </div>
-                  <div>Model: {modelStatus.llm.model}</div>
-                  <div>URL: {modelStatus.llm.url}</div>
+                  <div>Model: {modelStatus?.llm?.model || 'N/A'}</div>
+                  <div>URL: {modelStatus?.llm?.url || 'N/A'}</div>
                 </div>
               </div>
             </div>

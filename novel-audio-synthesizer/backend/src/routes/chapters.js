@@ -8,6 +8,8 @@ const { attributionEngine } = require('../engine/attribution');
 const { voiceProfiler } = require('../engine/voiceProfiler');
 const { ttsEngine } = require('../engine/ttsEngine');
 const { audioStitcher } = require('../engine/audioStitcher');
+const { eventDispatcher } = require('../engine/eventDispatcher');
+const { validateAudioBuffer } = require('../engine/audioValidator');
 const { broadcastProgress } = require('../websocket');
 const { config } = require('../config');
 const { optionalAuth } = require('../middleware/auth');
@@ -249,6 +251,10 @@ router.post('/upload', optionalAuth, async (req, res) => {
     return res.status(400).json({ error: 'Missing or invalid "text" field' });
   }
 
+  if (req.user && req.user.role === 'reader') {
+    return res.status(403).json({ error: "Forbidden: role 'reader' cannot ingest chapters." });
+  }
+
   try {
     let effectiveNovelId = novel_id;
     if (!effectiveNovelId || !UUID_REGEX.test(effectiveNovelId)) {
@@ -468,6 +474,14 @@ router.post('/synthesize/:chapter_id', async (req, res) => {
         effectiveVoiceId
       );
 
+      const rawBuf = result.audio_buffer || result.pcm_buffer;
+      const fmt = result.format || 'mp3';
+      const validation = validateAudioBuffer(rawBuf, fmt);
+      const isValidBuf = typeof validation === 'object' && validation !== null ? validation.valid : Boolean(validation);
+      if (!isValidBuf) {
+        throw new Error(`Invalid synthesized audio buffer for segment ${i + 1}`);
+      }
+
       segmentAudios.push({
         segment_id: seg.order,
         order: seg.order,
@@ -644,6 +658,103 @@ router.get('/stream/:chapter_id', (req, res) => {
       'Accept-Ranges': 'bytes',
     });
     fs.createReadStream(audioPath).pipe(res);
+  }
+});
+
+/**
+ * 6a-1. GET /api/chapters/:id/progress/sse
+ * Server-Sent Events (SSE) real-time synthesis progress stream fallback.
+ */
+router.get('/chapters/:id/progress/sse', (req, res) => {
+  const { id } = req.params;
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
+  if (typeof res.flushHeaders === 'function') {
+    res.flushHeaders();
+  }
+
+  eventDispatcher.addSseClient(id, res);
+
+  const heartbeat = setInterval(() => {
+    try {
+      res.write(': ping\n\n');
+    } catch (_) {
+      clearInterval(heartbeat);
+    }
+  }, 15000);
+
+  req.on('close', () => {
+    clearInterval(heartbeat);
+    eventDispatcher.removeSseClient(id, res);
+  });
+});
+
+/**
+ * 6a-2. GET /api/chapters/:id/progress
+ * Polling fallback for synthesis progress state.
+ */
+router.get('/chapters/:id/progress', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const cached = eventDispatcher.getLatest(id);
+    if (cached) {
+      return res.json(cached);
+    }
+
+    if (UUID_REGEX.test(id)) {
+      const q = `
+        SELECT c.status AS chapter_status,
+               j.status AS job_status,
+               j.progress_pct,
+               j.error_message
+        FROM chapters c
+        LEFT JOIN chapter_synthesis_job_targets t ON t.chapter_id = c.id
+        LEFT JOIN synthesis_jobs j ON j.id = t.job_id
+        WHERE c.id = $1
+        ORDER BY j.created_at DESC NULLS LAST
+        LIMIT 1;
+      `;
+      const { rows } = await pool.query(q, [id]);
+      if (rows.length > 0) {
+        const row = rows[0];
+        const statusMap = {
+          draft: 'idle',
+          parsed: 'idle',
+          synthesizing: 'synthesizing',
+          completed: 'complete',
+          failed: 'failed',
+        };
+        const status = statusMap[row.chapter_status] || 'idle';
+        const pct =
+          status === 'complete'
+            ? 100
+            : Math.round(Number(row.progress_pct || 0) * 100);
+        return res.json({
+          chapter_id: id,
+          status,
+          percent_complete: pct,
+          current_segment: null,
+          total_segments: null,
+          error: row.error_message || null,
+          timestamp: Date.now(),
+        });
+      }
+    }
+
+    return res.json({
+      chapter_id: id,
+      status: 'idle',
+      percent_complete: 0,
+      current_segment: null,
+      total_segments: null,
+      error: null,
+      timestamp: Date.now(),
+    });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to fetch synthesis progress.' });
   }
 });
 

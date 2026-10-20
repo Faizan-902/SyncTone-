@@ -17,6 +17,7 @@ export default function AudioPlayer({
   totalDurationMs,
   onToggle,
   onSetPlaybackRate,
+  onSeek,
   onPlay,
   onPause,
   onEnded,
@@ -29,8 +30,13 @@ export default function AudioPlayer({
   const handleSeek = (e) => {
     if (!audioRef.current || totalDurationMs === 0) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    const percent = (e.clientX - rect.left) / rect.width;
-    audioRef.current.currentTime = (percent * totalDurationMs) / 1000;
+    const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const targetMs = Math.round(percent * totalDurationMs);
+    if (onSeek) {
+      onSeek(targetMs, isPlaying);
+    } else {
+      audioRef.current.currentTime = targetMs / 1000;
+    }
   };
 
   const handleSpeedChange = () => {
