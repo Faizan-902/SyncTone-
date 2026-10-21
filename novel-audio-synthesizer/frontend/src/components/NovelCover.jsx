@@ -82,44 +82,32 @@ export default function NovelCover({
     );
   }
 
-  // Procedural Editorial Hardcover
+  // Procedural Editorial Hardcover (Pure visual artwork, zero text collision)
   return (
     <div
-      className={`relative w-full h-full ${palette.bg} border ${palette.border} border-l-4 ${palette.spine} shadow-[inset_4px_0_12px_rgba(0,0,0,0.5)] flex flex-col justify-between p-4 overflow-hidden select-none ${className}`}
+      className={`relative w-full h-full ${palette.bg} border ${palette.border} border-l-4 ${palette.spine} shadow-[inset_4px_0_12px_rgba(0,0,0,0.5)] flex flex-col items-center justify-center p-6 overflow-hidden select-none ${className}`}
+      aria-hidden="true"
     >
       {/* Decorative book corner frame */}
-      <div className="absolute inset-2 border border-white/5 rounded-sm pointer-events-none" />
+      <div className="absolute inset-3 border border-white/10 rounded-sm pointer-events-none" />
 
-      {/* Top Header Foil */}
-      <div className="relative z-10 flex items-center justify-between">
-        <span className="text-[9px] font-mono tracking-widest uppercase opacity-60 text-white">
-          SyncTone Audio
-        </span>
+      {/* Subtle literary motif at top corner */}
+      <div className="absolute top-3.5 right-3.5 opacity-40">
         <span className={`text-xs ${palette.accent}`}>{palette.motif}</span>
       </div>
 
       {/* Center Embossed Emblem */}
-      <div className="relative z-10 my-auto text-center space-y-2 px-2" aria-hidden="true">
-        <div className="w-12 h-12 mx-auto rounded-xl border border-white/20 bg-white/5 backdrop-blur-xs flex items-center justify-center shadow-inner">
-          <span className="font-display font-black text-xl text-white">
+      <div className="relative z-10 text-center space-y-3">
+        <div className="w-14 h-14 mx-auto rounded-2xl border border-white/20 bg-white/5 backdrop-blur-xs flex items-center justify-center shadow-inner">
+          <span className="font-display font-black text-2xl text-white tracking-wider">
             {(title?.[0] || 'S').toUpperCase()}
           </span>
         </div>
-        <div className="flex items-center justify-center gap-1.5 opacity-40">
-          <div className="w-4 h-px bg-white" />
-          <span className="text-[10px] text-white font-mono">{palette.motif}</span>
-          <div className="w-4 h-px bg-white" />
+        <div className="flex items-center justify-center gap-2 opacity-50">
+          <div className="w-6 h-px bg-white/40" />
+          <span className="text-[11px] text-white font-mono">{palette.motif}</span>
+          <div className="w-6 h-px bg-white/40" />
         </div>
-      </div>
-
-      {/* Bottom Footer Ribbon */}
-      <div className="relative z-10 flex items-center justify-between pt-2 border-t border-white/10 text-[10px]" aria-hidden="true">
-        <span className="text-white/60 font-mono text-[9px] uppercase tracking-wider">
-          Neural Novel
-        </span>
-        <span className={`font-mono text-[9px] px-1.5 py-0.5 rounded border ${palette.badge}`}>
-          Original
-        </span>
       </div>
 
       {/* Subtle paper grain / vignette lighting */}

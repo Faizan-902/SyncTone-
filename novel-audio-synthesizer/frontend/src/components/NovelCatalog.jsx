@@ -272,7 +272,7 @@ export default function NovelCatalog({ onSelectNovel, onOpenAddNovel }) {
                   className="book-card bg-[var(--bg-card)] rounded-2xl border border-[var(--border-subtle)] hover:border-indigo-500/40 flex flex-col overflow-hidden cursor-pointer group"
                 >
                   {/* Book Cover (2:3 Aspect ratio header) */}
-                  <div className="relative h-56 bg-[var(--bg-surface)] flex items-center justify-center overflow-hidden">
+                  <div className="relative h-52 bg-[var(--bg-surface)] flex items-center justify-center overflow-hidden flex-shrink-0">
                     <NovelCover
                       title={novel.title}
                       author={novel.author_username}
@@ -280,13 +280,10 @@ export default function NovelCatalog({ onSelectNovel, onOpenAddNovel }) {
                       className="w-full h-full"
                     />
 
-                    {/* Gradient Overlay for bottom title legibility */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-card)] via-transparent to-black/30" />
-
                     {/* Channel & Chapter Badges */}
-                    <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
+                    <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10 pointer-events-none">
                       <span
-                        className={`px-2.5 py-0.5 text-[10px] font-semibold rounded-md uppercase tracking-wider backdrop-blur-md ${
+                        className={`px-2.5 py-0.5 text-[10px] font-semibold rounded-md uppercase tracking-wider backdrop-blur-md shadow-sm ${
                           isVerified
                             ? 'bg-indigo-600/90 text-white'
                             : 'bg-[var(--bg-surface)]/90 text-[var(--text-muted)] border border-[var(--border-subtle)]'
@@ -295,26 +292,23 @@ export default function NovelCatalog({ onSelectNovel, onOpenAddNovel }) {
                         {isVerified ? 'Original' : 'Community'}
                       </span>
 
-                      <span className="px-2 py-0.5 bg-black/60 backdrop-blur-md text-white text-[10px] font-medium rounded-md">
+                      <span className="px-2 py-0.5 bg-black/70 backdrop-blur-md text-white text-[10px] font-mono font-medium rounded-md">
                         {novel.chapter_count || 0} ch
                       </span>
                     </div>
-
-                    {/* Title overlay at bottom of cover */}
-                    <div className="absolute bottom-3 left-4 right-4 z-10">
-                      <h3 className="text-base font-bold text-[var(--text-main)] tracking-tight line-clamp-1 font-display">
-                        {novel.title}
-                      </h3>
-                    </div>
                   </div>
 
-                  {/* Novel Information */}
-                  <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                    <div className="space-y-2.5">
+                  {/* Novel Information - in normal document flow */}
+                  <div className="p-5 flex-1 flex flex-col justify-between space-y-3 min-w-0">
+                    <div className="space-y-2.5 min-w-0">
+                      <h3 className="text-base font-bold text-[var(--text-main)] font-display tracking-tight leading-snug line-clamp-1 group-hover:text-indigo-400 transition-colors">
+                        {novel.title}
+                      </h3>
+
                       <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
-                        <span>By {novel.author_username || 'Author'}</span>
+                        <span className="truncate">By {novel.author_username || 'Author'}</span>
                         {novel.status && (
-                          <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
+                          <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex-shrink-0">
                             {novel.status}
                           </span>
                         )}
