@@ -2,31 +2,150 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  color: #1f1f1f;
-  background-color: #fafafa;
+/* ========================================================================= */
+/* BULLETPROOF THEME CSS TOKENS (Tri-Theme Engine)                           */
+/* ========================================================================= */
+
+:root, html.dark {
+  --bg-page: #0B0F17;
+  --bg-surface: #131926;
+  --bg-card: #182232;
+  --bg-hover: #222F46;
+  --bg-elevated: #1F2B3E;
+  --text-main: #F8FAFC;
+  --text-sub: #CBD5E1;
+  --text-muted: #94A3B8;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-focus: rgba(99, 102, 241, 0.4);
+  --glass-bg: rgba(11, 15, 23, 0.85);
+  --glass-dock: rgba(15, 23, 42, 0.90);
+  --top10-fill: #0B0F17;
+  --top10-stroke: #64748B;
+}
+
+html.sepia {
+  --bg-page: #FBF0D9;
+  --bg-surface: #F4E4C1;
+  --bg-card: #EAD8B0;
+  --bg-hover: #DFCC9F;
+  --bg-elevated: #E3CE9E;
+  --text-main: #2C2216;
+  --text-sub: #4A3B2C;
+  --text-muted: #7A6B56;
+  --border-subtle: rgba(44, 34, 22, 0.14);
+  --border-focus: rgba(180, 83, 9, 0.45);
+  --glass-bg: rgba(251, 240, 217, 0.88);
+  --glass-dock: rgba(244, 228, 193, 0.94);
+  --top10-fill: #FBF0D9;
+  --top10-stroke: #B45309;
+}
+
+html.light {
+  --bg-page: #F8FAFC;
+  --bg-surface: #FFFFFF;
+  --bg-card: #F1F5F9;
+  --bg-hover: #E2E8F0;
+  --bg-elevated: #FFFFFF;
+  --text-main: #0F172A;
+  --text-sub: #334155;
+  --text-muted: #64748B;
+  --border-subtle: rgba(15, 23, 42, 0.08);
+  --border-focus: rgba(79, 70, 229, 0.4);
+  --glass-bg: rgba(255, 255, 255, 0.88);
+  --glass-dock: rgba(255, 255, 255, 0.94);
+  --top10-fill: #F8FAFC;
+  --top10-stroke: #475569;
 }
 
 body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
+  background-color: var(--bg-page);
+  color: var(--text-main);
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-/* Smooth scroll for segment navigation */
-.segment-highlight {
-  scroll-margin-top: 100px;
+.theme-heading { color: var(--text-main) !important; }
+.theme-sub { color: var(--text-sub) !important; }
+.theme-muted { color: var(--text-muted) !important; }
+.theme-surface { background-color: var(--bg-surface) !important; border-color: var(--border-subtle) !important; }
+.theme-card { background-color: var(--bg-card) !important; border-color: var(--border-subtle) !important; color: var(--text-main) !important; }
+.theme-border { border-color: var(--border-subtle) !important; }
+
+/* Custom Scrollbars */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.5); }
+
+/* Netflix Top 10 Styled Outline Numbers */
+.top10-num {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 900;
+  line-height: 0.8;
+  color: var(--top10-fill);
+  -webkit-text-stroke: 4px var(--top10-stroke);
+  text-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  user-select: none;
+  transition: all 0.3s ease;
 }
 
-/* Active segment glow animation */
-@keyframes segment-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.3); }
-  50% { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+/* Glassmorphism using CSS variables */
+.glass-header {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-color: var(--border-subtle);
+}
+.glass-dock {
+  background: var(--glass-dock);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-color: var(--border-subtle);
 }
 
-.segment-active {
-  animation: segment-pulse 2s ease-in-out infinite;
+/* Netflix Quick-Preview Hover Popover */
+.preview-card-container {
+  position: relative;
+  transition: z-index 0.25s;
+}
+.preview-card-container:hover {
+  z-index: 50;
+}
+.preview-card-popover {
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0.92) translateY(8px);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+.preview-card-container:hover .preview-card-popover {
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1.16) translateY(-10px);
+  pointer-events: auto;
+}
+
+/* Active Reader Pulse */
+@keyframes glow-border {
+  0%, 100% { border-color: rgba(99, 102, 241, 0.85); box-shadow: 0 0 20px rgba(99, 102, 241, 0.25); }
+  50% { border-color: rgba(168, 85, 247, 0.95); box-shadow: 0 0 26px rgba(168, 85, 247, 0.4); }
+}
+.active-turn {
+  animation: glow-border 2.5s infinite ease-in-out;
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+@keyframes scaleUp {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+.animate-scaleUp {
+  animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
