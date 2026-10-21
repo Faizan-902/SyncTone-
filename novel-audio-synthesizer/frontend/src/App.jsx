@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from './hooks/useAuth';
 import { useAudioSync } from './hooks/useAudioSync';
 import { usePlaybackProgress } from './hooks/usePlaybackProgress';
 import { useSynthesisProgress } from './hooks/useSynthesisProgress';
 import { api } from './services/api';
 
+import SidebarNav from './components/SidebarNav';
+import TopHeader from './components/TopHeader';
 import NovelCatalog from './components/NovelCatalog';
 import NovelDetails from './components/NovelDetails';
 import ReaderView from './components/ReaderView';
@@ -19,7 +21,7 @@ import SettingsModal from './components/SettingsModal';
 const EMPTY_ARRAY = [];
 
 export default function App() {
-  const { user, role, isAuthenticated, isWriterOrAdmin, logout } = useAuth();
+  const { isWriterOrAdmin } = useAuth();
 
   // Navigation View: 'catalog' | 'details' | 'reader'
   const [view, setView] = useState('catalog');
@@ -46,6 +48,7 @@ export default function App() {
   const audioSync = useAudioSync(chapterManifest?.timeline ?? EMPTY_ARRAY);
 
   // 4NF Playback Progress Hook (auto-resume & throttled persistence)
+  const { user } = useAuth();
   const playbackProgress = usePlaybackProgress({
     novelId: currentNovel?.id,
     chapterId: currentChapter?.id,
@@ -85,7 +88,6 @@ export default function App() {
       setChapterSegments(segments);
 
       // 2. Determine manifest and audio stream URL
-      // Adheres to Rule 2: stream URL mapping
       let manifest = details.manifest || null;
       if (!manifest) {
         try {
@@ -135,329 +137,240 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800">
-      {/* Global Navigation Header */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-xs">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
-          {/* Brand Logo & View Switcher */}
-          <div className="flex items-center gap-6">
-            <button
-              onClick={() => {
-                setView('catalog');
-                setShowRoster(false);
-              }}
-              className="flex items-center gap-2 group text-left outline-none"
-            >
-              <span className="text-2xl transform group-hover:scale-110 transition duration-300">
-                🎙️
-              </span>
-              <div>
-                <span className="text-lg font-black tracking-tight text-gray-900 group-hover:text-indigo-600 transition">
-                  SyncTone
-                </span>
-                <span className="hidden sm:inline-block ml-1.5 px-1.5 py-0.2 text-[9px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 rounded border border-indigo-100">
-                  Dual-TTS 4NF
+    <div className="min-h-screen bg-[var(--bg-page)] text-[var(--text-main)] flex flex-col font-sans transition-colors duration-300">
+      {/* 1. Desktop Left Rail & Mobile Bottom Bar Navigation */}
+      <SidebarNav
+        currentView={view}
+        onNavigate={(newView) => {
+          setView(newView);
+          setShowRoster(false);
+        }}
+        onOpenAuth={(mode) => {
+          setAuthMode(mode);
+          setShowAuthModal(true);
+        }}
+        onOpenSettings={() => setShowSettings(true)}
+        onOpenAddNovel={() => setShowAddNovelModal(true)}
+      />
+
+      {/* 2. Main Content Wrapper (Offset for desktop left rail) */}
+      <div className="md:pl-20 flex-1 flex flex-col min-h-screen">
+        {/* Global Glass Top Header */}
+        <TopHeader
+          view={view}
+          currentNovel={currentNovel}
+          currentChapter={currentChapter}
+          onNavigate={(newView) => {
+            setView(newView);
+            setShowRoster(false);
+          }}
+          showRoster={showRoster}
+          onToggleRoster={() => setShowRoster(!showRoster)}
+          onOpenSettings={() => setShowSettings(true)}
+          onOpenAuth={(mode) => {
+            setAuthMode(mode);
+            setShowAuthModal(true);
+          }}
+        />
+
+        {/* Main Content Body Container */}
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-32">
+          {/* Playback Resume Banner */}
+          {view === 'reader' && playbackProgress.resumedAtMs !== null && (
+            <div className="mb-4 p-4 bg-brand-950 border border-brand-500/40 text-brand-100 rounded-2xl shadow-xl flex items-center justify-between text-xs animate-slideDown">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">⏱️</span>
+                <span>
+                  Resumed playback from previous session at{' '}
+                  <strong className="text-white font-mono">
+                    {Math.floor(playbackProgress.resumedAtMs / 60000)}:
+                    {Math.floor((playbackProgress.resumedAtMs % 60000) / 1000)
+                      .toString()
+                      .padStart(2, '0')}
+                  </strong>
+                  .
                 </span>
               </div>
-            </button>
-
-            {/* Breadcrumb Navigation */}
-            <nav className="hidden md:flex items-center gap-2 text-xs text-gray-500 font-medium">
               <button
-                onClick={() => setView('catalog')}
-                className={`hover:text-indigo-600 transition ${
-                  view === 'catalog' ? 'text-indigo-600 font-bold' : ''
-                }`}
+                onClick={playbackProgress.dismissResumeBanner}
+                className="text-brand-300 hover:text-white px-3 py-1 bg-brand-900/60 hover:bg-brand-900 rounded-xl transition"
               >
-                Library
+                ✕ Dismiss
               </button>
-              {view !== 'catalog' && currentNovel && (
-                <>
-                  <span>/</span>
+            </div>
+          )}
+
+          {/* Live Synthesis Progress */}
+          {view === 'reader' && synthesisProgress.status !== 'idle' && (
+            <div className="mb-6">
+              <SynthesisProgressBar
+                status={synthesisProgress.status}
+                percentComplete={synthesisProgress.percentComplete}
+                currentSegment={synthesisProgress.currentSegment}
+                totalSegments={synthesisProgress.totalSegments}
+                message={synthesisProgress.message}
+                error={synthesisProgress.error}
+                isConnected={synthesisProgress.isConnected}
+                onDismiss={synthesisProgress.reset}
+              />
+            </div>
+          )}
+
+          {/* VIEW 1: NOVEL CATALOG */}
+          {view === 'catalog' && (
+            <NovelCatalog
+              onSelectNovel={handleSelectNovel}
+              onOpenAddNovel={() => setShowAddNovelModal(true)}
+            />
+          )}
+
+          {/* VIEW 2: NOVEL DETAILS */}
+          {view === 'details' && selectedNovelId && (
+            <NovelDetails
+              novelId={selectedNovelId}
+              onBack={() => setView('catalog')}
+              onSelectChapter={handleSelectChapter}
+              onOpenUploadChapter={(novel) => {
+                setCurrentNovel(novel);
+                setShowUploadChapterModal(true);
+              }}
+            />
+          )}
+
+          {/* VIEW 3: SYNCHRONIZED READER */}
+          {view === 'reader' && (
+            <div className="space-y-6 pb-28">
+              {/* Chapter Header Card */}
+              <div className="bg-[var(--bg-card)] rounded-3xl border border-[var(--border-subtle)] p-6 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors duration-300">
+                <div>
+                  <div className="flex items-center gap-2 text-xs font-bold text-brand-500 uppercase tracking-wider mb-1">
+                    <span>{currentNovel?.title || 'SyncTone Novel'}</span>
+                    <span>•</span>
+                    <span>Chapter {currentChapter?.chapter_number || 1}</span>
+                  </div>
+                  <h2 className="text-2xl font-black text-[var(--text-main)] font-display tracking-tight">
+                    {currentChapter?.title || 'Chapter Reading'}
+                  </h2>
+                  <p className="text-xs text-[var(--text-muted)] mt-1">
+                    {chapterSegments.length} segments • Click any dialogue or narration to seek
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2.5">
+                  {isWriterOrAdmin && (
+                    <button
+                      onClick={handleSynthesizeCurrentChapter}
+                      className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-2"
+                    >
+                      <span>🎙️</span> Re-Synthesize
+                    </button>
+                  )}
                   <button
                     onClick={() => setView('details')}
-                    className={`hover:text-indigo-600 transition line-clamp-1 max-w-[140px] ${
-                      view === 'details' ? 'text-indigo-600 font-bold' : ''
-                    }`}
+                    className="px-4 py-2.5 bg-[var(--bg-surface)] hover:border-brand-500 text-[var(--text-main)] text-xs font-bold rounded-xl border border-[var(--border-subtle)] transition"
                   >
-                    {currentNovel.title}
+                    Directory
                   </button>
-                </>
-              )}
-              {view === 'reader' && currentChapter && (
-                <>
-                  <span>/</span>
-                  <span className="text-gray-900 font-bold line-clamp-1 max-w-[140px]">
-                    {currentChapter.title}
-                  </span>
-                </>
-              )}
-            </nav>
-          </div>
-
-          {/* Right Header Actions */}
-          <div className="flex items-center gap-2.5">
-            {view === 'reader' && (
-              <button
-                onClick={() => setShowRoster(!showRoster)}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-xl border transition flex items-center gap-1.5 ${
-                  showRoster
-                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
-                    : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                }`}
-              >
-                <span>👥</span>
-                <span className="hidden sm:inline">Cast Roster</span>
-              </button>
-            )}
-
-            <button
-              onClick={() => setShowSettings(true)}
-              className="p-2 text-gray-500 hover:text-gray-700 rounded-xl hover:bg-gray-100 transition"
-              title="TTS Engines & Status"
-            >
-              ⚙️
-            </button>
-
-            {/* User Session State */}
-            {isAuthenticated ? (
-              <div className="flex items-center gap-2 pl-2 border-l border-gray-200">
-                <div className="text-right hidden sm:block">
-                  <div className="text-xs font-bold text-gray-900">{user.username}</div>
-                  <span className="text-[10px] uppercase font-bold px-1.5 py-0.2 rounded bg-indigo-50 text-indigo-700">
-                    {role}
-                  </span>
                 </div>
-                <button
-                  onClick={logout}
-                  className="px-3 py-1.5 text-xs font-semibold text-gray-600 hover:text-red-600 bg-gray-100 hover:bg-red-50 rounded-xl transition"
-                >
-                  Sign Out
-                </button>
               </div>
-            ) : (
-              <div className="flex items-center gap-2 pl-2 border-l border-gray-200">
-                <button
-                  onClick={() => {
-                    setAuthMode('login');
-                    setShowAuthModal(true);
-                  }}
-                  className="px-3.5 py-1.5 text-xs font-semibold text-gray-700 hover:text-indigo-600 transition"
-                >
-                  Sign In
-                </button>
-                <button
-                  onClick={() => {
-                    setAuthMode('register');
-                    setShowAuthModal(true);
-                  }}
-                  className="px-3.5 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-xs transition"
-                >
-                  Sign Up
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
 
-      {/* Main Content Body */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-8">
-        {/* Playback Resume Toast */}
-        {view === 'reader' && playbackProgress.resumedAtMs !== null && (
-          <div className="mb-4 p-3.5 bg-indigo-900 text-white rounded-2xl shadow-lg flex items-center justify-between text-xs animate-slideDown">
-            <div className="flex items-center gap-2.5">
-              <span className="text-lg">⏱️</span>
-              <span>
-                Resumed playback from previous session at{' '}
-                <strong>
-                  {Math.floor(playbackProgress.resumedAtMs / 60000)}:
-                  {Math.floor((playbackProgress.resumedAtMs % 60000) / 1000)
-                    .toString()
-                    .padStart(2, '0')}
-                </strong>
-                .
-              </span>
+              {/* Error Message */}
+              {chapterError && (
+                <div className="p-4 bg-rose-500/10 border border-rose-500/30 text-rose-500 text-xs rounded-2xl shadow-sm">
+                  ❌ {chapterError}
+                </div>
+              )}
+
+              {/* Loading Indicator */}
+              {isLoadingChapter ? (
+                <div className="bg-[var(--bg-card)] rounded-3xl border border-[var(--border-subtle)] p-12 text-center text-[var(--text-muted)] text-sm animate-pulse space-y-3 shadow-xl">
+                  <div className="text-4xl">📖</div>
+                  <p>Loading chapter prose and synchronized timeline...</p>
+                </div>
+              ) : (
+                /* Synchronized 60fps Reader Text View */
+                <ReaderView
+                  segments={chapterSegments}
+                  activeSegmentId={audioSync.activeSegmentId}
+                  onSegmentClick={(segmentId) => {
+                    audioSync.seekToSegment(segmentId);
+                  }}
+                />
+              )}
             </div>
-            <button
-              onClick={playbackProgress.dismissResumeBanner}
-              className="text-indigo-200 hover:text-white px-2 py-1 rounded"
-            >
-              ✕ Dismiss
-            </button>
-          </div>
-        )}
+          )}
+        </main>
 
-        {/* Live Synthesis Progress */}
-        {view === 'reader' && synthesisProgress.status !== 'idle' && (
-          <div className="mb-6">
-            <SynthesisProgressBar
-              status={synthesisProgress.status}
-              percentComplete={synthesisProgress.percentComplete}
-              currentSegment={synthesisProgress.currentSegment}
-              totalSegments={synthesisProgress.totalSegments}
-              message={synthesisProgress.message}
-              error={synthesisProgress.error}
-              isConnected={synthesisProgress.isConnected}
-              onDismiss={synthesisProgress.reset}
-            />
-          </div>
-        )}
-
-        {/* VIEW 1: NOVEL CATALOG */}
-        {view === 'catalog' && (
-          <NovelCatalog
-            onSelectNovel={handleSelectNovel}
-            onOpenAddNovel={() => setShowAddNovelModal(true)}
+        {/* Docked Floating Glass Bottom Audio Player */}
+        {view === 'reader' && chapterManifest && (
+          <AudioPlayer
+            audioRef={audioSync.audioRef}
+            audioUrl={chapterManifest.audio_stream_url}
+            isPlaying={audioSync.isPlaying}
+            currentTimeMs={audioSync.currentTimeMs}
+            totalDurationMs={chapterManifest.total_duration_ms || currentChapter?.total_duration_ms || 0}
+            onToggle={audioSync.toggle}
+            onSetPlaybackRate={audioSync.setPlaybackRate}
+            onPlay={audioSync.handlePlay}
+            onPause={audioSync.handlePause}
+            onEnded={audioSync.handleEnded}
+            onLoadedMetadata={audioSync.handleLoadedMetadata}
           />
         )}
 
-        {/* VIEW 2: NOVEL DETAILS */}
-        {view === 'details' && selectedNovelId && (
-          <NovelDetails
-            novelId={selectedNovelId}
-            onBack={() => setView('catalog')}
-            onSelectChapter={handleSelectChapter}
-            onOpenUploadChapter={(novel) => {
-              setCurrentNovel(novel);
-              setShowUploadChapterModal(true);
+        {/* Slide-out Character Cast Roster Drawer */}
+        {showRoster && (
+          <CharacterRoster
+            chapterId={currentChapter?.id || ''}
+            segments={chapterSegments}
+            onClose={() => setShowRoster(false)}
+            onVoiceChange={(charId, newVoiceId) => {
+              setChapterSegments((prev) =>
+                prev.map((s) =>
+                  s.character_id === charId || s.speaker_id === charId
+                    ? { ...s, assigned_voice_id: newVoiceId, voice_id: newVoiceId }
+                    : s
+                )
+              );
             }}
           />
         )}
 
-        {/* VIEW 3: SYNCHRONIZED READER */}
-        {view === 'reader' && (
-          <div className="space-y-6 pb-28">
-            {/* Chapter Header Card */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-2 text-xs text-indigo-600 font-semibold mb-1">
-                  <span>{currentNovel?.title || 'SyncTone Novel'}</span>
-                  <span>•</span>
-                  <span>Chapter {currentChapter?.chapter_number || 1}</span>
-                </div>
-                <h2 className="text-xl font-bold text-gray-900">
-                  {currentChapter?.title || 'Chapter Reading'}
-                </h2>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  {chapterSegments.length} segments • Click any dialogue or narration to seek
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2.5">
-                {isWriterOrAdmin && (
-                  <button
-                    onClick={handleSynthesizeCurrentChapter}
-                    className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-xs transition flex items-center gap-1.5"
-                  >
-                    <span>🎙️</span> Re-Synthesize
-                  </button>
-                )}
-                <button
-                  onClick={() => setView('details')}
-                  className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-xl transition"
-                >
-                  Directory
-                </button>
-              </div>
-            </div>
-
-            {/* Error Message */}
-            {chapterError && (
-              <div className="p-4 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl">
-                ❌ {chapterError}
-              </div>
-            )}
-
-            {/* Loading Indicator */}
-            {isLoadingChapter ? (
-              <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center text-gray-500 text-sm animate-pulse space-y-3">
-                <div className="text-3xl">📖</div>
-                <p>Loading chapter prose and synchronized timeline...</p>
-              </div>
-            ) : (
-              /* Synchronized 60fps Reader Text View */
-              <ReaderView
-                segments={chapterSegments}
-                activeSegmentId={audioSync.activeSegmentId}
-                onSegmentClick={(segmentId) => {
-                  audioSync.seekToSegment(segmentId);
-                }}
-              />
-            )}
-          </div>
-        )}
-      </main>
-
-      {/* Docked Sticky Bottom Audio Player */}
-      {view === 'reader' && chapterManifest && (
-        <AudioPlayer
-          audioRef={audioSync.audioRef}
-          audioUrl={chapterManifest.audio_stream_url}
-          isPlaying={audioSync.isPlaying}
-          currentTimeMs={audioSync.currentTimeMs}
-          totalDurationMs={chapterManifest.total_duration_ms || currentChapter?.total_duration_ms || 0}
-          onToggle={audioSync.toggle}
-          onSetPlaybackRate={audioSync.setPlaybackRate}
-          onPlay={audioSync.handlePlay}
-          onPause={audioSync.handlePause}
-          onEnded={audioSync.handleEnded}
-          onLoadedMetadata={audioSync.handleLoadedMetadata}
+        {/* Auth Modal (Login / Register / Guest Access) */}
+        <AuthModal
+          isOpen={showAuthModal}
+          initialMode={authMode}
+          onClose={() => setShowAuthModal(false)}
         />
-      )}
 
-      {/* Slide-out Character Cast Roster Drawer */}
-      {showRoster && (
-        <CharacterRoster
-          chapterId={currentChapter?.id || ''}
-          segments={chapterSegments}
-          onClose={() => setShowRoster(false)}
-          onVoiceChange={(charId, newVoiceId) => {
-            setChapterSegments((prev) =>
-              prev.map((s) =>
-                s.character_id === charId || s.speaker_id === charId
-                  ? { ...s, assigned_voice_id: newVoiceId, voice_id: newVoiceId }
-                  : s
-              )
-            );
+        {/* Add Novel Modal (Writer / Admin Role Gated) */}
+        <AddNovelModal
+          isOpen={showAddNovelModal}
+          onClose={() => setShowAddNovelModal(false)}
+          onNovelCreated={(newNovel) => {
+            setSelectedNovelId(newNovel.id);
+            setView('details');
           }}
         />
-      )}
 
-      {/* Auth Modal (Login / Register) */}
-      <AuthModal
-        isOpen={showAuthModal}
-        initialMode={authMode}
-        onClose={() => setShowAuthModal(false)}
-      />
-
-      {/* Add Novel Modal (Writer / Admin Role Gated) */}
-      <AddNovelModal
-        isOpen={showAddNovelModal}
-        onClose={() => setShowAddNovelModal(false)}
-        onNovelCreated={(newNovel) => {
-          setSelectedNovelId(newNovel.id);
-          setView('details');
-        }}
-      />
-
-      {/* Upload Chapter Modal */}
-      <UploadChapterModal
-        isOpen={showUploadChapterModal}
-        novel={currentNovel}
-        onClose={() => setShowUploadChapterModal(false)}
-        onChapterUploaded={(newChapter) => {
-          handleSelectChapter(currentNovel, newChapter);
-        }}
-      />
-
-      {/* TTS Settings Modal */}
-      {showSettings && (
-        <SettingsModal
-          modelStatus={modelStatus}
-          onClose={() => setShowSettings(false)}
+        {/* Upload Chapter Modal */}
+        <UploadChapterModal
+          isOpen={showUploadChapterModal}
+          novel={currentNovel}
+          onClose={() => setShowUploadChapterModal(false)}
+          onChapterUploaded={(newChapter) => {
+            handleSelectChapter(currentNovel, newChapter);
+          }}
         />
-      )}
+
+        {/* TTS Settings Modal */}
+        {showSettings && (
+          <SettingsModal
+            modelStatus={modelStatus}
+            onClose={() => setShowSettings(false)}
+          />
+        )}
+      </div>
     </div>
   );
 }
