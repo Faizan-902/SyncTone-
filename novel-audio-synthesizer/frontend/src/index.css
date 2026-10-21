@@ -69,11 +69,17 @@ body {
 
 /* Typography Utility Classes */
 .font-display {
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  letter-spacing: -0.025em;
 }
 
 .font-serif {
-  font-family: 'Merriweather', Georgia, serif;
+  font-family: 'Literata', Georgia, Cambria, serif;
+  font-optical-sizing: auto;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
 }
 
 /* Custom Scrollbars */
@@ -156,4 +162,14 @@ body {
 }
 .animate-slideDown {
   animation: slideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Accessibility: Respect Reduced Motion Preferences */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

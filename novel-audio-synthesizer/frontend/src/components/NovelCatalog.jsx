@@ -11,6 +11,7 @@ import {
   IconSparkles,
   IconArrowRight,
 } from './icons';
+import NovelCover from './NovelCover';
 
 export default function NovelCatalog({ onSelectNovel, onOpenAddNovel }) {
   const { isWriterOrAdmin } = useAuth();
@@ -203,24 +204,13 @@ export default function NovelCatalog({ onSelectNovel, onOpenAddNovel }) {
               <div className="flex flex-col md:flex-row">
                 {/* Visual Cover Poster */}
                 <div className="md:w-80 h-72 md:h-auto relative bg-[var(--bg-surface)] flex-shrink-0 overflow-hidden flex items-center justify-center">
-                  {featuredNovel.cover_object ? (
-                    <img
-                      src={featuredNovel.cover_object}
-                      alt={featuredNovel.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                      }}
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-indigo-950/40 via-[var(--bg-surface)] to-[var(--bg-card)] flex flex-col items-center justify-center p-6 text-center">
-                      <IconBook className="w-12 h-12 text-indigo-400/40 mb-3" />
-                      <span className="text-xs font-mono text-[var(--text-muted)] uppercase tracking-wider">
-                        Original Audio Experience
-                      </span>
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent md:hidden" />
+                  <NovelCover
+                    title={featuredNovel.title}
+                    author={featuredNovel.author_username}
+                    coverUrl={featuredNovel.cover_object}
+                    className="w-full h-full"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent md:hidden pointer-events-none" />
                 </div>
 
                 {/* Editorial Content */}
@@ -283,23 +273,12 @@ export default function NovelCatalog({ onSelectNovel, onOpenAddNovel }) {
                 >
                   {/* Book Cover (2:3 Aspect ratio header) */}
                   <div className="relative h-56 bg-[var(--bg-surface)] flex items-center justify-center overflow-hidden">
-                    {novel.cover_object ? (
-                      <img
-                        src={novel.cover_object}
-                        alt={novel.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-indigo-950/20 via-[var(--bg-surface)] to-[var(--bg-card)] flex flex-col items-center justify-center p-6 text-center">
-                        <IconBook className="w-10 h-10 text-[var(--text-muted)] opacity-30 mb-2" />
-                        <span className="text-[11px] font-mono text-[var(--text-muted)] uppercase tracking-wider">
-                          Audio Novel
-                        </span>
-                      </div>
-                    )}
+                    <NovelCover
+                      title={novel.title}
+                      author={novel.author_username}
+                      coverUrl={novel.cover_object}
+                      className="w-full h-full"
+                    />
 
                     {/* Gradient Overlay for bottom title legibility */}
                     <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-card)] via-transparent to-black/30" />

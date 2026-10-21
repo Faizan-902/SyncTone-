@@ -239,7 +239,7 @@ export default function App() {
 
           {/* VIEW 3: SYNCHRONIZED READER */}
           {view === 'reader' && (
-            <div className="space-y-6 pb-28">
+            <div className="space-y-6 pb-32 sm:pb-28">
               {/* Chapter Header Card */}
               <div className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-subtle)] p-6 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors duration-250">
                 <div>

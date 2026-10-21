@@ -122,9 +122,11 @@ export default function SidebarNav({
         </div>
       </aside>
 
-      {/* Mobile Bottom Navigation Bar */}
+      {/* Mobile Bottom Navigation Bar (Hidden in Reader View for Literary Immersion) */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-50 h-16 bg-[var(--bg-surface)]/95 backdrop-blur-xl border-t border-[var(--border-subtle)] flex items-center justify-around px-4 shadow-xl"
+        className={`md:hidden fixed bottom-0 left-0 right-0 z-30 h-16 bg-[var(--bg-surface)]/95 backdrop-blur-xl border-t border-[var(--border-subtle)] items-center justify-around px-4 shadow-xl ${
+          currentView === 'reader' ? 'hidden' : 'flex'
+        }`}
         aria-label="Mobile Navigation"
       >
         <button

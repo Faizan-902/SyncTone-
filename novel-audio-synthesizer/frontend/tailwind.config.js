@@ -8,9 +8,10 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-        display: ['Montserrat', 'Inter', 'sans-serif'],
-        serif: ['Merriweather', 'Georgia', 'serif'],
+        sans: ['"Plus Jakarta Sans"', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+        display: ['"Plus Jakarta Sans"', 'sans-serif'],
+        serif: ['Literata', 'Georgia', 'Cambria', 'serif'],
+        mono: ['"JetBrains Mono"', 'Menlo', 'monospace'],
       },
       colors: {
         brand: {

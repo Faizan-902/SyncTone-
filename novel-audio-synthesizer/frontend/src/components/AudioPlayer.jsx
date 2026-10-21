@@ -66,7 +66,7 @@ export default function AudioPlayer({
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 px-3 sm:px-6 pb-4 pt-2 pointer-events-none">
+    <div className="fixed bottom-0 left-0 right-0 z-40 px-3 sm:px-6 pb-3 sm:pb-4 pt-2 pointer-events-none">
       {/* Hidden native audio element */}
       <audio
         ref={audioRef}

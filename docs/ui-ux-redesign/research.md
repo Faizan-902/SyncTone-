@@ -27,7 +27,7 @@
 - **Not Applicable**: Experimental typography layouts aren't suitable for long-form reading.
 
 ### 1.3 The Symphony of Vines (CSS Design Awards — WOTY 2025 Nominee)
-- **URL**: https://www.thesymphonyofvines.com
+- **URL**: https://www.thesymphonyofvines.com / https://www.cssdesignawards.com/woty2025/sites/the-symphony-of-vines
 - **Award**: CSDA WOTY 2025 Nominee
 - **Key Design Decisions**:
   - Cinematic storytelling through scroll — each section is a "scene"
@@ -37,7 +37,17 @@
   - Editorial typography with clear visual chapters
 - **Applicable to SyncTone**: Audio-visual narrative pairing. The transition from discovery → reading → listening should feel like entering a story, not switching SaaS tabs.
 
-### 1.4 Lando Norris (Awwwards — Site of the Year 2025)
+### 1.4 The Monolith Project (CSS Design Awards — Experimental Visual Interaction)
+- **URL**: https://www.cssdesignawards.com/woty2025/sites/the-monolith-project/
+- **Award**: CSDA Experimental Visual Interaction 2025
+- **Key Design Decisions**:
+  - Monolithic spatial architecture with deep atmospheric z-depth
+  - Restrained tactile typography contrasting bold sculptural focal points
+  - Micro-interactions on interactive hotspots with zero latency response
+  - Elegant high-contrast darkness with subtle amber rim highlights
+- **Applicable to SyncTone**: Novel card presentation and modal backdrop treatment. Depth should come from subtle borders, dark ambient tints, and precise highlights rather than heavy muddy drop-shadows or jarring neon glows.
+
+### 1.5 Lando Norris (Awwwards — Site of the Year 2025)
 - **URL**: https://landonorris.com (by OFF+BRAND)
 - **Award**: Awwwards SOTY 2025
 - **Key Design Decisions**:
@@ -48,7 +58,7 @@
   - Motion is purposeful (entrance reveals, parallax on scroll)
 - **Applicable to SyncTone**: Dark mode as a default with a strong, ownable accent color. Grid discipline prevents the "everything is floating cards" anti-pattern.
 
-### 1.5 Cartier: Watches & Wonders (Awwwards — Site of the Month)
+### 1.6 Cartier: Watches & Wonders (Awwwards — Site of the Month)
 - **URL**: https://www.cartier.com/watches-and-wonders
 - **Award**: Awwwards SOTM (by Immersive Garden)
 - **Key Design Decisions**:
@@ -59,7 +69,7 @@
   - Every interaction feels weighted and considered
 - **Applicable to SyncTone**: Treat novel covers and chapter art as premium editorial content, not generic card thumbnails.
 
-### 1.6 Audible (Competitive Product Analysis)
+### 1.7 Audible (Competitive Product Analysis)
 - **Platform**: Amazon Audible (iOS/Android/Web)
 - **Recognition**: Market leader in audiobook UX
 - **Key Design Decisions**:
@@ -71,7 +81,7 @@
 - **Weaknesses**: Cluttered, corporate Amazon design language; utilitarian rather than immersive
 - **Applicable to SyncTone**: Chapter navigation patterns, progress tracking UI, and playback controls placement. But avoid the visual clutter.
 
-### 1.7 Spotify Audiobooks (Competitive Product Analysis)
+### 1.8 Spotify Audiobooks (Competitive Product Analysis)
 - **Platform**: Spotify (Cross-platform)
 - **Key Design Decisions**:
   - Horizontal carousels for content discovery
@@ -83,7 +93,7 @@
 - **Weaknesses**: Audiobooks share space with music/podcasts, making deep library management harder
 - **Applicable to SyncTone**: Dynamic color extraction from covers; persistent mini-player; horizontal discovery rows.
 
-### 1.8 Apple Books (Competitive Product Analysis)
+### 1.9 Apple Books (Competitive Product Analysis)
 - **Platform**: Apple ecosystem
 - **Key Design Decisions**:
   - Clean, typographically sophisticated reading surface

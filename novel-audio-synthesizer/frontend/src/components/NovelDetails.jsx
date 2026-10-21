@@ -12,6 +12,7 @@ import {
   IconSparkles,
   IconCheck,
 } from './icons';
+import NovelCover from './NovelCover';
 
 function formatDuration(ms) {
   if (!ms || ms <= 0) return 'Audio pending';
@@ -113,23 +114,12 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
         <div className="flex flex-col md:flex-row p-6 sm:p-8 md:p-10 gap-8 items-start">
           {/* Elevated Cover Poster */}
           <div className="w-48 sm:w-56 h-72 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-lg overflow-hidden flex-shrink-0 flex items-center justify-center relative">
-            {novel.cover_object ? (
-              <img
-                src={novel.cover_object}
-                alt={novel.title}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-indigo-950/30 via-[var(--bg-surface)] to-[var(--bg-card)] flex flex-col items-center justify-center p-4 text-center">
-                <IconBook className="w-12 h-12 text-indigo-400/40 mb-2" />
-                <span className="text-[11px] font-mono text-[var(--text-muted)] uppercase">
-                  Cover Art
-                </span>
-              </div>
-            )}
+            <NovelCover
+              title={novel.title}
+              author={novel.author_username}
+              coverUrl={novel.cover_object}
+              className="w-full h-full"
+            />
           </div>
 
           {/* Metadata & Synopsis */}

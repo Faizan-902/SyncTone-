@@ -51,24 +51,26 @@ Accent:         #4F46E5  (Indigo-600)
 ---
 
 ## 2. Typography
-
-### Type Scale
+ 
+### Type Scale (1.25 Modular Scale)
 | Role | Font | Weight | Size | Usage |
 |---|---|---|---|---|
-| Display | Montserrat | 800 | 36-48px | Novel titles in hero sections |
-| Heading | Montserrat | 700 | 24-32px | Section headers, page titles |
-| Subheading | Inter | 600 | 16-20px | Card titles, tab labels |
-| Body | Inter | 400 | 14-16px | UI text, descriptions, metadata |
-| Reading | Merriweather | 400 | 16-22px | Chapter prose (user-adjustable) |
-| Caption | Inter | 500 | 11-13px | Badges, timestamps, labels |
-| Mono | JetBrains Mono | 500 | 12px | Voice IDs, technical metadata |
+| Display 2XL | Plus Jakarta Sans | 800 | 44px | Novel titles in hero sections |
+| Display XL | Plus Jakarta Sans | 700 | 32px | Section headers, detail titles |
+| Heading LG | Plus Jakarta Sans | 700 | 24px | Modal titles, drawer titles |
+| Subheading | Plus Jakarta Sans | 600 | 16-18px | Card titles, tab labels |
+| Body UI | Plus Jakarta Sans | 400/500 | 14-16px | UI text, descriptions, forms |
+| Reading Prose | Literata | 400 | 16-22px | Chapter prose (user-adjustable, opsz auto) |
+| Reading Dialogue | Literata | 400 Italic | 16-22px | Character spoken lines with speaker border |
+| Caption | Plus Jakarta Sans | 600 | 11-13px | Badges, timestamps, channel tags |
+| Mono | JetBrains Mono | 500 | 12px | Voice IDs, segment index, timecodes |
 
 ### Reading Typography Rules
-- **Measure**: 60-75 characters per line (optimal reading width)
-- **Line height**: 1.7-1.8 for body prose (generous, not cramped)
-- **Paragraph spacing**: 1.25em between prose blocks
-- **Dialogue**: Italic Merriweather with left accent border
-- **Narration**: Regular weight, slightly muted vs dialogue
+- **Measure**: 60-75 characters per line (optimal reading measure)
+- **Line height**: 1.75 for body prose (literary cadence, not cramped)
+- **Paragraph spacing**: 1.25em between prose segments
+- **Dialogue**: Italic Literata with subtle left speaker border
+- **Narration**: Regular weight Literata, comfortable cadence
 
 ---
 
