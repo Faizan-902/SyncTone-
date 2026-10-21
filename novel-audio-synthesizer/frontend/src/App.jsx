@@ -17,6 +17,7 @@ import AuthModal from './components/AuthModal';
 import AddNovelModal from './components/AddNovelModal';
 import UploadChapterModal from './components/UploadChapterModal';
 import SettingsModal from './components/SettingsModal';
+import { IconClock, IconX, IconMic, IconBook, IconArrowLeft } from './components/icons';
 
 const EMPTY_ARRAY = [];
 
@@ -177,9 +178,9 @@ export default function App() {
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-32">
           {/* Playback Resume Banner */}
           {view === 'reader' && playbackProgress.resumedAtMs !== null && (
-            <div className="mb-4 p-4 bg-brand-950 border border-brand-500/40 text-brand-100 rounded-2xl shadow-xl flex items-center justify-between text-xs animate-slideDown">
-              <div className="flex items-center gap-3">
-                <span className="text-xl">⏱️</span>
+            <div className="mb-4 p-3.5 bg-indigo-950/40 border border-indigo-500/30 text-indigo-200 rounded-xl flex items-center justify-between text-xs animate-slideDown">
+              <div className="flex items-center gap-2.5">
+                <IconClock className="w-4 h-4 text-indigo-400 flex-shrink-0" />
                 <span>
                   Resumed playback from previous session at{' '}
                   <strong className="text-white font-mono">
@@ -188,14 +189,13 @@ export default function App() {
                       .toString()
                       .padStart(2, '0')}
                   </strong>
-                  .
                 </span>
               </div>
               <button
                 onClick={playbackProgress.dismissResumeBanner}
-                className="text-brand-300 hover:text-white px-3 py-1 bg-brand-900/60 hover:bg-brand-900 rounded-xl transition"
+                className="text-[var(--text-muted)] hover:text-white px-2 py-1 hover:bg-white/10 rounded-lg transition"
               >
-                ✕ Dismiss
+                <IconX className="w-3.5 h-3.5" />
               </button>
             </div>
           )}
@@ -241,17 +241,17 @@ export default function App() {
           {view === 'reader' && (
             <div className="space-y-6 pb-28">
               {/* Chapter Header Card */}
-              <div className="bg-[var(--bg-card)] rounded-3xl border border-[var(--border-subtle)] p-6 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors duration-300">
+              <div className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-subtle)] p-6 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors duration-250">
                 <div>
-                  <div className="flex items-center gap-2 text-xs font-bold text-brand-500 uppercase tracking-wider mb-1">
+                  <div className="flex items-center gap-2 text-[11px] font-mono font-medium text-indigo-400 uppercase tracking-wider mb-1">
                     <span>{currentNovel?.title || 'SyncTone Novel'}</span>
                     <span>•</span>
                     <span>Chapter {currentChapter?.chapter_number || 1}</span>
                   </div>
-                  <h2 className="text-2xl font-black text-[var(--text-main)] font-display tracking-tight">
+                  <h2 className="text-xl sm:text-2xl font-bold text-[var(--text-main)] font-display tracking-tight">
                     {currentChapter?.title || 'Chapter Reading'}
                   </h2>
-                  <p className="text-xs text-[var(--text-muted)] mt-1">
+                  <p className="text-xs text-[var(--text-muted)] mt-1 font-serif">
                     {chapterSegments.length} segments • Click any dialogue or narration to seek
                   </p>
                 </div>
@@ -260,31 +260,32 @@ export default function App() {
                   {isWriterOrAdmin && (
                     <button
                       onClick={handleSynthesizeCurrentChapter}
-                      className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center gap-2"
+                      className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl shadow-xs transition flex items-center gap-1.5"
                     >
-                      <span>🎙️</span> Re-Synthesize
+                      <IconMic className="w-3.5 h-3.5" />
+                      <span>Re-Synthesize</span>
                     </button>
                   )}
                   <button
                     onClick={() => setView('details')}
-                    className="px-4 py-2.5 bg-[var(--bg-surface)] hover:border-brand-500 text-[var(--text-main)] text-xs font-bold rounded-xl border border-[var(--border-subtle)] transition"
+                    className="px-3.5 py-2 bg-[var(--bg-surface)] hover:border-indigo-500/50 text-[var(--text-main)] text-xs font-semibold rounded-xl border border-[var(--border-subtle)] transition"
                   >
-                    Directory
+                    Table of Contents
                   </button>
                 </div>
               </div>
 
               {/* Error Message */}
               {chapterError && (
-                <div className="p-4 bg-rose-500/10 border border-rose-500/30 text-rose-500 text-xs rounded-2xl shadow-sm">
-                  ❌ {chapterError}
+                <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-xl shadow-xs">
+                  {chapterError}
                 </div>
               )}
 
               {/* Loading Indicator */}
               {isLoadingChapter ? (
-                <div className="bg-[var(--bg-card)] rounded-3xl border border-[var(--border-subtle)] p-12 text-center text-[var(--text-muted)] text-sm animate-pulse space-y-3 shadow-xl">
-                  <div className="text-4xl">📖</div>
+                <div className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-subtle)] p-12 text-center text-[var(--text-muted)] text-xs animate-pulse space-y-3">
+                  <IconBook className="w-8 h-8 mx-auto text-indigo-400 opacity-40 mb-2" />
                   <p>Loading chapter prose and synchronized timeline...</p>
                 </div>
               ) : (

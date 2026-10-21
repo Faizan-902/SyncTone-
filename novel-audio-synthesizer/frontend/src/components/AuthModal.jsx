@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import {
+  IconX,
+  IconSoundwave,
+  IconBook,
+  IconMic,
+  IconSparkles,
+} from './icons';
 
 export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
   const { login, register, error, clearError } = useAuth();
@@ -44,7 +51,6 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
     setValidationError('');
     clearError();
 
-    // Client-side validations
     const trimmedEmail = email.trim().toLowerCase();
     if (!trimmedEmail || !trimmedEmail.includes('@')) {
       setValidationError('Please enter a valid email address.');
@@ -86,7 +92,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fadeIn"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn"
       role="dialog"
       aria-modal="true"
       aria-labelledby="auth-modal-title"
@@ -94,12 +100,11 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
         if (e.target === e.currentTarget && !isSubmitting) onClose();
       }}
     >
-      {/* 50/50 Split Modal Container (Unity Hub Style) */}
       <div
         ref={modalRef}
         className="w-full max-w-4xl bg-[var(--bg-card)] rounded-3xl shadow-2xl border border-[var(--border-subtle)] overflow-hidden flex flex-col md:flex-row transform transition-all animate-scaleUp"
       >
-        {/* Left Side: Clean Credentials & Registration Form */}
+        {/* Left Side: Form */}
         <div className="w-full md:w-1/2 p-6 sm:p-8 md:p-10 flex flex-col justify-between space-y-6">
           <div>
             {/* Header Tabs */}
@@ -111,9 +116,9 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                   setValidationError('');
                   clearError();
                 }}
-                className={`flex-1 pb-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 ${
+                className={`flex-1 pb-3 text-xs font-semibold uppercase tracking-wider transition-all border-b-2 ${
                   mode === 'login'
-                    ? 'border-brand-500 text-brand-500'
+                    ? 'border-indigo-500 text-indigo-400'
                     : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-main)]'
                 }`}
               >
@@ -126,9 +131,9 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                   setValidationError('');
                   clearError();
                 }}
-                className={`flex-1 pb-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 ${
+                className={`flex-1 pb-3 text-xs font-semibold uppercase tracking-wider transition-all border-b-2 ${
                   mode === 'register'
-                    ? 'border-brand-500 text-brand-500'
+                    ? 'border-indigo-500 text-indigo-400'
                     : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-main)]'
                 }`}
               >
@@ -137,7 +142,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
             </div>
 
             <div className="flex items-center justify-between mb-1">
-              <h2 id="auth-modal-title" className="text-2xl font-black text-[var(--text-main)] font-display tracking-tight">
+              <h2 id="auth-modal-title" className="text-xl font-bold text-[var(--text-main)] font-display tracking-tight">
                 {mode === 'login' ? 'Welcome Back' : 'Join SyncTone'}
               </h2>
               <button
@@ -147,20 +152,19 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                 className="text-[var(--text-muted)] hover:text-[var(--text-main)] p-1.5 rounded-xl hover:bg-[var(--bg-surface)] transition"
                 aria-label="Close dialog"
               >
-                ✕
+                <IconX className="w-4 h-4" />
               </button>
             </div>
 
-            <p className="text-xs text-[var(--text-sub)] mb-5">
+            <p className="text-xs text-[var(--text-sub)] mb-5 font-serif leading-relaxed">
               {mode === 'login'
-                ? 'Enter your credentials to access your synthesized library and reading history.'
-                : 'Create your account to read, customize character voices, and synthesize chapters.'}
+                ? 'Sign in to access your synchronized novel progress and voice preferences.'
+                : 'Create an account to explore neural voice literature and publish original novels.'}
             </p>
 
             {displayError && (
-              <div className="mb-4 p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-500 text-xs flex items-start gap-2">
-                <span className="font-bold">⚠️</span>
-                <span className="flex-1">{displayError}</span>
+              <div className="mb-4 p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 text-xs">
+                {displayError}
               </div>
             )}
 
@@ -168,7 +172,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
             <form noValidate onSubmit={handleSubmit} className="space-y-4">
               {mode === 'register' && (
                 <div>
-                  <label className="block text-[11px] font-bold text-[var(--text-sub)] uppercase tracking-wider mb-1">
+                  <label className="block text-[11px] font-semibold text-[var(--text-sub)] uppercase tracking-wider mb-1">
                     Username
                   </label>
                   <input
@@ -178,13 +182,13 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                     placeholder="e.g. synctone_reader"
                     required
                     disabled={isSubmitting}
-                    className="w-full px-3.5 py-2.5 text-xs bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-subtle)] rounded-xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition outline-none"
+                    className="w-full px-3.5 py-2 text-xs bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-subtle)] rounded-xl focus:outline-none focus:border-indigo-500 transition"
                   />
                 </div>
               )}
 
               <div>
-                <label className="block text-[11px] font-bold text-[var(--text-sub)] uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-semibold text-[var(--text-sub)] uppercase tracking-wider mb-1">
                   Email Address
                 </label>
                 <input
@@ -195,12 +199,12 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                   placeholder="you@example.com"
                   required
                   disabled={isSubmitting}
-                  className="w-full px-3.5 py-2.5 text-xs bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-subtle)] rounded-xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition outline-none"
+                  className="w-full px-3.5 py-2 text-xs bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-subtle)] rounded-xl focus:outline-none focus:border-indigo-500 transition"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-[var(--text-sub)] uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-semibold text-[var(--text-sub)] uppercase tracking-wider mb-1">
                   Password
                 </label>
                 <input
@@ -210,34 +214,31 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                   placeholder="••••••••"
                   required
                   disabled={isSubmitting}
-                  className="w-full px-3.5 py-2.5 text-xs bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-subtle)] rounded-xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition outline-none"
+                  className="w-full px-3.5 py-2 text-xs bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-subtle)] rounded-xl focus:outline-none focus:border-indigo-500 transition"
                 />
               </div>
 
               {mode === 'register' && (
                 <div>
-                  <label className="block text-[11px] font-bold text-[var(--text-sub)] uppercase tracking-wider mb-1">
+                  <label className="block text-[11px] font-semibold text-[var(--text-sub)] uppercase tracking-wider mb-1">
                     Account Role
                   </label>
                   <select
                     value={role}
                     onChange={(e) => setRole(e.target.value)}
                     disabled={isSubmitting}
-                    className="w-full px-3.5 py-2.5 text-xs bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-subtle)] rounded-xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition outline-none"
+                    className="w-full px-3.5 py-2 text-xs bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-subtle)] rounded-xl focus:outline-none focus:border-indigo-500 transition"
                   >
-                    <option value="reader">Reader (Browse & Listen)</option>
-                    <option value="writer">Writer / Author (Upload Novels & Chapters)</option>
+                    <option value="reader">Reader (Listen & Read)</option>
+                    <option value="writer">Author / Writer (Upload Novels & Manage Cast)</option>
                   </select>
-                  <p className="mt-1 text-[10px] text-[var(--text-muted)]">
-                    Writers can upload novels and customize neural character voice assignments.
-                  </p>
                 </div>
               )}
 
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3 px-4 bg-brand-600 hover:bg-brand-500 active:bg-brand-700 text-white text-xs font-bold rounded-xl shadow-lg shadow-brand-600/30 disabled:opacity-50 transition flex items-center justify-center gap-2 mt-2"
+                className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl shadow-sm transition flex items-center justify-center gap-2 mt-2"
               >
                 {isSubmitting ? (
                   <span>Processing...</span>
@@ -248,50 +249,45 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
             </form>
           </div>
 
-          {/* Quick Guest Access / One-Click Demo CTA */}
+          {/* Guest Access CTA */}
           <div className="pt-4 border-t border-[var(--border-subtle)]">
             <button
               type="button"
               onClick={onClose}
-              className="w-full py-2.5 px-3 bg-[var(--bg-surface)] hover:border-brand-500 border border-[var(--border-subtle)] rounded-xl text-xs font-bold text-[var(--text-main)] transition flex items-center justify-center gap-2"
+              className="w-full py-2 px-3 bg-[var(--bg-surface)] hover:border-indigo-500/50 border border-[var(--border-subtle)] rounded-xl text-xs font-semibold text-[var(--text-main)] transition"
             >
-              <span>🌐</span> Continue as Guest
+              Continue as Guest
             </button>
           </div>
         </div>
 
-        {/* Right Side: Cinematic Dark Fantasy Showcase (Unity Hub Style) */}
-        <div className="hidden md:flex w-1/2 relative bg-slate-950 overflow-hidden flex-col justify-end p-8 text-white">
-          {/* Ambient Background Glow and Gradient */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-brand-950 via-slate-950 to-indigo-950 opacity-90" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-brand-500/20 via-transparent to-transparent" />
+        {/* Right Side: Editorial Showcase */}
+        <div className="hidden md:flex w-1/2 relative bg-[var(--bg-surface)] overflow-hidden flex-col justify-end p-8 text-white">
+          <div className="absolute inset-0 bg-gradient-to-tr from-indigo-950/60 via-slate-950 to-indigo-950/40" />
 
-          {/* Synthesized Spotlight Card */}
-          <div className="relative z-10 bg-slate-900/90 border border-slate-800 p-6 rounded-2xl backdrop-blur-md shadow-2xl space-y-3">
+          <div className="relative z-10 bg-[var(--bg-card)] border border-[var(--border-subtle)] p-6 rounded-2xl shadow-xl space-y-3">
             <div className="flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
-                <span className="text-emerald-400 font-bold uppercase tracking-wider text-[10px]">
-                  Synthesized Spotlight
-                </span>
-              </div>
-              <span className="text-[10px] text-slate-400 font-mono">24kHz Edge Neural</span>
+              <span className="text-indigo-400 font-semibold uppercase tracking-wider text-[10px] flex items-center gap-1.5">
+                <IconSparkles className="w-3.5 h-3.5" />
+                <span>Neural Audio Platform</span>
+              </span>
+              <span className="text-[10px] text-[var(--text-muted)] font-mono">24kHz Neural</span>
             </div>
 
             <div>
-              <h3 className="text-lg font-black text-white font-serif">
-                Harry Potter & The Philosopher's Stone
+              <h3 className="text-base font-bold text-[var(--text-main)] font-display">
+                Multi-Voice Audio Synthesis
               </h3>
-              <p className="text-xs text-brand-300 font-medium">Chapter 1 • 7 Neural Voices Active</p>
+              <p className="text-xs text-indigo-300 font-serif">Dual-TTS Architecture</p>
             </div>
 
-            <p className="text-xs text-slate-300 leading-relaxed italic border-l-2 border-brand-500 pl-3 font-serif">
-              "Mr. and Mrs. Dursley, of number four, Privet Drive, were proud to say that they were perfectly normal, thank you very much."
+            <p className="text-xs text-[var(--text-sub)] leading-relaxed italic border-l-2 border-indigo-400 pl-3 font-serif">
+              "Experience synchronized prose where character dialogue and narrative passages are brought to life by dedicated voices."
             </p>
 
-            <div className="flex items-center justify-between pt-2 border-t border-slate-800 text-[11px] text-slate-400">
-              <span>Cast: Ryan Neural, Thomas, Libby, Arthur</span>
-              <span className="text-amber-400 font-bold">Dual-TTS 4NF</span>
+            <div className="flex items-center justify-between pt-2 border-t border-[var(--border-subtle)] text-[11px] text-[var(--text-muted)] font-mono">
+              <span>EdgeTTS & Kokoro Engine</span>
+              <span className="text-emerald-400 font-semibold">60fps Sync</span>
             </div>
           </div>
         </div>
