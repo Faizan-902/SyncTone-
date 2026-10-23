@@ -217,13 +217,11 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
                 )}
               </div>
             ) : (
-              chapters.map((ch) => {
-                const isReady = ch.status === 'completed' || (ch.total_duration_ms > 0);
-                return (
-                  <div
-                    key={ch.id}
-                    className="p-4 hover:bg-gray-50/80 transition flex items-center justify-between gap-4"
-                  >
+              chapters.map((ch) => (
+                <div
+                  key={ch.id}
+                  className="p-4 hover:bg-gray-50/80 transition flex items-center justify-between gap-4"
+                >
                     <div className="flex items-center gap-3">
                       <span className="w-8 h-8 rounded-xl bg-gray-100 text-gray-700 text-xs font-bold flex items-center justify-center">
                         {ch.chapter_number}
@@ -247,8 +245,7 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
                       <span>🎧</span> Read & Listen
                     </button>
                   </div>
-                );
-              })
+                ))
             )}
           </div>
         )}

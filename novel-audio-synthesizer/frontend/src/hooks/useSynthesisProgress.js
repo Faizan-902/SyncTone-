@@ -95,6 +95,11 @@ export function useSynthesisProgress(chapterId) {
           // Close connection if complete or failed
           if (status === 'complete' || status === 'failed') {
             clearInterval(pingIntervalRef.current);
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+              try {
+                wsRef.current.close();
+              } catch (_) {}
+            }
           }
         } catch (_) {}
       };

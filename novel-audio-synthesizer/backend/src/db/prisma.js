@@ -23,7 +23,7 @@ function getPrismaClient() {
           url: config.databaseUrl,
         },
       },
-      log: config.env === 'development' ? ['warn', 'error'] : ['error'],
+      log: (config.nodeEnv || config.env) === 'development' ? ['warn', 'error'] : ['error'],
     });
     return prismaInstance;
   } catch (err) {

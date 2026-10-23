@@ -73,7 +73,10 @@ router.post('/novels', optionalAuth, async (req, res) => {
       return res.status(400).json({ error: 'Title is required.' });
     }
 
-    const added_by = requestedAddedBy || req.user?.id;
+    // Prevent IDOR: an authenticated user (unless admin) can only create novels for their own id
+    const added_by = (req.user && req.user.role !== 'admin')
+      ? req.user.id
+      : (requestedAddedBy || req.user?.id);
     if (!added_by || !UUID_REGEX.test(added_by)) {
       return res.status(400).json({
         error: 'A valid added_by user UUID is required (or provide an authenticated session).',

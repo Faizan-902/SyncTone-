@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from './hooks/useAuth';
 import { useAudioSync } from './hooks/useAudioSync';
 import { usePlaybackProgress } from './hooks/usePlaybackProgress';
@@ -65,6 +65,7 @@ export default function App() {
   // Open novel details
   const handleSelectNovel = (novelId) => {
     setSelectedNovelId(novelId);
+    setShowRoster(false);
     setView('details');
   };
 
@@ -143,10 +144,11 @@ export default function App() {
         }
       }
       const synthRes = await api.chapters.synthesize(currentChapter.id);
-      if (synthRes?.manifest) {
+      const manifest = synthRes?.manifest || synthRes;
+      if (manifest && (manifest.timeline || manifest.audio_url || manifest.total_duration_ms)) {
         setChapterManifest({
-          ...synthRes.manifest,
-          audio_stream_url: `${synthRes.manifest.audio_url || `/api/stream/${currentChapter.id}`}?t=${Date.now()}`,
+          ...manifest,
+          audio_stream_url: `${manifest.audio_url || `/api/stream/${currentChapter.id}`}?t=${Date.now()}`,
         });
       }
       try {
@@ -190,7 +192,10 @@ export default function App() {
             {/* Breadcrumb Navigation */}
             <nav className="hidden md:flex items-center gap-2 text-xs text-gray-500 font-medium">
               <button
-                onClick={() => setView('catalog')}
+                onClick={() => {
+                  setView('catalog');
+                  setShowRoster(false);
+                }}
                 className={`hover:text-indigo-600 transition ${
                   view === 'catalog' ? 'text-indigo-600 font-bold' : ''
                 }`}
@@ -434,7 +439,7 @@ export default function App() {
       )}
 
       {/* Slide-out Character Cast Roster Drawer */}
-      {showRoster && (
+      {showRoster && view === 'reader' && (
         <CharacterRoster
           chapterId={currentChapter?.id || ''}
           segments={chapterSegments}

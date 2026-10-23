@@ -93,13 +93,19 @@ async function ensureChapterAudio(chapterId, segments) {
     ? audioStitcher.stitchAudioSegments.bind(audioStitcher)
     : audioStitcher.stitch.bind(audioStitcher);
 
-  stitchFn(segmentAudios, chapterId);
+  const stitched = stitchFn(segmentAudios, chapterId);
 
-  // Validate resulting audio
-  const savedBuffer = fs.readFileSync(mp3Path);
-  if (!validateAudioBuffer(savedBuffer, 'mp3')) {
-    console.warn(`  [Audio Warning] Audio buffer validation warning for ${mp3Path}`);
+  // Validate resulting audio (support both mp3 and wav fallback)
+  const savedAudioPath = fs.existsSync(mp3Path) ? mp3Path : wavPath;
+  if (fs.existsSync(savedAudioPath)) {
+    const savedBuffer = fs.readFileSync(savedAudioPath);
+    const audioFmt = savedAudioPath.endsWith('.mp3') ? 'mp3' : 'wav';
+    if (!validateAudioBuffer(savedBuffer, audioFmt)) {
+      console.warn(`  [Audio Warning] Audio buffer validation warning for ${savedAudioPath}`);
+    }
   }
+
+  return stitched;
 }
 
 /**
@@ -316,16 +322,16 @@ async function seedDemos({ closeConnections = false } = {}) {
     const charId = charRes.rows[0].id;
     hpCharMap[c.name] = { id: charId, voiceId: c.voiceId };
 
-    // 4NF Aliases
+    // 4NF Aliases (character_id, alias)
     for (const alias of c.aliases) {
       await pool.query(
         `
-        INSERT INTO character_aliases (novel_id, character_id, alias)
-        VALUES ($1, $2, $3)
-        ON CONFLICT (novel_id, alias) DO UPDATE SET
-          character_id = EXCLUDED.character_id;
+        INSERT INTO character_aliases (character_id, alias)
+        VALUES ($1, $2)
+        ON CONFLICT (character_id, alias) DO UPDATE SET
+          alias = EXCLUDED.alias;
       `,
-        [hpNovelId, charId, alias]
+        [charId, alias]
       );
     }
   }
@@ -438,19 +444,30 @@ async function seedDemos({ closeConnections = false } = {}) {
   const hpChapterRes = await pool.query(
     `
     INSERT INTO chapters (novel_id, chapter_number, title, status, audio_version, swift_audio_object, total_duration_ms)
-    VALUES ($1, 1, 'The Boy Who Lived', 'completed', 1, 'novel-chapters/hp_ch1.mp3', $2)
+    VALUES ($1, 1, 'The Boy Who Lived', 'completed', 1, 'hp_ch1.mp3', $2)
     ON CONFLICT (novel_id, chapter_number) DO UPDATE SET
       title = EXCLUDED.title,
       status = 'completed',
-      total_duration_ms = EXCLUDED.total_duration_ms,
       audio_version = EXCLUDED.audio_version,
-      swift_audio_object = EXCLUDED.swift_audio_object,
       updated_at = now()
     RETURNING id;
   `,
     [hpNovelId, hpTotalDurationMs]
   );
   const hpChapterId = hpChapterRes.rows[0].id;
+
+  // Synthesize/stitch demo chapter audio and capture real durations & format
+  const stitchedHp = await ensureChapterAudio(hpChapterId, hpSegments);
+  const hpAudioFormat = stitchedHp?.audio_format || (fs.existsSync(path.join(outputDir, `${hpChapterId}.wav`)) ? 'wav' : 'mp3');
+  const hpFinalDurationMs = stitchedHp?.total_duration_ms || hpTotalDurationMs;
+  const hpFinalTimeline = (stitchedHp?.timeline && stitchedHp.timeline.length > 0) ? stitchedHp.timeline : hpTimeline;
+  const hpSwiftAudioObject = `${hpChapterId}.${hpAudioFormat}`;
+
+  // Update PostgreSQL chapter with verified audio object and exact duration
+  await pool.query(
+    `UPDATE chapters SET total_duration_ms = $1, swift_audio_object = $2, updated_at = now() WHERE id = $3;`,
+    [hpFinalDurationMs, hpSwiftAudioObject, hpChapterId]
+  );
 
   // MongoDB chapter document
   const hpRawText = hpRawSegments.map((s) => s.text).join('\n\n');
@@ -464,17 +481,16 @@ async function seedDemos({ closeConnections = false } = {}) {
       raw_text: hpRawText,
       audio_version: 1,
       manifest: {
-        total_duration_ms: hpTotalDurationMs,
-        audio_url: `/static/audio/${hpChapterId}.mp3`,
-        timeline: hpTimeline,
+        total_duration_ms: hpFinalDurationMs,
+        audio_url: `/api/stream/${hpChapterId}`,
+        timeline: hpFinalTimeline,
       },
       segments: hpSegments,
     },
     { upsert: true, new: true, runValidators: true }
   );
 
-  await ensureChapterAudio(hpChapterId, hpSegments);
-  console.log(`  ✔ Seeded Chapter 1 ('The Boy Who Lived'): ID=${hpChapterId}\n`);
+  console.log(`  ✔ Seeded Chapter 1 ('The Boy Who Lived'): ID=${hpChapterId} (${hpFinalDurationMs}ms, ${hpAudioFormat})\n`);
 
   // ---------------------------------------------------------------------------
   // 4. Public Verified Demo: The Adventures of Sherlock Holmes (Ch 1 & 2)
@@ -593,16 +609,16 @@ async function seedDemos({ closeConnections = false } = {}) {
     const charId = charRes.rows[0].id;
     shCharMap[c.name] = { id: charId, voiceId: c.voiceId };
 
-    // 4NF Aliases
+    // 4NF Aliases (character_id, alias)
     for (const alias of c.aliases) {
       await pool.query(
         `
-        INSERT INTO character_aliases (novel_id, character_id, alias)
-        VALUES ($1, $2, $3)
-        ON CONFLICT (novel_id, alias) DO UPDATE SET
-          character_id = EXCLUDED.character_id;
+        INSERT INTO character_aliases (character_id, alias)
+        VALUES ($1, $2)
+        ON CONFLICT (character_id, alias) DO UPDATE SET
+          alias = EXCLUDED.alias;
       `,
-        [shNovelId, charId, alias]
+        [charId, alias]
       );
     }
   }
@@ -692,19 +708,30 @@ async function seedDemos({ closeConnections = false } = {}) {
   const shCh1Res = await pool.query(
     `
     INSERT INTO chapters (novel_id, chapter_number, title, status, audio_version, swift_audio_object, total_duration_ms)
-    VALUES ($1, 1, 'A Scandal in Bohemia - Part I', 'completed', 1, 'novel-chapters/sh_ch1.mp3', $2)
+    VALUES ($1, 1, 'A Scandal in Bohemia - Part I', 'completed', 1, 'sh_ch1.mp3', $2)
     ON CONFLICT (novel_id, chapter_number) DO UPDATE SET
       title = EXCLUDED.title,
       status = 'completed',
-      total_duration_ms = EXCLUDED.total_duration_ms,
       audio_version = EXCLUDED.audio_version,
-      swift_audio_object = EXCLUDED.swift_audio_object,
       updated_at = now()
     RETURNING id;
   `,
     [shNovelId, shCh1TotalDurationMs]
   );
   const shCh1Id = shCh1Res.rows[0].id;
+
+  // Synthesize/stitch demo chapter audio and capture real durations & format
+  const stitchedSh1 = await ensureChapterAudio(shCh1Id, shCh1Segments);
+  const sh1AudioFormat = stitchedSh1?.audio_format || (fs.existsSync(path.join(outputDir, `${shCh1Id}.wav`)) ? 'wav' : 'mp3');
+  const sh1FinalDurationMs = stitchedSh1?.total_duration_ms || shCh1TotalDurationMs;
+  const sh1FinalTimeline = (stitchedSh1?.timeline && stitchedSh1.timeline.length > 0) ? stitchedSh1.timeline : shCh1Timeline;
+  const sh1SwiftAudioObject = `${shCh1Id}.${sh1AudioFormat}`;
+
+  // Update PostgreSQL chapter with verified audio object and exact duration
+  await pool.query(
+    `UPDATE chapters SET total_duration_ms = $1, swift_audio_object = $2, updated_at = now() WHERE id = $3;`,
+    [sh1FinalDurationMs, sh1SwiftAudioObject, shCh1Id]
+  );
 
   const shCh1RawText = shCh1RawSegments.map((s) => s.text).join('\n\n');
   await Chapter.findOneAndUpdate(
@@ -717,17 +744,16 @@ async function seedDemos({ closeConnections = false } = {}) {
       raw_text: shCh1RawText,
       audio_version: 1,
       manifest: {
-        total_duration_ms: shCh1TotalDurationMs,
-        audio_url: `/static/audio/${shCh1Id}.mp3`,
-        timeline: shCh1Timeline,
+        total_duration_ms: sh1FinalDurationMs,
+        audio_url: `/api/stream/${shCh1Id}`,
+        timeline: sh1FinalTimeline,
       },
       segments: shCh1Segments,
     },
     { upsert: true, new: true, runValidators: true }
   );
 
-  await ensureChapterAudio(shCh1Id, shCh1Segments);
-  console.log(`  ✔ Seeded Chapter 1 ('A Scandal in Bohemia - Part I'): ID=${shCh1Id}`);
+  console.log(`  ✔ Seeded Chapter 1 ('A Scandal in Bohemia - Part I'): ID=${shCh1Id} (${sh1FinalDurationMs}ms, ${sh1AudioFormat})`);
 
   // Chapter 2: A Scandal in Bohemia - Part II
   const shCh2RawSegments = [
@@ -813,19 +839,30 @@ async function seedDemos({ closeConnections = false } = {}) {
   const shCh2Res = await pool.query(
     `
     INSERT INTO chapters (novel_id, chapter_number, title, status, audio_version, swift_audio_object, total_duration_ms)
-    VALUES ($1, 2, 'A Scandal in Bohemia - Part II', 'completed', 1, 'novel-chapters/sh_ch2.mp3', $2)
+    VALUES ($1, 2, 'A Scandal in Bohemia - Part II', 'completed', 1, 'sh_ch2.mp3', $2)
     ON CONFLICT (novel_id, chapter_number) DO UPDATE SET
       title = EXCLUDED.title,
       status = 'completed',
-      total_duration_ms = EXCLUDED.total_duration_ms,
       audio_version = EXCLUDED.audio_version,
-      swift_audio_object = EXCLUDED.swift_audio_object,
       updated_at = now()
     RETURNING id;
   `,
     [shNovelId, shCh2TotalDurationMs]
   );
   const shCh2Id = shCh2Res.rows[0].id;
+
+  // Synthesize/stitch demo chapter audio and capture real durations & format
+  const stitchedSh2 = await ensureChapterAudio(shCh2Id, shCh2Segments);
+  const sh2AudioFormat = stitchedSh2?.audio_format || (fs.existsSync(path.join(outputDir, `${shCh2Id}.wav`)) ? 'wav' : 'mp3');
+  const sh2FinalDurationMs = stitchedSh2?.total_duration_ms || shCh2TotalDurationMs;
+  const sh2FinalTimeline = (stitchedSh2?.timeline && stitchedSh2.timeline.length > 0) ? stitchedSh2.timeline : shCh2Timeline;
+  const sh2SwiftAudioObject = `${shCh2Id}.${sh2AudioFormat}`;
+
+  // Update PostgreSQL chapter with verified audio object and exact duration
+  await pool.query(
+    `UPDATE chapters SET total_duration_ms = $1, swift_audio_object = $2, updated_at = now() WHERE id = $3;`,
+    [sh2FinalDurationMs, sh2SwiftAudioObject, shCh2Id]
+  );
 
   const shCh2RawText = shCh2RawSegments.map((s) => s.text).join('\n\n');
   await Chapter.findOneAndUpdate(
@@ -838,17 +875,16 @@ async function seedDemos({ closeConnections = false } = {}) {
       raw_text: shCh2RawText,
       audio_version: 1,
       manifest: {
-        total_duration_ms: shCh2TotalDurationMs,
-        audio_url: `/static/audio/${shCh2Id}.mp3`,
-        timeline: shCh2Timeline,
+        total_duration_ms: sh2FinalDurationMs,
+        audio_url: `/api/stream/${shCh2Id}`,
+        timeline: sh2FinalTimeline,
       },
       segments: shCh2Segments,
     },
     { upsert: true, new: true, runValidators: true }
   );
 
-  await ensureChapterAudio(shCh2Id, shCh2Segments);
-  console.log(`  ✔ Seeded Chapter 2 ('A Scandal in Bohemia - Part II'): ID=${shCh2Id}\n`);
+  console.log(`  ✔ Seeded Chapter 2 ('A Scandal in Bohemia - Part II'): ID=${shCh2Id} (${sh2FinalDurationMs}ms, ${sh2AudioFormat})\n`);
 
   console.log('========================================================================');
   console.log('✅ Demo seeding finished successfully!');

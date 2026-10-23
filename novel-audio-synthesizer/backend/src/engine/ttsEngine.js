@@ -43,6 +43,16 @@ class TTSEngine {
     };
   }
 
+  escapeSsml(text) {
+    if (!text || typeof text !== 'string') return '';
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
+  }
+
   // Primary: Microsoft Edge Neural TTS
   async synthesizeWithEdge(text, voiceId, options = {}) {
     const tts = new MsEdgeTTS();
@@ -57,7 +67,8 @@ class TTSEngine {
       }, 15000);
 
       try {
-        const { audioStream } = tts.toStream(text, prosody);
+        const safeText = this.escapeSsml(text);
+        const { audioStream } = tts.toStream(safeText, prosody);
         const chunks = [];
 
         audioStream.on('data', (chunk) => {
@@ -165,7 +176,7 @@ class TTSEngine {
     for (const [key, entry] of Object.entries(VOICE_CATALOG)) {
       if (entry.primary === voiceId || key === voiceId) {
         edgeVoice = entry.primary;
-        prosody = entry.prosody || prosody;
+        prosody = entry.prosody ? { ...entry.prosody } : { rate: '+0%', pitch: '+0%' };
         break;
       }
     }
