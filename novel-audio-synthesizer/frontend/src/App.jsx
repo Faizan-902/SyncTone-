@@ -17,14 +17,15 @@ import AuthModal from './components/AuthModal';
 import AddNovelModal from './components/AddNovelModal';
 import UploadChapterModal from './components/UploadChapterModal';
 import SettingsModal from './components/SettingsModal';
-import { IconClock, IconX, IconMic, IconBook, IconArrowLeft } from './components/icons';
+import { IconClock, IconX } from './components/icons';
+import { executeViewTransition } from './tokens/motion';
 
 const EMPTY_ARRAY = [];
 
 export default function App() {
-  const { isWriterOrAdmin } = useAuth();
+  const { user, role, isAuthenticated, isWriterOrAdmin } = useAuth();
 
-  // Navigation View: 'catalog' | 'details' | 'reader'
+  // Navigation View: 'catalog' | 'details' | 'reader' | 'settings' | 'upload'
   const [view, setView] = useState('catalog');
   const [selectedNovelId, setSelectedNovelId] = useState(null);
   const [currentNovel, setCurrentNovel] = useState(null);
@@ -49,7 +50,6 @@ export default function App() {
   const audioSync = useAudioSync(chapterManifest?.timeline ?? EMPTY_ARRAY);
 
   // 4NF Playback Progress Hook (auto-resume & throttled persistence)
-  const { user } = useAuth();
   const playbackProgress = usePlaybackProgress({
     novelId: currentNovel?.id,
     chapterId: currentChapter?.id,
@@ -61,29 +61,100 @@ export default function App() {
   // Real-time WebSocket Synthesis Progress Hook
   const synthesisProgress = useSynthesisProgress(currentChapter?.id);
 
-  // Fetch status on mount
+  // Helper for safe scroll without jsdom not-implemented warning
+  const safeScrollToTop = (behavior = 'instant') => {
+    try {
+      if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
+        window.scrollTo({ top: 0, behavior });
+      }
+    } catch (_) {}
+  };
+
+  // Centralized navigation handler with View Transitions & History state sync
+  const handleNavigate = (targetView, novelId = null) => {
+    executeViewTransition(() => {
+      if (targetView === 'catalog') {
+        setSelectedNovelId(null);
+      } else if (targetView === 'details') {
+        const id = novelId || selectedNovelId || currentNovel?.id;
+        if (id) setSelectedNovelId(id);
+      }
+      setView(targetView);
+      setShowRoster(false);
+
+      try {
+        if (typeof window !== 'undefined' && window.history) {
+          const stateNovelId = novelId || (targetView === 'details' ? (selectedNovelId || currentNovel?.id) : null);
+          window.history.pushState({ view: targetView, novelId: stateNovelId }, '', window.location.pathname);
+        }
+      } catch (_) {}
+
+      safeScrollToTop('instant');
+    });
+  };
+
+  // Listen to browser Back/Forward navigation (popstate)
+  useEffect(() => {
+    const handlePopState = (event) => {
+      if (event.state && event.state.view) {
+        executeViewTransition(() => {
+          setView(event.state.view);
+          if (event.state.novelId) {
+            setSelectedNovelId(event.state.novelId);
+          }
+          setShowRoster(false);
+        });
+      } else {
+        executeViewTransition(() => {
+          setView('catalog');
+          setSelectedNovelId(null);
+          setShowRoster(false);
+        });
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Fetch model status on mount
   useEffect(() => {
     api.status.models().then(setModelStatus).catch(() => {});
   }, []);
 
-  // Open novel details
+  // Open novel details with view transition
   const handleSelectNovel = (novelId) => {
-    setSelectedNovelId(novelId);
-    setView('details');
+    handleNavigate('details', novelId);
   };
 
-  // Open chapter in Reader
+  // Open chapter in Reader with view transition
   const handleSelectChapter = async (novel, chapter) => {
-    setCurrentNovel(novel);
-    setCurrentChapter(chapter);
-    setView('reader');
-    setIsLoadingChapter(true);
-    setChapterError(null);
-    setChapterSegments(EMPTY_ARRAY);
-    setChapterManifest(null);
+    executeViewTransition(() => {
+      setCurrentNovel(novel);
+      if (novel?.id) {
+        setSelectedNovelId(novel.id);
+      }
+      setCurrentChapter(chapter);
+      setView('reader');
+      setIsLoadingChapter(true);
+      setChapterError(null);
+      setChapterSegments(EMPTY_ARRAY);
+      setChapterManifest(null);
+
+      try {
+        if (typeof window !== 'undefined' && window.history) {
+          window.history.pushState(
+            { view: 'reader', novelId: novel?.id, chapterId: chapter?.id },
+            '',
+            window.location.pathname
+          );
+        }
+      } catch (_) {}
+
+      safeScrollToTop('instant');
+    });
 
     try {
-      // 1. Fetch chapter details & MongoDB segments
+      // 1. Fetch chapter details & segments
       const details = await api.chapters.get(chapter.id);
       const segments = details.segments || [];
       setChapterSegments(segments);
@@ -106,7 +177,6 @@ export default function App() {
           audio_stream_url: streamUrl,
         });
       } else {
-        // Fallback placeholder manifest with local stream proxy
         setChapterManifest({
           audio_stream_url: `/api/stream/${chapter.id}`,
           total_duration_ms: chapter.total_duration_ms || 0,
@@ -127,80 +197,67 @@ export default function App() {
     }
   };
 
-  // Trigger re-synthesis of chapter
-  const handleSynthesizeCurrentChapter = async () => {
-    if (!currentChapter?.id) return;
-    try {
-      await api.chapters.synthesize(currentChapter.id);
-    } catch (err) {
-      setChapterError(err.message || 'Failed to trigger chapter synthesis.');
-    }
+  const handleOpenAuth = (mode = 'login') => {
+    setAuthMode(mode);
+    setShowAuthModal(true);
   };
 
   return (
-    <div className="min-h-screen bg-[var(--bg-page)] text-[var(--text-main)] flex flex-col font-sans transition-colors duration-300">
-      {/* 1. Desktop Left Rail & Mobile Bottom Bar Navigation */}
+    <div className="min-h-screen bg-[var(--bg-page)] text-[var(--text-main)] flex flex-col font-sans transition-colors duration-200">
+      {/* Editorial 72px Navigation Rail (Desktop) & Bottom Bar (Mobile) */}
       <SidebarNav
         currentView={view}
-        onNavigate={(newView) => {
-          setView(newView);
-          setShowRoster(false);
-        }}
-        onOpenAuth={(mode) => {
-          setAuthMode(mode);
-          setShowAuthModal(true);
-        }}
+        onNavigate={(targetView) => handleNavigate(targetView)}
         onOpenSettings={() => setShowSettings(true)}
+        onOpenAuth={handleOpenAuth}
         onOpenAddNovel={() => setShowAddNovelModal(true)}
       />
 
-      {/* 2. Main Content Wrapper (Offset for desktop left rail) */}
-      <div className="md:pl-20 flex-1 flex flex-col min-h-screen">
-        {/* Global Glass Top Header */}
-        <TopHeader
-          view={view}
-          currentNovel={currentNovel}
-          currentChapter={currentChapter}
-          onNavigate={(newView) => {
-            setView(newView);
-            setShowRoster(false);
-          }}
-          showRoster={showRoster}
-          onToggleRoster={() => setShowRoster(!showRoster)}
-          onOpenSettings={() => setShowSettings(true)}
-          onOpenAuth={(mode) => {
-            setAuthMode(mode);
-            setShowAuthModal(true);
-          }}
-        />
+      {/* Main Viewport Container (Offset by 72px desktop rail) */}
+      <div className="flex-1 md:pl-[72px] flex flex-col min-h-screen">
+        {/* Top Sticky Header (Breadcrumbs, Search & Cast Controls for Details/Reader) */}
+        {view !== 'catalog' && (
+          <TopHeader
+            view={view}
+            currentNovel={currentNovel}
+            currentChapter={currentChapter}
+            onNavigate={(targetView) => handleNavigate(targetView)}
+            showRoster={showRoster}
+            onToggleRoster={() => setShowRoster((prev) => !prev)}
+            onOpenSettings={() => setShowSettings(true)}
+            onOpenAuth={handleOpenAuth}
+          />
+        )}
 
-        {/* Main Content Body Container */}
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-32">
-          {/* Playback Resume Banner */}
+        {/* Content Body Area */}
+        <main key={view} className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-8 py-6 motion-view-route">
+          {/* Playback Resume Toast */}
           {view === 'reader' && playbackProgress.resumedAtMs !== null && (
-            <div className="mb-4 p-3.5 bg-indigo-950/40 border border-indigo-500/30 text-indigo-200 rounded-xl flex items-center justify-between text-xs animate-slideDown">
+            <div className="mb-4 p-3.5 rounded-2xl bg-[var(--accent)] text-white shadow-xl flex items-center justify-between text-xs animate-slideDown">
               <div className="flex items-center gap-2.5">
-                <IconClock className="w-4 h-4 text-indigo-400 flex-shrink-0" />
+                <IconClock className="w-4 h-4" />
                 <span>
                   Resumed playback from previous session at{' '}
-                  <strong className="text-white font-mono">
+                  <strong>
                     {Math.floor(playbackProgress.resumedAtMs / 60000)}:
                     {Math.floor((playbackProgress.resumedAtMs % 60000) / 1000)
                       .toString()
                       .padStart(2, '0')}
                   </strong>
+                  .
                 </span>
               </div>
               <button
                 onClick={playbackProgress.dismissResumeBanner}
-                className="text-[var(--text-muted)] hover:text-white px-2 py-1 hover:bg-white/10 rounded-lg transition"
+                className="hover:opacity-80 p-1"
+                aria-label="Dismiss resume notification"
               >
-                <IconX className="w-3.5 h-3.5" />
+                <IconX className="w-4 h-4" />
               </button>
             </div>
           )}
 
-          {/* Live Synthesis Progress */}
+          {/* Live Synthesis Progress Banner */}
           {view === 'reader' && synthesisProgress.status !== 'idle' && (
             <div className="mb-6">
               <SynthesisProgressBar
@@ -220,15 +277,19 @@ export default function App() {
           {view === 'catalog' && (
             <NovelCatalog
               onSelectNovel={handleSelectNovel}
+              onSelectChapter={handleSelectChapter}
               onOpenAddNovel={() => setShowAddNovelModal(true)}
+              onOpenSettings={() => setShowSettings(true)}
+              onOpenAuth={handleOpenAuth}
+              onToggleRoster={() => setShowRoster((prev) => !prev)}
             />
           )}
 
           {/* VIEW 2: NOVEL DETAILS */}
-          {view === 'details' && selectedNovelId && (
+          {view === 'details' && (selectedNovelId || currentNovel?.id) && (
             <NovelDetails
-              novelId={selectedNovelId}
-              onBack={() => setView('catalog')}
+              novelId={selectedNovelId || currentNovel?.id}
+              onBack={() => handleNavigate('catalog')}
               onSelectChapter={handleSelectChapter}
               onOpenUploadChapter={(novel) => {
                 setCurrentNovel(novel);
@@ -237,64 +298,38 @@ export default function App() {
             />
           )}
 
-          {/* VIEW 3: SYNCHRONIZED READER */}
+          {/* VIEW 3: 60FPS SYNCHRONIZED READER */}
           {view === 'reader' && (
-            <div className="space-y-6 pb-32 sm:pb-28">
-              {/* Chapter Header Card */}
-              <div className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-subtle)] p-6 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors duration-250">
-                <div>
-                  <div className="flex items-center gap-2 text-[11px] font-mono font-medium text-indigo-400 uppercase tracking-wider mb-1">
-                    <span>{currentNovel?.title || 'SyncTone Novel'}</span>
-                    <span>•</span>
-                    <span>Chapter {currentChapter?.chapter_number || 1}</span>
-                  </div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-[var(--text-main)] font-display tracking-tight">
-                    {currentChapter?.title || 'Chapter Reading'}
-                  </h2>
-                  <p className="text-xs text-[var(--text-muted)] mt-1 font-serif">
-                    {chapterSegments.length} segments • Click any dialogue or narration to seek
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2.5">
-                  {isWriterOrAdmin && (
-                    <button
-                      onClick={handleSynthesizeCurrentChapter}
-                      className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl shadow-xs transition flex items-center gap-1.5"
-                    >
-                      <IconMic className="w-3.5 h-3.5" />
-                      <span>Re-Synthesize</span>
-                    </button>
-                  )}
-                  <button
-                    onClick={() => setView('details')}
-                    className="px-3.5 py-2 bg-[var(--bg-surface)] hover:border-indigo-500/50 text-[var(--text-main)] text-xs font-semibold rounded-xl border border-[var(--border-subtle)] transition"
-                  >
-                    Table of Contents
-                  </button>
-                </div>
-              </div>
-
-              {/* Error Message */}
+            <div className="space-y-6">
+              {/* Chapter Error State */}
               {chapterError && (
-                <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-xl shadow-xs">
+                <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs">
                   {chapterError}
                 </div>
               )}
 
-              {/* Loading Indicator */}
+              {/* Chapter Loading Skeleton */}
               {isLoadingChapter ? (
-                <div className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-subtle)] p-12 text-center text-[var(--text-muted)] text-xs animate-pulse space-y-3">
-                  <IconBook className="w-8 h-8 mx-auto text-indigo-400 opacity-40 mb-2" />
+                <div className="rounded-2xl theme-surface border p-12 text-center theme-muted text-sm animate-pulse space-y-3 max-w-3xl mx-auto">
+                  <div className="w-8 h-8 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin mx-auto" />
                   <p>Loading chapter prose and synchronized timeline...</p>
                 </div>
               ) : (
-                /* Synchronized 60fps Reader Text View */
                 <ReaderView
                   segments={chapterSegments}
                   activeSegmentId={audioSync.activeSegmentId}
+                  isPlaying={audioSync.isPlaying}
                   onSegmentClick={(segmentId) => {
                     audioSync.seekToSegment(segmentId);
+                  }}
+                  currentNovel={currentNovel}
+                  currentChapter={currentChapter}
+                  onBack={() => {
+                    if (selectedNovelId || currentNovel?.id) {
+                      handleNavigate('details', selectedNovelId || currentNovel?.id);
+                    } else {
+                      handleNavigate('catalog');
+                    }
                   }}
                 />
               )}
@@ -302,7 +337,7 @@ export default function App() {
           )}
         </main>
 
-        {/* Docked Floating Glass Bottom Audio Player */}
+        {/* Docked Sticky Bottom Audio Player */}
         {view === 'reader' && chapterManifest && (
           <AudioPlayer
             audioRef={audioSync.audioRef}
@@ -316,10 +351,22 @@ export default function App() {
             onPause={audioSync.handlePause}
             onEnded={audioSync.handleEnded}
             onLoadedMetadata={audioSync.handleLoadedMetadata}
+            currentNovel={currentNovel}
+            currentChapter={currentChapter}
+            onSeekSegment={(dir) => {
+              const currentIdx = chapterSegments.findIndex(
+                (s) => (s.segment_id ?? s.order) === audioSync.activeSegmentId
+              );
+              const targetIdx = Math.max(0, Math.min(chapterSegments.length - 1, (currentIdx >= 0 ? currentIdx : 0) + dir));
+              const targetSeg = chapterSegments[targetIdx];
+              if (targetSeg) {
+                audioSync.seekToSegment(targetSeg.segment_id ?? targetSeg.order);
+              }
+            }}
           />
         )}
 
-        {/* Slide-out Character Cast Roster Drawer */}
+        {/* Character Cast Roster Drawer */}
         {showRoster && (
           <CharacterRoster
             chapterId={currentChapter?.id || ''}
@@ -337,7 +384,7 @@ export default function App() {
           />
         )}
 
-        {/* Auth Modal (Login / Register / Guest Access) */}
+        {/* Auth Modal (Login / Register) */}
         <AuthModal
           isOpen={showAuthModal}
           initialMode={authMode}
@@ -348,9 +395,9 @@ export default function App() {
         <AddNovelModal
           isOpen={showAddNovelModal}
           onClose={() => setShowAddNovelModal(false)}
+          onOpenAuth={handleOpenAuth}
           onNovelCreated={(newNovel) => {
-            setSelectedNovelId(newNovel.id);
-            setView('details');
+            handleNavigate('details', newNovel.id);
           }}
         />
 
@@ -364,7 +411,7 @@ export default function App() {
           }}
         />
 
-        {/* TTS Settings Modal */}
+        {/* Neural Engine Settings Modal */}
         {showSettings && (
           <SettingsModal
             modelStatus={modelStatus}
