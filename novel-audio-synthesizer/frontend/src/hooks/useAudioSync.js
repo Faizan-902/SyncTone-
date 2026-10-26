@@ -36,6 +36,13 @@ export function useAudioSync(timeline = [], onSegmentChange = null) {
   const [currentTimeMs, setCurrentTimeMs] = useState(0);
   const [duration, setDuration] = useState(0);
 
+  useEffect(() => {
+    lastActiveSegIdRef.current = -1;
+    setActiveSegmentId(-1);
+    setCurrentTimeMs(0);
+    setIsPlaying(false);
+  }, [timeline]);
+
   // Synchronized animation loop (60fps audio clock)
   const syncLoop = useCallback(() => {
     if (!audioRef.current) return;

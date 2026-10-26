@@ -35,9 +35,14 @@ router.post('/auth/register', async (req, res) => {
       });
     }
 
-    let normalizedRole = role ? role.toLowerCase().trim() : 'reader';
+    let normalizedRole = (typeof role === 'string' && role.trim()) ? role.toLowerCase().trim() : 'reader';
     if (normalizedRole === 'author') {
       normalizedRole = 'writer';
+    }
+    if (!ALLOWED_ROLES.includes(normalizedRole)) {
+      return res.status(400).json({
+        error: `Invalid role. Allowed values: ${ALLOWED_ROLES.join(', ')}.`,
+      });
     }
     if (normalizedRole === 'admin') {
       return res.status(403).json({

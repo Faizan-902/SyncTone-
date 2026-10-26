@@ -43,7 +43,7 @@ class AudioStitcher {
     const frame = Buffer.alloc(144, 0);
     frame[0] = 0xff;
     frame[1] = 0xf3;
-    frame[2] = 0x40;
+    frame[2] = 0x60; // 48 kbps index (0110) MPEG-2 Layer 3, 24kHz = 144 bytes per frame
     frame[3] = 0xc0;
     const frames = [];
     for (let i = 0; i < frameCount; i++) {
@@ -154,6 +154,10 @@ class AudioStitcher {
       total_duration_ms: currentMs,
       timeline,
     };
+  }
+
+  stitchAudioSegments(segments, chapterId) {
+    return this.stitch(segments, chapterId);
   }
 }
 

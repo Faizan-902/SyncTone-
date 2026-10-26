@@ -123,6 +123,7 @@ export default function App() {
 
   // Open novel details with view transition
   const handleSelectNovel = (novelId) => {
+    setShowRoster(false);
     handleNavigate('details', novelId);
   };
 
@@ -156,7 +157,15 @@ export default function App() {
     try {
       // 1. Fetch chapter details & segments
       const details = await api.chapters.get(chapter.id);
-      const segments = details.segments || [];
+      let segments = details.segments || [];
+      if (segments.length === 0 && (details.status === 'draft' || chapter?.status === 'draft' || !details.status)) {
+        try {
+          const parsedRes = await api.chapters.parse(chapter.id);
+          if (parsedRes?.segments) {
+            segments = parsedRes.segments;
+          }
+        } catch (_) {}
+      }
       setChapterSegments(segments);
 
       // 2. Determine manifest and audio stream URL
@@ -200,6 +209,35 @@ export default function App() {
   const handleOpenAuth = (mode = 'login') => {
     setAuthMode(mode);
     setShowAuthModal(true);
+  };
+
+  // Trigger re-synthesis of chapter
+  const handleSynthesizeCurrentChapter = async () => {
+    if (!currentChapter?.id) return;
+    try {
+      if (chapterSegments.length === 0) {
+        const parsedRes = await api.chapters.parse(currentChapter.id);
+        if (parsedRes?.segments) {
+          setChapterSegments(parsedRes.segments);
+        }
+      }
+      const synthRes = await api.chapters.synthesize(currentChapter.id);
+      const manifest = synthRes?.manifest || synthRes;
+      if (manifest && (manifest.timeline || manifest.audio_url || manifest.total_duration_ms)) {
+        setChapterManifest({
+          ...manifest,
+          audio_stream_url: `${manifest.audio_url || `/api/stream/${currentChapter.id}`}?t=${Date.now()}`,
+        });
+      }
+      try {
+        const refreshed = await api.chapters.get(currentChapter.id);
+        if (refreshed?.segments) {
+          setChapterSegments(refreshed.segments);
+        }
+      } catch (_) {}
+    } catch (err) {
+      setChapterError(err.message || 'Failed to trigger chapter synthesis.');
+    }
   };
 
   return (
@@ -347,6 +385,7 @@ export default function App() {
             totalDurationMs={chapterManifest.total_duration_ms || currentChapter?.total_duration_ms || 0}
             onToggle={audioSync.toggle}
             onSetPlaybackRate={audioSync.setPlaybackRate}
+            onSeek={audioSync.seekToTimeMs}
             onPlay={audioSync.handlePlay}
             onPause={audioSync.handlePause}
             onEnded={audioSync.handleEnded}

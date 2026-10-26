@@ -29,6 +29,7 @@ export default function AudioPlayer({
   totalDurationMs = 0,
   onToggle,
   onSetPlaybackRate,
+  onSeek,
   onPlay,
   onPause,
   onEnded,
@@ -56,9 +57,14 @@ export default function AudioPlayer({
       if (!audioRef?.current || totalDurationMs <= 0 || !scrubberTrackRef.current) return;
       const rect = scrubberTrackRef.current.getBoundingClientRect();
       const fraction = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
-      audioRef.current.currentTime = (fraction * totalDurationMs) / 1000;
+      const targetMs = Math.round(fraction * totalDurationMs);
+      if (onSeek) {
+        onSeek(targetMs, isPlaying);
+      } else {
+        audioRef.current.currentTime = targetMs / 1000;
+      }
     },
-    [audioRef, totalDurationMs]
+    [audioRef, totalDurationMs, onSeek, isPlaying]
   );
 
   const handleScrubberClick = (e) => {

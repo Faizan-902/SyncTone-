@@ -10,6 +10,7 @@
     "prisma:generate": "prisma generate",
     "prisma:validate": "prisma validate",
     "prisma:studio": "prisma studio",
+    "seed:demos": "node src/scripts/seedDemos.js",
     "test": "node test_sprint1.js",
     "test:de": "node test_de_integrity.js"
   },

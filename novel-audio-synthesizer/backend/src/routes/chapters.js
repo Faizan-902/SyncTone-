@@ -8,9 +8,11 @@ const { attributionEngine } = require('../engine/attribution');
 const { voiceProfiler } = require('../engine/voiceProfiler');
 const { ttsEngine } = require('../engine/ttsEngine');
 const { audioStitcher } = require('../engine/audioStitcher');
+const { eventDispatcher } = require('../engine/eventDispatcher');
+const { validateAudioBuffer } = require('../engine/audioValidator');
 const { broadcastProgress } = require('../websocket');
 const { config } = require('../config');
-const { optionalAuth } = require('../middleware/auth');
+const { authenticateUser, optionalAuth, requireRole } = require('../middleware/auth');
 const { getSwiftAuth } = require('./swift');
 
 const router = Router();
@@ -63,10 +65,12 @@ async function getOrCreateDefaultNovel() {
  * Common ingestion helper: performs atomic PostgreSQL transaction and MongoDB document creation.
  */
 async function ingestChapter({ novelId, title, text, chapterNumber, requestedBy }) {
-  const client = await pool.connect();
+  let client;
+  let clientReleased = false;
   let createdPgChapter = null;
 
   try {
+    client = await pool.connect();
     await client.query('BEGIN');
 
     // 1. Verify novel exists and lock parent novel row with FOR UPDATE when auto-numbering
@@ -144,6 +148,7 @@ async function ingestChapter({ novelId, title, text, chapterNumber, requestedBy 
     // 6. Commit transaction
     await client.query('COMMIT');
     client.release();
+    clientReleased = true;
 
     persistChapterToDisk(createdPgChapter.id, createdPgChapter.title, text);
 
@@ -153,8 +158,11 @@ async function ingestChapter({ novelId, title, text, chapterNumber, requestedBy 
       mongo_id: mongoDoc._id,
     };
   } catch (err) {
-    await client.query('ROLLBACK').catch(() => {});
-    client.release();
+    if (client && !clientReleased) {
+      await client.query('ROLLBACK').catch(() => {});
+      client.release();
+      clientReleased = true;
+    }
 
     // Compensating cleanup: remove orphan MongoDB document if created
     if (createdPgChapter && createdPgChapter.id) {
@@ -170,48 +178,51 @@ async function ingestChapter({ novelId, title, text, chapterNumber, requestedBy 
  * Official Polyglot Chapter Ingestion route (saves text to Mongo, enqueues job in Postgres).
  */
 router.post('/novels/:id/chapters', optionalAuth, async (req, res) => {
-  const novelId = req.params.id;
-  const { text, title, chapter_number, requested_by } = req.body;
-
-  if (!novelId || !UUID_REGEX.test(novelId)) {
-    return res.status(400).json({ error: 'Invalid novel UUID in route parameter.' });
-  }
-
-  if (!text || typeof text !== 'string' || text.trim().length === 0) {
-    return res.status(400).json({ error: 'Missing or empty chapter "text" field.' });
-  }
-
-  // Verify novel exists in PostgreSQL before authorization checks
-  const novelCheck = await pool.query('SELECT id FROM novels WHERE id = $1', [novelId]);
-  if (novelCheck.rows.length === 0) {
-    return res.status(404).json({ error: `Novel with id '${novelId}' not found.` });
-  }
-
-  // Verify caller has authorized writer/admin role
-  if (req.user) {
-    if (req.user.role === 'reader') {
-      return res.status(403).json({ error: "Forbidden: role 'reader' cannot ingest chapters." });
-    }
-  } else if (requested_by) {
-    if (!UUID_REGEX.test(requested_by)) {
-      return res.status(400).json({ error: 'Invalid requested_by user UUID.' });
-    }
-    const userRoleCheck = await pool.query('SELECT role FROM users WHERE id = $1', [requested_by]);
-    if (userRoleCheck.rows.length === 0) {
-      return res.status(404).json({ error: `User with id '${requested_by}' does not exist.` });
-    }
-    if (userRoleCheck.rows[0].role === 'reader') {
-      return res.status(403).json({ error: "Forbidden: role 'reader' cannot ingest chapters." });
-    }
-  } else {
-    return res.status(401).json({
-      error: 'Authentication required. Please log in or provide an authorized writer user ID.',
-    });
-  }
-
-  const effectiveRequestedBy = requested_by || req.user?.id || null;
-
   try {
+    const novelId = req.params.id;
+    const { text, title, chapter_number, requested_by } = req.body;
+
+    if (!novelId || !UUID_REGEX.test(novelId)) {
+      return res.status(400).json({ error: 'Invalid novel UUID in route parameter.' });
+    }
+
+    if (!text || typeof text !== 'string' || text.trim().length === 0) {
+      return res.status(400).json({ error: 'Missing or empty chapter "text" field.' });
+    }
+
+    // Verify novel exists in PostgreSQL before authorization checks
+    const novelCheck = await pool.query('SELECT id FROM novels WHERE id = $1', [novelId]);
+    if (novelCheck.rows.length === 0) {
+      return res.status(404).json({ error: `Novel with id '${novelId}' not found.` });
+    }
+
+    // Verify caller has authorized writer/admin role
+    if (req.user) {
+      if (req.user.role === 'reader') {
+        return res.status(403).json({ error: "Forbidden: role 'reader' cannot ingest chapters." });
+      }
+    } else if (requested_by) {
+      if (!UUID_REGEX.test(requested_by)) {
+        return res.status(400).json({ error: 'Invalid requested_by user UUID.' });
+      }
+      const userRoleCheck = await pool.query('SELECT role FROM users WHERE id = $1', [requested_by]);
+      if (userRoleCheck.rows.length === 0) {
+        return res.status(404).json({ error: `User with id '${requested_by}' does not exist.` });
+      }
+      if (userRoleCheck.rows[0].role === 'reader') {
+        return res.status(403).json({ error: "Forbidden: role 'reader' cannot ingest chapters." });
+      }
+    } else {
+      return res.status(401).json({
+        error: 'Authentication required. Please log in or provide an authorized writer user ID.',
+      });
+    }
+
+    // Prevent IDOR: authenticated users always use their own id unless admin
+    const effectiveRequestedBy = (req.user && req.user.role !== 'admin')
+      ? req.user.id
+      : (requested_by || req.user?.id || null);
+
     const result = await ingestChapter({
       novelId,
       title,
@@ -243,19 +254,43 @@ router.post('/novels/:id/chapters', optionalAuth, async (req, res) => {
  * Backwards-compatible upload route: ingests into specified novel or default novel.
  */
 router.post('/upload', optionalAuth, async (req, res) => {
-  const { text, title = 'Untitled Chapter', novel_id, requested_by } = req.body;
-
-  if (!text || typeof text !== 'string' || text.trim().length === 0) {
-    return res.status(400).json({ error: 'Missing or invalid "text" field' });
-  }
-
   try {
+    const { text, title = 'Untitled Chapter', novel_id, requested_by } = req.body;
+
+    if (!text || typeof text !== 'string' || text.trim().length === 0) {
+      return res.status(400).json({ error: 'Missing or invalid "text" field' });
+    }
+
+    if (req.user) {
+      if (req.user.role === 'reader') {
+        return res.status(403).json({ error: "Forbidden: role 'reader' cannot ingest chapters." });
+      }
+    } else if (requested_by) {
+      if (!UUID_REGEX.test(requested_by)) {
+        return res.status(400).json({ error: 'Invalid requested_by user UUID.' });
+      }
+      const userRoleCheck = await pool.query('SELECT role FROM users WHERE id = $1', [requested_by]);
+      if (userRoleCheck.rows.length === 0) {
+        return res.status(404).json({ error: `User with id '${requested_by}' does not exist.` });
+      }
+      if (userRoleCheck.rows[0].role === 'reader') {
+        return res.status(403).json({ error: "Forbidden: role 'reader' cannot ingest chapters." });
+      }
+    } else {
+      return res.status(401).json({
+        error: 'Authentication required. Please log in or provide an authorized writer user ID.',
+      });
+    }
+
     let effectiveNovelId = novel_id;
     if (!effectiveNovelId || !UUID_REGEX.test(effectiveNovelId)) {
       effectiveNovelId = await getOrCreateDefaultNovel();
     }
 
-    const effectiveRequestedBy = requested_by || req.user?.id || null;
+    // Prevent IDOR: authenticated users always use their own id unless admin
+    const effectiveRequestedBy = (req.user && req.user.role !== 'admin')
+      ? req.user.id
+      : (requested_by || req.user?.id || null);
 
     const result = await ingestChapter({
       novelId: effectiveNovelId,
@@ -325,8 +360,16 @@ router.get('/chapters', async (_req, res) => {
  * 4. POST /api/parse/:chapter_id
  * Reads chapter text from MongoDB, runs parsing & attribution, updates MongoDB & PostgreSQL.
  */
-router.post('/parse/:chapter_id', async (req, res) => {
+router.post('/parse/:chapter_id', authenticateUser, async (req, res) => {
   const { chapter_id } = req.params;
+
+  if (!chapter_id || !UUID_REGEX.test(chapter_id)) {
+    return res.status(400).json({ error: 'Invalid chapter UUID format.' });
+  }
+
+  if (req.user && req.user.role === 'reader') {
+    return res.status(403).json({ error: "Forbidden: role 'reader' cannot parse chapters." });
+  }
 
   try {
     const chapterDoc = await Chapter.findOne({ pg_chapter_id: chapter_id });
@@ -420,8 +463,16 @@ router.post('/parse/:chapter_id', async (req, res) => {
  * 5. POST /api/synthesize/:chapter_id
  * Synthesizes segment audio via Edge TTS (Kokoro fallback), stitches PCM/MP3, updates MongoDB manifest & PostgreSQL chapters/jobs.
  */
-router.post('/synthesize/:chapter_id', async (req, res) => {
+router.post('/synthesize/:chapter_id', authenticateUser, async (req, res) => {
   const { chapter_id } = req.params;
+
+  if (!chapter_id || !UUID_REGEX.test(chapter_id)) {
+    return res.status(400).json({ error: 'Invalid chapter UUID format.' });
+  }
+
+  if (req.user && req.user.role === 'reader') {
+    return res.status(403).json({ error: "Forbidden: role 'reader' cannot synthesize chapters." });
+  }
 
   try {
     const chapterDoc = await Chapter.findOne({ pg_chapter_id: chapter_id });
@@ -468,12 +519,20 @@ router.post('/synthesize/:chapter_id', async (req, res) => {
         effectiveVoiceId
       );
 
+      const rawBuf = result.audio_buffer || result.pcm_buffer;
+      const fmt = result.format || 'mp3';
+      const validation = validateAudioBuffer(rawBuf, fmt);
+      const isValidBuf = typeof validation === 'object' && validation !== null ? validation.valid : Boolean(validation);
+      if (!isValidBuf) {
+        throw new Error(`Invalid synthesized audio buffer for segment ${i + 1}`);
+      }
+
       segmentAudios.push({
         segment_id: seg.order,
         order: seg.order,
         text: seg.text,
         voice_id: effectiveVoiceId,
-        speaker_name: seg.character_id,
+        speaker_name: seg.speaker_name || seg.character_id,
         character_id: seg.character_id,
         audio_buffer: result.audio_buffer || result.pcm_buffer,
         pcm_buffer: result.pcm_buffer || result.audio_buffer,
@@ -601,6 +660,13 @@ router.post('/synthesize/:chapter_id', async (req, res) => {
  */
 router.get('/stream/:chapter_id', (req, res) => {
   const { chapter_id } = req.params;
+
+  // Prevent path traversal
+  const cleanId = path.basename(chapter_id);
+  if (cleanId !== chapter_id || !/^[0-9a-zA-Z_-]+$/.test(chapter_id)) {
+    return res.status(400).json({ detail: 'Invalid chapter ID' });
+  }
+
   const audioPathMp3 = path.join(config.paths.outputDir, `${chapter_id}.mp3`);
   const audioPathWav = path.join(config.paths.outputDir, `${chapter_id}.wav`);
   const isMp3 = fs.existsSync(audioPathMp3);
@@ -644,6 +710,103 @@ router.get('/stream/:chapter_id', (req, res) => {
       'Accept-Ranges': 'bytes',
     });
     fs.createReadStream(audioPath).pipe(res);
+  }
+});
+
+/**
+ * 6a-1. GET /api/chapters/:id/progress/sse
+ * Server-Sent Events (SSE) real-time synthesis progress stream fallback.
+ */
+router.get('/chapters/:id/progress/sse', (req, res) => {
+  const { id } = req.params;
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
+  if (typeof res.flushHeaders === 'function') {
+    res.flushHeaders();
+  }
+
+  eventDispatcher.addSseClient(id, res);
+
+  const heartbeat = setInterval(() => {
+    try {
+      res.write(': ping\n\n');
+    } catch (_) {
+      clearInterval(heartbeat);
+    }
+  }, 15000);
+
+  req.on('close', () => {
+    clearInterval(heartbeat);
+    eventDispatcher.removeSseClient(id, res);
+  });
+});
+
+/**
+ * 6a-2. GET /api/chapters/:id/progress
+ * Polling fallback for synthesis progress state.
+ */
+router.get('/chapters/:id/progress', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const cached = eventDispatcher.getLatest(id);
+    if (cached) {
+      return res.json(cached);
+    }
+
+    if (UUID_REGEX.test(id)) {
+      const q = `
+        SELECT c.status AS chapter_status,
+               j.status AS job_status,
+               j.progress_pct,
+               j.error_message
+        FROM chapters c
+        LEFT JOIN chapter_synthesis_job_targets t ON t.chapter_id = c.id
+        LEFT JOIN synthesis_jobs j ON j.id = t.job_id
+        WHERE c.id = $1
+        ORDER BY j.created_at DESC NULLS LAST
+        LIMIT 1;
+      `;
+      const { rows } = await pool.query(q, [id]);
+      if (rows.length > 0) {
+        const row = rows[0];
+        const statusMap = {
+          draft: 'idle',
+          parsed: 'idle',
+          synthesizing: 'synthesizing',
+          completed: 'complete',
+          failed: 'failed',
+        };
+        const status = statusMap[row.chapter_status] || 'idle';
+        const pct =
+          status === 'complete'
+            ? 100
+            : Math.round(Number(row.progress_pct || 0) * 100);
+        return res.json({
+          chapter_id: id,
+          status,
+          percent_complete: pct,
+          current_segment: null,
+          total_segments: null,
+          error: row.error_message || null,
+          timestamp: Date.now(),
+        });
+      }
+    }
+
+    return res.json({
+      chapter_id: id,
+      status: 'idle',
+      percent_complete: 0,
+      current_segment: null,
+      total_segments: null,
+      error: null,
+      timestamp: Date.now(),
+    });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to fetch synthesis progress.' });
   }
 });
 

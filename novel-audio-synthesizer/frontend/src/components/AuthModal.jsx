@@ -24,6 +24,16 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
   const modalRef = useRef(null);
   const emailInputRef = useRef(null);
 
+  const handleClose = () => {
+    setEmail('');
+    setPassword('');
+    setUsername('');
+    setRole('reader');
+    setValidationError('');
+    clearError();
+    onClose();
+  };
+
   useEffect(() => {
     setMode(initialMode);
   }, [initialMode]);
@@ -33,6 +43,9 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
       clearError();
       setValidationError('');
       setTimeout(() => emailInputRef.current?.focus(), 50);
+    } else {
+      setPassword('');
+      setValidationError('');
     }
   }, [isOpen, mode, clearError]);
 
@@ -40,7 +53,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
   useEffect(() => {
     function handleKeyDown(e) {
       if (e.key === 'Escape' && isOpen && !isSubmitting) {
-        onClose();
+        handleClose();
       }
     }
     window.addEventListener('keydown', handleKeyDown);
@@ -79,12 +92,12 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
       if (mode === 'login') {
         const res = await login(trimmedEmail, password);
         if (res.success) {
-          onClose();
+          handleClose();
         }
       } else {
         const res = await register(username.trim(), trimmedEmail, password, role);
         if (res.success) {
-          onClose();
+          handleClose();
         }
       }
     } finally {
@@ -101,7 +114,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
       aria-modal="true"
       aria-labelledby="auth-modal-title"
       onClick={(e) => {
-        if (e.target === e.currentTarget && !isSubmitting) onClose();
+        if (e.target === e.currentTarget && !isSubmitting) handleClose();
       }}
     >
       <div

@@ -13,6 +13,9 @@ export default {
         serif: ['"Newsreader Variable"', 'Newsreader', 'Georgia', 'serif'],
         mono: ['"JetBrains Mono Variable"', '"JetBrains Mono"', 'Menlo', 'monospace'],
       },
+      spacing: {
+        '88': '22rem',
+      },
       colors: {
         page: 'var(--bg-page)',
         surface: 'var(--bg-surface)',
@@ -70,6 +73,31 @@ export default {
         fast: '200ms',
         normal: '320ms',
         slow: '500ms',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        scaleUp: {
+          '0%': { opacity: '0', transform: 'scale(0.96)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        shake: {
+          '0%, 100%': { transform: 'translateX(0)' },
+          '20%, 60%': { transform: 'translateX(-4px)' },
+          '40%, 80%': { transform: 'translateX(4px)' },
+        },
+        slideLeft: {
+          '0%': { transform: 'translateX(100%)' },
+          '100%': { transform: 'translateX(0)' },
+        },
+      },
+      animation: {
+        fadeIn: 'fadeIn 0.2s ease-out forwards',
+        scaleUp: 'scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+        shake: 'shake 0.35s ease-in-out',
+        slideLeft: 'slideLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
       },
     },
   },
