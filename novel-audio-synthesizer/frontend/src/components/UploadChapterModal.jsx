@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { api, ApiError } from '../services/api';
-import { IconPlus, IconX, IconBook } from './icons';
+import { IconUpload, IconX } from './icons';
 
 export default function UploadChapterModal({ isOpen, novel, onClose, onChapterUploaded }) {
   const [title, setTitle] = useState('');
@@ -42,25 +42,25 @@ export default function UploadChapterModal({ isOpen, novel, onClose, onChapterUp
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm modal-scrim-enter"
       role="dialog"
       aria-modal="true"
     >
-      <div className="w-full max-w-xl bg-[var(--bg-card)] rounded-2xl shadow-2xl border border-[var(--border-subtle)] overflow-hidden">
-        <div className="p-6 border-b border-[var(--border-subtle)] flex items-center justify-between">
+      <div className="w-full max-w-xl theme-surface rounded-2xl shadow-2xl border overflow-hidden modal-panel-enter">
+        <div className="p-6 border-b theme-border flex items-center justify-between">
           <div>
-            <h2 className="text-base font-bold text-[var(--text-main)] flex items-center gap-2 font-display">
-              <IconBook className="w-4 h-4 text-indigo-400" />
+            <h2 className="text-base font-bold theme-heading flex items-center gap-2">
+              <IconUpload className="w-4 h-4 text-[var(--accent)]" />
               <span>Upload Chapter to {novel.title}</span>
             </h2>
-            <p className="text-xs text-[var(--text-muted)] mt-0.5">
-              Prose text will be ingested with dialogue segmentation and character voice casting.
+            <p className="text-xs theme-muted mt-0.5">
+              Prose will be prepared for multi-voice performance with dialogue detection.
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-[var(--text-muted)] hover:text-[var(--text-main)] p-1 rounded-lg"
-            aria-label="Close"
+            className="p-1 rounded-lg theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition"
+            aria-label="Close modal"
           >
             <IconX className="w-4 h-4" />
           </button>
@@ -75,7 +75,7 @@ export default function UploadChapterModal({ isOpen, novel, onClose, onChapterUp
 
           <div className="grid grid-cols-3 gap-3">
             <div className="col-span-2">
-              <label className="block text-[11px] font-semibold text-[var(--text-sub)] uppercase tracking-wider mb-1">
+              <label className="block text-xs font-semibold theme-sub uppercase tracking-wider mb-1.5 font-mono">
                 Chapter Title
               </label>
               <input
@@ -83,11 +83,11 @@ export default function UploadChapterModal({ isOpen, novel, onClose, onChapterUp
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Chapter 1: The Boy Who Lived"
-                className="w-full px-3.5 py-2 text-xs bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-subtle)] rounded-xl focus:outline-none focus:border-indigo-500"
+                className="w-full px-3.5 py-2 text-xs theme-card border rounded-xl placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--border-focus)] transition"
               />
             </div>
             <div>
-              <label className="block text-[11px] font-semibold text-[var(--text-sub)] uppercase tracking-wider mb-1">
+              <label className="block text-xs font-semibold theme-sub uppercase tracking-wider mb-1.5 font-mono">
                 Number (optional)
               </label>
               <input
@@ -96,40 +96,39 @@ export default function UploadChapterModal({ isOpen, novel, onClose, onChapterUp
                 value={chapterNumber}
                 onChange={(e) => setChapterNumber(e.target.value)}
                 placeholder="Auto"
-                className="w-full px-3.5 py-2 text-xs bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-subtle)] rounded-xl focus:outline-none focus:border-indigo-500"
+                className="w-full px-3.5 py-2 text-xs theme-card border rounded-xl placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--border-focus)] transition"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-[11px] font-semibold text-[var(--text-sub)] uppercase tracking-wider mb-1">
+            <label className="block text-xs font-semibold theme-sub uppercase tracking-wider mb-1.5 font-mono">
               Chapter Prose Text
             </label>
             <textarea
+              rows={8}
               value={text}
               onChange={(e) => setText(e.target.value)}
-              rows={9}
-              placeholder="Paste raw chapter text... SyncTone automatically analyzes dialogue and narrative segments."
+              placeholder="Paste raw prose text here. Quotes will be automatically detected and attributed to distinct character voices..."
               required
-              className="w-full px-3.5 py-2.5 text-xs bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-subtle)] rounded-xl focus:outline-none focus:border-indigo-500 font-serif leading-relaxed"
+              className="w-full px-3.5 py-2.5 text-xs theme-card border rounded-xl placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--border-focus)] transition font-serif leading-relaxed"
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="pt-2 flex justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              disabled={isSubmitting}
-              className="px-4 py-2 bg-[var(--bg-surface)] hover:border-indigo-500/50 border border-[var(--border-subtle)] text-[var(--text-main)] text-xs font-semibold rounded-xl"
+              className="px-4 py-2 theme-card border rounded-xl text-xs font-semibold theme-muted hover:text-[var(--text-main)] transition"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl shadow-sm disabled:opacity-50"
+              className="px-5 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-bold rounded-xl shadow-md transition disabled:opacity-50"
             >
-              {isSubmitting ? 'Uploading...' : 'Upload & Synthesize'}
+              {isSubmitting ? 'Ingesting...' : 'Upload & Parse Prose'}
             </button>
           </div>
         </form>
