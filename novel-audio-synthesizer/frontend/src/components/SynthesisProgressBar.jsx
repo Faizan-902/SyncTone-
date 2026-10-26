@@ -23,64 +23,57 @@ export default function SynthesisProgressBar({
   const isFailed = status === 'failed';
 
   let StatusIcon = IconMic;
-  let badgeColor = 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
-  let barColor = 'bg-indigo-500';
+  let barColor = 'bg-[var(--accent)]';
 
   if (status === 'parsing') {
     StatusIcon = IconScroll;
-    badgeColor = 'bg-blue-500/10 text-blue-400 border-blue-500/20';
-    barColor = 'bg-blue-500';
   } else if (status === 'stitching') {
     StatusIcon = IconSoundwave;
-    badgeColor = 'bg-purple-500/10 text-purple-400 border-purple-500/20';
-    barColor = 'bg-purple-500';
   } else if (isComplete) {
     StatusIcon = IconCheck;
-    badgeColor = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
     barColor = 'bg-emerald-500';
   } else if (isFailed) {
     StatusIcon = IconX;
-    badgeColor = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
     barColor = 'bg-rose-500';
   }
 
   return (
     <div
-      className="bg-[var(--bg-card)] rounded-xl border border-[var(--border-subtle)] p-4 shadow-md space-y-3 animate-fadeIn"
+      className="theme-card rounded-2xl border p-4 shadow-lg space-y-3 animate-fadeIn"
       role="region"
-      aria-label="Live Synthesis Progress"
+      aria-label="Chapter Audio Progress"
     >
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex items-center justify-center text-indigo-400">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-8 h-8 rounded-xl bg-[var(--accent-surface)] border border-[var(--border-focus)] text-[var(--accent)] flex items-center justify-center flex-shrink-0">
             <StatusIcon className="w-4 h-4" />
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className={`text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded border ${badgeColor}`}>
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-md theme-surface theme-sub border">
                 {status}
               </span>
               {isConnected && !isComplete && !isFailed && (
-                <span className="flex items-center gap-1.5 text-[10px] font-mono text-emerald-400">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="flex items-center gap-1 text-[11px] text-emerald-400 font-mono font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
                   Live Sync
                 </span>
               )}
             </div>
-            <p className="text-xs text-[var(--text-main)] mt-1 font-serif">
-              {error || message || 'Processing audio chapter with neural TTS...'}
+            <p className="text-xs font-semibold theme-heading mt-1 truncate">
+              {error || message || 'Processing audio chapter...'}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-mono font-bold text-indigo-400">
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <span className="text-xs font-bold theme-heading font-mono">
             {Math.round(percentComplete)}%
           </span>
           {(isComplete || isFailed) && onDismiss && (
             <button
               onClick={onDismiss}
-              className="text-[var(--text-muted)] hover:text-[var(--text-main)] p-1 rounded-lg hover:bg-[var(--bg-surface)] transition"
+              className="theme-muted hover:text-[var(--text-main)] text-xs p-1 rounded-lg transition"
               aria-label="Dismiss progress"
             >
               <IconX className="w-4 h-4" />
@@ -91,11 +84,11 @@ export default function SynthesisProgressBar({
 
       {/* Progress Bar Container */}
       <div
-        className="w-full bg-[var(--bg-surface)] rounded-full h-1.5 overflow-hidden border border-[var(--border-subtle)]"
+        className="w-full bg-[var(--bg-surface)] rounded-full h-2 overflow-hidden border theme-border"
         role="progressbar"
         aria-valuenow={Math.round(percentComplete)}
-        aria-valuemin="0"
-        aria-valuemax="100"
+        aria-valuemin={0}
+        aria-valuemax={100}
       >
         <div
           className={`h-full rounded-full transition-all duration-300 ${barColor}`}
@@ -105,9 +98,9 @@ export default function SynthesisProgressBar({
 
       {/* Segment Counter */}
       {currentSegment !== null && totalSegments !== null && (
-        <div className="flex items-center justify-between text-[10px] font-mono text-[var(--text-muted)]">
+        <div className="flex items-center justify-between text-[11px] theme-muted font-mono pt-0.5">
           <span>
-            Processing segment <strong className="text-[var(--text-main)]">{currentSegment}</strong> of {totalSegments}
+            Synthesizing audio segment <strong className="theme-heading font-bold">{currentSegment}</strong> of {totalSegments}
           </span>
           <span>{totalSegments - currentSegment} remaining</span>
         </div>
