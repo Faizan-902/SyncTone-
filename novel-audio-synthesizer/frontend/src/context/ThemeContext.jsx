@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { executeViewTransition } from '../tokens/motion';
 
 export const ThemeContext = createContext(null);
 
@@ -6,13 +7,22 @@ const STORAGE_THEME_KEY = 'synctone_theme';
 const STORAGE_FONT_KEY = 'synctone_font_family';
 const STORAGE_FONT_SIZE_KEY = 'synctone_font_size';
 
-const THEME_CYCLE = ['dark', 'sepia', 'light'];
+const THEME_CYCLE = ['dark', 'light'];
 
 export function ThemeProvider({ children }) {
   const [theme, setThemeState] = useState(() => {
     if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlTheme = urlParams.get('theme');
+      if (urlTheme === 'dark' || urlTheme === 'light') return urlTheme;
+
       const saved = localStorage.getItem(STORAGE_THEME_KEY);
-      if (saved === 'dark' || saved === 'sepia' || saved === 'light') return saved;
+      // Migrate legacy "sepia" to "dark" silently (no flash)
+      if (saved === 'sepia') {
+        try { localStorage.setItem(STORAGE_THEME_KEY, 'dark'); } catch (_) {}
+        return 'dark';
+      }
+      if (saved === 'dark' || saved === 'light') return saved;
     }
     return 'dark';
   });
@@ -22,7 +32,7 @@ export function ThemeProvider({ children }) {
       const saved = localStorage.getItem(STORAGE_FONT_KEY);
       if (saved === 'sans' || saved === 'serif') return saved;
     }
-    return 'sans';
+    return 'serif';
   });
 
   const [fontSize, setFontSizeState] = useState(() => {
@@ -33,13 +43,12 @@ export function ThemeProvider({ children }) {
     return 16;
   });
 
-  const [readerWidth, setReaderWidth] = useState('standard'); // 'standard' (max-w-3xl) | 'wide' (max-w-5xl)
+  const [readerWidth, setReaderWidth] = useState('standard');
 
-  // Apply theme to document element
   useEffect(() => {
     if (typeof document === 'undefined') return;
     const root = document.documentElement;
-    root.classList.remove('dark', 'sepia', 'light');
+    root.classList.remove('dark', 'light');
     root.classList.add(theme);
     try {
       localStorage.setItem(STORAGE_THEME_KEY, theme);
@@ -47,15 +56,21 @@ export function ThemeProvider({ children }) {
   }, [theme]);
 
   const setTheme = useCallback((newTheme) => {
-    if (newTheme === 'dark' || newTheme === 'sepia' || newTheme === 'light') {
-      setThemeState(newTheme);
+    // Accept only dual-mode values; silently migrate sepia → dark
+    if (newTheme === 'sepia') newTheme = 'dark';
+    if (newTheme === 'dark' || newTheme === 'light') {
+      executeViewTransition(() => {
+        setThemeState(newTheme);
+      });
     }
   }, []);
 
   const cycleTheme = useCallback(() => {
-    setThemeState((curr) => {
-      const idx = THEME_CYCLE.indexOf(curr);
-      return THEME_CYCLE[(idx + 1) % THEME_CYCLE.length];
+    executeViewTransition(() => {
+      setThemeState((curr) => {
+        const idx = THEME_CYCLE.indexOf(curr);
+        return THEME_CYCLE[(idx + 1) % THEME_CYCLE.length];
+      });
     });
   }, []);
 
@@ -111,7 +126,6 @@ export function ThemeProvider({ children }) {
       setReaderWidth,
       toggleReaderWidth,
       isDark: theme === 'dark',
-      isSepia: theme === 'sepia',
       isLight: theme === 'light',
     }),
     [
@@ -149,7 +163,6 @@ const DEFAULT_THEME_CONTEXT = {
   setReaderWidth: () => {},
   toggleReaderWidth: () => {},
   isDark: true,
-  isSepia: false,
   isLight: false,
 };
 
