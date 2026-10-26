@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import NovelCover from './NovelCover';
 import {
-  IconX,
   IconSoundwave,
-  IconBook,
-  IconMic,
+  IconX,
+  IconUser,
+  IconLock,
   IconSparkles,
+  IconShield,
+  IconPlay,
 } from './icons';
 
 export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
@@ -51,6 +54,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
     setValidationError('');
     clearError();
 
+    // Client-side validations
     const trimmedEmail = email.trim().toLowerCase();
     if (!trimmedEmail || !trimmedEmail.includes('@')) {
       setValidationError('Please enter a valid email address.');
@@ -92,7 +96,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md modal-scrim-enter"
       role="dialog"
       aria-modal="true"
       aria-labelledby="auth-modal-title"
@@ -102,135 +106,118 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
     >
       <div
         ref={modalRef}
-        className="w-full max-w-4xl bg-[var(--bg-card)] rounded-3xl shadow-2xl border border-[var(--border-subtle)] overflow-hidden flex flex-col md:flex-row transform transition-all animate-scaleUp"
+        className="w-full max-w-md md:max-w-3xl theme-surface rounded-3xl shadow-2xl border overflow-hidden flex flex-col md:flex-row modal-panel-enter"
       >
-        {/* Left Side: Form */}
-        <div className="w-full md:w-1/2 p-6 sm:p-8 md:p-10 flex flex-col justify-between space-y-6">
+        {/* Left Column: Accessible Authentication Form */}
+        <div className="w-full md:w-1/2 p-6 sm:p-8 flex flex-col justify-between">
           <div>
-            {/* Header Tabs */}
-            <div className="flex border-b border-[var(--border-subtle)] mb-6">
-              <button
-                type="button"
-                onClick={() => {
-                  setMode('login');
-                  setValidationError('');
-                  clearError();
-                }}
-                className={`flex-1 pb-3 text-xs font-semibold uppercase tracking-wider transition-all border-b-2 ${
-                  mode === 'login'
-                    ? 'border-indigo-500 text-indigo-400'
-                    : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-main)]'
-                }`}
-              >
-                Sign In
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setMode('register');
-                  setValidationError('');
-                  clearError();
-                }}
-                className={`flex-1 pb-3 text-xs font-semibold uppercase tracking-wider transition-all border-b-2 ${
-                  mode === 'register'
-                    ? 'border-indigo-500 text-indigo-400'
-                    : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-main)]'
-                }`}
-              >
-                Create Account
-              </button>
-            </div>
+            {/* Header with Brand Logo & Close Button */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-[var(--accent)] text-white flex items-center justify-center font-bold shadow-sm">
+                  <IconSoundwave className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold theme-heading font-display">SyncTone</h3>
+                  <p className="text-[10px] theme-muted font-mono uppercase tracking-wider">Dramatic Audio</p>
+                </div>
+              </div>
 
-            <div className="flex items-center justify-between mb-1">
-              <h2 id="auth-modal-title" className="text-xl font-bold text-[var(--text-main)] font-display tracking-tight">
-                {mode === 'login' ? 'Welcome Back' : 'Join SyncTone'}
-              </h2>
               <button
-                type="button"
                 onClick={onClose}
-                disabled={isSubmitting}
-                className="text-[var(--text-muted)] hover:text-[var(--text-main)] p-1.5 rounded-xl hover:bg-[var(--bg-surface)] transition"
-                aria-label="Close dialog"
+                className="p-1.5 rounded-lg theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition"
+                aria-label="Close modal"
               >
                 <IconX className="w-4 h-4" />
               </button>
             </div>
 
-            <p className="text-xs text-[var(--text-sub)] mb-5 font-serif leading-relaxed">
-              {mode === 'login'
-                ? 'Sign in to access your synchronized novel progress and voice preferences.'
-                : 'Create an account to explore neural voice literature and publish original novels.'}
-            </p>
+            {/* Title & Subheading */}
+            <div className="mb-6">
+              <h2 id="auth-modal-title" className="text-2xl font-bold theme-heading font-serif">
+                {mode === 'login' ? 'Welcome Back' : 'Join SyncTone'}
+              </h2>
+              <p className="text-xs theme-sub mt-1 leading-relaxed">
+                {mode === 'login'
+                  ? 'Sign in to access your saved audio library and synced progress.'
+                  : 'Create an account to start listening and assigning character voices.'}
+              </p>
+            </div>
 
+            {/* Error Message Box */}
             {displayError && (
-              <div className="mb-4 p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 text-xs">
+              <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-semibold">
                 {displayError}
               </div>
             )}
 
-            {/* Form */}
+            {/* Authentication Form */}
             <form noValidate onSubmit={handleSubmit} className="space-y-4">
               {mode === 'register' && (
                 <div>
-                  <label className="block text-[11px] font-semibold text-[var(--text-sub)] uppercase tracking-wider mb-1">
+                  <label htmlFor="auth-username" className="block text-xs font-semibold theme-sub mb-1.5">
                     Username
                   </label>
                   <input
+                    id="auth-username"
                     type="text"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder="e.g. synctone_reader"
-                    required
+                    autoComplete="username"
                     disabled={isSubmitting}
-                    className="w-full px-3.5 py-2 text-xs bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-subtle)] rounded-xl focus:outline-none focus:border-indigo-500 transition"
+                    className="w-full px-3.5 py-2.5 theme-card border rounded-xl text-xs placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--border-focus)] transition"
                   />
                 </div>
               )}
 
               <div>
-                <label className="block text-[11px] font-semibold text-[var(--text-sub)] uppercase tracking-wider mb-1">
-                  Email Address
+                <label htmlFor="auth-email" className="block text-xs font-semibold theme-sub mb-1.5">
+                  Email address
                 </label>
                 <input
                   ref={emailInputRef}
+                  id="auth-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  required
+                  autoComplete="email"
                   disabled={isSubmitting}
-                  className="w-full px-3.5 py-2 text-xs bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-subtle)] rounded-xl focus:outline-none focus:border-indigo-500 transition"
+                  className="w-full px-3.5 py-2.5 theme-card border rounded-xl text-xs placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--border-focus)] transition"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-[var(--text-sub)] uppercase tracking-wider mb-1">
+                <label htmlFor="auth-password" className="block text-xs font-semibold theme-sub mb-1.5">
                   Password
                 </label>
                 <input
+                  id="auth-password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  required
+                  autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
                   disabled={isSubmitting}
-                  className="w-full px-3.5 py-2 text-xs bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-subtle)] rounded-xl focus:outline-none focus:border-indigo-500 transition"
+                  className="w-full px-3.5 py-2.5 theme-card border rounded-xl text-xs placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--border-focus)] transition"
                 />
               </div>
 
               {mode === 'register' && (
                 <div>
-                  <label className="block text-[11px] font-semibold text-[var(--text-sub)] uppercase tracking-wider mb-1">
-                    Account Role
+                  <label htmlFor="auth-role" className="block text-xs font-semibold theme-sub mb-1.5">
+                    Account Type
                   </label>
                   <select
+                    id="auth-role"
                     value={role}
                     onChange={(e) => setRole(e.target.value)}
                     disabled={isSubmitting}
-                    className="w-full px-3.5 py-2 text-xs bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-subtle)] rounded-xl focus:outline-none focus:border-indigo-500 transition"
+                    className="w-full px-3.5 py-2.5 theme-card border rounded-xl text-xs focus:outline-none focus:border-[var(--border-focus)] transition"
                   >
-                    <option value="reader">Reader (Listen & Read)</option>
-                    <option value="writer">Author / Writer (Upload Novels & Manage Cast)</option>
+                    <option value="reader">Reader (Listen & Read only)</option>
+                    <option value="writer">Writer (Upload Novels & Manage Cast)</option>
                   </select>
                 </div>
               )}
@@ -238,56 +225,82 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl shadow-sm transition flex items-center justify-center gap-2 mt-2"
+                className="w-full py-3 px-4 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] font-bold rounded-xl shadow-md text-xs transition min-h-[44px] cursor-pointer disabled:opacity-50 select-none"
               >
-                {isSubmitting ? (
-                  <span>Processing...</span>
-                ) : (
-                  <span>{mode === 'login' ? 'Sign In to SyncTone' : 'Create Account'}</span>
-                )}
+                {isSubmitting
+                  ? 'Connecting...'
+                  : mode === 'login'
+                  ? 'Sign In to SyncTone'
+                  : 'Join as ' + (role === 'writer' ? 'Writer' : 'Reader')}
               </button>
             </form>
           </div>
 
-          {/* Guest Access CTA */}
-          <div className="pt-4 border-t border-[var(--border-subtle)]">
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-full py-2 px-3 bg-[var(--bg-surface)] hover:border-indigo-500/50 border border-[var(--border-subtle)] rounded-xl text-xs font-semibold text-[var(--text-main)] transition"
-            >
-              Continue as Guest
-            </button>
+          {/* Mode Switcher Footer */}
+          <div className="mt-6 pt-3 border-t theme-border text-center text-xs theme-muted">
+            {mode === 'login' ? (
+              <span>
+                New to SyncTone?{' '}
+                <button
+                  type="button"
+                  onClick={() => setMode('register')}
+                  className="text-[var(--accent)] hover:underline font-bold cursor-pointer"
+                >
+                  Create Account
+                </button>
+              </span>
+            ) : (
+              <span>
+                Already have an account?{' '}
+                <button
+                  type="button"
+                  onClick={() => setMode('login')}
+                  className="text-[var(--accent)] hover:underline font-bold cursor-pointer"
+                >
+                  Sign In
+                </button>
+              </span>
+            )}
           </div>
         </div>
 
-        {/* Right Side: Editorial Showcase */}
-        <div className="hidden md:flex w-1/2 relative bg-[var(--bg-surface)] overflow-hidden flex-col justify-end p-8 text-white">
-          <div className="absolute inset-0 bg-gradient-to-tr from-indigo-950/60 via-slate-950 to-indigo-950/40" />
+        {/* Right Column: Luxury Cinematic Spotlight Showcase (Desktop only) */}
+        <div className="hidden md:flex w-1/2 relative bg-[var(--bg-card)] overflow-hidden flex-col justify-end p-8 border-l theme-border">
+          <div className="absolute inset-0 opacity-40">
+            <NovelCover
+              title="Harry Potter"
+              author="J.K. Rowling"
+              className="w-full h-full object-cover scale-110 blur-sm"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-card)] via-[var(--bg-card)]/75 to-transparent" />
+          </div>
 
-          <div className="relative z-10 bg-[var(--bg-card)] border border-[var(--border-subtle)] p-6 rounded-2xl shadow-xl space-y-3">
+          {/* Spotlight Card */}
+          <div className="relative z-10 theme-surface border rounded-2xl p-5 shadow-2xl space-y-3">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-indigo-400 font-semibold uppercase tracking-wider text-[10px] flex items-center gap-1.5">
-                <IconSparkles className="w-3.5 h-3.5" />
-                <span>Neural Audio Platform</span>
+              <span className="flex items-center gap-1.5 text-status-success font-bold uppercase tracking-wider text-[10px] font-mono">
+                <span className="w-2 h-2 rounded-full bg-[var(--color-status-success)] animate-ping" />
+                Featured Audio Story
               </span>
-              <span className="text-[10px] text-[var(--text-muted)] font-mono">24kHz Neural</span>
+              <span className="text-[10px] theme-muted font-mono">Studio Audio</span>
             </div>
 
             <div>
-              <h3 className="text-base font-bold text-[var(--text-main)] font-display">
-                Multi-Voice Audio Synthesis
-              </h3>
-              <p className="text-xs text-indigo-300 font-serif">Dual-TTS Architecture</p>
+              <h4 className="text-base font-bold theme-heading font-serif">
+                Harry Potter and the Philosopher&apos;s Stone
+              </h4>
+              <p className="text-[11px] theme-muted font-mono mt-0.5">
+                Ch. 1: The Boy Who Lived • Multi-Voice Dramatic Cast
+              </p>
             </div>
 
-            <p className="text-xs text-[var(--text-sub)] leading-relaxed italic border-l-2 border-indigo-400 pl-3 font-serif">
-              "Experience synchronized prose where character dialogue and narrative passages are brought to life by dedicated voices."
+            <p className="text-xs theme-sub italic border-l-2 border-[var(--accent)] pl-3 font-serif leading-relaxed">
+              &ldquo;Mr. and Mrs. Dursley, of number four, Privet Drive, were proud to say that they were perfectly normal, thank you very much.&rdquo;
             </p>
 
-            <div className="flex items-center justify-between pt-2 border-t border-[var(--border-subtle)] text-[11px] text-[var(--text-muted)] font-mono">
-              <span>EdgeTTS & Kokoro Engine</span>
-              <span className="text-emerald-400 font-semibold">60fps Sync</span>
+            <div className="pt-2 border-t theme-border flex items-center justify-between text-[11px] font-mono theme-muted">
+              <span>Narrated by a full dramatic cast</span>
+              <span className="text-status-success font-bold font-mono">Synchronized Reading</span>
             </div>
           </div>
         </div>
