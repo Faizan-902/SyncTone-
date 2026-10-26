@@ -1,113 +1,124 @@
 import React from 'react';
-import {
-  IconSettings,
-  IconX,
-  IconShield,
-  IconSoundwave,
-} from './icons';
+import { useTheme } from '../context/ThemeContext';
+import { IconSettings, IconX } from './icons';
 
-export default function SettingsModal({ modelStatus, onClose }) {
+export default function SettingsModal({ onClose }) {
+  const { theme, setTheme, fontFamily, setFontFamily, fontSize, increaseFontSize, decreaseFontSize } = useTheme();
+
   return (
     <div
-      className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fadeIn"
+      className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 modal-scrim-enter"
       role="dialog"
       aria-modal="true"
+      aria-labelledby="settings-dialog-title"
     >
-      <div className="bg-[var(--bg-card)] rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 border border-[var(--border-subtle)] space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-[var(--text-main)] font-display flex items-center gap-2">
-            <IconSettings className="w-4 h-4 text-indigo-400" />
-            <span>Neural Synthesizer Architecture</span>
+      <div className="theme-surface rounded-2xl shadow-2xl border border-[var(--border-subtle)] max-w-md w-full p-6 space-y-6 modal-panel-enter">
+        <div className="flex items-center justify-between pb-3 border-b border-[var(--border-subtle)]">
+          <h2 id="settings-dialog-title" className="text-base font-bold theme-heading flex items-center gap-2">
+            <IconSettings className="w-4 h-4 text-[var(--accent)]" />
+            <span>Reading & Audio Preferences</span>
           </h2>
           <button
+            type="button"
             onClick={onClose}
-            className="text-[var(--text-muted)] hover:text-[var(--text-main)] p-1 rounded-lg"
-            aria-label="Close"
+            className="p-1.5 rounded-lg theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition cursor-pointer"
+            aria-label="Close settings"
           >
             <IconX className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="space-y-4">
-          <h3 className="text-xs font-semibold text-[var(--text-sub)] uppercase tracking-wider font-mono">
-            Engines & Fallback Stack
-          </h3>
-
-          {modelStatus ? (
-            <div className="space-y-3">
-              <div className="p-3.5 bg-[var(--bg-surface)] rounded-xl border border-[var(--border-subtle)]">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                  <span className="text-xs font-semibold text-[var(--text-main)]">
-                    Primary: Edge Neural TTS (24kHz)
-                  </span>
-                </div>
-                <div className="text-[11px] text-[var(--text-muted)] ml-4 space-y-0.5 font-mono">
-                  <div>Status: Active (Cloud WebSocket)</div>
-                  <div>Format: 24kHz High Bitrate MP3</div>
-                  <div>Voice Cast: Microsoft Neural British & American</div>
-                </div>
-              </div>
-
-              <div className="p-3.5 bg-[var(--bg-surface)] rounded-xl border border-[var(--border-subtle)]">
-                <div className="flex items-center gap-2 mb-1">
-                  <span
-                    className={`w-2 h-2 rounded-full ${
-                      modelStatus?.tts?.model_exists ? 'bg-emerald-400' : 'bg-amber-400'
-                    }`}
-                  />
-                  <span className="text-xs font-semibold text-[var(--text-main)]">
-                    Secondary: Kokoro-82M TTS
-                  </span>
-                </div>
-                <div className="text-[11px] text-[var(--text-muted)] ml-4 space-y-0.5 font-mono">
-                  <div>
-                    Model:{' '}
-                    {modelStatus?.tts?.model_exists
-                      ? 'Installed (ONNX runtime)'
-                      : 'Standby / Offline fallback'}
-                  </div>
-                  <div>Cache: kokoro-tts-backend/models_cache/</div>
-                </div>
-              </div>
-
-              <div className="p-3.5 bg-[var(--bg-surface)] rounded-xl border border-[var(--border-subtle)]">
-                <div className="flex items-center gap-2 mb-1">
-                  <span
-                    className={`w-2 h-2 rounded-full ${
-                      modelStatus?.llm?.available ? 'bg-emerald-400' : 'bg-amber-400'
-                    }`}
-                  />
-                  <span className="text-xs font-semibold text-[var(--text-main)]">
-                    LLM Parser: Ollama
-                  </span>
-                </div>
-                <div className="text-[11px] text-[var(--text-muted)] ml-4 space-y-0.5 font-mono">
-                  <div>
-                    Status:{' '}
-                    {modelStatus?.llm?.available ? 'Connected' : 'Rule-Based Fallback Standby'}
-                  </div>
-                  <div>Model: {modelStatus?.llm?.model || 'llama3:8b'}</div>
-                </div>
-              </div>
+        <div className="space-y-4 text-xs">
+          {/* Theme Option */}
+          <div className="flex items-center justify-between py-2 border-b border-[var(--border-subtle)]">
+            <div>
+              <p className="font-semibold theme-heading">Color Theme</p>
+              <p className="theme-muted text-[11px]">Choose light or dark appearance</p>
             </div>
-          ) : (
-            <p className="text-xs text-[var(--text-muted)]">Checking synthesizer status...</p>
-          )}
+            <div className="flex p-0.5 rounded-lg theme-card border border-[var(--border-subtle)]">
+              <button
+                type="button"
+                onClick={() => setTheme('dark')}
+                className={`px-3 py-1 rounded text-xs font-semibold transition cursor-pointer ${
+                  theme === 'dark' ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-xs' : 'theme-muted'
+                }`}
+              >
+                Dark
+              </button>
+              <button
+                type="button"
+                onClick={() => setTheme('light')}
+                className={`px-3 py-1 rounded text-xs font-semibold transition cursor-pointer ${
+                  theme === 'light' ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-xs' : 'theme-muted'
+                }`}
+              >
+                Light
+              </button>
+            </div>
+          </div>
 
-          <div className="p-3.5 bg-indigo-500/10 rounded-xl text-[11px] text-indigo-300 border border-indigo-500/20 leading-relaxed font-serif">
-            <p className="font-bold mb-1 font-sans text-indigo-200">Dual-TTS 4NF Guarantee</p>
-            <p>
-              SyncTone seamlessly fails over from Edge Neural cloud synthesizers to local Kokoro-82M ONNX models, maintaining persistent chapter timestamps and lossless state.
-            </p>
+          {/* Typography */}
+          <div className="flex items-center justify-between py-2 border-b border-[var(--border-subtle)]">
+            <div>
+              <p className="font-semibold theme-heading">Book Font</p>
+              <p className="theme-muted text-[11px]">Choose serif literature or clean sans</p>
+            </div>
+            <div className="flex p-0.5 rounded-lg theme-card border border-[var(--border-subtle)]">
+              <button
+                type="button"
+                onClick={() => setFontFamily('serif')}
+                className={`px-3 py-1 rounded text-xs font-serif font-semibold transition cursor-pointer ${
+                  fontFamily === 'serif' ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-xs' : 'theme-muted'
+                }`}
+              >
+                Serif
+              </button>
+              <button
+                type="button"
+                onClick={() => setFontFamily('sans')}
+                className={`px-3 py-1 rounded text-xs font-sans font-semibold transition cursor-pointer ${
+                  fontFamily === 'sans' ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-xs' : 'theme-muted'
+                }`}
+              >
+                Sans
+              </button>
+            </div>
+          </div>
+
+          {/* Font Size */}
+          <div className="flex items-center justify-between py-2">
+            <div>
+              <p className="font-semibold theme-heading">Text Size</p>
+              <p className="theme-muted text-[11px]">Adjust reading comfort</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={decreaseFontSize}
+                className="w-7 h-7 rounded-lg theme-card border border-[var(--border-subtle)] font-bold theme-muted hover:text-[var(--text-main)] transition cursor-pointer"
+                aria-label="Decrease font size"
+              >
+                A-
+              </button>
+              <span className="font-mono font-bold text-xs theme-heading px-1">{fontSize}px</span>
+              <button
+                type="button"
+                onClick={increaseFontSize}
+                className="w-7 h-7 rounded-lg theme-card border border-[var(--border-subtle)] font-bold theme-muted hover:text-[var(--text-main)] transition cursor-pointer"
+                aria-label="Increase font size"
+              >
+                A+
+              </button>
+            </div>
           </div>
         </div>
 
         <button
+          type="button"
           onClick={onClose}
-          className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition"
+          className="w-full mt-2 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] font-bold rounded-xl shadow-xs text-xs transition cursor-pointer"
         >
-          Close
+          Done
         </button>
       </div>
     </div>
