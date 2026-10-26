@@ -102,7 +102,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_characters_narrator_per_novel ON characters
 -- Transitive novel_id removed; uniqueness per novel enforced via DB trigger + advisory lock
 CREATE TABLE IF NOT EXISTS character_aliases (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    character_id UUID NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+    character_id UUID NOT NULL CONSTRAINT fk_character_aliases_character REFERENCES characters(id) ON DELETE CASCADE,
     alias VARCHAR(100) NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT uq_character_aliases_character_alias UNIQUE (character_id, alias)
