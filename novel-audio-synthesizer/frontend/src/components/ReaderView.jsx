@@ -3,6 +3,7 @@ import { getSpeakerColor } from '../utils/speakerColors';
 import { parseSegmentImage } from '../utils/segmentUtils';
 import { useTheme } from '../context/ThemeContext';
 import { sanitizeSegmentsWithTtsDomCleaner } from '../utils/ttsSanitizer';
+import { process4PassSegment } from '../utils/readerLayoutEngine';
 import { Button } from './primitives/Button';
 import OpenGLPageReader from './OpenGLPageReader';
 import {
@@ -208,13 +209,13 @@ export default function ReaderView({
       </div>
     ) : null;
 
-    // Inactive segment: plain text
+    // Inactive segment: plain text (Pass 3 Typography with full justification)
     if (!isActive) {
       return (
         <>
           {imageElement}
           {displayText && (
-            <p className={`relative z-10 leading-relaxed ${isDialogue ? 'italic theme-main font-serif' : 'theme-sub font-normal'}`}>
+            <p className={`relative z-10 leading-[1.85] text-justify hyphens-auto ${isDialogue ? 'italic theme-main font-serif' : 'theme-sub font-normal'}`}>
               {displayText}
             </p>
           )}
@@ -241,7 +242,7 @@ export default function ReaderView({
         <>
           {imageElement}
           {displayText && (
-            <p className={`relative z-10 leading-relaxed p-2.5 rounded-xl bg-yellow-400/20 dark:bg-yellow-500/20 border-l-4 border-yellow-400 shadow-xs transition-colors duration-100 ${
+            <p className={`relative z-10 leading-[1.85] text-justify hyphens-auto p-2.5 rounded-xl bg-yellow-400/20 dark:bg-yellow-500/20 border-l-4 border-yellow-400 shadow-xs transition-colors duration-100 ${
               isDialogue ? 'italic font-serif text-slate-900 dark:text-yellow-100 font-medium' : 'text-slate-900 dark:text-yellow-50'
             }`}>
               {tokens.map((token, idx) => {
@@ -268,7 +269,7 @@ export default function ReaderView({
       <>
         {imageElement}
         {displayText && (
-          <p className={`relative z-10 leading-relaxed p-2 rounded-lg bg-yellow-400/15 dark:bg-yellow-500/15 border-b-2 border-yellow-400 ${
+          <p className={`relative z-10 leading-[1.85] text-justify hyphens-auto p-2 rounded-lg bg-yellow-400/15 dark:bg-yellow-500/15 border-b-2 border-yellow-400 ${
             isDialogue ? 'italic theme-main font-serif font-medium' : 'theme-main font-normal'
           }`}>
             {displayText}

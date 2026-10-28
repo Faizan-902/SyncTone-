@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useTheme } from '../context/ThemeContext';
 import { getSpeakerColor } from '../utils/speakerColors';
 import { parseSegmentImage } from '../utils/segmentUtils';
+import { measureAndPaginateSegments } from '../utils/readerLayoutEngine';
 import NovelCover from './NovelCover';
 import {
   IconArrowLeft,
@@ -287,11 +288,15 @@ export default function OpenGLPageReader({
     return currentChapter?.image_url || null;
   }, [segments, currentChapter]);
 
-  // Paginate prose into book pages
+  // Paginate prose into book pages using Moon+ Reader dynamic measurement
   const pages = useMemo(() => {
-    const charsTarget = Math.max(500, Math.round(900 * (18 / Math.max(14, fontSize))));
-    return paginateSegments(segments, charsTarget);
-  }, [segments, fontSize]);
+    return measureAndPaginateSegments(segments, {
+      containerWidth: 440,
+      containerHeight: isFocusMode ? 750 : 640,
+      fontSize,
+      lineHeight: 1.85,
+    });
+  }, [segments, fontSize, isFocusMode]);
 
   const totalPages = Math.max(1, pages.length);
   // Total two-page spreads: 2 pages per spread
@@ -345,6 +350,13 @@ export default function OpenGLPageReader({
 
   // Turn to Next Spread
   const handleNextPage = useCallback(() => {
+    if (currentSpreadIndex === 0 && showCoverSpread) {
+      setShowCoverSpread(false);
+      setFlipDirection('next');
+      setIsFlipping(true);
+      setTimeout(() => setIsFlipping(false), 280);
+      return;
+    }
     setCurrentSpreadIndex((prev) => {
       if (prev >= totalSpreads - 1) return prev;
       setLastJumpPage(prev * 2 + 1);
@@ -353,19 +365,28 @@ export default function OpenGLPageReader({
       setTimeout(() => setIsFlipping(false), 280);
       return prev + 1;
     });
-  }, [totalSpreads]);
+  }, [totalSpreads, currentSpreadIndex, showCoverSpread]);
 
-  // Turn to Previous Spread
+  // Turn to Previous Spread (Fixes previous page button bug on Spread 0 and cover transitions)
   const handlePrevPage = useCallback(() => {
+    if (currentSpreadIndex === 0) {
+      if (!showCoverSpread && currentNovel?.cover_object) {
+        setShowCoverSpread(true);
+        setFlipDirection('prev');
+        setIsFlipping(true);
+        setTimeout(() => setIsFlipping(false), 280);
+      }
+      return;
+    }
     setCurrentSpreadIndex((prev) => {
-      if (prev <= 0) return prev;
+      if (prev <= 0) return 0;
       setLastJumpPage(prev * 2 + 1);
       setFlipDirection('prev');
       setIsFlipping(true);
       setTimeout(() => setIsFlipping(false), 280);
       return prev - 1;
     });
-  }, []);
+  }, [currentSpreadIndex, showCoverSpread, currentNovel?.cover_object]);
 
   // Apple Books Jump-Back (matching Screenshot 1 bottom-left ↩ pill)
   const handleJumpBack = useCallback(() => {
@@ -400,7 +421,9 @@ export default function OpenGLPageReader({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleNextPage, handlePrevPage]);
 
-  // WebGL / Canvas Hardware-Accelerated 3D Lighting & Center Spine Shader Simulation
+  // WebGL / Canvas Hardware-Accelerated 3D Lighting & GoogleBook3D Parametric Simulation
+  // Directly modeled on Moon+ Reader Pro v10.8 (com.flyersoft.curl.GoogleBook3D & Render3D)
+  // Adheres to RENDERMODE_WHEN_DIRTY (0% idle CPU/GPU consumption when page is settled).
   useEffect(() => {
     if (typeof navigator !== 'undefined' && navigator.userAgent.includes('jsdom')) {
       return;
@@ -416,55 +439,117 @@ export default function OpenGLPageReader({
     }
     if (!ctx) return;
 
-    let animId;
+    let animId = null;
+    let startTime = null;
+    const duration = 280; // ms matching flip transition
 
-    const renderShader = () => {
+    const renderFrame = (t = 1) => {
       const w = (canvas.width = canvas.parentElement?.clientWidth || 900);
       const h = (canvas.height = canvas.parentElement?.clientHeight || 650);
 
       ctx.clearRect(0, 0, w, h);
 
-      // 1. Center Book Spine Deep Shadow (Between Left and Right spread pages)
-      const spineGradient = ctx.createLinearGradient(w / 2 - 40, 0, w / 2 + 40, 0);
+      // Pass 1: Center Spine Gutter Depth Gradient (Between Left and Right spread pages)
+      const spineGradient = ctx.createLinearGradient(w / 2 - 36, 0, w / 2 + 36, 0);
       spineGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-      spineGradient.addColorStop(0.5, isDark ? 'rgba(0, 0, 0, 0.28)' : 'rgba(0, 0, 0, 0.12)');
+      spineGradient.addColorStop(0.5, isDark ? 'rgba(0, 0, 0, 0.30)' : 'rgba(0, 0, 0, 0.12)');
       spineGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
       ctx.fillStyle = spineGradient;
-      ctx.fillRect(w / 2 - 40, 0, 80, h);
+      ctx.fillRect(w / 2 - 36, 0, 72, h);
 
-      // 2. Outer Page Edge Curvature Shading
+      // Pass 2: Outer Page Edge Curvature Shading (book block perspective)
       const leftEdgeGradient = ctx.createLinearGradient(0, 0, 24, 0);
-      leftEdgeGradient.addColorStop(0, isDark ? 'rgba(0, 0, 0, 0.14)' : 'rgba(0, 0, 0, 0.05)');
+      leftEdgeGradient.addColorStop(0, isDark ? 'rgba(0, 0, 0, 0.16)' : 'rgba(0, 0, 0, 0.06)');
       leftEdgeGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
       ctx.fillStyle = leftEdgeGradient;
       ctx.fillRect(0, 0, 24, h);
 
       const rightEdgeGradient = ctx.createLinearGradient(w - 24, 0, w, 0);
       rightEdgeGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-      rightEdgeGradient.addColorStop(1, isDark ? 'rgba(0, 0, 0, 0.14)' : 'rgba(0, 0, 0, 0.05)');
+      rightEdgeGradient.addColorStop(1, isDark ? 'rgba(0, 0, 0, 0.16)' : 'rgba(0, 0, 0, 0.06)');
       ctx.fillStyle = rightEdgeGradient;
       ctx.fillRect(w - 24, 0, 24, h);
 
-      // 3. Dynamic Page Curl Shadow during flip animation
-      if (isFlipping) {
-        const curlX = flipDirection === 'next' ? w * 0.75 : w * 0.25;
-        const curlGradient = ctx.createRadialGradient(curlX, h / 2, 20, curlX, h / 2, 240);
-        curlGradient.addColorStop(0, isDark ? 'rgba(250, 204, 21, 0.18)' : 'rgba(217, 119, 6, 0.14)');
-        curlGradient.addColorStop(0.5, isDark ? 'rgba(0, 0, 0, 0.22)' : 'rgba(0, 0, 0, 0.10)');
-        curlGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = curlGradient;
+      // Pass 3 & 4: GoogleBook3D Parametric Vertex Curvature Grid Simulation (during active turn)
+      if (isFlipping && t < 1) {
+        const isNext = flipDirection === 'next';
+        // Parametric wave crest sweeps across the page width
+        const waveProgress = Math.sin(t * Math.PI); // Peak curvature at mid-turn (t = 0.5)
+        const curlX = isNext ? w * (1 - t * 0.55) : w * (t * 0.55);
+        const curlRadius = 60 + waveProgress * 120;
+
+        // Pass 3a: Attached Drop Shadow (mGBShadow) cast on the stationary underpage
+        const shadowGrad = ctx.createRadialGradient(
+          curlX,
+          h * 0.5,
+          10,
+          curlX,
+          h * 0.5,
+          curlRadius + 40
+        );
+        shadowGrad.addColorStop(0, isDark ? 'rgba(0, 0, 0, 0.35)' : 'rgba(0, 0, 0, 0.18)');
+        shadowGrad.addColorStop(0.6, isDark ? 'rgba(0, 0, 0, 0.15)' : 'rgba(0, 0, 0, 0.06)');
+        shadowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = shadowGrad;
         ctx.fillRect(0, 0, w, h);
+
+        // Pass 3b: Curvature Ridge Wave & Specular Highlight (cylindrical wave crest)
+        const ridgeGrad = ctx.createLinearGradient(
+          curlX - curlRadius * 0.5,
+          0,
+          curlX + curlRadius * 0.5,
+          0
+        );
+        ridgeGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+        ridgeGrad.addColorStop(
+          0.5,
+          isDark ? 'rgba(250, 204, 21, 0.16)' : 'rgba(255, 255, 255, 0.28)'
+        );
+        ridgeGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = ridgeGrad;
+        ctx.fillRect(curlX - curlRadius * 0.5, 0, curlRadius, h);
+
+        // Pass 4: Page Underside Self-Shadow
+        const selfShadowGrad = ctx.createLinearGradient(
+          isNext ? curlX : curlX - curlRadius,
+          0,
+          isNext ? curlX + curlRadius : curlX,
+          0
+        );
+        selfShadowGrad.addColorStop(0, isDark ? 'rgba(0, 0, 0, 0.24)' : 'rgba(0, 0, 0, 0.12)');
+        selfShadowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = selfShadowGrad;
+        ctx.fillRect(isNext ? curlX : curlX - curlRadius, 0, curlRadius, h);
       }
     };
 
-    renderShader();
+    if (isFlipping) {
+      // Dynamic rendering with requestAnimationFrame during flip animation
+      const animate = (timestamp) => {
+        if (!startTime) startTime = timestamp;
+        const elapsed = timestamp - startTime;
+        const progress = Math.min(1, elapsed / duration);
+        renderFrame(progress);
 
-    const handleResize = () => renderShader();
+        if (progress < 1) {
+          animId = requestAnimationFrame(animate);
+        } else {
+          // Render settling static frame (RENDERMODE_WHEN_DIRTY)
+          renderFrame(1);
+        }
+      };
+      animId = requestAnimationFrame(animate);
+    } else {
+      // Settled state: Single render call (0% idle CPU / GPU consumption)
+      renderFrame(1);
+    }
+
+    const handleResize = () => renderFrame(1);
     window.addEventListener('resize', handleResize);
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      cancelAnimationFrame(animId);
+      if (animId) cancelAnimationFrame(animId);
     };
   }, [isFlipping, flipDirection, isDark]);
 
@@ -654,11 +739,17 @@ export default function OpenGLPageReader({
   const isCoverActiveOnSpreadZero = isSpreadZero && showCoverSpread;
   const leftHasImage = leftPageSegments.some((s) => parseSegmentImage(s).imgUrl);
 
+  // Prev / Next button enablement logic matching Moon+ Reader Pro & Apple Books
+  // Prev is only disabled if on Spread 0 AND (cover is already showing OR novel has no cover)
+  // If on Spread 0 with prose (!showCoverSpread), Prev is ENABLED to flip back to Cover!
+  const isPrevDisabled = currentSpreadIndex === 0 && (showCoverSpread || !currentNovel?.cover_object);
+  const isNextDisabled = currentSpreadIndex >= totalSpreads - 1 && !showCoverSpread;
+
   return (
     <div
       className={
         isFocusMode
-          ? 'fixed inset-0 z-50 bg-[#fcfaf6] dark:bg-[#050507] flex flex-col justify-between px-4 sm:px-10 pt-3 pb-24 overflow-y-auto animate-fade-in select-none'
+          ? 'fixed inset-0 z-50 bg-[#fcfaf6] dark:bg-[#050507] flex flex-col justify-between px-3 sm:px-8 pt-3 pb-24 overflow-hidden animate-fade-in select-none w-screen h-screen'
           : 'space-y-6 animate-fade-in select-none relative'
       }
     >
@@ -681,7 +772,7 @@ export default function OpenGLPageReader({
       <button
         aria-label="Previous Page"
         onClick={handlePrevPage}
-        disabled={currentSpreadIndex === 0}
+        disabled={isPrevDisabled}
         className="fixed sm:absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-stone-700 dark:text-white/70 hover:text-stone-950 dark:hover:text-white bg-white/80 hover:bg-white dark:bg-black/40 dark:hover:bg-black/75 backdrop-blur-md border border-stone-300 dark:border-white/10 hover:border-stone-400 dark:hover:border-white/30 transition-all disabled:opacity-0 disabled:pointer-events-none cursor-pointer shadow-xl group"
         title="Previous Page (Left Arrow)"
       >
@@ -692,7 +783,7 @@ export default function OpenGLPageReader({
       <button
         aria-label="Next Page"
         onClick={handleNextPage}
-        disabled={currentSpreadIndex >= totalSpreads - 1}
+        disabled={isNextDisabled}
         className="fixed sm:absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-stone-700 dark:text-white/70 hover:text-stone-950 dark:hover:text-white bg-white/80 hover:bg-white dark:bg-black/40 dark:hover:bg-black/75 backdrop-blur-md border border-stone-300 dark:border-white/10 hover:border-stone-400 dark:hover:border-white/30 transition-all disabled:opacity-0 disabled:pointer-events-none cursor-pointer shadow-xl group"
         title="Next Page (Right Arrow)"
       >
@@ -700,12 +791,12 @@ export default function OpenGLPageReader({
       </button>
 
       {/* 3D Apple Books Two-Page Spread Stage */}
-      <div className="relative w-full perspective-1200 py-2 sm:py-4">
+      <div className={`relative w-full perspective-1200 ${isFocusMode ? 'flex-1 flex flex-col justify-center my-auto py-1' : 'py-2 sm:py-4'}`}>
         {/* Apple Books Hardcover Canvas Container */}
         <div
           ref={bookContainerRef}
           className={`
-            relative min-h-[640px] sm:min-h-[720px] rounded-3xl
+            relative ${isFocusMode ? 'min-h-[calc(100vh-140px)]' : 'min-h-[640px] sm:min-h-[720px]'} rounded-3xl
             bg-[#fcfaf6] text-[#1c1917] border border-stone-300/70
             dark:bg-[#050507] dark:text-[#e5e5ea] dark:border-white/10
             shadow-2xl overflow-hidden transition-all duration-300 flex flex-col justify-between
@@ -726,7 +817,7 @@ export default function OpenGLPageReader({
             {/* ========================================================================= */}
             <div
               className={`
-                flex flex-col justify-between p-6 sm:p-10 lg:p-12 min-h-[580px] sm:min-h-[660px]
+                flex flex-col justify-between p-6 sm:p-10 lg:p-12 ${isFocusMode ? 'min-h-[calc(100vh-220px)]' : 'min-h-[580px] sm:min-h-[660px]'}
                 ${fontFamily === 'serif' ? 'font-serif' : 'font-sans'}
               `}
             >
@@ -799,7 +890,7 @@ export default function OpenGLPageReader({
             {/* ========================================================================= */}
             <div
               className={`
-                flex flex-col justify-between p-6 sm:p-10 lg:p-12 min-h-[580px] sm:min-h-[660px]
+                flex flex-col justify-between p-6 sm:p-10 lg:p-12 ${isFocusMode ? 'min-h-[calc(100vh-220px)]' : 'min-h-[580px] sm:min-h-[660px]'}
                 ${fontFamily === 'serif' ? 'font-serif' : 'font-sans'}
               `}
             >
@@ -905,8 +996,10 @@ export default function OpenGLPageReader({
 
           {/* Corner Curl Click Targets for intuitive page turning */}
           <div
-            onClick={handlePrevPage}
-            className="absolute top-0 left-0 w-16 h-16 z-30 cursor-pointer group flex items-start justify-start p-2"
+            onClick={isPrevDisabled ? undefined : handlePrevPage}
+            className={`absolute top-0 left-0 w-16 h-16 z-30 group flex items-start justify-start p-2 ${
+              isPrevDisabled ? 'opacity-0 pointer-events-none' : 'cursor-pointer'
+            }`}
             title="Turn to previous spread"
             aria-label="Turn page backward"
           >
@@ -914,8 +1007,10 @@ export default function OpenGLPageReader({
           </div>
 
           <div
-            onClick={handleNextPage}
-            className="absolute top-0 right-0 w-16 h-16 z-30 cursor-pointer group flex items-start justify-end p-2"
+            onClick={isNextDisabled ? undefined : handleNextPage}
+            className={`absolute top-0 right-0 w-16 h-16 z-30 group flex items-start justify-end p-2 ${
+              isNextDisabled ? 'opacity-0 pointer-events-none' : 'cursor-pointer'
+            }`}
             title="Turn to next spread"
             aria-label="Turn page forward"
           >
@@ -931,7 +1026,7 @@ export default function OpenGLPageReader({
           <button
             type="button"
             onClick={handlePrevPage}
-            disabled={currentSpreadIndex === 0}
+            disabled={isPrevDisabled}
             className="px-2.5 py-1.5 rounded-xl theme-card border hover:border-amber-400 text-xs font-semibold theme-sub hover:theme-main transition flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:pointer-events-none shadow-xs"
             title="Previous Page (Left Arrow)"
           >
@@ -941,7 +1036,7 @@ export default function OpenGLPageReader({
           <button
             type="button"
             onClick={handleNextPage}
-            disabled={currentSpreadIndex >= totalSpreads - 1}
+            disabled={isNextDisabled}
             className="px-2.5 py-1.5 rounded-xl theme-card border hover:border-amber-400 text-xs font-semibold theme-sub hover:theme-main transition flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:pointer-events-none shadow-xs"
             title="Next Page (Right Arrow)"
           >
