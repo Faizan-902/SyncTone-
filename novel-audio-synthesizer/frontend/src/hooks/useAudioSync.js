@@ -73,7 +73,6 @@ export function useAudioSync(timeline = [], onSegmentChange = null) {
         sec.onerror = null;
         sec.ontimeupdate = null;
         sec.pause();
-        sec.removeAttribute('src');
         sec.currentTime = 0;
       } catch (_) {}
     }
@@ -131,12 +130,13 @@ export function useAudioSync(timeline = [], onSegmentChange = null) {
       if (myGen !== speechGenRef.current || speechCancelledRef.current) return;
 
       const rawText = entry.text || '';
-      if (!rawText.trim()) {
+      const cleanText = rawText.replace(/\[IMAGE:[^\]]*\]/gi, '').trim();
+      if (!cleanText) {
         advanceToNextSegment(targetSegId);
         return;
       }
 
-      const utterance = new SpeechSynthesisUtterance(rawText);
+      const utterance = new SpeechSynthesisUtterance(cleanText);
       activeUtteranceRef.current = utterance;
 
       const voices = window.speechSynthesis.getVoices() || [];
@@ -229,7 +229,8 @@ export function useAudioSync(timeline = [], onSegmentChange = null) {
       if (!entry) return;
 
       const rawText = entry.text || '';
-      if (!rawText.trim()) {
+      const cleanText = rawText.replace(/\[IMAGE:[^\]]*\]/gi, '').trim();
+      if (!cleanText) {
         advanceToNextSegment(targetSegId);
         return;
       }
@@ -243,7 +244,7 @@ export function useAudioSync(timeline = [], onSegmentChange = null) {
       // Try /api/voices/speak with selected engine if not previously failed
       if (!apiSpeakFailedRef.current && typeof Audio !== 'undefined') {
         const voiceParam = encodeURIComponent(entry.voice_id || 'en-GB-RyanNeural');
-        const textParam = encodeURIComponent(rawText);
+        const textParam = encodeURIComponent(cleanText);
         const engineParam = encodeURIComponent(ttsEngine || 'msedge-tts');
         const speakUrl = `/api/voices/speak?text=${textParam}&voice_id=${voiceParam}&engine=${engineParam}`;
 
@@ -256,7 +257,7 @@ export function useAudioSync(timeline = [], onSegmentChange = null) {
 
         secAudio.onerror = () => {
           if (myGen !== speechGenRef.current || speechCancelledRef.current) return;
-          apiSpeakFailedRef.current = true;
+          // Fallback to client synthesis for this utterance without permanently killing the engine
           speakWithSpeechSynthesis(entry, targetSegId, myGen);
         };
 
@@ -287,7 +288,6 @@ export function useAudioSync(timeline = [], onSegmentChange = null) {
           ) {
             return;
           }
-          apiSpeakFailedRef.current = true;
           speakWithSpeechSynthesis(entry, targetSegId, myGen);
         });
       } else {
@@ -302,6 +302,7 @@ export function useAudioSync(timeline = [], onSegmentChange = null) {
   const changeTtsEngine = useCallback(
     (newEngine) => {
       stopSpeech();
+      apiSpeakFailedRef.current = false;
       setTtsEngine(newEngine);
       if (isPlaying && playbackMode === 'tts' && activeSegmentId !== -1) {
         speakActiveSegmentRef.current?.(activeSegmentId, segmentProgress);
@@ -316,6 +317,7 @@ export function useAudioSync(timeline = [], onSegmentChange = null) {
     setCurrentTimeMs(0);
     setSegmentProgress(0);
     setIsPlaying(false);
+    apiSpeakFailedRef.current = false;
     stopSpeech();
   }, [timeline, stopSpeech]);
 
@@ -521,13 +523,16 @@ export function useAudioSync(timeline = [], onSegmentChange = null) {
         }
       } else {
         stopSpeech();
+        if (audioRef.current) {
+          audioRef.current.currentTime = Math.max(0, currentTimeMs / 1000);
+        }
         if (isPlaying && audioRef.current) {
           audioRef.current.play().catch(() => {});
         }
       }
       return next;
     });
-  }, [isPlaying, activeSegmentId, timeline, stopSpeech, speakActiveSegment]);
+  }, [isPlaying, activeSegmentId, timeline, stopSpeech, speakActiveSegment, currentTimeMs]);
 
   return {
     audioRef,

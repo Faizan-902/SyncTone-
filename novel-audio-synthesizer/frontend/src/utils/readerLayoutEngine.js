@@ -164,6 +164,48 @@ export function measureAndPaginateSegments(segments = [], options = {}) {
       continue;
     }
 
+    // If a single text segment exceeds usable page height, split it by sentence boundaries
+    // so prose never bleeds outside the book spread container or overlaps the footer
+    if (segHeight > usablePageHeight && cleanText && cleanText.length > 300) {
+      const sentences = cleanText.match(/[^.!?]+[.!?]+["”']?\s*|[^.!?]+$/g) || [cleanText];
+      let subText = '';
+      let subUsedHeight = 0;
+
+      for (let sIdx = 0; sIdx < sentences.length; sIdx++) {
+        const sentence = sentences[sIdx];
+        const testSubText = subText + sentence;
+        const testSubSeg = { ...seg, text: testSubText };
+        const testHeight = estimateSegmentHeight(testSubSeg, { containerWidth, fontSize, lineHeight });
+
+        if (currentPage.length > 0 && currentUsedHeight + testHeight > usablePageHeight) {
+          if (subText.trim()) {
+            currentPage.push({ ...seg, text: subText.trim() });
+          }
+          pages.push(currentPage);
+          currentPage = [];
+          currentUsedHeight = 0;
+          subText = sentence;
+          subUsedHeight = estimateSegmentHeight({ ...seg, text: sentence }, { containerWidth, fontSize, lineHeight });
+        } else if (testHeight > usablePageHeight && subText.trim()) {
+          currentPage.push({ ...seg, text: subText.trim() });
+          pages.push(currentPage);
+          currentPage = [];
+          currentUsedHeight = 0;
+          subText = sentence;
+          subUsedHeight = estimateSegmentHeight({ ...seg, text: sentence }, { containerWidth, fontSize, lineHeight });
+        } else {
+          subText = testSubText;
+          subUsedHeight = testHeight;
+        }
+      }
+
+      if (subText.trim()) {
+        currentPage.push({ ...seg, text: subText.trim() });
+        currentUsedHeight += subUsedHeight;
+      }
+      continue;
+    }
+
     // Check if adding this segment would exceed the page's vertical budget or segment cap
     const wouldOverflow =
       currentPage.length > 0 &&

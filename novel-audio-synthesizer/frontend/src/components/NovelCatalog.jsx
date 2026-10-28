@@ -653,6 +653,9 @@ export default function NovelCatalog({
                     role="button"
                     aria-label={novel.title}
                     onKeyDown={(e) => {
+                      if (e.target !== e.currentTarget && e.target.closest('button, a, input, select')) {
+                        return;
+                      }
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
                         onSelectNovel(novel.id);

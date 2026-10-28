@@ -34,6 +34,8 @@ export default function ReaderView({
   onBack,
   onRetry,
   onNextChapter,
+  useTtsSanitizer: propUseTtsSanitizer,
+  onToggleTtsSanitizer: propOnToggleTtsSanitizer,
 }) {
   const { fontFamily, setFontFamily, fontSize, increaseFontSize, decreaseFontSize } = useTheme();
   const activeElementRef = useRef(null);
@@ -59,10 +61,19 @@ export default function ReaderView({
     typeof document !== 'undefined' ? !document.hidden : true
   );
 
-  const [useTtsSanitizer, setUseTtsSanitizer] = useState(false);
+  const [localUseTtsSanitizer, setLocalUseTtsSanitizer] = useState(false);
+  const isSanitizerActive = propUseTtsSanitizer !== undefined ? propUseTtsSanitizer : localUseTtsSanitizer;
+  const handleToggleSanitizer = () => {
+    if (propOnToggleTtsSanitizer) {
+      propOnToggleTtsSanitizer();
+    } else {
+      setLocalUseTtsSanitizer((prev) => !prev);
+    }
+  };
+
   const effectiveSegments = React.useMemo(
-    () => (useTtsSanitizer ? sanitizeSegmentsWithTtsDomCleaner(segments) : segments),
-    [segments, useTtsSanitizer]
+    () => (isSanitizerActive ? sanitizeSegmentsWithTtsDomCleaner(segments) : segments),
+    [segments, isSanitizerActive]
   );
 
   // Listen to Escape key to exit Focus Mode and toggle full-screen body class
@@ -505,11 +516,15 @@ export default function ReaderView({
           <button
             type="button"
             data-testid="reader-tts-sanitizer-toggle"
-            aria-pressed={useTtsSanitizer}
-            onClick={() => setUseTtsSanitizer((prev) => !prev)}
-            title="Toggle tts-dom-cleaner sanitizer to strip hidden spam, ASCII dividers, and duplicate paragraphs"
+            aria-pressed={isSanitizerActive}
+            onClick={handleToggleSanitizer}
+            title={
+              isSanitizerActive
+                ? 'TTS Clean: ON (Filtering OCR noise, spam & junk divider symbols)'
+                : 'TTS Clean: OFF (Click to filter scanned OCR noise, dividers & duplicate paragraphs)'
+            }
             className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer flex items-center gap-1.5 ${
-              useTtsSanitizer
+              isSanitizerActive
                 ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-md font-bold'
                 : 'theme-surface border-[var(--border-subtle)] theme-muted hover:text-[var(--text-main)]'
             }`}
@@ -630,7 +645,7 @@ export default function ReaderView({
                   ) : (
                     <span className="font-bold theme-heading font-sans flex items-center gap-1.5">
                       <IconBook className="w-3.5 h-3.5 opacity-60" />
-                      <span>Narrator</span>
+                      <span>{seg.speaker_name || 'Narrator'}</span>
                     </span>
                   )}
 

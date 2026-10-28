@@ -91,12 +91,22 @@ export default function AudioPlayer({
 
   const handleSkip = useCallback(
     (seconds) => {
-      if (playbackMode === 'tts' && onSeekSegment) {
-        onSeekSegment(seconds < 0 ? -1 : 1);
+      if (playbackMode === 'tts') {
+        if (onSeek) {
+          const maxMs = totalDurationMs > 0 ? totalDurationMs : Infinity;
+          const targetMs = Math.max(0, Math.min(maxMs, currentTimeMs + seconds * 1000));
+          onSeek(targetMs, isPlaying);
+        } else if (onSeekSegment) {
+          onSeekSegment(seconds < 0 ? -1 : 1);
+        }
         return;
       }
       if (!audioRef?.current) {
-        if (onSeekSegment) {
+        if (onSeek) {
+          const maxMs = totalDurationMs > 0 ? totalDurationMs : Infinity;
+          const targetMs = Math.max(0, Math.min(maxMs, currentTimeMs + seconds * 1000));
+          onSeek(targetMs, isPlaying);
+        } else if (onSeekSegment) {
           onSeekSegment(seconds < 0 ? -1 : 1);
         }
         return;
@@ -110,7 +120,7 @@ export default function AudioPlayer({
         Math.min(totalDurationMs / 1000, audioRef.current.currentTime + seconds)
       );
     },
-    [audioRef, totalDurationMs, playbackMode, onSeekSegment]
+    [audioRef, totalDurationMs, playbackMode, onSeekSegment, onSeek, currentTimeMs, isPlaying]
   );
 
   const handleSpeedChange = () => {
@@ -301,10 +311,10 @@ export default function AudioPlayer({
         </div>
 
         {/* Player Controls & Track Metadata Row */}
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-2 sm:gap-3 flex-nowrap min-w-0">
           {/* Left: Track Information */}
-          <div className="flex items-center gap-3 min-w-0 max-w-[200px] sm:max-w-xs">
-            <div className="w-9 h-9 rounded-xl theme-card border flex items-center justify-center text-[var(--accent)] shadow-xs flex-shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 max-w-[130px] sm:max-w-[200px] md:max-w-xs flex-shrink">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl theme-card border flex items-center justify-center text-[var(--accent)] shadow-xs flex-shrink-0">
               {isPlaying ? (
                 <div className="flex items-end gap-0.5 h-4 w-4 justify-center">
                   <span className="w-1 bg-[var(--accent)] rounded-full eq-bar-1" />
@@ -320,18 +330,18 @@ export default function AudioPlayer({
               <h4 className="text-xs font-bold theme-heading truncate leading-tight">
                 {currentChapter?.title || 'Chapter Audio Track'}
               </h4>
-              <p className="text-[10px] theme-muted font-mono truncate mt-0.5">
+              <p className="text-[10px] theme-muted font-mono truncate mt-0.5 hidden sm:block">
                 {currentNovel?.title || 'SyncTone Audio'}
               </p>
             </div>
           </div>
 
           {/* Center: Playback Transport Buttons (44px Accessible Hit Targets) */}
-          <div className="flex items-center gap-1 sm:gap-2">
+          <div className="flex items-center gap-0.5 sm:gap-1.5 flex-shrink-0">
             {/* Skip -10s */}
             <button
               onClick={() => handleSkip(-10)}
-              className="w-11 h-11 rounded-xl theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition flex items-center justify-center cursor-pointer"
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition flex items-center justify-center cursor-pointer"
               title="Skip back 10 seconds (J)"
               aria-label="Skip back 10 seconds"
             >
@@ -341,7 +351,7 @@ export default function AudioPlayer({
             {/* Previous Turn */}
             <button
               onClick={() => onSeekSegment && onSeekSegment(-1)}
-              className="w-11 h-11 rounded-xl theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition flex items-center justify-center cursor-pointer"
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition flex items-center justify-center cursor-pointer"
               title="Previous dialogue turn"
               aria-label="Previous turn"
             >
@@ -351,7 +361,7 @@ export default function AudioPlayer({
             {/* Play / Pause Toggle Button */}
             <button
               onClick={onToggle}
-              className="w-11 h-11 rounded-full bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] font-bold flex items-center justify-center shadow-lg transition-transform duration-120 hover:scale-105 active:scale-95 focus:outline-none cursor-pointer"
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] font-bold flex items-center justify-center shadow-lg transition-transform duration-120 hover:scale-105 active:scale-95 focus:outline-none cursor-pointer"
               aria-label={isPlaying ? 'Pause audio' : 'Play audio'}
             >
               <span className="transition-all duration-120 transform scale-100 opacity-100 flex items-center justify-center">
@@ -366,7 +376,7 @@ export default function AudioPlayer({
             {/* Next Turn */}
             <button
               onClick={() => onSeekSegment && onSeekSegment(1)}
-              className="w-11 h-11 rounded-xl theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition flex items-center justify-center cursor-pointer"
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition flex items-center justify-center cursor-pointer"
               title="Next dialogue turn"
               aria-label="Next turn"
             >
@@ -376,7 +386,7 @@ export default function AudioPlayer({
             {/* Skip +10s */}
             <button
               onClick={() => handleSkip(10)}
-              className="w-11 h-11 rounded-xl theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition flex items-center justify-center cursor-pointer"
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition flex items-center justify-center cursor-pointer"
               title="Skip forward 10 seconds (L)"
               aria-label="Skip forward 10 seconds"
             >
@@ -385,7 +395,7 @@ export default function AudioPlayer({
           </div>
 
           {/* Right: Audio Speed, Playback Engine Mode & Volume Controls */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
             {/* 3-Engine Selector Pill / Dropdown */}
             {onChangeTtsEngine && (
               <div className="relative flex items-center">
@@ -417,15 +427,15 @@ export default function AudioPlayer({
               <button
                 type="button"
                 onClick={onTogglePlaybackMode}
-                className={`px-2.5 py-1 rounded-lg border text-xs font-mono font-bold transition shadow-xs cursor-pointer flex items-center gap-1.5 ${
+                className={`px-2 sm:px-2.5 py-1 rounded-lg border text-xs font-mono font-bold transition shadow-xs cursor-pointer flex items-center gap-1.5 ${
                   playbackMode === 'tts'
                     ? 'bg-amber-400/20 text-amber-300 border-amber-400/40 hover:bg-amber-400/30'
                     : 'theme-card hover:border-[var(--border-focus)] theme-sub'
                 }`}
                 title={
                   playbackMode === 'tts'
-                    ? 'Currently using Live Multi-Voice TTS Read-Along. Click for Studio Track.'
-                    : 'Currently using Studio Track stream. Click for Live Multi-Voice TTS Read-Along.'
+                    ? 'Voice TTS: Playing live character TTS segment-by-segment. Click to switch to Studio Track.'
+                    : 'Studio Track: Playing pre-rendered stitched full-chapter audio. Click to switch to Voice TTS.'
                 }
                 aria-label={`Playback engine: ${playbackMode === 'tts' ? 'Voice TTS' : 'Studio Track'}`}
               >
@@ -434,10 +444,10 @@ export default function AudioPlayer({
                     playbackMode === 'tts' ? 'bg-amber-400 animate-pulse' : 'bg-slate-400'
                   }`}
                 />
-                <span className="hidden sm:inline">
+                <span className="hidden md:inline">
                   {playbackMode === 'tts' ? 'Voice TTS' : 'Studio'}
                 </span>
-                <span className="sm:hidden font-mono">
+                <span className="md:hidden font-mono">
                   {playbackMode === 'tts' ? 'TTS' : 'Studio'}
                 </span>
               </button>
@@ -446,7 +456,7 @@ export default function AudioPlayer({
             {/* Speed Pill Selector */}
             <button
               onClick={handleSpeedChange}
-              className="px-2.5 py-1 rounded-lg theme-card border hover:border-[var(--border-focus)] text-xs font-mono font-bold transition shadow-xs cursor-pointer"
+              className="px-2 sm:px-2.5 py-1 rounded-lg theme-card border hover:border-[var(--border-focus)] text-xs font-mono font-bold transition shadow-xs cursor-pointer"
               title="Cycle playback speed"
               aria-label={`Playback speed: ${speed}x`}
             >

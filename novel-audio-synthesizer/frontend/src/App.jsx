@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from './hooks/useAuth';
 import { useAudioSync } from './hooks/useAudioSync';
 import { usePlaybackProgress } from './hooks/usePlaybackProgress';
 import { useSynthesisProgress } from './hooks/useSynthesisProgress';
+import { sanitizeSegmentsWithTtsDomCleaner } from './utils/ttsSanitizer';
 import { api } from './services/api';
 
 import SidebarNav from './components/SidebarNav';
@@ -45,9 +46,16 @@ export default function App() {
   const [showRoster, setShowRoster] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [modelStatus, setModelStatus] = useState(null);
+  const [useTtsSanitizer, setUseTtsSanitizer] = useState(false);
+
+  // Sanitized timeline when TTS Clean is active
+  const effectiveTimeline = useMemo(() => {
+    const rawTimeline = chapterManifest?.timeline ?? EMPTY_ARRAY;
+    return useTtsSanitizer ? sanitizeSegmentsWithTtsDomCleaner(rawTimeline) : rawTimeline;
+  }, [chapterManifest?.timeline, useTtsSanitizer]);
 
   // Audio Synchronization Hook (60fps loop with binary search)
-  const audioSync = useAudioSync(chapterManifest?.timeline ?? EMPTY_ARRAY);
+  const audioSync = useAudioSync(effectiveTimeline);
 
   // 4NF Playback Progress Hook (auto-resume & throttled persistence)
   const playbackProgress = usePlaybackProgress({
@@ -55,7 +63,7 @@ export default function App() {
     chapterId: currentChapter?.id,
     user,
     audioSync,
-    timeline: chapterManifest?.timeline ?? EMPTY_ARRAY,
+    timeline: effectiveTimeline,
   });
 
   // Real-time WebSocket Synthesis Progress Hook
@@ -104,12 +112,24 @@ export default function App() {
 
   // Listen to browser Back/Forward navigation (popstate)
   useEffect(() => {
-    const handlePopState = (event) => {
-      if (event.state && event.state.view) {
+    const handlePopState = async (event) => {
+      const state = event.state;
+      if (state && state.view) {
+        if (state.view === 'reader' && state.chapterId && state.novelId) {
+          try {
+            const novelRes = await api.novels.get(state.novelId);
+            const novel = novelRes?.novel || novelRes;
+            const chapter = (novel?.chapters || []).find((c) => c.id === state.chapterId);
+            if (chapter) {
+              handleSelectChapter(novel, chapter, false);
+              return;
+            }
+          } catch (_) {}
+        }
         executeViewTransition(() => {
-          setView(event.state.view);
-          if (event.state.novelId) {
-            setSelectedNovelId(event.state.novelId);
+          setView(state.view);
+          if (state.novelId) {
+            setSelectedNovelId(state.novelId);
           }
           setShowRoster(false);
         });
@@ -137,7 +157,7 @@ export default function App() {
   };
 
   // Open chapter in Reader with view transition
-  const handleSelectChapter = async (novel, chapter) => {
+  const handleSelectChapter = async (novel, chapter, pushHistory = true) => {
     executeViewTransition(() => {
       setCurrentNovel(novel);
       if (novel?.id) {
@@ -151,7 +171,7 @@ export default function App() {
       setChapterManifest(null);
 
       try {
-        if (typeof window !== 'undefined' && window.history) {
+        if (pushHistory && typeof window !== 'undefined' && window.history) {
           window.history.pushState(
             { view: 'reader', novelId: novel?.id, chapterId: chapter?.id },
             '',
@@ -406,6 +426,8 @@ export default function App() {
                   }}
                   currentNovel={currentNovel}
                   currentChapter={currentChapter}
+                  useTtsSanitizer={useTtsSanitizer}
+                  onToggleTtsSanitizer={() => setUseTtsSanitizer((prev) => !prev)}
                   onBack={() => {
                     if (selectedNovelId || currentNovel?.id) {
                       handleNavigate('details', selectedNovelId || currentNovel?.id);

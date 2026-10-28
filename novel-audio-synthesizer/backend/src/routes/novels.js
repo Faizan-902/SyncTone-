@@ -24,9 +24,12 @@ const uploadStorage = multer.diskStorage({
   },
 });
 
+let activeParseJobs = 0;
+const MAX_CONCURRENT_PARSE_JOBS = 3;
+
 const upload = multer({
   storage: uploadStorage,
-  limits: { fileSize: 350 * 1024 * 1024 }, // 350MB limit
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit to protect against memory exhaustion
 });
 
 /**
@@ -85,6 +88,12 @@ router.get('/novels', async (req, res) => {
 router.post('/novels/parse-file', upload.single('file'), async (req, res) => {
   let tmpPath = null;
   let shouldUnlink = false;
+  if (activeParseJobs >= MAX_CONCURRENT_PARSE_JOBS) {
+    return res.status(429).json({
+      error: 'The server is currently parsing other uploaded books. Please wait a moment and retry.',
+    });
+  }
+  activeParseJobs++;
   try {
     let originalName = 'book.epub';
     if (req.file) {
@@ -135,6 +144,7 @@ router.post('/novels/parse-file', upload.single('file'), async (req, res) => {
     console.error('[Parse File Error]:', err.message);
     return res.status(500).json({ error: `Failed to parse uploaded book file: ${err.message}` });
   } finally {
+    activeParseJobs = Math.max(0, activeParseJobs - 1);
     if (shouldUnlink && tmpPath && fs.existsSync(tmpPath)) {
       try {
         fs.unlinkSync(tmpPath);

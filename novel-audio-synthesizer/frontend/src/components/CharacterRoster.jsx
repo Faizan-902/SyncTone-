@@ -194,7 +194,7 @@ export default function CharacterRoster({
                         value={char.voiceId}
                         disabled={isUpdating}
                         onChange={(e) => handleVoiceSelect(char.id, e.target.value)}
-                        className="text-xs px-2.5 py-1.5 theme-surface border rounded-xl focus:outline-none focus:border-[var(--border-focus)] transition font-medium theme-heading disabled:opacity-50"
+                        className="text-xs px-2 py-1.5 theme-surface border rounded-xl focus:outline-none focus:border-[var(--border-focus)] transition font-medium theme-heading disabled:opacity-50 min-w-0 max-w-[210px] truncate"
                       >
                         {Object.entries(availableVoices).map(([archetype, voiceId]) => (
                           <option key={archetype} value={voiceId}>

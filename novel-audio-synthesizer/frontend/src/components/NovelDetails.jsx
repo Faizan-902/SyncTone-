@@ -30,7 +30,33 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
   const [activeTab, setActiveTab] = useState('chapters'); // 'chapters' | 'characters'
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [inLibrary, setInLibrary] = useState(false);
+  const [inLibrary, setInLibrary] = useState(() => {
+    try {
+      return typeof window !== 'undefined' && localStorage.getItem(`synctone_library_${novelId}`) === 'true';
+    } catch (_) {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        setInLibrary(localStorage.getItem(`synctone_library_${novelId}`) === 'true');
+      }
+    } catch (_) {}
+  }, [novelId]);
+
+  const handleToggleLibrary = () => {
+    setInLibrary((prev) => {
+      const next = !prev;
+      try {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(`synctone_library_${novelId}`, String(next));
+        }
+      } catch (_) {}
+      return next;
+    });
+  };
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
@@ -226,7 +252,7 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
                 className={`px-4 py-3 theme-card hover:border-[var(--border-focus)] rounded-xl text-xs sm:text-sm font-semibold border min-h-[44px] transition cursor-pointer ${
                   inLibrary ? 'text-status-success border-[var(--color-status-success)]' : ''
                 }`}
-                onClick={() => setInLibrary((prev) => !prev)}
+                onClick={handleToggleLibrary}
               >
                 {inLibrary ? '✓ In Library' : '+ Add to Library'}
               </button>

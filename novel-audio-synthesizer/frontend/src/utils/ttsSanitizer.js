@@ -9,6 +9,26 @@ const DEFAULT_REMOVE_PATTERNS = [
 const BLOCK_TAG_DETECT_REGEX = /<(?:p|div|br|h[1-6]|article|section|blockquote|li|tr|table)\b/i;
 
 /**
+ * Cleans scanned book OCR noise, junk divider punctuation, and broken scanner artifacts.
+ * Directly fixes OCR noise like `* ^`, `> * 1 s : i Lx`, `EN /`, `hadn’ t` -> `hadn’t`.
+ */
+export function cleanOcrArtifacts(text) {
+  if (!text || typeof text !== 'string') return '';
+  return text
+    // 1. Remove isolated punctuation noise patterns (e.g. * ^, `>, |, ^, =)
+    .replace(/(?:^|\s)[`>|~^=*\\]+(?:\s+[`>|~^=*\\]+)*(?=\s|$)/g, ' ')
+    // 2. Remove OCR junk symbol clusters like `> * 1 s : i Lx`, `EN /`, `ww ZW =`, `a e 00 pe SE E PN`
+    .replace(/(?:^|\s)(?:[`*^>|~=:\/\\]|\b[a-zA-Z0-9]\b|\b[A-Z]{2,}\b|\b\d+\b)(?:\s+[`*^>|~=:\/\\]|\s+\b[a-zA-Z0-9]\b|\s+\b[A-Z]{2,}\b|\s+\b\d+\b){2,}(?=\s|$)/g, ' ')
+    // 3. Fix broken apostrophes and split contractions like "hadn’ t" -> "hadn’t"
+    .replace(/\b([a-zA-Z]+)[’\x27]\s+([a-zA-Z]+)\b/g, '$1’$2')
+    // 4. Remove floating lone punctuation like isolated backticks, carats, asterisks
+    .replace(/\s+[`^*|~=]\s+/g, ' ')
+    // 5. Clean up extra spaces
+    .replace(/[ \t]{2,}/g, ' ')
+    .trim();
+}
+
+/**
  * Safely sanitizes novel text or HTML using `tts-dom-cleaner` while:
  * 1) Preserving embedded `[IMAGE:...]` markers and converting `<img src="...">` to `[IMAGE:...]` blocks.
  * 2) Wrapping plaintext double-newline paragraphs in `<p>` tags when no HTML block tags are present
@@ -49,7 +69,7 @@ export function sanitizeTextWithTtsDomCleaner(rawInput, options = {}) {
       .join('\n');
   }
 
-  return cleanHtml(prepared, {
+  const cleaned = cleanHtml(prepared, {
     output: 'text',
     removeHidden: true,
     dedupeParagraphs: true,
@@ -59,6 +79,8 @@ export function sanitizeTextWithTtsDomCleaner(rawInput, options = {}) {
     removePatterns: DEFAULT_REMOVE_PATTERNS,
     ...options,
   });
+
+  return cleanOcrArtifacts(cleaned);
 }
 
 /**

@@ -6,6 +6,47 @@ const { authenticateUser, requireRole } = require('../middleware/auth');
 
 const router = Router();
 
+// In-memory cache for on-demand speech segments (speeds up replay and eliminates redundant Edge TTS calls)
+const speakCache = new Map();
+const MAX_CACHE_ENTRIES = 250;
+
+/**
+ * Sends audio buffer with support for HTTP Range requests (crucial for Chrome audio streaming)
+ */
+function sendAudioBuffer(req, res, buffer, mimeType, engine) {
+  res.set({
+    'X-TTS-Engine': engine,
+    'Accept-Ranges': 'bytes',
+    'Cache-Control': 'public, max-age=86400',
+  });
+
+  const range = req.headers.range;
+  if (range) {
+    const parts = range.replace(/bytes=/, '').split('-');
+    const start = parseInt(parts[0], 10);
+    const end = parts[1] ? parseInt(parts[1], 10) : buffer.length - 1;
+
+    if (isNaN(start) || start >= buffer.length || end < start) {
+      res.status(416).set('Content-Range', `bytes */${buffer.length}`);
+      return res.end();
+    }
+
+    const chunk = buffer.slice(start, end + 1);
+    res.status(206).set({
+      'Content-Range': `bytes ${start}-${end}/${buffer.length}`,
+      'Content-Length': String(chunk.length),
+      'Content-Type': mimeType,
+    });
+    return res.send(chunk);
+  }
+
+  res.status(200).set({
+    'Content-Type': mimeType,
+    'Content-Length': String(buffer.length),
+  });
+  return res.send(buffer);
+}
+
 // Handler for on-demand segment speech preview
 async function handleSpeak(req, res) {
   try {
@@ -14,28 +55,42 @@ async function handleSpeak(req, res) {
     const speed = parseFloat(req.query.speed || req.body?.speed) || 1.0;
     const engine = req.query.engine || req.body?.engine || 'auto';
 
-    const cleanText = String(rawText !== undefined && rawText !== null ? rawText : 'Hello, this is a sample preview.').slice(0, 1500);
+    // Strip image markers and normalize text
+    let cleanText = String(rawText !== undefined && rawText !== null ? rawText : 'Hello, this is a sample preview.');
+    cleanText = cleanText.replace(/\[IMAGE:[^\]]+\]/gi, '').trim().slice(0, 1500);
+
+    if (!cleanText) {
+      cleanText = ' ';
+    }
+
+    const cacheKey = `${engine}:${voice_id}:${speed}:${cleanText}`;
+    if (speakCache.has(cacheKey)) {
+      const cached = speakCache.get(cacheKey);
+      return sendAudioBuffer(req, res, cached.buffer, cached.mimeType, cached.engine);
+    }
 
     const result = await ttsEngine.synthesizeSegment(cleanText, String(voice_id), speed, String(engine));
 
-    res.set('X-TTS-Engine', result.engine || 'msedge-tts');
+    let finalBuffer = result.audio_buffer;
+    let mimeType = result.format === 'mp3' ? 'audio/mpeg' : 'audio/wav';
 
     if (result.format === 'pcm') {
       const wavHeader = audioStitcher.createWavHeader(result.audio_buffer.length, 24000, 1, 16);
-      const fullWav = Buffer.concat([wavHeader, result.audio_buffer]);
-      res.set('Content-Type', 'audio/wav');
-      res.set('Content-Length', String(fullWav.length));
-      return res.send(fullWav);
+      finalBuffer = Buffer.concat([wavHeader, result.audio_buffer]);
+      mimeType = 'audio/wav';
     }
 
-    if (result.format === 'mp3') {
-      res.set('Content-Type', 'audio/mpeg');
-      res.set('Content-Length', String(result.audio_buffer.length));
-      return res.send(result.audio_buffer);
+    if (speakCache.size >= MAX_CACHE_ENTRIES) {
+      const oldestKey = speakCache.keys().next().value;
+      speakCache.delete(oldestKey);
     }
+    speakCache.set(cacheKey, {
+      buffer: finalBuffer,
+      mimeType,
+      engine: result.engine || 'msedge-tts',
+    });
 
-    res.set('Content-Type', 'audio/wav');
-    return res.send(result.audio_buffer);
+    return sendAudioBuffer(req, res, finalBuffer, mimeType, result.engine || 'msedge-tts');
   } catch (err) {
     console.error('[Voices Speak Error]:', err.message);
     return res.status(500).json({ error: 'Failed to synthesize speech segment' });
