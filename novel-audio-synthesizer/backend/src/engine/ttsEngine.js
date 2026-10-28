@@ -239,7 +239,16 @@ class TTSEngine {
   }
 
   async synthesizeWithEdgeCli(text, voiceId, options = {}) {
-    const prosody = options.prosody || { pitch: '+0%', rate: '+0%' };
+    const prosody = options.prosody || { pitch: '+0Hz', rate: '+0%' };
+    let edgePitch = '+0Hz';
+    if (prosody.pitch) {
+      if (/^[+-]\d+Hz$/i.test(prosody.pitch)) {
+        edgePitch = prosody.pitch;
+      } else {
+        const num = parseInt(prosody.pitch, 10);
+        edgePitch = isNaN(num) ? '+0Hz' : `${num >= 0 ? '+' : ''}${num}Hz`;
+      }
+    }
     const tmpFile = path.join(os.tmpdir(), `edge_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.mp3`);
 
     const edgeBinCandidates = [
@@ -262,7 +271,7 @@ class TTSEngine {
             '--rate',
             prosody.rate || '+0%',
             '--pitch',
-            prosody.pitch || '+0Hz',
+            edgePitch,
             '--write-media',
             tmpFile,
             '--no-progress',
@@ -282,7 +291,7 @@ class TTSEngine {
             '--rate',
             prosody.rate || '+0%',
             '--pitch',
-            prosody.pitch || '+0Hz',
+            edgePitch,
             '--write-media',
             tmpFile,
             '--no-progress',
