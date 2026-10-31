@@ -143,11 +143,6 @@ export default function NovelCover({
           <p className={`text-[10px] font-mono tracking-widest uppercase font-bold ${style.accentText}`}>
             {style.subtitle}
           </p>
-          {author && (
-            <p className="text-[9px] font-mono text-slate-300 truncate max-w-[140px] mx-auto">
-              By {author}
-            </p>
-          )}
         </div>
       </div>
 

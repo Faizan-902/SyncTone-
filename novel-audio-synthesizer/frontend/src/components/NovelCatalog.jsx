@@ -198,7 +198,7 @@ export default function NovelCatalog({
   };
 
   return (
-    <div className="space-y-10 pb-20">
+    <div className="space-y-10 pb-20 overflow-x-clip max-w-full">
       {/* ================================================================= */}
       {/* 1. MASTER STICKY GLASS HEADER (Single Unified Header)             */}
       {/* ================================================================= */}
