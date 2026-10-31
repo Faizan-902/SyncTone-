@@ -1,6 +1,5 @@
 import React from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { useTheme } from '../context/ThemeContext';
 import { preloadAuthModal, preloadSettingsModal, preloadCharacterRoster } from '../App';
 import {
   IconSoundwave,
@@ -9,8 +8,6 @@ import {
   IconUser,
   IconShield,
   IconArrowLeft,
-  IconMoon,
-  IconSun,
 } from './icons';
 
 export default function TopHeader({
@@ -24,11 +21,10 @@ export default function TopHeader({
   onOpenAuth,
 }) {
   const { user, role, isAuthenticated, logout } = useAuth();
-  const { theme, cycleTheme } = useTheme();
 
   return (
-    <header className="sticky top-0 z-40 glass-header border-b h-16 flex-shrink-0">
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 h-full flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-40 glass-header border-b">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between gap-4">
         {/* Brand & Breadcrumbs */}
         <div className="flex items-center gap-4 sm:gap-6 min-w-0">
           <button
@@ -107,18 +103,6 @@ export default function TopHeader({
               <span>Cast Roster</span>
             </button>
           )}
-
-          {/* Theme Toggle Trigger */}
-          <button
-            type="button"
-            onClick={cycleTheme}
-            className="p-2.5 theme-muted hover:text-[var(--text-main)] rounded-xl hover:bg-[var(--bg-hover)] border border-transparent hover:border-[var(--border-subtle)] transition cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
-            title={`Switch Theme (${theme === 'dark' ? 'Atelier Dark' : 'Editorial Light'})`}
-            aria-label="Switch theme"
-            aria-pressed={theme === 'dark'}
-          >
-            {theme === 'dark' ? <IconMoon className="w-4 h-4" /> : <IconSun className="w-4 h-4" />}
-          </button>
 
           {/* Settings Trigger */}
           <button
