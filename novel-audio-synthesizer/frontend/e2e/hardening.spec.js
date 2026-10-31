@@ -261,7 +261,10 @@ test.describe('SyncTone Hardening E2E Suite', () => {
 
     await page.evaluate(async () => {
       if ('serviceWorker' in navigator) {
-        await navigator.serviceWorker.ready.catch(() => {});
+        await Promise.race([
+          navigator.serviceWorker.ready,
+          new Promise((r) => setTimeout(r, 1000)),
+        ]).catch(() => {});
       }
     });
 
@@ -270,6 +273,7 @@ test.describe('SyncTone Hardening E2E Suite', () => {
 
     try {
       await page.goto('/', { waitUntil: 'domcontentloaded' }).catch(() => {});
+      await page.waitForTimeout(500);
 
       const content = await page.content();
       expect(content.length).toBeGreaterThan(50);

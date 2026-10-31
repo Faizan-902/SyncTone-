@@ -88,7 +88,40 @@
     </div>
     <h1>You're Offline</h1>
     <p>Please check your internet connection. Previously loaded chapters and downloaded audio remain accessible.</p>
-    <button onclick="window.location.reload()">Reconnect</button>
+    <button onclick="cleanAndReload()">Reconnect</button>
   </div>
+  <script>
+    function checkConnection() {
+      fetch('/', { method: 'HEAD', cache: 'no-store' })
+        .then(function(res) {
+          if (res.ok) {
+            window.location.reload();
+          }
+        })
+        .catch(function() {});
+    }
+
+    // Auto-reconnect when connection recovers
+    setInterval(checkConnection, 2000);
+    window.addEventListener('online', checkConnection);
+
+    function cleanAndReload() {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(regs) {
+          return Promise.all(regs.map(function(r) { return r.unregister(); }));
+        }).then(function() {
+          if ('caches' in window) {
+            return caches.keys().then(function(keys) {
+              return Promise.all(keys.map(function(k) { return caches.delete(k); }));
+            });
+          }
+        }).catch(function() {}).then(function() {
+          window.location.reload();
+        });
+      } else {
+        window.location.reload();
+      }
+    }
+  </script>
 </body>
 </html>
