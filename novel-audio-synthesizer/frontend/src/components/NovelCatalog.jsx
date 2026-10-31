@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { api, ApiError } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
-import { useTheme } from '../context/ThemeContext';
 import { useDebounce } from '../hooks/useDebounce';
 import NovelCover from './NovelCover';
 import {
@@ -19,8 +18,6 @@ import {
   IconChevronRight,
   IconSoundwave,
   IconTrash,
-  IconMoon,
-  IconSun,
 } from './icons';
 
 export default function NovelCatalog({
@@ -32,7 +29,6 @@ export default function NovelCatalog({
   onNovelDeleted,
 }) {
   const { user, isAuthenticated } = useAuth();
-  const { theme, cycleTheme } = useTheme();
   const isWriterOrAdmin = user && (user.role === 'writer' || user.role === 'admin');
 
   const [novels, setNovels] = useState([]);
@@ -198,11 +194,11 @@ export default function NovelCatalog({
   };
 
   return (
-    <div className="space-y-10 pb-20 overflow-x-clip max-w-full">
+    <div className="space-y-10 pb-20">
       {/* ================================================================= */}
       {/* 1. MASTER STICKY GLASS HEADER (Single Unified Header)             */}
       {/* ================================================================= */}
-      <header className="sticky top-0 z-30 -mx-4 sm:-mx-8 px-4 sm:px-8 lg:px-8 py-3.5 md:py-0 glass-header border-b flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 min-h-[64px] md:h-16 flex-shrink-0">
+      <header className="sticky top-0 z-30 -mx-4 sm:-mx-8 px-4 sm:px-8 lg:px-8 py-3.5 glass-header border-b flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 min-h-[64px]">
         {/* Left: Heading & Instant Search */}
         <div className="flex items-center gap-4 flex-1 max-w-2xl">
           <div className="flex-shrink-0">
@@ -291,18 +287,6 @@ export default function NovelCatalog({
             </button>
           )}
 
-          {/* Theme Toggle Button */}
-          <button
-            type="button"
-            onClick={cycleTheme}
-            className="p-2 theme-card border hover:border-[var(--border-focus)] rounded-xl text-xs font-semibold transition flex items-center justify-center flex-shrink-0 min-h-[36px] min-w-[36px] cursor-pointer"
-            title={`Switch Theme (${theme === 'dark' ? 'Atelier Dark' : 'Editorial Light'})`}
-            aria-label="Switch theme"
-            aria-pressed={theme === 'dark'}
-          >
-            {theme === 'dark' ? <IconMoon className="w-3.5 h-3.5" /> : <IconSun className="w-3.5 h-3.5" />}
-          </button>
-
           {/* Auth Button */}
           {onOpenAuth && (
             <button
@@ -352,7 +336,7 @@ export default function NovelCatalog({
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="rounded-2xl theme-card border overflow-hidden flex flex-col">
-                <div className="aspect-[2/3] bg-[var(--border-subtle)]" />
+                <div className="aspect-[3/4] bg-[var(--border-subtle)]" />
                 <div className="p-4 space-y-3 flex-1">
                   <div className="h-3 w-24 bg-[var(--border-subtle)] rounded" />
                   <div className="h-5 w-full bg-[var(--border-subtle)] rounded" />
@@ -489,7 +473,7 @@ export default function NovelCatalog({
               {/* Right Column: 3D Hardcover Physical Book Presentation */}
               <div
                 onClick={() => onSelectNovel(featuredNovel.id)}
-                className="relative z-10 w-44 sm:w-56 md:w-60 aspect-[2/3] max-w-full flex-shrink-0 cursor-pointer group transform hover:scale-105 transition-all duration-300"
+                className="relative z-10 w-48 sm:w-60 md:w-64 aspect-[3/4] flex-shrink-0 cursor-pointer group transform hover:scale-105 transition-all duration-300"
                 style={{
                   filter: 'drop-shadow(0 25px 40px rgba(0, 0, 0, 0.85))',
                 }}
@@ -629,8 +613,8 @@ export default function NovelCatalog({
 
                       {/* Card Body in Normal Document Flow */}
                       <div className="relative z-10 w-44 sm:w-56 rounded-2xl overflow-hidden theme-card border shadow-xl flex flex-col card-motion">
-                        {/* 2:3 Cover Artwork without text overlay */}
-                        <div className="w-full aspect-[2/3] relative overflow-hidden">
+                        {/* 3:4 Cover Artwork without text overlay */}
+                        <div className="w-full aspect-[3/4] relative overflow-hidden">
                           <NovelCover
                             title={novel.title}
                             author={novel.author_username}
@@ -707,12 +691,20 @@ export default function NovelCatalog({
                     key={novel.id}
                     onClick={() => onSelectNovel(novel.id)}
                     className="novel-card-hybrid group cursor-pointer"
+                    tabIndex={0}
+                    role="button"
                     aria-label={novel.title}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onSelectNovel(novel.id);
+                      }
+                    }}
                   >
                     {/* Desktop Column Container / Mobile Flex Row (<640px) */}
-                    <div className="flex flex-col min-[420px]:flex-row sm:flex-col h-full min-w-0">
-                      {/* Cover Zone (Fixed 2:3 aspect ratio) */}
-                      <div className="w-full min-[420px]:w-28 sm:w-full aspect-[2/3] relative overflow-hidden flex-shrink-0">
+                    <div className="flex flex-row sm:flex-col h-full min-w-0">
+                      {/* Cover Zone (Fixed 3:4 aspect ratio) */}
+                      <div className="w-28 sm:w-full aspect-[3/4] relative overflow-hidden flex-shrink-0">
                         <NovelCover
                           title={novel.title}
                           author={novel.author_username}
