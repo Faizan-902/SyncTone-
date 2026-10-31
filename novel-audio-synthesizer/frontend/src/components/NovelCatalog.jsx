@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { api, ApiError } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 import { useDebounce } from '../hooks/useDebounce';
+import { preloadNovelDetails, preloadReaderView } from '../App';
 import NovelCover from './NovelCover';
 import {
   IconSearch,
@@ -455,6 +456,9 @@ export default function NovelCatalog({
                 <div className="flex flex-wrap items-center gap-3.5 pt-2 stagger-5">
                   <button
                     onClick={(e) => handleStartListening(featuredNovel, e)}
+                    onMouseEnter={preloadReaderView}
+                    onFocus={preloadReaderView}
+                    onPointerDown={preloadReaderView}
                     className="px-6 py-3.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-bold rounded-xl shadow-xl flex items-center gap-2.5 text-xs sm:text-sm transition transform hover:-translate-y-0.5 focus:outline-none cursor-pointer"
                   >
                     <IconPlay className="w-4 h-4 fill-current" />
@@ -462,6 +466,9 @@ export default function NovelCatalog({
                   </button>
                   <button
                     onClick={() => onSelectNovel(featuredNovel.id)}
+                    onMouseEnter={preloadNovelDetails}
+                    onFocus={preloadNovelDetails}
+                    onPointerDown={preloadNovelDetails}
                     className="px-5 py-3.5 theme-card border font-semibold rounded-xl text-xs sm:text-sm transition hover:border-[var(--border-focus)] focus:outline-none shadow-sm flex items-center gap-2 cursor-pointer"
                   >
                     <IconBook className="w-4 h-4" />
@@ -473,6 +480,9 @@ export default function NovelCatalog({
               {/* Right Column: 3D Hardcover Physical Book Presentation */}
               <div
                 onClick={() => onSelectNovel(featuredNovel.id)}
+                onMouseEnter={preloadNovelDetails}
+                onFocus={preloadNovelDetails}
+                onPointerDown={preloadNovelDetails}
                 className="relative z-10 w-48 sm:w-60 md:w-64 aspect-[3/4] flex-shrink-0 cursor-pointer group transform hover:scale-105 transition-all duration-300"
                 style={{
                   filter: 'drop-shadow(0 25px 40px rgba(0, 0, 0, 0.85))',
@@ -601,6 +611,9 @@ export default function NovelCatalog({
                     <li
                       key={novel.id}
                       onClick={() => onSelectNovel(novel.id)}
+                      onMouseEnter={preloadNovelDetails}
+                      onFocus={preloadNovelDetails}
+                      onPointerDown={preloadNovelDetails}
                       className="top10-card flex-shrink-0 flex items-center cursor-pointer group snap-start relative pl-12 sm:pl-16"
                     >
                       {/* Decorative Outline Rank Number */}
@@ -690,6 +703,9 @@ export default function NovelCatalog({
                   <article
                     key={novel.id}
                     onClick={() => onSelectNovel(novel.id)}
+                    onMouseEnter={preloadNovelDetails}
+                    onFocus={preloadNovelDetails}
+                    onPointerDown={preloadNovelDetails}
                     className="novel-card-hybrid group cursor-pointer"
                     tabIndex={0}
                     role="button"
@@ -762,6 +778,9 @@ export default function NovelCatalog({
                         <div className="pt-3.5 mt-4 border-t theme-border flex items-center justify-between gap-2.5">
                           <button
                             onClick={(e) => handleStartListening(novel, e)}
+                            onMouseEnter={preloadReaderView}
+                            onFocus={preloadReaderView}
+                            onPointerDown={preloadReaderView}
                             className="flex-1 py-2 px-3.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-semibold rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 focus:outline-none cursor-pointer"
                           >
                             <IconPlay className="w-3.5 h-3.5 fill-current" />
@@ -772,6 +791,9 @@ export default function NovelCatalog({
                               e.stopPropagation();
                               onSelectNovel(novel.id);
                             }}
+                            onMouseEnter={preloadNovelDetails}
+                            onFocus={preloadNovelDetails}
+                            onPointerDown={preloadNovelDetails}
                             className="p-2 rounded-xl theme-surface hover:bg-[var(--bg-hover)] theme-sub border border-[var(--border-subtle)] hover:border-[var(--border-hover)] transition focus:outline-none cursor-pointer min-w-[36px] flex items-center justify-center"
                             title="View Novel Details"
                             aria-label="View Novel Details"

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api, ApiError } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
-import { preloadUploadChapterModal } from '../App';
+import { preloadUploadChapterModal, preloadReaderView } from '../App';
 import NovelCover from './NovelCover';
 import {
   IconArrowLeft,
@@ -208,6 +208,9 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
               {chapters.length > 0 && (
                 <button
                   onClick={() => onSelectChapter(novel, chapters[0])}
+                  onMouseEnter={preloadReaderView}
+                  onFocus={preloadReaderView}
+                  onPointerDown={preloadReaderView}
                   className="px-6 py-3 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] font-bold rounded-xl shadow-lg flex items-center gap-2 text-xs sm:text-sm min-h-[44px] transition transform hover:-translate-y-0.5 active:scale-95 focus:outline-none cursor-pointer"
                 >
                   <IconPlay className="w-4 h-4 fill-current" />
@@ -333,6 +336,9 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
                   role="button"
                   tabIndex={0}
                   onClick={() => onSelectChapter(novel, ch)}
+                  onMouseEnter={preloadReaderView}
+                  onFocus={preloadReaderView}
+                  onPointerDown={preloadReaderView}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
@@ -364,6 +370,9 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
                     </span>
                     <button
                       className="px-3 py-1.5 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] text-xs font-semibold transition flex items-center gap-1.5 shadow-sm cursor-pointer"
+                      onMouseEnter={preloadReaderView}
+                      onFocus={preloadReaderView}
+                      onPointerDown={preloadReaderView}
                       onClick={(e) => {
                         e.stopPropagation();
                         onSelectChapter(novel, ch);
