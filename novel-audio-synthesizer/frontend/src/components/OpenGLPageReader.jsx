@@ -3,6 +3,9 @@ import { useTheme } from '../context/ThemeContext';
 import { getSpeakerColor } from '../utils/speakerColors';
 import { parseSegmentImage } from '../utils/segmentUtils';
 import NovelCover from './NovelCover';
+import { paginateSegments } from '../reader/paginate';
+import PageNavButtons from '../reader/PageNavButtons';
+import SpineShadowCanvas from '../reader/SpineShadowCanvas';
 import {
   IconArrowLeft,
   IconBook,
@@ -16,106 +19,6 @@ import {
   IconSoundwave,
 } from './icons';
 
-/**
- * Smart paginator that groups segments into realistic literary book pages
- * targeting ~850-1000 characters per page or 3-5 paragraphs.
- */
-function paginateSegments(segments = [], charsPerPage = 850) {
-  if (!segments || segments.length === 0) return [];
-
-  const pages = [];
-  let currentPage = [];
-  let currentChars = 0;
-
-  for (const seg of segments) {
-    const { imgUrl, cleanText } = parseSegmentImage(seg);
-
-    // Standalone illustration: dedicated page
-    if (imgUrl && !cleanText) {
-      if (currentPage.length > 0) {
-        pages.push(currentPage);
-        currentPage = [];
-        currentChars = 0;
-      }
-      pages.push([seg]);
-      continue;
-    }
-
-    let textLen = (cleanText || seg.text || '').length;
-    if (imgUrl && cleanText) {
-      textLen += 450;
-    }
-
-    // If page is not empty and adding this segment exceeds target character count, start new page
-    if (currentPage.length > 0 && currentChars + textLen > charsPerPage && currentPage.length >= 2) {
-      pages.push(currentPage);
-      currentPage = [seg];
-      currentChars = textLen;
-    } else {
-      currentPage.push(seg);
-      currentChars += textLen;
-    }
-  }
-
-  if (currentPage.length > 0) {
-    pages.push(currentPage);
-  }
-
-  // If character-based pagination produced only 1 page but chapter has >= 2 segments,
-  // split segments into smaller pages of at most 2-3 segments per page (or ~450 chars)
-  // so every multi-paragraph chapter has multiple pages and spreads that can turn!
-  if (pages.length === 1 && segments.length >= 2) {
-    const subPages = [];
-    let cur = [];
-    let chars = 0;
-    const maxChars = Math.min(charsPerPage, 450);
-    const maxSegs = segments.length <= 3 ? 1 : 2;
-
-    for (const seg of segments) {
-      const { imgUrl, cleanText } = parseSegmentImage(seg);
-
-      // Standalone illustration: dedicated page
-      if (imgUrl && !cleanText) {
-        if (cur.length > 0) {
-          subPages.push(cur);
-          cur = [];
-          chars = 0;
-        }
-        subPages.push([seg]);
-        continue;
-      }
-
-      let textLen = (cleanText || seg.text || '').length;
-      if (imgUrl && cleanText) {
-        textLen += 450;
-      }
-
-      if (cur.length > 0 && (chars + textLen > maxChars || cur.length >= maxSegs)) {
-        subPages.push(cur);
-        cur = [seg];
-        chars = textLen;
-      } else {
-        cur.push(seg);
-        chars += textLen;
-      }
-    }
-    if (cur.length > 0) {
-      subPages.push(cur);
-    }
-    if (subPages.length > 1) {
-      return subPages;
-    }
-    // Fallback for short segments: 1 per page if <= 3 segments, else 2 per page
-    const fallbackPages = [];
-    const step = segments.length <= 3 ? 1 : 2;
-    for (let i = 0; i < segments.length; i += step) {
-      fallbackPages.push(segments.slice(i, i + step));
-    }
-    return fallbackPages;
-  }
-
-  return pages;
-}
 
 /**
  * High-fidelity Hogwarts Heraldic Crest Ornament matching Apple Books Screenshot 2
@@ -270,7 +173,6 @@ export default function OpenGLPageReader({
   const [lastJumpPage, setLastJumpPage] = useState(1);
   const [showCoverSpread, setShowCoverSpread] = useState(false);
 
-  const canvasRef = useRef(null);
   const bookContainerRef = useRef(null);
   const autoFlipLockRef = useRef(false);
   const lastAutoFlippedSegRef = useRef(-1);
@@ -400,73 +302,6 @@ export default function OpenGLPageReader({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleNextPage, handlePrevPage]);
 
-  // WebGL / Canvas Hardware-Accelerated 3D Lighting & Center Spine Shader Simulation
-  useEffect(() => {
-    if (typeof navigator !== 'undefined' && navigator.userAgent.includes('jsdom')) {
-      return;
-    }
-    const canvas = canvasRef.current;
-    if (!canvas || typeof canvas.getContext !== 'function') return;
-
-    let ctx;
-    try {
-      ctx = canvas.getContext('2d');
-    } catch (_) {
-      return;
-    }
-    if (!ctx) return;
-
-    let animId;
-
-    const renderShader = () => {
-      const w = (canvas.width = canvas.parentElement?.clientWidth || 900);
-      const h = (canvas.height = canvas.parentElement?.clientHeight || 650);
-
-      ctx.clearRect(0, 0, w, h);
-
-      // 1. Center Book Spine Deep Shadow (Between Left and Right spread pages)
-      const spineGradient = ctx.createLinearGradient(w / 2 - 40, 0, w / 2 + 40, 0);
-      spineGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-      spineGradient.addColorStop(0.5, isDark ? 'rgba(0, 0, 0, 0.28)' : 'rgba(0, 0, 0, 0.12)');
-      spineGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      ctx.fillStyle = spineGradient;
-      ctx.fillRect(w / 2 - 40, 0, 80, h);
-
-      // 2. Outer Page Edge Curvature Shading
-      const leftEdgeGradient = ctx.createLinearGradient(0, 0, 24, 0);
-      leftEdgeGradient.addColorStop(0, isDark ? 'rgba(0, 0, 0, 0.14)' : 'rgba(0, 0, 0, 0.05)');
-      leftEdgeGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      ctx.fillStyle = leftEdgeGradient;
-      ctx.fillRect(0, 0, 24, h);
-
-      const rightEdgeGradient = ctx.createLinearGradient(w - 24, 0, w, 0);
-      rightEdgeGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-      rightEdgeGradient.addColorStop(1, isDark ? 'rgba(0, 0, 0, 0.14)' : 'rgba(0, 0, 0, 0.05)');
-      ctx.fillStyle = rightEdgeGradient;
-      ctx.fillRect(w - 24, 0, 24, h);
-
-      // 3. Dynamic Page Curl Shadow during flip animation
-      if (isFlipping) {
-        const curlX = flipDirection === 'next' ? w * 0.75 : w * 0.25;
-        const curlGradient = ctx.createRadialGradient(curlX, h / 2, 20, curlX, h / 2, 240);
-        curlGradient.addColorStop(0, isDark ? 'rgba(250, 204, 21, 0.18)' : 'rgba(217, 119, 6, 0.14)');
-        curlGradient.addColorStop(0.5, isDark ? 'rgba(0, 0, 0, 0.22)' : 'rgba(0, 0, 0, 0.10)');
-        curlGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = curlGradient;
-        ctx.fillRect(0, 0, w, h);
-      }
-    };
-
-    renderShader();
-
-    const handleResize = () => renderShader();
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      cancelAnimationFrame(animId);
-    };
-  }, [isFlipping, flipDirection, isDark]);
 
   // Render WTR-Lab TTS Yellow Highlight with intra-segment word tracking and inline EPUB illustrations
   const renderSegmentProse = (seg, isActive) => {
@@ -677,27 +512,13 @@ export default function OpenGLPageReader({
         </div>
       )}
 
-      {/* Minimalist Floating Apple Books Left Chevron (Matching Screenshot 1 & 2) */}
-      <button
-        aria-label="Previous Page"
-        onClick={handlePrevPage}
-        disabled={currentSpreadIndex === 0}
-        className="fixed sm:absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-stone-700 dark:text-white/70 hover:text-stone-950 dark:hover:text-white bg-white/80 hover:bg-white dark:bg-black/40 dark:hover:bg-black/75 backdrop-blur-md border border-stone-300 dark:border-white/10 hover:border-stone-400 dark:hover:border-white/30 transition-all disabled:opacity-0 disabled:pointer-events-none cursor-pointer shadow-xl group"
-        title="Previous Page (Left Arrow)"
-      >
-        <IconChevronLeft className="w-6 h-6 -ml-0.5 group-hover:-translate-x-0.5 transition-transform" />
-      </button>
-
-      {/* Minimalist Floating Apple Books Right Chevron (Matching Screenshot 1 & 2) */}
-      <button
-        aria-label="Next Page"
-        onClick={handleNextPage}
-        disabled={currentSpreadIndex >= totalSpreads - 1}
-        className="fixed sm:absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-stone-700 dark:text-white/70 hover:text-stone-950 dark:hover:text-white bg-white/80 hover:bg-white dark:bg-black/40 dark:hover:bg-black/75 backdrop-blur-md border border-stone-300 dark:border-white/10 hover:border-stone-400 dark:hover:border-white/30 transition-all disabled:opacity-0 disabled:pointer-events-none cursor-pointer shadow-xl group"
-        title="Next Page (Right Arrow)"
-      >
-        <IconChevronRight className="w-6 h-6 -mr-0.5 group-hover:translate-x-0.5 transition-transform" />
-      </button>
+      {/* Floating Apple Books Chevrons */}
+      <PageNavButtons
+        onPrev={handlePrevPage}
+        onNext={handleNextPage}
+        canPrev={currentSpreadIndex > 0}
+        canNext={currentSpreadIndex < totalSpreads - 1}
+      />
 
       {/* 3D Apple Books Two-Page Spread Stage */}
       <div className="relative w-full perspective-1200 py-2 sm:py-4">
@@ -717,7 +538,11 @@ export default function OpenGLPageReader({
           }}
         >
           {/* Hardware-accelerated canvas lighting overlay */}
-          <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none z-20 w-full h-full" />
+          <SpineShadowCanvas
+            isDark={isDark}
+            isFlipping={isFlipping}
+            flipDirection={flipDirection}
+          />
 
           {/* Two-Page Side-by-Side Spread: Left Page (Page 2k) | Right Page (Page 2k + 1) */}
           <div className="relative z-10 flex-1 grid grid-cols-1 lg:grid-cols-2 lg:divide-x lg:divide-stone-300/70 dark:lg:divide-white/10">
