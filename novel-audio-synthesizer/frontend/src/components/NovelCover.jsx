@@ -86,7 +86,7 @@ export default function NovelCover({
   // If real image URL is valid, render image with rich book spine & ambient shadow
   if (coverUrl && !imgError) {
     return (
-      <div className={`relative overflow-hidden aspect-[2/3] w-full h-full ${className}`}>
+      <div className={`relative overflow-hidden ${className}`}>
         <img
           src={coverUrl}
           alt={title}
@@ -104,12 +104,11 @@ export default function NovelCover({
   // Generative Artistic Hardcover: Rich book design with spine binding, foil borders, and literary emblem
   return (
     <div
-      role="img"
-      aria-label={`${title} cover`}
-      className={`relative w-full h-full aspect-[2/3] ${style.bg} border ${style.border} border-l-[6px] ${style.spine} flex flex-col justify-between p-4 sm:p-5 select-none overflow-hidden ${className}`}
+      className={`relative w-full h-full ${style.bg} border ${style.border} border-l-[6px] ${style.spine} flex flex-col justify-between p-4 sm:p-5 select-none overflow-hidden ${className}`}
       style={{
         boxShadow: `inset 4px 0 12px rgba(0, 0, 0, 0.7), inset 1px 0 0 rgba(255, 255, 255, 0.15), 0 8px 24px ${style.glow}`,
       }}
+      aria-hidden="true"
     >
       {/* Ornate Gold/Foil Inner Border Frame */}
       <div className="absolute inset-2 sm:inset-2.5 border border-white/10 rounded pointer-events-none" />
