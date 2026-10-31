@@ -35,6 +35,8 @@ export default function App() {
   // Chapter prose and manifest data
   const [chapterSegments, setChapterSegments] = useState(EMPTY_ARRAY);
   const [chapterManifest, setChapterManifest] = useState(null);
+  const [hasStudioAudio, setHasStudioAudio] = useState(false);
+  const [novelChapters, setNovelChapters] = useState(EMPTY_ARRAY);
   const [isLoadingChapter, setIsLoadingChapter] = useState(false);
   const [chapterError, setChapterError] = useState(null);
 
@@ -71,12 +73,13 @@ export default function App() {
 
   // Fetch TTS / LLM model engine status when settings is opened
   useEffect(() => {
-    if (showSettings && !modelStatus) {
-      api.get('/status/models')
+    if (showSettings) {
+      api.status
+        .models()
         .then((res) => setModelStatus(res))
         .catch(() => {});
     }
-  }, [showSettings, modelStatus]);
+  }, [showSettings]);
 
   // Helper for safe scroll without jsdom not-implemented warning
   const safeScrollToTop = (behavior = 'instant') => {
@@ -184,8 +187,26 @@ export default function App() {
     });
 
     try {
+      // 0. Fetch novel chapter list for Next Chapter navigation
+      if (novel?.id) {
+        api.novels
+          .get(novel.id)
+          .then((nData) => {
+            if (Array.isArray(nData?.chapters)) {
+              setNovelChapters(nData.chapters);
+            }
+          })
+          .catch(() => {});
+      }
+
       // 1. Fetch chapter details & segments
       const details = await api.chapters.get(chapter.id);
+      const studioReady = Boolean(details.has_studio_audio);
+      setHasStudioAudio(studioReady);
+      if (!studioReady && audioSync.playbackMode === 'studio') {
+        audioSync.togglePlaybackMode('live');
+      }
+
       let segments = details.segments || [];
       if (segments.length === 0 && (details.status === 'draft' || chapter?.status === 'draft' || !details.status)) {
         try {
@@ -286,6 +307,7 @@ export default function App() {
       const synthRes = await api.chapters.synthesize(currentChapter.id);
       const manifest = synthRes?.manifest || synthRes;
       if (manifest && (manifest.timeline || manifest.audio_url || manifest.total_duration_ms)) {
+        setHasStudioAudio(true);
         setChapterManifest({
           ...manifest,
           audio_stream_url: `${manifest.audio_url || `/api/stream/${currentChapter.id}`}?t=${Date.now()}`,
@@ -428,6 +450,22 @@ export default function App() {
                   currentChapter={currentChapter}
                   useTtsSanitizer={useTtsSanitizer}
                   onToggleTtsSanitizer={() => setUseTtsSanitizer((prev) => !prev)}
+                  onRetry={() => {
+                    if (currentChapter) {
+                      handleSelectChapter(currentNovel, currentChapter, false);
+                    }
+                  }}
+                  onNextChapter={(() => {
+                    if (!currentChapter || novelChapters.length === 0) return null;
+                    const idx = novelChapters.findIndex((c) => c.id === currentChapter.id);
+                    const nextCh =
+                      idx >= 0 && idx + 1 < novelChapters.length
+                        ? novelChapters[idx + 1]
+                        : novelChapters.find(
+                            (c) => Number(c.chapter_number) === Number(currentChapter.chapter_number) + 1
+                          );
+                    return nextCh ? () => handleSelectChapter(currentNovel, nextCh) : null;
+                  })()}
                   onBack={() => {
                     if (selectedNovelId || currentNovel?.id) {
                       handleNavigate('details', selectedNovelId || currentNovel?.id);
@@ -459,7 +497,16 @@ export default function App() {
             currentNovel={currentNovel}
             currentChapter={currentChapter}
             playbackMode={audioSync.playbackMode}
-            onTogglePlaybackMode={audioSync.togglePlaybackMode}
+            onTogglePlaybackMode={(mode) => {
+              const targetMode = mode || (audioSync.playbackMode === 'live' ? 'studio' : 'live');
+              if (targetMode === 'studio' && !hasStudioAudio) {
+                handleSynthesizeCurrentChapter().then(() => {
+                  audioSync.togglePlaybackMode('studio');
+                });
+                return;
+              }
+              audioSync.togglePlaybackMode(targetMode);
+            }}
             ttsEngine={audioSync.ttsEngine}
             onChangeTtsEngine={audioSync.setTtsEngine}
             onSeekSegment={(dir) => {

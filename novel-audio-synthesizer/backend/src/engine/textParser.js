@@ -30,18 +30,32 @@ const SPEECH_TAG_BEFORE = new RegExp(
 );
 
 function cleanSpeakerName(raw) {
-  const noiseWords = new Set(['the', 'a', 'an', 'then', 'and', 'but', 'as', 'when', 'while', 'to']);
-  const pronouns = new Set(['he', 'she', 'they', 'it']);
+  const noiseWords = new Set([
+    'the', 'a', 'an', 'then', 'and', 'but', 'as', 'when', 'while', 'to', 'for', 'so', 'yet', 'now', 'still', 'just', 'even', 'only'
+  ]);
+  const bannedNames = new Set([
+    'he', 'she', 'they', 'it', 'i', 'we', 'you', 'me', 'him', 'her', 'us', 'them',
+    'who', 'whom', 'whose', 'which', 'what', 'that', 'this', 'these', 'those',
+    'one', 'someone', 'somebody', 'anyone', 'anybody', 'everyone', 'everybody', 'nobody',
+    'there', 'here', 'where', 'when', 'why', 'how', 'all', 'both', 'each', 'either', 'neither',
+    'page', 'chapter', 'section', 'part', 'book', 'voice', 'man', 'woman', 'boy', 'girl'
+  ]);
   const words = raw.trim().split(/\s+/);
   while (words.length > 0 && noiseWords.has(words[0].toLowerCase())) {
     words.shift();
   }
-  const name = words.join(' ').trim().replace(/[.,!?;:]+$/, '');
-  if (!name || words.length > 3) return '';
-  if (pronouns.has(name.toLowerCase())) {
-    return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+  while (words.length > 0 && noiseWords.has(words[words.length - 1].toLowerCase())) {
+    words.pop();
   }
-  if (name[0] === name[0].toLowerCase()) return '';
+  const name = words.join(' ').trim().replace(/^[.,!?;:'"“”‘’()[\]]+|[.,!?;:'"“”‘’()[\]]+$/g, '');
+  if (!name || words.length > 3) return '';
+  if (bannedNames.has(name.toLowerCase())) {
+    return '';
+  }
+  if (words.some((w) => bannedNames.has(w.toLowerCase().replace(/[.,!?;:]/g, '')))) {
+    return '';
+  }
+  if (name[0] === name[0].toLowerCase() || !/^[A-Z]/.test(name)) return '';
   return name;
 }
 
@@ -75,8 +89,15 @@ function parseChapter(rawText, title = 'Untitled Chapter', chapterId = 'ch-1') {
 
   const segments = [];
   let segmentIdCounter = 1;
+  let lastKnownSpeaker = '';
+  let secondLastSpeaker = '';
 
   for (const paragraph of paragraphs) {
+    // Strip residual Internet Archive / hOCR page headers if they appear alone on a line
+    if (/^(?:Page\s+\d+|Notice:\s*The book may not offer.*|This book is available for free download.*)$/i.test(paragraph)) {
+      continue;
+    }
+
     const imgMatch = paragraph.match(/\[IMAGE:(\/static\/covers\/[^\]]+)\]/i);
     if (imgMatch) {
       segments.push({
@@ -123,9 +144,27 @@ function parseChapter(rawText, title = 'Untitled Chapter', chapterId = 'ch-1') {
     }
 
     const { name: extractedSpeaker, source: attrSource } = extractSpeakerRegex(paragraph);
-    const speakerName = extractedSpeaker || 'Unknown Speaker';
-    const speakerId = extractedSpeaker
-      ? extractedSpeaker.toLowerCase().replace(/[^a-z0-9]/g, '_')
+    let resolvedSpeaker = extractedSpeaker;
+    let resolvedSource = extractedSpeaker ? attrSource : 'unresolved';
+
+    if (!resolvedSpeaker) {
+      if (secondLastSpeaker && lastKnownSpeaker && secondLastSpeaker !== lastKnownSpeaker) {
+        resolvedSpeaker = secondLastSpeaker;
+        resolvedSource = 'context_alternation';
+      } else if (lastKnownSpeaker) {
+        resolvedSpeaker = lastKnownSpeaker;
+        resolvedSource = 'context_continuation';
+      }
+    }
+
+    if (resolvedSpeaker) {
+      secondLastSpeaker = lastKnownSpeaker;
+      lastKnownSpeaker = resolvedSpeaker;
+    }
+
+    const speakerName = resolvedSpeaker || 'Dialogue Speaker';
+    const speakerId = resolvedSpeaker
+      ? resolvedSpeaker.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/^_+|_+$/g, '')
       : 'unresolved';
 
     let lastIdx = 0;

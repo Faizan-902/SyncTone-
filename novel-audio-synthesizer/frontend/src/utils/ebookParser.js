@@ -202,7 +202,7 @@ export function extractTextFromHtmlDoc(doc) {
     const clone = body.cloneNode(true);
 
     if (typeof clone.querySelectorAll === 'function') {
-      const unwanted = clone.querySelectorAll('script, style, noscript, svg, nav');
+      const unwanted = clone.querySelectorAll('head, title, script, style, noscript, svg, nav');
       unwanted.forEach((el) => el.remove && el.remove());
 
       const brs = clone.querySelectorAll('br');
@@ -256,9 +256,15 @@ export function extractTextFromHtmlDoc(doc) {
 
 function cleanExtractedText(raw) {
   if (!raw) return '';
-  return raw
+  const stripped = raw
+    .replace(/The text on this page is estimated to be only \d+\.?\d*% accurate[^\n]*/gi, '')
+    .replace(/This book was produced in EPUB format by the Internet Archive[\s\S]*?(?:reading sequence\.|errors\.|volunteer\.)/gi, '')
+    .replace(/Notice:\s*The book may not offer the correct reading sequence[^\n]*/gi, '')
+    .replace(/This book is available for free download in a number of formats[^\n]*/gi, '');
+  return stripped
     .split(/\r?\n/)
     .map((line) => line.trim())
+    .filter((line) => !/^(?:Page\s+\d+|\d{1,4})$/i.test(line))
     .join('\n')
     .replace(/[ \t]+/g, ' ')
     .replace(/\n{3,}/g, '\n\n')

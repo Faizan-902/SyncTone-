@@ -45,6 +45,31 @@ const KOKORO_TO_EDGE_MAP = {
   bm_daniel: 'en-GB-AlfieNeural',
 };
 
+const EDGE_TO_KOKORO_MAP = {
+  'en-GB-RyanNeural': 'bm_george',
+  'en-GB-ArthurNeural': 'am_george',
+  'en-GB-SoniaNeural': 'af_sarah',
+  'en-GB-LibbyNeural': 'bf_emma',
+  'en-GB-ThomasNeural': 'am_adam',
+  'en-GB-AlfieNeural': 'bm_daniel',
+  'en-GB-NoahNeural': 'am_michael',
+  'en-GB-OliverNeural': 'bm_daniel',
+};
+
+const VALID_KOKORO_VOICES = new Set(Object.keys(KOKORO_TO_EDGE_MAP));
+
+function resolveKokoroVoice(voiceId) {
+  if (!voiceId) return 'bm_george';
+  if (VALID_KOKORO_VOICES.has(voiceId)) return voiceId;
+  if (EDGE_TO_KOKORO_MAP[voiceId]) return EDGE_TO_KOKORO_MAP[voiceId];
+  for (const [key, entry] of Object.entries(VOICE_CATALOG)) {
+    if ((entry.primary === voiceId || key === voiceId) && entry.fallback && VALID_KOKORO_VOICES.has(entry.fallback)) {
+      return entry.fallback;
+    }
+  }
+  return 'bm_george';
+}
+
 const TRUSTED_CLIENT_TOKEN = '6A5AA1D4EAFF4E9FB37E23D68491D6F4';
 const CHROMIUM_FULL_VERSION = '143.0.3650.75';
 const CHROMIUM_MAJOR_VERSION = '143';
@@ -53,6 +78,12 @@ const SEC_MS_GEC_VERSION = `2-${CHROMIUM_FULL_VERSION}`;
 let cachedSecMsGecToken = null;
 let tokenExpiryTime = 0;
 
+function getPythonBin() {
+  const pythonVenv = path.resolve(config.paths.modelsDir, '../.venv/bin/python');
+  if (fs.existsSync(pythonVenv)) return pythonVenv;
+  return process.env.PYTHON_BIN || 'python3';
+}
+
 function getSecMsGecToken() {
   const now = Date.now();
   if (cachedSecMsGecToken && now < tokenExpiryTime) {
@@ -60,7 +91,7 @@ function getSecMsGecToken() {
   }
   try {
     const token = child_process
-      .execFileSync('python3', ['-c', 'from edge_tts.drm import DRM; print(DRM.generate_sec_ms_gec())'], {
+      .execFileSync(getPythonBin(), ['-c', 'from edge_tts.drm import DRM; print(DRM.generate_sec_ms_gec())'], {
         encoding: 'utf8',
         timeout: 4000,
       })
@@ -349,42 +380,106 @@ class TTSEngine {
 
     // If local ONNX weights exist, execute Kokoro ONNX model synthesis
     if (modelExists) {
+      const tmpWavPath = path.join(
+        os.tmpdir(),
+        `kokoro_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.wav`
+      );
       try {
-        const tmpWavPath = path.join(
-          os.tmpdir(),
-          `kokoro_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.wav`
-        );
-        const pythonVenv = path.resolve(config.paths.modelsDir, '../.venv/bin/python');
-        const pythonBin = fs.existsSync(pythonVenv) ? pythonVenv : 'python3';
+        const pythonBin = getPythonBin();
+        const kokoroVoice = resolveKokoroVoice(voiceId);
+        const lang = kokoroVoice.startsWith('b') ? 'en-gb' : 'en-us';
+
+        const pyScript = `
+import sys, os, shutil, re, numpy as np, soundfile as sf, espeakng_loader
+from kokoro_onnx import Kokoro, EspeakConfig
+
+model_path, voices_path, text, voice, speed_str, lang, out_wav = sys.argv[1:8]
+speed = float(speed_str)
+orig_dp = espeakng_loader.get_data_path()
+if len(orig_dp) > 130:
+    short_dp = "/tmp/espeak-ng-data"
+    if os.path.islink(short_dp):
+        os.unlink(short_dp)
+    if not os.path.exists(short_dp):
+        shutil.copytree(orig_dp, short_dp, symlinks=True)
+    orig_dp = short_dp
+
+kokoro = Kokoro(model_path, voices_path, espeak_config=EspeakConfig(data_path=orig_dp))
+
+# Split long text into sentence chunks to stay well under Kokoro's 510 phoneme window
+sentences = [s.strip() for s in re.split(r'(?<=[.!?])\\s+', text) if s.strip()]
+if not sentences:
+    sentences = [text]
+
+chunks = []
+curr = ""
+for s in sentences:
+    if len(curr) + len(s) + 1 <= 320:
+        curr = f"{curr} {s}".strip() if curr else s
+    else:
+        if curr:
+            chunks.append(curr)
+        curr = s[:320]
+if curr:
+    chunks.append(curr)
+
+all_samples = []
+sr = 24000
+for c in chunks:
+    samples, sr = kokoro.create(c, voice=voice, speed=speed, lang=lang)
+    if len(samples) > 0:
+        all_samples.append(samples)
+
+final_samples = np.concatenate(all_samples) if all_samples else np.zeros(int(sr * 0.2), dtype=np.float32)
+sf.write(out_wav, final_samples, sr, subtype="PCM_16")
+`;
 
         child_process.execFileSync(
           pythonBin,
           [
             '-c',
-            `
-import sys, soundfile as sf
-from kokoro_onnx import Kokoro
-kokoro = Kokoro("${this.modelPath}", "${this.voicesPath}")
-samples, sr = kokoro.create("${trimmed.replace(/"/g, '\\"')}", voice="${voiceId}", speed=${speed || 1.0})
-sf.write("${tmpWavPath}", samples, sr)
-            `,
+            pyScript,
+            this.modelPath,
+            this.voicesPath,
+            trimmed,
+            kokoroVoice,
+            String(speed || 1.0),
+            lang,
+            tmpWavPath,
           ],
-          { timeout: 15000 }
+          { timeout: 25000 }
         );
 
         if (fs.existsSync(tmpWavPath)) {
           const wavBuf = fs.readFileSync(tmpWavPath);
           fs.unlinkSync(tmpWavPath);
-          const pcm = wavBuf.subarray(44);
-          const durationMs = Math.round((pcm.length / 2 / this.sampleRate) * 1000);
+
+          let pcmBuffer;
+          const dataIdx = wavBuf.indexOf(Buffer.from('data'));
+          if (dataIdx !== -1 && dataIdx + 8 <= wavBuf.length) {
+            const dataLen = wavBuf.readUInt32LE(dataIdx + 4);
+            pcmBuffer =
+              dataLen > 0 && dataIdx + 8 + dataLen <= wavBuf.length
+                ? wavBuf.subarray(dataIdx + 8, dataIdx + 8 + dataLen)
+                : wavBuf.subarray(dataIdx + 8);
+          } else {
+            pcmBuffer = wavBuf.subarray(44);
+          }
+
+          const durationMs = Math.max(100, Math.round((pcmBuffer.length / 2 / this.sampleRate) * 1000));
           return {
-            audio_buffer: pcm,
+            audio_buffer: pcmBuffer,
             duration_ms: durationMs,
             format: 'pcm',
             engine: 'kokoro-tts',
           };
         }
       } catch (kokoroErr) {
+        if (fs.existsSync(tmpWavPath)) {
+          try {
+            fs.unlinkSync(tmpWavPath);
+          } catch (_) {}
+        }
         console.warn(`[TTSEngine] Kokoro ONNX direct execution failed: ${kokoroErr.message}`);
       }
     }

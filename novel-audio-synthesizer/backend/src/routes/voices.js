@@ -112,7 +112,7 @@ router.get('/voices', (_req, res) => {
 // POST /api/voices/assign
 router.post('/voices/assign', authenticateUser, requireRole('writer', 'admin'), async (req, res) => {
 
-  const { character_id, new_voice_id, chapter_id } = req.body;
+  const { character_id, new_voice_id, chapter_id, novel_id } = req.body;
   if (!character_id || !new_voice_id) {
     return res.status(400).json({ detail: 'character_id and new_voice_id are required' });
   }
@@ -169,27 +169,43 @@ router.post('/voices/assign', authenticateUser, requireRole('writer', 'admin'), 
     }
   }
 
-  // Update PostgreSQL characters if connected (Prisma ORM + pg pool expression match)
+  // Update PostgreSQL characters if connected (scoped by UUID or novel_id to prevent cross-novel corruption)
   try {
-    const { pool, prisma } = require('../db');
-    try {
-      if (prisma.character) {
-        await prisma.character.updateMany({
-          where: { canonical_name: character_id },
-          data: { voice_id: effectiveVoiceId, updated_at: new Date() },
-        }).catch(() => {});
+    const { pool } = require('../db');
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(character_id));
+    let targetNovelId = novel_id || null;
+    if (!targetNovelId && chapter_id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(chapter_id))) {
+      const chRow = await pool.query('SELECT novel_id FROM chapters WHERE id = $1', [chapter_id]);
+      if (chRow.rows.length > 0) {
+        targetNovelId = chRow.rows[0].novel_id;
       }
-      await pool.query(
-        'UPDATE characters SET voice_id = $1, updated_at = now() WHERE id::text = $2 OR canonical_name = $2 OR LOWER(REPLACE(canonical_name, \' \', \'_\')) = LOWER($2)',
-        [effectiveVoiceId, character_id]
-      );
+    }
+
+    const runPgUpdate = async (voiceToSet) => {
+      if (isUuid) {
+        await pool.query(
+          'UPDATE characters SET voice_id = $1, updated_at = now() WHERE id = $2::uuid',
+          [voiceToSet, character_id]
+        );
+      } else if (targetNovelId) {
+        await pool.query(
+          "UPDATE characters SET voice_id = $1, updated_at = now() WHERE novel_id = $3 AND (canonical_name = $2 OR LOWER(REPLACE(canonical_name, ' ', '_')) = LOWER($2))",
+          [voiceToSet, character_id, targetNovelId]
+        );
+      } else {
+        await pool.query(
+          "UPDATE characters SET voice_id = $1, updated_at = now() WHERE canonical_name = $2 OR LOWER(REPLACE(canonical_name, ' ', '_')) = LOWER($2)",
+          [voiceToSet, character_id]
+        );
+      }
+    };
+
+    try {
+      await runPgUpdate(effectiveVoiceId);
     } catch (pgErr) {
       if (pgErr.code === '23503') {
         const kokoroFallback = EDGE_TO_KOKORO_MAP[effectiveVoiceId] || 'am_adam';
-        await pool.query(
-          'UPDATE characters SET voice_id = $1, updated_at = now() WHERE id::text = $2 OR canonical_name = $2 OR LOWER(REPLACE(canonical_name, \' \', \'_\')) = LOWER($2)',
-          [kokoroFallback, character_id]
-        );
+        await runPgUpdate(kokoroFallback);
       } else {
         throw pgErr;
       }

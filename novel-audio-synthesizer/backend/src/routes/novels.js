@@ -7,6 +7,7 @@ const multer = require('multer');
 const { pool } = require('../db');
 const { Chapter } = require('../models');
 const { parseChapter } = require('../engine/textParser');
+const { voiceProfiler } = require('../engine/voiceProfiler');
 const { optionalAuth } = require('../middleware/auth');
 
 const router = Router();
@@ -115,7 +116,9 @@ router.post('/novels/parse-file', upload.single('file'), async (req, res) => {
     }
 
     const scriptPath = path.resolve(__dirname, '../scripts/parseUploadedBook.py');
-    const pyOutput = child_process.execFileSync('python3', [scriptPath, tmpPath, originalName], {
+    const venvPython = path.resolve(__dirname, '../../../kokoro-tts-backend/.venv/bin/python');
+    const pythonBin = fs.existsSync(venvPython) ? venvPython : 'python3';
+    const pyOutput = child_process.execFileSync(pythonBin, [scriptPath, tmpPath, originalName], {
       maxBuffer: 50 * 1024 * 1024,
       timeout: 60000,
       encoding: 'utf-8',
@@ -312,10 +315,18 @@ router.post('/novels', optionalAuth, async (req, res) => {
         [createdJob.id, createdNovel.id]
       );
 
-      // Auto-Chapter Ingestion: If chapters array provided, insert up to 50 chapters into PG & MongoDB
+      // Auto-Chapter Ingestion: If chapters array provided, insert chapters into PG & MongoDB
       const createdChapters = [];
+      const detectedCast = new Map();
+      detectedCast.set('Narrator', {
+        name: 'Narrator',
+        voiceId: 'en-GB-RyanNeural',
+        isNarrator: true,
+        sampleQuote: 'Primary narrative voice.',
+      });
+
       if (Array.isArray(rawChapters) && rawChapters.length > 0) {
-        const chaptersToIngest = rawChapters.slice(0, 50);
+        const chaptersToIngest = rawChapters.slice(0, 500);
 
         for (let idx = 0; idx < chaptersToIngest.length; idx++) {
           const ch = chaptersToIngest[idx];
@@ -325,11 +336,12 @@ router.post('/novels', optionalAuth, async (req, res) => {
             : `Chapter ${chNum}`;
           const rawText = ch.raw_text || ch.text || '';
 
-          // Parse chapter text into attributed segments
+          // Parse chapter text into attributed segments and assign distinct character voices
           const parsedData = parseChapter(rawText, chTitle, String(chNum));
+          const voicedSegments = voiceProfiler.applyVoicesToSegments(parsedData.segments || []);
 
           let currentMs = 0;
-          const mappedSegments = (parsedData.segments || []).map((s, segIdx) => {
+          const mappedSegments = voicedSegments.map((s, segIdx) => {
             const isImage = s.type === 'image' || (s.text && s.text.startsWith('[IMAGE:'));
             const words = (s.text || '').trim().split(/\s+/).length;
             const durationMs = isImage ? 1000 : Math.max(800, Math.round((words / 2.8) * 1000));
@@ -338,6 +350,19 @@ router.post('/novels', optionalAuth, async (req, res) => {
             currentMs = end_ms + 250;
 
             const voiceId = s.assigned_voice_id || (s.type === 'narration' ? 'en-GB-RyanNeural' : 'en-GB-ThomasNeural');
+            const speakerName = isImage ? 'Illustration' : (s.speaker_name || (s.type === 'narration' ? 'Narrator' : 'Unknown'));
+            const speakerId = isImage ? 'image' : (s.speaker_id || (s.type === 'narration' ? 'narrator' : 'unknown'));
+
+            if (!isImage && speakerId !== 'narrator' && speakerId !== 'unresolved' && speakerId !== 'unknown' && speakerName && speakerName !== 'Unknown') {
+              if (!detectedCast.has(speakerName)) {
+                detectedCast.set(speakerName, {
+                  name: speakerName,
+                  voiceId,
+                  isNarrator: false,
+                  sampleQuote: (s.text || '').slice(0, 220),
+                });
+              }
+            }
 
             return {
               order: segIdx + 1,
@@ -345,9 +370,9 @@ router.post('/novels', optionalAuth, async (req, res) => {
               type: isImage ? 'image' : s.type,
               text: s.text,
               image_url: s.image_url || (isImage && s.text ? (s.text.match(/\[IMAGE:([^\]]+)\]/) || [])[1] : null),
-              character_id: isImage ? 'image' : (s.speaker_id || (s.type === 'narration' ? 'narrator' : 'unknown')),
-              speaker_id: isImage ? 'image' : (s.speaker_id || (s.type === 'narration' ? 'narrator' : 'unknown')),
-              speaker_name: isImage ? 'Illustration' : (s.speaker_name || (s.type === 'narration' ? 'Narrator' : 'Unknown')),
+              character_id: speakerId,
+              speaker_id: speakerId,
+              speaker_name: speakerName,
               voice_id: voiceId,
               assigned_voice_id: voiceId,
               start_ms,
@@ -403,6 +428,25 @@ router.post('/novels', optionalAuth, async (req, res) => {
           }
 
           createdChapters.push(pgChapter);
+        }
+
+        // Populate PostgreSQL characters portfolio for the uploaded novel
+        await client.query('SAVEPOINT sp_novel_characters');
+        try {
+          for (const charEntry of detectedCast.values()) {
+            await client.query(
+              `
+              INSERT INTO characters (novel_id, canonical_name, gender, age_band, temperament, sample_quote, voice_id, speed_multiplier, is_narrator, source)
+              VALUES ($1, $2, 'unknown', 'adult', 'calm', $3, $4, 1.0, $5, 'manual')
+              ON CONFLICT (novel_id, canonical_name) DO NOTHING;
+              `,
+              [createdNovel.id, charEntry.name, charEntry.sampleQuote || '', charEntry.voiceId, charEntry.isNarrator]
+            );
+          }
+          await client.query('RELEASE SAVEPOINT sp_novel_characters');
+        } catch (charErr) {
+          await client.query('ROLLBACK TO SAVEPOINT sp_novel_characters').catch(() => {});
+          console.warn('[Novels] Character portfolio population warning:', charErr.message);
         }
       }
 
@@ -476,7 +520,7 @@ router.get('/novels/:id', async (req, res) => {
       WHERE c.novel_id = $1
       ORDER BY c.is_narrator DESC, c.canonical_name ASC;
     `;
-    const charsRes = await pool.query(charactersQuery, [id]);
+    let charsRes = await pool.query(charactersQuery, [id]);
 
     // 3. Chapter directory
     const chaptersQuery = `
@@ -489,8 +533,64 @@ router.get('/novels/:id', async (req, res) => {
     `;
     const chaptersRes = await pool.query(chaptersQuery, [id]);
 
+    // Auto-populate character portfolio if novel has chapters but no character rows yet
+    let novelRow = novelRes.rows[0];
+    if (charsRes.rows.length === 0 && chaptersRes.rows.length > 0) {
+      try {
+        const mongoChapters = await Chapter.find({ novel_id: id }).limit(10);
+        const detectedCast = new Map();
+        detectedCast.set('Narrator', {
+          name: 'Narrator',
+          voiceId: 'en-GB-RyanNeural',
+          isNarrator: true,
+          sampleQuote: 'Primary narrative voice.',
+        });
+        for (const mDoc of mongoChapters) {
+          for (const s of mDoc.segments || []) {
+            const speakerId = s.speaker_id || s.character_id;
+            const speakerName = s.speaker_name;
+            if (
+              s.type !== 'image' &&
+              speakerId &&
+              speakerId !== 'narrator' &&
+              speakerId !== 'unresolved' &&
+              speakerId !== 'unknown' &&
+              speakerId !== 'image' &&
+              speakerName &&
+              speakerName !== 'Unknown' &&
+              speakerName !== 'Narrator'
+            ) {
+              if (!detectedCast.has(speakerName)) {
+                detectedCast.set(speakerName, {
+                  name: speakerName,
+                  voiceId: s.assigned_voice_id || s.voice_id || 'en-GB-ThomasNeural',
+                  isNarrator: false,
+                  sampleQuote: (s.text || '').slice(0, 220),
+                });
+              }
+            }
+          }
+        }
+        for (const charEntry of detectedCast.values()) {
+          await pool.query(
+            `
+            INSERT INTO characters (novel_id, canonical_name, gender, age_band, temperament, sample_quote, voice_id, speed_multiplier, is_narrator, source)
+            VALUES ($1, $2, 'unknown', 'adult', 'calm', $3, $4, 1.0, $5, 'manual')
+            ON CONFLICT (novel_id, canonical_name) DO NOTHING;
+            `,
+            [id, charEntry.name, charEntry.sampleQuote || '', charEntry.voiceId, charEntry.isNarrator]
+          ).catch(() => {});
+        }
+        charsRes = await pool.query(charactersQuery, [id]);
+        const refreshedNovel = await pool.query(novelQuery, [id]);
+        if (refreshedNovel.rows.length > 0) {
+          novelRow = refreshedNovel.rows[0];
+        }
+      } catch (_) {}
+    }
+
     return res.json({
-      novel: novelRes.rows[0],
+      novel: novelRow,
       characters: charsRes.rows,
       chapters: chaptersRes.rows,
     });

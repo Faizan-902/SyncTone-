@@ -45,13 +45,21 @@ def clean_ocr_disclaimers(raw_text: str) -> str:
     """Strips automated OCR notices and disclaimers (e.g. from Internet Archive scans)."""
     if not raw_text:
         return ""
-    clean = re.sub(r'<[^>]*>The text on this page is estimated to be only \d+\.?\d*% accurate[^<]*<[^>]*>', '', raw_text, flags=re.IGNORECASE)
+    clean = re.sub(r'(?is)<b[^>]*>[^<]*The text on this page is estimated to be only[^<]*</b>', ' ', raw_text)
+    clean = re.sub(r'<[^>]*>The text on this page is estimated to be only \d+\.?\d*% accurate[^<]*<[^>]*>', '', clean, flags=re.IGNORECASE)
     clean = re.sub(r'The text on this page is estimated to be only \d+\.?\d*% accurate.*', '', clean, flags=re.IGNORECASE)
-    clean = re.sub(r'This book was produced in EPUB format by the Internet Archive.*?(?:reading sequence\.|errors\.)', '', clean, flags=re.IGNORECASE | re.DOTALL)
+    clean = re.sub(r'This book was produced in EPUB format by the Internet Archive.*?(?:reading sequence\.|errors\.|volunteer\.)', '', clean, flags=re.IGNORECASE | re.DOTALL)
     clean = re.sub(r'This book was produced in EPUB format by the Internet Archive.*', '', clean, flags=re.IGNORECASE)
     clean = re.sub(r'The book pages were scanned and converted to EPUB format automatically.*', '', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'Notice:\s*The book may not offer the correct reading sequence.*?(?: guesses at structure\.|\n|$)', '', clean, flags=re.IGNORECASE | re.DOTALL)
+    clean = re.sub(r'This book is available for free download in a number of formats.*?(?:volunteer\.|\n|$)', '', clean, flags=re.IGNORECASE | re.DOTALL)
     # Strip non-Latin OCR garbage (Urdu/Arabic scan artifacts from IA scans)
     clean = re.sub(r'[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF\u200e\u200f\u200b\u200c\u200d]+', ' ', clean)
+    # Repair common hOCR ligature and drop-cap scan corruptions
+    clean = re.sub(r'\bfi\*om\b', 'from', clean)
+    clean = re.sub(r'\b111\.\s+THE\s+ADVENTURE', 'III. THE ADVENTURE', clean)
+    clean = re.sub(r'\bY\s+dear\s+fellow\b', 'My dear fellow', clean)
+    clean = re.sub(r'(?:^|\n)\s*[Oo]\s+Sherlock\s+Holmes\b', '\nTo Sherlock Holmes', clean)
     return clean
 
 
@@ -60,6 +68,8 @@ def strip_html_tags(raw_html: str) -> str:
     if not raw_html:
         return ""
     clean = clean_ocr_disclaimers(raw_html)
+    clean = re.sub(r'(?is)<head.*?>.*?</head>', ' ', clean)
+    clean = re.sub(r'(?is)<title.*?>.*?</title>', ' ', clean)
     clean = re.sub(r'(?is)<script.*?>.*?</script>', ' ', clean)
     clean = re.sub(r'(?is)<style.*?>.*?</style>', ' ', clean)
     clean = re.sub(r'(?i)<(br|p|div|h[1-6]|li|tr)[^>]*>', '\n', clean)
@@ -177,6 +187,24 @@ def split_by_chapter_headings(text: str):
             name_part = m.group(2).strip().title()
             chapters.append({
                 "title": f"Chapter {num_part}: {name_part}",
+                "raw_text": chunk
+            })
+        return chapters
+
+    # Diary / Journal month headings (e.g., SEPTEMBER, OCTOBER, NOVEMBER...)
+    month_pattern = re.compile(
+        r'(?:^|\n)[ \t]*(SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER|JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST)[ \t]*(?=\n|$)'
+    )
+    m_matches = list(month_pattern.finditer(text))
+    if len(m_matches) >= 2:
+        chapters = []
+        for i, m in enumerate(m_matches):
+            start = m.start()
+            end = m_matches[i + 1].start() if i + 1 < len(m_matches) else len(text)
+            chunk = text[start:end].strip()
+            month_name = m.group(1).strip().title()
+            chapters.append({
+                "title": f"Chapter {i + 1}: {month_name}",
                 "raw_text": chunk
             })
         return chapters
@@ -466,6 +494,8 @@ def parse_epub(file_path: str, original_filename: str = ""):
                     if not trimmed:
                         continue
                     if re.match(r'^\d{1,4}$', trimmed):
+                        continue
+                    if re.match(r'^Page\s+\d+$', trimmed, re.I):
                         continue
                     if re.match(r'^(?:\d{1,4}\s+)?(?:ADVENTURES OF SHERLOCK HOLMES|HARRY POTTER)[.\s\d]*$', trimmed, re.I):
                         continue

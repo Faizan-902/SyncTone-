@@ -61,6 +61,59 @@ async function getOrCreateDefaultNovel() {
   return novelRes.rows[0].id;
 }
 
+function buildParsedSegmentsAndManifest(rawText, chapterTitle, chapterId) {
+  const parsedData = parseChapter(rawText || '', chapterTitle || 'Chapter', String(chapterId || '1'));
+  const voicedSegments = voiceProfiler.applyVoicesToSegments(parsedData.segments || []);
+  let currentMs = 0;
+
+  const mappedSegments = voicedSegments.map((s, segIdx) => {
+    const isImage = s.type === 'image' || (s.text && s.text.startsWith('[IMAGE:'));
+    const words = (s.text || '').trim().split(/\s+/).length;
+    const durationMs = isImage ? 1000 : Math.max(800, Math.round((words / 2.8) * 1000));
+    const start_ms = currentMs;
+    const end_ms = start_ms + durationMs;
+    currentMs = end_ms + 250;
+
+    const voiceId = s.assigned_voice_id || (s.type === 'narration' ? 'en-GB-RyanNeural' : 'en-GB-ThomasNeural');
+
+    return {
+      order: segIdx + 1,
+      segment_id: segIdx + 1,
+      type: isImage ? 'image' : s.type,
+      text: s.text,
+      image_url: s.image_url || (isImage && s.text ? (s.text.match(/\[IMAGE:([^\]]+)\]/) || [])[1] : null),
+      character_id: isImage ? 'image' : (s.speaker_id || (s.type === 'narration' ? 'narrator' : 'unknown')),
+      speaker_id: isImage ? 'image' : (s.speaker_id || (s.type === 'narration' ? 'narrator' : 'unknown')),
+      speaker_name: isImage ? 'Illustration' : (s.speaker_name || (s.type === 'narration' ? 'Narrator' : 'Unknown')),
+      voice_id: voiceId,
+      assigned_voice_id: voiceId,
+      start_ms,
+      end_ms,
+      confidence: s.attribution_confidence !== undefined ? s.attribution_confidence : 1.0,
+      source: s.attribution_source || 'narrator_default',
+    };
+  });
+
+  const totalDurationMs = mappedSegments.length > 0 ? mappedSegments[mappedSegments.length - 1].end_ms : 0;
+  const timeline = mappedSegments.map((s) => ({
+    order: s.order,
+    segment_id: s.segment_id,
+    start_ms: s.start_ms,
+    end_ms: s.end_ms,
+    character_id: s.character_id,
+    voice_id: s.voice_id,
+    text: s.text,
+    type: s.type,
+    image_url: s.image_url || null,
+  }));
+
+  return {
+    mappedSegments,
+    totalDurationMs,
+    timeline,
+  };
+}
+
 /**
  * Common ingestion helper: performs atomic PostgreSQL transaction and MongoDB document creation.
  */
@@ -128,7 +181,13 @@ async function ingestChapter({ novelId, title, text, chapterNumber, requestedBy 
     job.novel_id = novelId;
     job.chapter_id = createdPgChapter.id;
 
-    // 5. Create document in MongoDB (linked via pg_chapter_id)
+    // 5. Create document in MongoDB (linked via pg_chapter_id) with pre-parsed segments & timeline
+    const { mappedSegments, totalDurationMs, timeline } = buildParsedSegmentsAndManifest(
+      text,
+      createdPgChapter.title,
+      createdPgChapter.id
+    );
+
     const mongoDoc = new Chapter({
       pg_chapter_id: createdPgChapter.id,
       novel_id: createdPgChapter.novel_id,
@@ -137,11 +196,11 @@ async function ingestChapter({ novelId, title, text, chapterNumber, requestedBy 
       raw_text: text,
       audio_version: 1,
       manifest: {
-        total_duration_ms: 0,
-        audio_url: '',
-        timeline: [],
+        total_duration_ms: totalDurationMs,
+        audio_url: `/api/stream/${createdPgChapter.id}`,
+        timeline,
       },
-      segments: [],
+      segments: mappedSegments,
     });
     await mongoDoc.save();
 
@@ -501,10 +560,12 @@ router.post('/synthesize/:chapter_id', authenticateUser, async (req, res) => {
     const segmentAudios = [];
 
     const activeAssignments = voiceProfiler.getAllAssignments();
+    const preferredEngine = req.body?.engine || req.query?.engine || 'auto';
 
     for (let i = 0; i < total; i++) {
       const seg = chapterDoc.segments[i];
       const effectiveVoiceId = activeAssignments[seg.character_id] || seg.voice_id;
+      const isImageSeg = seg.type === 'image' || (seg.text && seg.text.startsWith('[IMAGE:'));
 
       broadcastProgress(chapter_id, {
         chapter_id,
@@ -514,9 +575,15 @@ router.post('/synthesize/:chapter_id', authenticateUser, async (req, res) => {
         status: 'synthesizing',
       });
 
+      if (isImageSeg) {
+        continue;
+      }
+
       const result = await ttsEngine.synthesizeSegment(
         seg.text,
-        effectiveVoiceId
+        effectiveVoiceId,
+        1.0,
+        preferredEngine
       );
 
       const rawBuf = result.audio_buffer || result.pcm_buffer;
@@ -830,13 +897,35 @@ router.get('/chapters/:id', async (req, res) => {
       return res.status(404).json({ error: 'Chapter not found' });
     }
 
+    // Auto-parse on read if raw_text exists in MongoDB but segments were not yet parsed
+    if (chapterDoc && (!chapterDoc.segments || chapterDoc.segments.length === 0) && chapterDoc.raw_text) {
+      const { mappedSegments, totalDurationMs, timeline } = buildParsedSegmentsAndManifest(
+        chapterDoc.raw_text,
+        chapterDoc.title || pgData.title,
+        id
+      );
+      chapterDoc.segments = mappedSegments;
+      if (!chapterDoc.manifest || !chapterDoc.manifest.timeline || chapterDoc.manifest.timeline.length === 0) {
+        chapterDoc.manifest = {
+          total_duration_ms: totalDurationMs,
+          audio_url: `/api/stream/${id}`,
+          timeline,
+        };
+      }
+      await chapterDoc.save().catch(() => {});
+    }
+
     const docData = chapterDoc ? (chapterDoc.toObject ? chapterDoc.toObject() : chapterDoc) : {};
+    const audioPathMp3 = path.join(config.paths.outputDir, `${id}.mp3`);
+    const audioPathWav = path.join(config.paths.outputDir, `${id}.wav`);
+    const hasStudioAudio = fs.existsSync(audioPathMp3) || fs.existsSync(audioPathWav);
 
     return res.json({
       ...pgData,
       ...docData,
       id: pgData.id || docData.pg_chapter_id,
       pg_chapter_id: pgData.id || docData.pg_chapter_id,
+      has_studio_audio: hasStudioAudio,
     });
   } catch (err) {
     console.error('[Get Chapter Error]:', err.message);
@@ -852,6 +941,22 @@ router.get('/chapters/:id/segments', async (req, res) => {
   const { id } = req.params;
   try {
     const chapterDoc = await Chapter.findOne({ pg_chapter_id: id });
+    if (chapterDoc && (!chapterDoc.segments || chapterDoc.segments.length === 0) && chapterDoc.raw_text) {
+      const { mappedSegments, totalDurationMs, timeline } = buildParsedSegmentsAndManifest(
+        chapterDoc.raw_text,
+        chapterDoc.title,
+        id
+      );
+      chapterDoc.segments = mappedSegments;
+      if (!chapterDoc.manifest || !chapterDoc.manifest.timeline || chapterDoc.manifest.timeline.length === 0) {
+        chapterDoc.manifest = {
+          total_duration_ms: totalDurationMs,
+          audio_url: `/api/stream/${id}`,
+          timeline,
+        };
+      }
+      await chapterDoc.save().catch(() => {});
+    }
     if (!chapterDoc || !chapterDoc.segments || chapterDoc.segments.length === 0) {
       return res.status(404).json({ error: 'Chapter segments not found or not yet parsed.' });
     }

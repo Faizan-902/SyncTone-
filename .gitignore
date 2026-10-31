@@ -64,10 +64,13 @@ dist-ssr/
 .tsbuildinfo
 
 # Model Weights, Checkpoints & TTS Voice Caches (Large Binaries)
-models_cache/*
-!models_cache/.gitkeep
+**/models_cache/*
+!**/models_cache/.gitkeep
 /models/
 !novel-audio-synthesizer/backend/src/models/
+*.onnx
+*.bin
+*.pth
 kokoro-v0_19.onnx
 voices.bin
 
