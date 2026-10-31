@@ -1,4 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
+import {
+  BrowserRouter,
+  useInRouterContext,
+  useNavigate,
+  useLocation,
+} from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import { useAudioSync } from './hooks/useAudioSync';
 import { usePlaybackProgress } from './hooks/usePlaybackProgress';
@@ -8,26 +14,90 @@ import { api } from './services/api';
 import SidebarNav from './components/SidebarNav';
 import TopHeader from './components/TopHeader';
 import NovelCatalog from './components/NovelCatalog';
-import NovelDetails from './components/NovelDetails';
-const ReaderView = React.lazy(() => import('./components/ReaderView'));
-import AudioPlayer from './components/AudioPlayer';
-import CharacterRoster from './components/CharacterRoster';
-import SynthesisProgressBar from './components/SynthesisProgressBar';
 import ErrorBoundary from './components/ErrorBoundary';
-import AuthModal from './components/AuthModal';
-import AddNovelModal from './components/AddNovelModal';
-import UploadChapterModal from './components/UploadChapterModal';
-import SettingsModal from './components/SettingsModal';
 import { IconClock, IconX } from './components/icons';
 import { executeViewTransition } from './tokens/motion';
 
+// Lazy route-level views
+const NovelDetails = React.lazy(() => import('./components/NovelDetails'));
+const ReaderView = React.lazy(() => import('./components/ReaderView'));
+const UploadView = React.lazy(() => import('./components/UploadView'));
+const ProfileView = React.lazy(() => import('./components/ProfileView'));
+const AdminView = React.lazy(() => import('./components/AdminView'));
+const AudioPlayer = React.lazy(() => import('./components/AudioPlayer'));
+const SynthesisProgressBar = React.lazy(() => import('./components/SynthesisProgressBar'));
+
+// Lazy modals
+const AuthModal = React.lazy(() => import('./components/AuthModal'));
+const AddNovelModal = React.lazy(() => import('./components/AddNovelModal'));
+const UploadChapterModal = React.lazy(() => import('./components/UploadChapterModal'));
+const SettingsModal = React.lazy(() => import('./components/SettingsModal'));
+const CharacterRoster = React.lazy(() => import('./components/CharacterRoster'));
+
+// Modal preloader triggers for hover/focus
+export const preloadAuthModal = () => import('./components/AuthModal');
+export const preloadAddNovelModal = () => import('./components/AddNovelModal');
+export const preloadUploadChapterModal = () => import('./components/UploadChapterModal');
+export const preloadSettingsModal = () => import('./components/SettingsModal');
+export const preloadCharacterRoster = () => import('./components/CharacterRoster');
+
 const EMPTY_ARRAY = [];
 
-export default function App() {
+function RouteSkeleton() {
+  return (
+    <div className="flex flex-col gap-6 p-8 animate-pulse max-w-4xl mx-auto" aria-busy="true">
+      <div className="h-8 w-64 bg-[var(--border-subtle)] rounded-xl" />
+      <div className="h-64 w-full bg-[var(--border-subtle)] rounded-2xl" />
+      <div className="h-24 w-full bg-[var(--border-subtle)] rounded-2xl" />
+    </div>
+  );
+}
+
+function ModalSkeleton({ maxWidth = 'max-w-xl', onClose }) {
+  useEffect(() => {
+    if (!onClose) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-pulse"
+      role="dialog"
+      aria-modal="true"
+      aria-busy="true"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && onClose) onClose();
+      }}
+    >
+      <div className={`w-full ${maxWidth} theme-surface rounded-2xl border theme-border shadow-2xl p-6`}>
+        <div className="flex items-center justify-between pb-4 border-b theme-border">
+          <div className="h-5 w-32 bg-[var(--border-subtle)] rounded-lg" />
+          <div className="h-6 w-6 bg-[var(--border-subtle)] rounded-lg" />
+        </div>
+        <div className="py-6 space-y-4">
+          <div className="h-4 w-3/4 bg-[var(--border-subtle)] rounded-lg" />
+          <div className="h-10 w-full bg-[var(--border-subtle)] rounded-xl" />
+          <div className="h-20 w-full bg-[var(--border-subtle)] rounded-xl" />
+        </div>
+        <div className="flex justify-end gap-3 pt-4 border-t theme-border">
+          <div className="h-9 w-20 bg-[var(--border-subtle)] rounded-xl" />
+          <div className="h-9 w-28 bg-[var(--accent)]/30 rounded-xl" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AppContent() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const { user, role, isAuthenticated, isWriterOrAdmin } = useAuth();
 
-  // Navigation View: 'catalog' | 'details' | 'reader' | 'settings' | 'upload'
-  const [view, setView] = useState('catalog');
+  // Selected Novel & Chapter state
   const [selectedNovelId, setSelectedNovelId] = useState(null);
   const [currentNovel, setCurrentNovel] = useState(null);
   const [currentChapter, setCurrentChapter] = useState(null);
@@ -38,7 +108,7 @@ export default function App() {
   const [isLoadingChapter, setIsLoadingChapter] = useState(false);
   const [chapterError, setChapterError] = useState(null);
 
-  // Modals
+  // Modals state
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState('login');
   const [showAddNovelModal, setShowAddNovelModal] = useState(false);
@@ -50,7 +120,7 @@ export default function App() {
   // Audio Synchronization Hook (60fps loop with binary search)
   const audioSync = useAudioSync(chapterManifest?.timeline ?? EMPTY_ARRAY);
 
-  // 4NF Playback Progress Hook (auto-resume & throttled persistence)
+  // Playback Progress Hook (auto-resume & throttled persistence)
   const playbackProgress = usePlaybackProgress({
     novelId: currentNovel?.id,
     chapterId: currentChapter?.id,
@@ -65,13 +135,35 @@ export default function App() {
   // Fetch TTS / LLM model engine status when settings is opened
   useEffect(() => {
     if (showSettings && !modelStatus) {
-      api.get('/status/models')
-        .then((res) => setModelStatus(res))
+      api.status.models()
+        .then(setModelStatus)
         .catch(() => {});
     }
   }, [showSettings, modelStatus]);
 
-  // Helper for safe scroll without jsdom not-implemented warning
+  // Derive current view from location.pathname
+  const pathname = location.pathname;
+  let view = 'catalog';
+  let routeNovelId = null;
+  let routeChapterId = null;
+
+  if (pathname.startsWith('/novel/')) {
+    view = 'details';
+    routeNovelId = pathname.replace('/novel/', '').split('/')[0];
+  } else if (pathname.startsWith('/reader/')) {
+    view = 'reader';
+    routeChapterId = pathname.replace('/reader/', '').split('/')[0];
+  } else if (pathname === '/upload') {
+    view = 'upload';
+  } else if (pathname === '/profile') {
+    view = 'profile';
+  } else if (pathname === '/admin') {
+    view = 'admin';
+  } else if (pathname === '/settings') {
+    view = 'settings';
+  }
+
+  // Safe scroll helper
   const safeScrollToTop = (behavior = 'instant') => {
     try {
       if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
@@ -80,97 +172,73 @@ export default function App() {
     } catch (_) {}
   };
 
-  // Centralized navigation handler with View Transitions & History state sync
-  const handleNavigate = (targetView, novelId = null) => {
+  // Centralized navigation handler with real routing
+  const handleNavigate = useCallback((targetView, paramId = null) => {
     executeViewTransition(() => {
+      setShowRoster(false);
+      safeScrollToTop('instant');
+
       if (targetView === 'catalog') {
         setSelectedNovelId(null);
+        navigate('/');
       } else if (targetView === 'details') {
-        const id = novelId || selectedNovelId || currentNovel?.id;
-        if (id) setSelectedNovelId(id);
-      }
-      setView(targetView);
-      setShowRoster(false);
-
-      try {
-        if (typeof window !== 'undefined' && window.history) {
-          const stateNovelId = novelId || (targetView === 'details' ? (selectedNovelId || currentNovel?.id) : null);
-          window.history.pushState({ view: targetView, novelId: stateNovelId }, '', window.location.pathname);
+        const id = paramId || selectedNovelId || currentNovel?.id;
+        if (id) {
+          setSelectedNovelId(id);
+          navigate(`/novel/${id}`);
+        } else {
+          navigate('/');
         }
-      } catch (_) {}
-
-      safeScrollToTop('instant');
-    });
-  };
-
-  // Listen to browser Back/Forward navigation (popstate)
-  useEffect(() => {
-    const handlePopState = (event) => {
-      if (event.state && event.state.view) {
-        executeViewTransition(() => {
-          setView(event.state.view);
-          if (event.state.novelId) {
-            setSelectedNovelId(event.state.novelId);
-          }
-          setShowRoster(false);
-        });
-      } else {
-        executeViewTransition(() => {
-          setView('catalog');
-          setSelectedNovelId(null);
-          setShowRoster(false);
-        });
-      }
-    };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
-  // Fetch model status on mount
-  useEffect(() => {
-    api.status.models().then(setModelStatus).catch(() => {});
-  }, []);
-
-  // Open novel details with view transition
-  const handleSelectNovel = (novelId) => {
-    setShowRoster(false);
-    handleNavigate('details', novelId);
-  };
-
-  // Open chapter in Reader with view transition
-  const handleSelectChapter = async (novel, chapter) => {
-    executeViewTransition(() => {
-      setCurrentNovel(novel);
-      if (novel?.id) {
-        setSelectedNovelId(novel.id);
-      }
-      setCurrentChapter(chapter);
-      setView('reader');
-      setIsLoadingChapter(true);
-      setChapterError(null);
-      setChapterSegments(EMPTY_ARRAY);
-      setChapterManifest(null);
-
-      try {
-        if (typeof window !== 'undefined' && window.history) {
-          window.history.pushState(
-            { view: 'reader', novelId: novel?.id, chapterId: chapter?.id },
-            '',
-            window.location.pathname
-          );
+      } else if (targetView === 'reader') {
+        const chId = paramId || currentChapter?.id;
+        if (chId) {
+          navigate(`/reader/${chId}`);
         }
-      } catch (_) {}
-
-      safeScrollToTop('instant');
+      } else if (targetView === 'upload') {
+        navigate('/upload');
+      } else if (targetView === 'profile') {
+        navigate('/profile');
+      } else if (targetView === 'admin') {
+        navigate('/admin');
+      } else if (targetView === 'settings') {
+        setShowSettings(true);
+      }
     });
+  }, [navigate, selectedNovelId, currentNovel?.id, currentChapter?.id]);
+
+  // Sync routeNovelId with selectedNovelId
+  useEffect(() => {
+    if (view === 'details' && routeNovelId && routeNovelId !== selectedNovelId) {
+      setSelectedNovelId(routeNovelId);
+    }
+  }, [view, routeNovelId, selectedNovelId]);
+
+  // Load chapter helper (used for route navigation and deep links)
+  const loadChapterById = useCallback(async (chapterId, novel = null) => {
+    setIsLoadingChapter(true);
+    setChapterError(null);
+    setChapterSegments(EMPTY_ARRAY);
+    setChapterManifest(null);
 
     try {
-      // 1. Fetch chapter details & segments
-      const details = await api.chapters.get(chapter.id);
-      let segments = details.segments || [];
-      if (segments.length === 0 && (details.status === 'draft' || chapter?.status === 'draft' || !details.status)) {
+      const details = await api.chapters.get(chapterId);
+      setCurrentChapter(details);
+
+      if (!novel && details.novel_id) {
         try {
-          const parsedRes = await api.chapters.parse(chapter.id);
+          const fetchedNovel = await api.novels.get(details.novel_id);
+          setCurrentNovel(fetchedNovel);
+          setSelectedNovelId(fetchedNovel.id);
+        } catch (_) {}
+      } else if (novel) {
+        setCurrentNovel(novel);
+        setSelectedNovelId(novel.id);
+      }
+
+      let segments = details.segments || [];
+      if (segments.length === 0 && (details.status === 'draft' || !details.status)) {
+        try {
+          const parsedRes = await api.chapters.parse(chapterId);
           if (parsedRes?.segments) {
             segments = parsedRes.segments;
           }
@@ -178,11 +246,10 @@ export default function App() {
       }
       setChapterSegments(segments);
 
-      // 2. Determine manifest and audio stream URL
       let manifest = details.manifest || null;
       if (!manifest) {
         try {
-          manifest = await api.chapters.getManifest(chapter.id);
+          manifest = await api.chapters.getManifest(chapterId);
         } catch (_) {}
       }
 
@@ -190,7 +257,7 @@ export default function App() {
         const streamUrl =
           manifest.audio_url ||
           manifest.audio_stream_url ||
-          `/api/stream/${chapter.id}`;
+          `/api/stream/${chapterId}`;
         const enrichedTimeline = (manifest.timeline || []).map((t, idx) => {
           const seg =
             segments.find(
@@ -214,8 +281,8 @@ export default function App() {
         });
       } else {
         setChapterManifest({
-          audio_stream_url: `/api/stream/${chapter.id}`,
-          total_duration_ms: chapter.total_duration_ms || 0,
+          audio_stream_url: `/api/stream/${chapterId}`,
+          total_duration_ms: details.total_duration_ms || 0,
           timeline: segments.map((s, idx) => ({
             order: s.order || idx + 1,
             segment_id: s.segment_id !== undefined ? s.segment_id : idx + 1,
@@ -234,6 +301,35 @@ export default function App() {
     } finally {
       setIsLoadingChapter(false);
     }
+  }, []);
+
+  // Sync routeChapterId when navigating deep link to /reader/:chapterId
+  useEffect(() => {
+    if (view === 'reader' && routeChapterId) {
+      if (currentChapter?.id !== routeChapterId) {
+        loadChapterById(routeChapterId, currentNovel);
+      }
+    }
+  }, [view, routeChapterId, currentChapter?.id, currentNovel, loadChapterById]);
+
+  // Open novel details
+  const handleSelectNovel = (novelId) => {
+    setShowRoster(false);
+    handleNavigate('details', novelId);
+  };
+
+  // Open chapter in Reader
+  const handleSelectChapter = async (novel, chapter) => {
+    executeViewTransition(() => {
+      setCurrentNovel(novel);
+      if (novel?.id) {
+        setSelectedNovelId(novel.id);
+      }
+      setCurrentChapter(chapter);
+      safeScrollToTop('instant');
+      navigate(`/reader/${chapter.id}`);
+    });
+    loadChapterById(chapter.id, novel);
   };
 
   const handleOpenAuth = (mode = 'login') => {
@@ -254,278 +350,309 @@ export default function App() {
     handleNavigate('catalog');
   };
 
-  // Trigger re-synthesis of chapter
-  const handleSynthesizeCurrentChapter = async () => {
-    if (!currentChapter?.id) return;
-    try {
-      if (chapterSegments.length === 0) {
-        const parsedRes = await api.chapters.parse(currentChapter.id);
-        if (parsedRes?.segments) {
-          setChapterSegments(parsedRes.segments);
-        }
-      }
-      const synthRes = await api.chapters.synthesize(currentChapter.id);
-      const manifest = synthRes?.manifest || synthRes;
-      if (manifest && (manifest.timeline || manifest.audio_url || manifest.total_duration_ms)) {
-        setChapterManifest({
-          ...manifest,
-          audio_stream_url: `${manifest.audio_url || `/api/stream/${currentChapter.id}`}?t=${Date.now()}`,
-        });
-      }
-      try {
-        const refreshed = await api.chapters.get(currentChapter.id);
-        if (refreshed?.segments) {
-          setChapterSegments(refreshed.segments);
-        }
-      } catch (_) {}
-    } catch (err) {
-      setChapterError(err.message || 'Failed to trigger chapter synthesis.');
-    }
-  };
-
   return (
     <ErrorBoundary friendlyMessage="Something unexpected happened. Please refresh the page.">
       <div className="min-h-screen bg-[var(--bg-page)] text-[var(--text-main)] flex flex-col font-sans transition-colors duration-200">
-      {/* Editorial 72px Navigation Rail (Desktop) & Bottom Bar (Mobile) */}
-      <SidebarNav
-        currentView={view}
-        onNavigate={(targetView) => handleNavigate(targetView)}
-        onOpenSettings={() => setShowSettings(true)}
-        onOpenAuth={handleOpenAuth}
-        onOpenAddNovel={() => setShowAddNovelModal(true)}
-      />
+        {/* Navigation Rail (Desktop) & Bottom Bar (Mobile) */}
+        <SidebarNav
+          currentView={view}
+          onNavigate={handleNavigate}
+          onOpenSettings={() => setShowSettings(true)}
+          onOpenAuth={handleOpenAuth}
+          onOpenAddNovel={() => setShowAddNovelModal(true)}
+        />
 
-      {/* Main Viewport Container (Offset by 72px desktop rail) */}
-      <div className="flex-1 md:pl-[72px] flex flex-col min-h-screen">
-        {/* Top Sticky Header (Breadcrumbs, Search & Cast Controls for Details/Reader) */}
-        {view !== 'catalog' && (
-          <TopHeader
-            view={view}
-            currentNovel={currentNovel}
-            currentChapter={currentChapter}
-            onNavigate={(targetView) => handleNavigate(targetView)}
-            showRoster={showRoster}
-            onToggleRoster={() => setShowRoster((prev) => !prev)}
-            onOpenSettings={() => setShowSettings(true)}
-            onOpenAuth={handleOpenAuth}
-          />
-        )}
-
-        {/* Content Body Area */}
-        <main key={view} className="flex-1 w-full px-4 sm:px-8 py-6 motion-view-route">
-          {/* Playback Resume Toast */}
-          {view === 'reader' && playbackProgress.resumedAtMs !== null && (
-            <div className="mb-4 p-3.5 rounded-2xl bg-[var(--accent)] text-white shadow-xl flex items-center justify-between text-xs animate-slideDown">
-              <div className="flex items-center gap-2.5">
-                <IconClock className="w-4 h-4" />
-                <span>
-                  Resumed playback from previous session at{' '}
-                  <strong>
-                    {Math.floor(playbackProgress.resumedAtMs / 60000)}:
-                    {Math.floor((playbackProgress.resumedAtMs % 60000) / 1000)
-                      .toString()
-                      .padStart(2, '0')}
-                  </strong>
-                  .
-                </span>
-              </div>
-              <button
-                onClick={playbackProgress.dismissResumeBanner}
-                className="hover:opacity-80 p-1"
-                aria-label="Dismiss resume notification"
-              >
-                <IconX className="w-4 h-4" />
-              </button>
-            </div>
-          )}
-
-          {/* Live Synthesis Progress Banner */}
-          {view === 'reader' && synthesisProgress.status !== 'idle' && (
-            <div className="mb-6">
-              <SynthesisProgressBar
-                status={synthesisProgress.status}
-                percentComplete={synthesisProgress.percentComplete}
-                currentSegment={synthesisProgress.currentSegment}
-                totalSegments={synthesisProgress.totalSegments}
-                message={synthesisProgress.message}
-                error={synthesisProgress.error}
-                isConnected={synthesisProgress.isConnected}
-                onDismiss={synthesisProgress.reset}
-              />
-            </div>
-          )}
-
-          {/* VIEW 1: NOVEL CATALOG */}
-          {view === 'catalog' && (
-            <NovelCatalog
-              onSelectNovel={handleSelectNovel}
-              onSelectChapter={handleSelectChapter}
-              onOpenAddNovel={() => setShowAddNovelModal(true)}
-              onOpenSettings={() => setShowSettings(true)}
-              onOpenAuth={handleOpenAuth}
-              onNovelDeleted={handleNovelDeleted}
-            />
-          )}
-
-          {/* VIEW 2: NOVEL DETAILS */}
-          {view === 'details' && (selectedNovelId || currentNovel?.id) && (
-            <NovelDetails
-              novelId={selectedNovelId || currentNovel?.id}
-              onBack={() => handleNavigate('catalog')}
-              onSelectChapter={handleSelectChapter}
-              onOpenUploadChapter={(novel) => {
-                setCurrentNovel(novel);
-                setShowUploadChapterModal(true);
-              }}
-              onNovelDeleted={handleNovelDeleted}
-            />
-          )}
-
-          {/* VIEW 3: 60FPS SYNCHRONIZED READER */}
-          {view === 'reader' && (
-            <div className="space-y-6">
-              {/* Chapter Error State */}
-              {chapterError && (
-                <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs">
-                  {chapterError}
-                </div>
-              )}
-
-              {/* Chapter Loading Skeleton */}
-              {isLoadingChapter ? (
-                <div className="rounded-2xl theme-surface border p-12 text-center theme-muted text-sm animate-pulse space-y-3 max-w-3xl mx-auto">
-                  <div className="w-8 h-8 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin mx-auto" />
-                  <p>Loading chapter prose and synchronized timeline...</p>
-                </div>
-              ) : (
-                <ErrorBoundary friendlyMessage="Couldn't load the reader. Try opening the chapter again.">
-                  <React.Suspense fallback={
-                    <div className="flex flex-col gap-6 p-8 animate-pulse">
-                      <div className="h-8 w-64 bg-[var(--border-subtle)] rounded-xl" />
-                      <div className="h-[60vh] w-full bg-[var(--border-subtle)] rounded-2xl" />
-                      <div className="h-24 w-full bg-[var(--border-subtle)] rounded-2xl" />
-                    </div>
-                  }>
-                    <ReaderView
-                      segments={chapterSegments}
-                      activeSegmentId={audioSync.activeSegmentId}
-                      segmentProgress={audioSync.segmentProgress}
-                      isPlaying={audioSync.isPlaying}
-                      onSegmentClick={(segmentId) => {
-                        audioSync.seekToSegment(segmentId);
-                      }}
-                      currentNovel={currentNovel}
-                      currentChapter={currentChapter}
-                      onBack={() => {
-                        if (selectedNovelId || currentNovel?.id) {
-                          handleNavigate('details', selectedNovelId || currentNovel?.id);
-                        } else {
-                          handleNavigate('catalog');
-                        }
-                      }}
-                    />
-                  </React.Suspense>
-                </ErrorBoundary>
-              )}
-            </div>
-          )}
-        </main>
-
-        {/* Docked Sticky Bottom Audio Player */}
-        {view === 'reader' && chapterManifest && (
-          <ErrorBoundary friendlyMessage="Audio player encountered an issue.">
-            <AudioPlayer
-              audioRef={audioSync.audioRef}
-              audioUrl={chapterManifest.audio_stream_url}
-              isPlaying={audioSync.isPlaying}
-              currentTimeMs={audioSync.currentTimeMs}
-              totalDurationMs={chapterManifest.total_duration_ms || currentChapter?.total_duration_ms || 0}
-              onToggle={audioSync.toggle}
-              onSetPlaybackRate={audioSync.setPlaybackRate}
-              onSeek={audioSync.seekToTimeMs}
-              onPlay={audioSync.handlePlay}
-              onPause={audioSync.handlePause}
-              onEnded={audioSync.handleEnded}
-              onLoadedMetadata={audioSync.handleLoadedMetadata}
+        {/* Main Viewport Container */}
+        <div className="flex-1 md:pl-[72px] flex flex-col min-h-screen">
+          {view !== 'catalog' && (
+            <TopHeader
+              view={view}
               currentNovel={currentNovel}
               currentChapter={currentChapter}
-              playbackMode={audioSync.playbackMode}
-              onTogglePlaybackMode={audioSync.togglePlaybackMode}
-              ttsEngine={audioSync.ttsEngine}
-              onChangeTtsEngine={audioSync.setTtsEngine}
-              onSeekSegment={(dir) => {
-                const currentIdx = chapterSegments.findIndex(
-                  (s) => (s.segment_id ?? s.order) === audioSync.activeSegmentId
-                );
-                const targetIdx = Math.max(0, Math.min(chapterSegments.length - 1, (currentIdx >= 0 ? currentIdx : 0) + dir));
-                const targetSeg = chapterSegments[targetIdx];
-                if (targetSeg) {
-                  audioSync.seekToSegment(targetSeg.segment_id ?? targetSeg.order);
-                }
-              }}
+              onNavigate={handleNavigate}
+              showRoster={showRoster}
+              onToggleRoster={() => setShowRoster((prev) => !prev)}
+              onOpenSettings={() => setShowSettings(true)}
+              onOpenAuth={handleOpenAuth}
             />
-          </ErrorBoundary>
-        )}
+          )}
 
-        {/* Character Cast Roster Drawer */}
-        {showRoster && view === 'reader' && (
-          <CharacterRoster
-            chapterId={currentChapter?.id || ''}
-            segments={chapterSegments}
-            onClose={() => setShowRoster(false)}
-            onVoiceChange={(charId, newVoiceId) => {
-              setChapterSegments((prev) =>
-                prev.map((s) =>
-                  s.character_id === charId || s.speaker_id === charId
-                    ? { ...s, assigned_voice_id: newVoiceId, voice_id: newVoiceId }
-                    : s
-                )
-              );
-            }}
-          />
-        )}
+          {/* Content Body Area */}
+          <main key={view} className="flex-1 w-full px-4 sm:px-8 py-6 motion-view-route">
+            {/* Playback Resume Toast */}
+            {view === 'reader' && playbackProgress.resumedAtMs !== null && (
+              <div className="mb-4 p-3.5 rounded-2xl bg-[var(--accent)] text-white shadow-xl flex items-center justify-between text-xs animate-slideDown">
+                <div className="flex items-center gap-2.5">
+                  <IconClock className="w-4 h-4" />
+                  <span>
+                    Resumed playback from previous session at{' '}
+                    <strong>
+                      {Math.floor(playbackProgress.resumedAtMs / 60000)}:
+                      {Math.floor((playbackProgress.resumedAtMs % 60000) / 1000)
+                        .toString()
+                        .padStart(2, '0')}
+                    </strong>
+                    .
+                  </span>
+                </div>
+                <button
+                  onClick={playbackProgress.dismissResumeBanner}
+                  className="hover:opacity-80 p-1"
+                  aria-label="Dismiss resume notification"
+                >
+                  <IconX className="w-4 h-4" />
+                </button>
+              </div>
+            )}
 
-        {/* Auth Modal (Login / Register) */}
-        <AuthModal
-          isOpen={showAuthModal}
-          initialMode={authMode}
-          onClose={() => setShowAuthModal(false)}
-        />
+            {/* Live Synthesis Progress Banner */}
+            {view === 'reader' && synthesisProgress.status !== 'idle' && (
+              <Suspense fallback={null}>
+                <div className="mb-6">
+                  <SynthesisProgressBar
+                    status={synthesisProgress.status}
+                    percentComplete={synthesisProgress.percentComplete}
+                    currentSegment={synthesisProgress.currentSegment}
+                    totalSegments={synthesisProgress.totalSegments}
+                    message={synthesisProgress.message}
+                    error={synthesisProgress.error}
+                    isConnected={synthesisProgress.isConnected}
+                    onDismiss={synthesisProgress.reset}
+                  />
+                </div>
+              </Suspense>
+            )}
 
-        {/* Add Novel Modal (Writer / Admin Role Gated) */}
-        <AddNovelModal
-          isOpen={showAddNovelModal}
-          onClose={() => setShowAddNovelModal(false)}
-          onOpenAuth={handleOpenAuth}
-          onSelectChapter={handleSelectChapter}
-          onNovelCreated={(newNovel, firstChapter) => {
-            if (firstChapter) {
-              handleSelectChapter(newNovel, firstChapter);
-            } else {
-              handleNavigate('details', newNovel.id);
-            }
-          }}
-        />
+            {/* VIEW 1: NOVEL CATALOG (Home) */}
+            {view === 'catalog' && (
+              <NovelCatalog
+                onSelectNovel={handleSelectNovel}
+                onSelectChapter={handleSelectChapter}
+                onOpenAddNovel={() => setShowAddNovelModal(true)}
+                onOpenSettings={() => setShowSettings(true)}
+                onOpenAuth={handleOpenAuth}
+                onNovelDeleted={handleNovelDeleted}
+              />
+            )}
 
-        {/* Upload Chapter Modal */}
-        <UploadChapterModal
-          isOpen={showUploadChapterModal}
-          novel={currentNovel}
-          onClose={() => setShowUploadChapterModal(false)}
-          onChapterUploaded={(newChapter) => {
-            handleSelectChapter(currentNovel, newChapter);
-          }}
-        />
+            {/* VIEW 2: NOVEL DETAILS */}
+            {view === 'details' && (selectedNovelId || currentNovel?.id) && (
+              <ErrorBoundary friendlyMessage="Couldn't load novel details.">
+                <Suspense fallback={<RouteSkeleton />}>
+                  <NovelDetails
+                    novelId={selectedNovelId || currentNovel?.id}
+                    onBack={() => handleNavigate('catalog')}
+                    onSelectChapter={handleSelectChapter}
+                    onOpenUploadChapter={(novel) => {
+                      setCurrentNovel(novel);
+                      setShowUploadChapterModal(true);
+                    }}
+                    onNovelDeleted={handleNovelDeleted}
+                  />
+                </Suspense>
+              </ErrorBoundary>
+            )}
 
-        {/* Neural Engine Settings Modal */}
-        {showSettings && (
-          <SettingsModal
-            modelStatus={modelStatus}
-            onClose={() => setShowSettings(false)}
-          />
-        )}
+            {/* VIEW 3: SYNCHRONIZED READER */}
+            {view === 'reader' && (
+              <div className="space-y-6">
+                {chapterError && (
+                  <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs">
+                    {chapterError}
+                  </div>
+                )}
+
+                {isLoadingChapter ? (
+                  <div className="rounded-2xl theme-surface border theme-border p-12 text-center theme-muted text-sm animate-pulse space-y-3 max-w-3xl mx-auto">
+                    <div className="w-8 h-8 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin mx-auto" />
+                    <p>Loading chapter prose and synchronized timeline...</p>
+                  </div>
+                ) : (
+                  <ErrorBoundary friendlyMessage="Couldn't load the reader. Try opening the chapter again.">
+                    <Suspense fallback={<RouteSkeleton />}>
+                      <ReaderView
+                        segments={chapterSegments}
+                        activeSegmentId={audioSync.activeSegmentId}
+                        segmentProgress={audioSync.segmentProgress}
+                        isPlaying={audioSync.isPlaying}
+                        onSegmentClick={(segmentId) => {
+                          audioSync.seekToSegment(segmentId);
+                        }}
+                        currentNovel={currentNovel}
+                        currentChapter={currentChapter}
+                        onBack={() => {
+                          if (selectedNovelId || currentNovel?.id) {
+                            handleNavigate('details', selectedNovelId || currentNovel?.id);
+                          } else {
+                            handleNavigate('catalog');
+                          }
+                        }}
+                      />
+                    </Suspense>
+                  </ErrorBoundary>
+                )}
+              </div>
+            )}
+
+            {/* VIEW 4: UPLOAD VIEW */}
+            {view === 'upload' && (
+              <ErrorBoundary friendlyMessage="Couldn't load upload studio.">
+                <Suspense fallback={<RouteSkeleton />}>
+                  <UploadView
+                    onOpenUploadModal={() => setShowAddNovelModal(true)}
+                    onOpenAuth={handleOpenAuth}
+                  />
+                </Suspense>
+              </ErrorBoundary>
+            )}
+
+            {/* VIEW 5: PROFILE VIEW */}
+            {view === 'profile' && (
+              <ErrorBoundary friendlyMessage="Couldn't load profile.">
+                <Suspense fallback={<RouteSkeleton />}>
+                  <ProfileView
+                    onOpenAuth={handleOpenAuth}
+                    onNavigateHome={() => handleNavigate('catalog')}
+                  />
+                </Suspense>
+              </ErrorBoundary>
+            )}
+
+            {/* VIEW 6: ADMIN VIEW */}
+            {view === 'admin' && (
+              <ErrorBoundary friendlyMessage="Couldn't load administration.">
+                <Suspense fallback={<RouteSkeleton />}>
+                  <AdminView
+                    onNavigateHome={() => handleNavigate('catalog')}
+                    onOpenSettings={() => setShowSettings(true)}
+                  />
+                </Suspense>
+              </ErrorBoundary>
+            )}
+          </main>
+
+          {/* Sticky Bottom Audio Player */}
+          {view === 'reader' && chapterManifest && (
+            <ErrorBoundary friendlyMessage="Audio player encountered an issue.">
+              <Suspense fallback={null}>
+                <AudioPlayer
+                  audioRef={audioSync.audioRef}
+                  audioUrl={chapterManifest.audio_stream_url}
+                  isPlaying={audioSync.isPlaying}
+                  currentTimeMs={audioSync.currentTimeMs}
+                  totalDurationMs={chapterManifest.total_duration_ms || currentChapter?.total_duration_ms || 0}
+                  onToggle={audioSync.toggle}
+                  onSetPlaybackRate={audioSync.setPlaybackRate}
+                  onSeek={audioSync.seekToTimeMs}
+                  onPlay={audioSync.handlePlay}
+                  onPause={audioSync.handlePause}
+                  onEnded={audioSync.handleEnded}
+                  onLoadedMetadata={audioSync.handleLoadedMetadata}
+                  currentNovel={currentNovel}
+                  currentChapter={currentChapter}
+                  playbackMode={audioSync.playbackMode}
+                  onTogglePlaybackMode={audioSync.togglePlaybackMode}
+                  ttsEngine={audioSync.ttsEngine}
+                  onChangeTtsEngine={audioSync.setTtsEngine}
+                  onSeekSegment={(dir) => {
+                    const currentIdx = chapterSegments.findIndex(
+                      (s) => (s.segment_id ?? s.order) === audioSync.activeSegmentId
+                    );
+                    const targetIdx = Math.max(0, Math.min(chapterSegments.length - 1, (currentIdx >= 0 ? currentIdx : 0) + dir));
+                    const targetSeg = chapterSegments[targetIdx];
+                    if (targetSeg) {
+                      audioSync.seekToSegment(targetSeg.segment_id ?? targetSeg.order);
+                    }
+                  }}
+                />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+
+          {/* Character Cast Roster Drawer */}
+          {showRoster && view === 'reader' && (
+            <Suspense fallback={null}>
+              <CharacterRoster
+                chapterId={currentChapter?.id || ''}
+                segments={chapterSegments}
+                onClose={() => setShowRoster(false)}
+                onVoiceChange={(charId, newVoiceId) => {
+                  setChapterSegments((prev) =>
+                    prev.map((s) =>
+                      s.character_id === charId || s.speaker_id === charId
+                        ? { ...s, assigned_voice_id: newVoiceId, voice_id: newVoiceId }
+                        : s
+                    )
+                  );
+                }}
+              />
+            </Suspense>
+          )}
+
+          {/* Lazy Modals with Obsidian Skeleton Fallback */}
+          {showAuthModal && (
+            <Suspense fallback={<ModalSkeleton maxWidth="max-w-3xl" onClose={() => setShowAuthModal(false)} />}>
+              <AuthModal
+                isOpen={showAuthModal}
+                initialMode={authMode}
+                onClose={() => setShowAuthModal(false)}
+              />
+            </Suspense>
+          )}
+
+          {showAddNovelModal && (
+            <Suspense fallback={<ModalSkeleton maxWidth="max-w-xl" onClose={() => setShowAddNovelModal(false)} />}>
+              <AddNovelModal
+                isOpen={showAddNovelModal}
+                onClose={() => setShowAddNovelModal(false)}
+                onOpenAuth={handleOpenAuth}
+                onSelectChapter={handleSelectChapter}
+                onNovelCreated={(newNovel, firstChapter) => {
+                  if (firstChapter) {
+                    handleSelectChapter(newNovel, firstChapter);
+                  } else {
+                    handleNavigate('details', newNovel.id);
+                  }
+                }}
+              />
+            </Suspense>
+          )}
+
+          {showUploadChapterModal && (
+            <Suspense fallback={<ModalSkeleton maxWidth="max-w-xl" onClose={() => setShowUploadChapterModal(false)} />}>
+              <UploadChapterModal
+                isOpen={showUploadChapterModal}
+                novel={currentNovel}
+                onClose={() => setShowUploadChapterModal(false)}
+                onChapterUploaded={(newChapter) => {
+                  handleSelectChapter(currentNovel, newChapter);
+                }}
+              />
+            </Suspense>
+          )}
+
+          {showSettings && (
+            <Suspense fallback={<ModalSkeleton maxWidth="max-w-lg" onClose={() => setShowSettings(false)} />}>
+              <SettingsModal
+                modelStatus={modelStatus}
+                onClose={() => setShowSettings(false)}
+              />
+            </Suspense>
+          )}
+        </div>
       </div>
-    </div>
     </ErrorBoundary>
   );
+}
+
+export default function App() {
+  const inRouter = useInRouterContext();
+  if (!inRouter) {
+    return (
+      <BrowserRouter>
+        <AppContent />
+      </BrowserRouter>
+    );
+  }
+  return <AppContent />;
 }

@@ -1,0 +1,87 @@
+import React from 'react';
+import { useAuth } from '../hooks/useAuth';
+import { IconShield, IconSoundwave, IconUsers, IconBook } from './icons';
+
+export default function AdminView({ onNavigateHome, onOpenSettings }) {
+  const { role, isWriterOrAdmin } = useAuth();
+
+  if (role !== 'admin') {
+    return (
+      <div className="max-w-md mx-auto py-16 px-4 text-center">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[var(--surface-elevated)] border theme-border flex items-center justify-center text-[var(--accent)]">
+          <IconShield className="w-8 h-8" />
+        </div>
+        <h2 className="text-xl font-bold theme-heading font-serif mb-2">Restricted Access</h2>
+        <p className="text-sm theme-muted mb-6">
+          This area is available only to system administrators. If you believe this is an error, please sign in with an administrator account.
+        </p>
+        <button
+          onClick={onNavigateHome}
+          className="px-6 py-2.5 rounded-xl bg-[var(--accent)] text-white text-xs font-bold hover:bg-[var(--accent-hover)] transition shadow-sm"
+        >
+          Return to Library
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto py-8 px-4">
+      <div className="flex items-center justify-between mb-6 pb-4 border-b theme-border">
+        <div>
+          <h1 className="text-2xl font-bold theme-heading font-serif">Studio Administration</h1>
+          <p className="text-xs theme-muted mt-1">
+            System overview, voice synthesis status, and library management.
+          </p>
+        </div>
+        <button
+          onClick={onOpenSettings}
+          className="px-4 py-2 rounded-xl bg-[var(--accent)] text-white text-xs font-bold hover:bg-[var(--accent-hover)] transition shadow-sm"
+        >
+          Voice Settings
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <div className="p-5 rounded-2xl theme-surface border theme-border shadow-sm">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2.5 rounded-xl bg-[var(--accent)]/15 text-[var(--accent)]">
+              <IconSoundwave className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs theme-muted">Voice Synthesis</p>
+              <p className="text-base font-bold theme-heading text-status-success">Ready</p>
+            </div>
+          </div>
+          <p className="text-xs theme-muted">Edge Neural and Kokoro voices are active.</p>
+        </div>
+
+        <div className="p-5 rounded-2xl theme-surface border theme-border shadow-sm">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2.5 rounded-xl bg-blue-500/15 text-blue-400">
+              <IconBook className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs theme-muted">Library Publications</p>
+              <p className="text-base font-bold theme-heading">All Channels</p>
+            </div>
+          </div>
+          <p className="text-xs theme-muted">Verified classics and community manuscripts.</p>
+        </div>
+
+        <div className="p-5 rounded-2xl theme-surface border theme-border shadow-sm">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2.5 rounded-xl bg-emerald-500/15 text-emerald-400">
+              <IconUsers className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs theme-muted">Access Control</p>
+              <p className="text-base font-bold theme-heading">Enforced</p>
+            </div>
+          </div>
+          <p className="text-xs theme-muted">Role-based permissions with secure session cookies.</p>
+        </div>
+      </div>
+    </div>
+  );
+}

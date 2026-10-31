@@ -32,13 +32,36 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,woff2}'],
+        globPatterns: [
+          '**/*.{css,html,svg,woff2}',
+          '**/index-*.js',
+          '**/react-vendor-*.js',
+          '**/registerSW.js',
+        ],
+        globIgnores: [
+          '**/pdf-*.js',
+          '**/pdf.worker*.mjs',
+          '**/foliate-*.js',
+          '**/stats.html',
+          '**/stats.json',
+        ],
         navigateFallback: '/offline.html',
         navigateFallbackDenylist: [/^\/api/, /^\/static/],
         runtimeCaching: [
           {
             urlPattern: /^\/api\/.*/i,
             handler: 'NetworkOnly',
+          },
+          {
+            urlPattern: /^.*\/assets\/(pdf|foliate|ReaderView).*\.js$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'lazy-reader-chunks',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 30 * 24 * 60 * 60,
+              },
+            },
           },
           {
             urlPattern: /^\/static\/(?!.*\.opus$).*/i,
@@ -75,8 +98,15 @@ export default defineConfig({
         manualChunks(id) {
           if (id.includes('pdfjs-dist')) return 'pdf';
           if (id.includes('foliate-js')) return 'foliate';
-          if (id.includes('tts-dom-cleaner')) return 'tts-cleaner';
-          if (id.includes('node_modules')) return 'vendor';
+          if (
+            id.includes('node_modules/react/') ||
+            id.includes('node_modules/react-dom/') ||
+            id.includes('node_modules/scheduler/') ||
+            id.includes('node_modules/react-router/') ||
+            id.includes('node_modules/react-router-dom/')
+          ) {
+            return 'react-vendor';
+          }
         },
       },
     },

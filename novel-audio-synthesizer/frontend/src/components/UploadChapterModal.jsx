@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { LazyMotion, domAnimation, m, useReducedMotion } from 'framer-motion';
 import { api, ApiError } from '../services/api';
 import { sanitizeTextWithTtsDomCleaner } from '../utils/ttsSanitizer';
 import { IconUpload, IconX } from './icons';
@@ -68,25 +68,26 @@ export default function UploadChapterModal({ isOpen, novel, onClose, onChapterUp
   };
 
   return (
-    <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="upload-chapter-modal-title"
-      variants={backdropVariants}
-      initial="hidden"
-      animate="visible"
-      exit="hidden"
-      transition={{ duration: 0.2 }}
-    >
-      <motion.div
-        className="w-full max-w-xl theme-surface rounded-2xl shadow-2xl border overflow-hidden"
-        variants={panelVariants}
+    <LazyMotion features={domAnimation}>
+      <m.div
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="upload-chapter-modal-title"
+        variants={backdropVariants}
         initial="hidden"
         animate="visible"
         exit="hidden"
-        transition={{ duration: 0.2, ease: 'easeOut' }}
+        transition={{ duration: 0.2 }}
       >
+        <m.div
+          className="w-full max-w-xl theme-surface rounded-2xl shadow-2xl border overflow-hidden"
+          variants={panelVariants}
+          initial="hidden"
+          animate="visible"
+          exit="hidden"
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+        >
         <div className="p-6 border-b theme-border flex items-center justify-between">
           <div>
             <h2 id="upload-chapter-modal-title" className="text-base font-bold theme-heading flex items-center gap-2">
@@ -203,7 +204,8 @@ export default function UploadChapterModal({ isOpen, novel, onClose, onChapterUp
             </button>
           </div>
         </form>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
+  </LazyMotion>
   );
 }

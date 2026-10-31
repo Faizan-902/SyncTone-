@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
+import { preloadAuthModal, preloadAddNovelModal, preloadSettingsModal } from '../App';
 import {
   IconSoundwave,
   IconBook,
@@ -68,6 +69,8 @@ export default function SidebarNav({
             {isWriterOrAdmin && onOpenAddNovel && (
               <button
                 onClick={onOpenAddNovel}
+                onMouseEnter={preloadAddNovelModal}
+                onFocus={preloadAddNovelModal}
                 className="group relative flex items-center justify-center w-11 h-11 rounded-xl theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition cursor-pointer"
                 title="Create New Novel"
                 aria-label="Create New Novel"
@@ -79,6 +82,8 @@ export default function SidebarNav({
             {/* Settings */}
             <button
               onClick={onOpenSettings}
+              onMouseEnter={preloadSettingsModal}
+              onFocus={preloadSettingsModal}
               className="group relative flex items-center justify-center w-11 h-11 rounded-xl theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition cursor-pointer"
               title="Settings & Preferences"
               aria-label="Settings"
@@ -115,6 +120,8 @@ export default function SidebarNav({
           ) : (
             <button
               onClick={() => onOpenAuth('login')}
+              onMouseEnter={preloadAuthModal}
+              onFocus={preloadAuthModal}
               className="w-10 h-10 rounded-xl theme-card flex items-center justify-center theme-muted hover:text-[var(--text-main)] border hover:border-[var(--border-focus)] transition"
               title="Sign in / Register"
               aria-label="Account / Sign In"

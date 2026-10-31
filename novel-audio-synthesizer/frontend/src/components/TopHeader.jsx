@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { preloadAuthModal, preloadSettingsModal, preloadCharacterRoster } from '../App';
 import {
   IconSoundwave,
   IconUsers,
@@ -89,6 +90,8 @@ export default function TopHeader({
           {view === 'reader' && (
             <button
               onClick={onToggleRoster}
+              onMouseEnter={preloadCharacterRoster}
+              onFocus={preloadCharacterRoster}
               className={`px-3 py-1.5 text-xs font-medium rounded-xl border transition-all flex items-center gap-1.5 cursor-pointer ${
                 showRoster
                   ? 'bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)] shadow-sm'
@@ -104,6 +107,8 @@ export default function TopHeader({
           {/* Settings Trigger */}
           <button
             onClick={onOpenSettings}
+            onMouseEnter={preloadSettingsModal}
+            onFocus={preloadSettingsModal}
             className="p-2.5 theme-muted hover:text-[var(--text-main)] rounded-xl hover:bg-[var(--bg-hover)] border border-transparent hover:border-[var(--border-subtle)] transition cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
             title="Settings & Preferences"
             aria-label="Settings"
@@ -130,6 +135,8 @@ export default function TopHeader({
             <div className="flex items-center gap-2 pl-2 border-l border-[var(--border-subtle)]">
               <button
                 onClick={() => onOpenAuth('login')}
+                onMouseEnter={preloadAuthModal}
+                onFocus={preloadAuthModal}
                 className="px-3.5 py-2 text-xs font-semibold rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] shadow-sm transition flex items-center gap-1.5 cursor-pointer min-h-[36px]"
               >
                 <IconUser className="w-3.5 h-3.5" />

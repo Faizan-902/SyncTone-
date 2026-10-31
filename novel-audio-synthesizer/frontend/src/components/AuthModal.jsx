@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { LazyMotion, domAnimation, m, useReducedMotion } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
 import NovelCover from './NovelCover';
 import {
@@ -75,9 +75,9 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
         handleClose();
       }
     }
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, isSubmitting, onClose]);
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
+  }, [isOpen, isSubmitting]);
 
   if (!isOpen) return null;
 
@@ -127,29 +127,30 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
   const displayError = validationError || error;
 
   return (
-    <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="auth-modal-title"
-      variants={backdropVariants}
-      initial="hidden"
-      animate="visible"
-      exit="hidden"
-      transition={{ duration: 0.2 }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget && !isSubmitting) handleClose();
-      }}
-    >
-      <motion.div
-        ref={modalRef}
-        className="w-full max-w-md md:max-w-3xl theme-surface rounded-3xl shadow-2xl border overflow-hidden flex flex-col md:flex-row"
-        variants={panelVariants}
+    <LazyMotion features={domAnimation}>
+      <m.div
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="auth-modal-title"
+        variants={backdropVariants}
         initial="hidden"
         animate="visible"
         exit="hidden"
-        transition={{ duration: 0.2, ease: 'easeOut' }}
+        transition={{ duration: 0.2 }}
+        onClick={(e) => {
+          if (e.target === e.currentTarget && !isSubmitting) handleClose();
+        }}
       >
+        <m.div
+          ref={modalRef}
+          className="w-full max-w-md md:max-w-3xl theme-surface rounded-3xl shadow-2xl border overflow-hidden flex flex-col md:flex-row"
+          variants={panelVariants}
+          initial="hidden"
+          animate="visible"
+          exit="hidden"
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+        >
         {/* Left Column: Accessible Authentication Form */}
         <div className="w-full md:w-1/2 p-6 sm:p-8 flex flex-col justify-between">
           <div>
@@ -346,7 +347,8 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
             </div>
           </div>
         </div>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
+  </LazyMotion>
   );
 }

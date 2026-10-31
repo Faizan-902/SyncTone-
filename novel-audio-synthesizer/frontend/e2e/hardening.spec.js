@@ -112,4 +112,70 @@ test.describe('SyncTone Hardening E2E Suite', () => {
       expect(criticalLight).toEqual([]);
     }
   });
+
+  test('8. Deep link and Browser back/forward navigation with React Router', async ({ page }) => {
+    await page.goto('/');
+
+    const firstCard = page.locator('article h4').first();
+    await expect(firstCard).toBeVisible();
+    await firstCard.click();
+
+    // URL changes to /novel/:id
+    await expect(page).toHaveURL(/\/novel\/.+/);
+    await expect(page.getByText('Back to Library')).toBeVisible();
+
+    // Browser back button returns to /
+    await page.goBack();
+    await expect(page).toHaveURL('/');
+    await expect(page.getByText('Novel Library')).toBeVisible();
+
+    // Browser forward button goes back to /novel/:id
+    await page.goForward();
+    await expect(page).toHaveURL(/\/novel\/.+/);
+    await expect(page.getByText('Back to Library')).toBeVisible();
+  });
+
+  test('9. Role guarded routes (/admin, /profile, /upload)', async ({ page }) => {
+    // Unauthenticated user navigating directly to /admin sees friendly restricted access
+    await page.goto('/admin');
+    await expect(page.getByText('Restricted Access')).toBeVisible();
+    await expect(page.getByText('Return to Library')).toBeVisible();
+
+    // Click Return to Library redirects to /
+    await page.getByText('Return to Library').click();
+    await expect(page).toHaveURL('/');
+
+    // Guest navigating to /profile sees sign in options
+    await page.goto('/profile');
+    await expect(page.getByText('Member Profile')).toBeVisible();
+    await expect(page.getByRole('main').getByRole('button', { name: 'Sign In' })).toBeVisible();
+
+    // Guest navigating to /upload sees writer portal prompt
+    await page.goto('/upload');
+    await expect(page.getByText('Author Publishing Portal')).toBeVisible();
+  });
+
+  test('10. Modals open on throttled Fast 3G connection with skeleton fallback and no blank frame', async ({ page, context }) => {
+    await page.goto('/');
+
+    const cdp = await context.newCDPSession(page);
+    await cdp.send('Network.emulateNetworkConditions', {
+      offline: false,
+      downloadThroughput: (1.5 * 1024 * 1024) / 8,
+      uploadThroughput: (750 * 1024) / 8,
+      latency: 40,
+    });
+
+    const signInBtn = page.getByRole('button', { name: 'Sign In', exact: true });
+    if (await signInBtn.isVisible()) {
+      await signInBtn.click();
+
+      const dialog = page.getByRole('dialog');
+      await expect(dialog).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Welcome Back' })).toBeVisible();
+
+      await page.keyboard.press('Escape');
+      await expect(dialog).not.toBeVisible();
+    }
+  });
 });

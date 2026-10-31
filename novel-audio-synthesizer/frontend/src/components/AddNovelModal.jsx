@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { LazyMotion, domAnimation, m, useReducedMotion } from 'framer-motion';
 import { api, ApiError } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 import { extractChaptersFromText, parseNovelFileClientSide } from '../utils/ebookParser';
@@ -336,25 +336,26 @@ export default function AddNovelModal({
   };
 
   return (
-    <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="add-novel-modal-title"
-      variants={backdropVariants}
-      initial="hidden"
-      animate="visible"
-      exit="hidden"
-      transition={{ duration: 0.2 }}
-    >
-      <motion.div
-        className="w-full max-w-xl theme-surface rounded-2xl shadow-2xl border overflow-hidden max-h-[90vh] flex flex-col"
-        variants={panelVariants}
+    <LazyMotion features={domAnimation}>
+      <m.div
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="add-novel-modal-title"
+        variants={backdropVariants}
         initial="hidden"
         animate="visible"
         exit="hidden"
-        transition={{ duration: 0.2, ease: 'easeOut' }}
+        transition={{ duration: 0.2 }}
       >
+        <m.div
+          className="w-full max-w-xl theme-surface rounded-2xl shadow-2xl border overflow-hidden max-h-[90vh] flex flex-col"
+          variants={panelVariants}
+          initial="hidden"
+          animate="visible"
+          exit="hidden"
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+        >
         {/* Modal Header */}
         <div className="p-5 border-b theme-border flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-2">
@@ -678,7 +679,8 @@ export default function AddNovelModal({
             </button>
           </div>
         </form>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
+  </LazyMotion>
   );
 }

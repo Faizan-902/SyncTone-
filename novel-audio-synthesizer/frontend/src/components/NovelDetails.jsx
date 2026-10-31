@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api, ApiError } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
+import { preloadUploadChapterModal } from '../App';
 import NovelCover from './NovelCover';
 import {
   IconArrowLeft,
@@ -216,6 +217,8 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
               {isWriterOrAdmin && onOpenUploadChapter && (
                 <button
                   onClick={() => onOpenUploadChapter(novel)}
+                  onMouseEnter={preloadUploadChapterModal}
+                  onFocus={preloadUploadChapterModal}
                   className="px-4 py-3 theme-card hover:border-[var(--border-focus)] rounded-xl text-xs sm:text-sm font-semibold border min-h-[44px] transition flex items-center gap-1.5 cursor-pointer"
                 >
                   <IconPlus className="w-4 h-4" />
