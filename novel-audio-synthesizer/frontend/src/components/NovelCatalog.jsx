@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { api, ApiError } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
+import { useDebounce } from '../hooks/useDebounce';
 import NovelCover from './NovelCover';
 import {
   IconSearch,
@@ -33,6 +34,7 @@ export default function NovelCatalog({
   const [novels, setNovels] = useState([]);
   const [channel, setChannel] = useState('verified'); // 'verified' | 'community' | 'all'
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 200);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [novelToDelete, setNovelToDelete] = useState(null);
@@ -60,25 +62,51 @@ export default function NovelCatalog({
 
   const searchInputRef = useRef(null);
   const carouselRef = useRef(null);
+  const tabRefs = useRef([]);
+  const CHANNELS = ['verified', 'community', 'all'];
+
+  const handleTabKeyDown = (e, idx) => {
+    let nextIdx = idx;
+    if (e.key === 'ArrowRight') {
+      nextIdx = (idx + 1) % CHANNELS.length;
+    } else if (e.key === 'ArrowLeft') {
+      nextIdx = (idx - 1 + CHANNELS.length) % CHANNELS.length;
+    } else if (e.key === 'Home') {
+      nextIdx = 0;
+    } else if (e.key === 'End') {
+      nextIdx = CHANNELS.length - 1;
+    } else {
+      return;
+    }
+    e.preventDefault();
+    setChannel(CHANNELS[nextIdx]);
+    tabRefs.current[nextIdx]?.focus();
+  };
 
   // Fetch novels by channel filter
-  const fetchNovels = async (selectedChannel) => {
+  const fetchNovels = async (selectedChannel, signal) => {
     setIsLoading(true);
     setError(null);
     try {
       const channelParam = selectedChannel === 'all' ? undefined : selectedChannel;
       const data = await api.novels.list(channelParam);
+      if (signal && signal.aborted) return;
       setNovels(data.novels || []);
     } catch (err) {
+      if (signal && signal.aborted) return;
       const msg = err instanceof ApiError ? err.message : err.message || 'Failed to load novel catalog';
       setError(msg);
     } finally {
-      setIsLoading(false);
+      if (!signal || !signal.aborted) {
+        setIsLoading(false);
+      }
     }
   };
 
   useEffect(() => {
-    fetchNovels(channel);
+    const controller = new AbortController();
+    fetchNovels(channel, controller.signal);
+    return () => controller.abort();
   }, [channel]);
 
   // Global "/" keyboard shortcut to focus search
@@ -100,8 +128,8 @@ export default function NovelCatalog({
 
   // Filter novels by search query
   const filteredNovels = useMemo(() => {
-    if (!searchQuery.trim()) return novels;
-    const q = searchQuery.toLowerCase().trim();
+    if (!debouncedSearch.trim()) return novels;
+    const q = debouncedSearch.toLowerCase().trim();
     return novels.filter((n) => {
       const titleMatch = (n.title || '').toLowerCase().includes(q);
       const synopsisMatch = (n.synopsis || '').toLowerCase().includes(q);
@@ -109,7 +137,7 @@ export default function NovelCatalog({
       const narratorMatch = (n.narrator_name || '').toLowerCase().includes(q);
       return titleMatch || synopsisMatch || authorMatch || narratorMatch;
     });
-  }, [novels, searchQuery]);
+  }, [novels, debouncedSearch]);
 
   // Netflix-style automatic billboard rotation state
   const [featuredIndex, setFeaturedIndex] = useState(0);
@@ -122,14 +150,17 @@ export default function NovelCatalog({
 
   // Netflix-style automatic rotation timer (every 6000ms when not paused or searching)
   useEffect(() => {
-    if (searchQuery || isBillboardPaused || novels.length <= 1) return;
+    if (debouncedSearch || isBillboardPaused || novels.length <= 1) return;
+
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReduced) return;
 
     const timer = setInterval(() => {
       setFeaturedIndex((prev) => (prev + 1) % novels.length);
     }, 6000);
 
     return () => clearInterval(timer);
-  }, [searchQuery, isBillboardPaused, novels.length]);
+  }, [debouncedSearch, isBillboardPaused, novels.length]);
 
   // Featured Hero Novel (cycles automatically through novels)
   const featuredNovel = useMemo(() => {
@@ -167,7 +198,7 @@ export default function NovelCatalog({
       {/* ================================================================= */}
       {/* 1. MASTER STICKY GLASS HEADER (Single Unified Header)             */}
       {/* ================================================================= */}
-      <header className="sticky top-0 z-30 -mx-4 sm:-mx-8 px-4 sm:px-8 py-3.5 glass-header border-b flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+      <header className="sticky top-0 z-30 -mx-4 sm:-mx-8 px-4 sm:px-8 lg:px-8 py-3.5 glass-header border-b flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 min-h-[64px]">
         {/* Left: Heading & Instant Search */}
         <div className="flex items-center gap-4 flex-1 max-w-2xl">
           <div className="flex-shrink-0">
@@ -199,9 +230,12 @@ export default function NovelCatalog({
         <div className="flex items-center gap-2.5 overflow-x-auto pb-1 md:pb-0 flex-shrink-0">
           <div className="inline-flex p-1 rounded-xl theme-card border" role="tablist" aria-label="Channel selection">
             <button
+              ref={(el) => (tabRefs.current[0] = el)}
               role="tab"
               aria-selected={channel === 'verified'}
+              tabIndex={channel === 'verified' ? 0 : -1}
               onClick={() => setChannel('verified')}
+              onKeyDown={(e) => handleTabKeyDown(e, 0)}
               className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                 channel === 'verified'
                   ? 'bg-[var(--accent)] text-white shadow-sm'
@@ -211,9 +245,12 @@ export default function NovelCatalog({
               Verified Originals
             </button>
             <button
+              ref={(el) => (tabRefs.current[1] = el)}
               role="tab"
               aria-selected={channel === 'community'}
+              tabIndex={channel === 'community' ? 0 : -1}
               onClick={() => setChannel('community')}
+              onKeyDown={(e) => handleTabKeyDown(e, 1)}
               className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                 channel === 'community'
                   ? 'bg-[var(--accent)] text-white shadow-sm'
@@ -223,9 +260,12 @@ export default function NovelCatalog({
               Community Novels
             </button>
             <button
+              ref={(el) => (tabRefs.current[2] = el)}
               role="tab"
               aria-selected={channel === 'all'}
+              tabIndex={channel === 'all' ? 0 : -1}
               onClick={() => setChannel('all')}
+              onKeyDown={(e) => handleTabKeyDown(e, 2)}
               className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                 channel === 'all'
                   ? 'bg-[var(--accent)] text-white shadow-sm'
@@ -315,7 +355,7 @@ export default function NovelCatalog({
           {/* ================================================================= */}
           {/* 2. CINEMATIC HERO BILLBOARD (Full-Bleed Marquee Banner)           */}
           {/* ================================================================= */}
-          {featuredNovel && !searchQuery && (
+          {featuredNovel && !searchQuery.trim() && (
             <section
               className="relative w-full rounded-3xl overflow-hidden p-6 sm:p-12 md:p-16 border theme-border shadow-2xl flex flex-col md:flex-row items-center md:items-end justify-between gap-8 min-h-[480px] sm:min-h-[520px] transition-all duration-300"
               style={{
@@ -516,7 +556,7 @@ export default function NovelCatalog({
           {/* ================================================================= */}
           {/* 3. SECTION 1: TOP 10 NUMBERED CAROUSEL (<ol> List with Controls)  */}
           {/* ================================================================= */}
-          {top10Novels.length > 0 && !searchQuery && (
+          {top10Novels.length > 0 && !searchQuery.trim() && (
             <section className="space-y-4 pt-2" aria-label="Top 10 Audiobooks">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">

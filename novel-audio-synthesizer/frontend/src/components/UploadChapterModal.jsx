@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { api, ApiError } from '../services/api';
 import { sanitizeTextWithTtsDomCleaner } from '../utils/ttsSanitizer';
 import { IconUpload, IconX } from './icons';
@@ -10,6 +11,29 @@ export default function UploadChapterModal({ isOpen, novel, onClose, onChapterUp
   const [useTtsSanitizer, setUseTtsSanitizer] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+
+  const triggerRef = useRef(null);
+  const prefersReduced = useReducedMotion();
+
+  const backdropVariants = { hidden: { opacity: 0 }, visible: { opacity: 1 } };
+  const panelVariants = prefersReduced
+    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
+    : { hidden: { opacity: 0, scale: 0.95 }, visible: { opacity: 1, scale: 1 } };
+
+  // Store trigger element on open; restore focus on close
+  useEffect(() => {
+    if (isOpen) {
+      triggerRef.current = document.activeElement;
+    }
+  }, [isOpen]);
+
+  // ESC key handler
+  useEffect(() => {
+    if (!isOpen) return;
+    const h = (e) => { if (e.key === 'Escape') { onClose(); if (triggerRef.current) triggerRef.current.focus(); } };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [isOpen, onClose]);
 
   if (!isOpen || !novel) return null;
 
@@ -44,15 +68,28 @@ export default function UploadChapterModal({ isOpen, novel, onClose, onChapterUp
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm modal-scrim-enter"
+    <motion.div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
+      aria-labelledby="upload-chapter-modal-title"
+      variants={backdropVariants}
+      initial="hidden"
+      animate="visible"
+      exit="hidden"
+      transition={{ duration: 0.2 }}
     >
-      <div className="w-full max-w-xl theme-surface rounded-2xl shadow-2xl border overflow-hidden modal-panel-enter">
+      <motion.div
+        className="w-full max-w-xl theme-surface rounded-2xl shadow-2xl border overflow-hidden"
+        variants={panelVariants}
+        initial="hidden"
+        animate="visible"
+        exit="hidden"
+        transition={{ duration: 0.2, ease: 'easeOut' }}
+      >
         <div className="p-6 border-b theme-border flex items-center justify-between">
           <div>
-            <h2 className="text-base font-bold theme-heading flex items-center gap-2">
+            <h2 id="upload-chapter-modal-title" className="text-base font-bold theme-heading flex items-center gap-2">
               <IconUpload className="w-4 h-4 text-[var(--accent)]" />
               <span>Upload Chapter to {novel.title}</span>
             </h2>
@@ -166,7 +203,7 @@ export default function UploadChapterModal({ isOpen, novel, onClose, onChapterUp
             </button>
           </div>
         </form>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

@@ -1,4 +1,5 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { api, ApiError } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 import { extractChaptersFromText, parseNovelFileClientSide } from '../utils/ebookParser';
@@ -46,6 +47,28 @@ export default function AddNovelModal({
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const fileInputRef = useRef(null);
+  const triggerRef = useRef(null);
+  const prefersReduced = useReducedMotion();
+
+  const backdropVariants = { hidden: { opacity: 0 }, visible: { opacity: 1 } };
+  const panelVariants = prefersReduced
+    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
+    : { hidden: { opacity: 0, scale: 0.95 }, visible: { opacity: 1, scale: 1 } };
+
+  // Store trigger element when modal opens; restore focus on close
+  useEffect(() => {
+    if (isOpen) {
+      triggerRef.current = document.activeElement;
+    }
+  }, [isOpen]);
+
+  // ESC key handler
+  useEffect(() => {
+    if (!isOpen) return;
+    const h = (e) => { if (e.key === 'Escape') { onClose(); if (triggerRef.current) triggerRef.current.focus(); } };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -313,12 +336,25 @@ export default function AddNovelModal({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm modal-scrim-enter"
+    <motion.div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
+      aria-labelledby="add-novel-modal-title"
+      variants={backdropVariants}
+      initial="hidden"
+      animate="visible"
+      exit="hidden"
+      transition={{ duration: 0.2 }}
     >
-      <div className="w-full max-w-xl theme-surface rounded-2xl shadow-2xl border overflow-hidden modal-panel-enter max-h-[90vh] flex flex-col">
+      <motion.div
+        className="w-full max-w-xl theme-surface rounded-2xl shadow-2xl border overflow-hidden max-h-[90vh] flex flex-col"
+        variants={panelVariants}
+        initial="hidden"
+        animate="visible"
+        exit="hidden"
+        transition={{ duration: 0.2, ease: 'easeOut' }}
+      >
         {/* Modal Header */}
         <div className="p-5 border-b theme-border flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-2">
@@ -326,7 +362,7 @@ export default function AddNovelModal({
               <IconBook className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-bold theme-heading font-serif">Add New Novel</h2>
+              <h2 id="add-novel-modal-title" className="text-base font-bold theme-heading font-serif">Add New Novel</h2>
               <p className="text-[11px] theme-muted">
                 Import EPUB, PDF, TXT or author your novel with synchronized audio
               </p>
@@ -642,7 +678,7 @@ export default function AddNovelModal({
             </button>
           </div>
         </form>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

@@ -9,10 +9,11 @@ import SidebarNav from './components/SidebarNav';
 import TopHeader from './components/TopHeader';
 import NovelCatalog from './components/NovelCatalog';
 import NovelDetails from './components/NovelDetails';
-import ReaderView from './components/ReaderView';
+const ReaderView = React.lazy(() => import('./components/ReaderView'));
 import AudioPlayer from './components/AudioPlayer';
 import CharacterRoster from './components/CharacterRoster';
 import SynthesisProgressBar from './components/SynthesisProgressBar';
+import ErrorBoundary from './components/ErrorBoundary';
 import AuthModal from './components/AuthModal';
 import AddNovelModal from './components/AddNovelModal';
 import UploadChapterModal from './components/UploadChapterModal';
@@ -283,7 +284,8 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--bg-page)] text-[var(--text-main)] flex flex-col font-sans transition-colors duration-200">
+    <ErrorBoundary friendlyMessage="Something unexpected happened. Please refresh the page.">
+      <div className="min-h-screen bg-[var(--bg-page)] text-[var(--text-main)] flex flex-col font-sans transition-colors duration-200">
       {/* Editorial 72px Navigation Rail (Desktop) & Bottom Bar (Mobile) */}
       <SidebarNav
         currentView={view}
@@ -396,24 +398,34 @@ export default function App() {
                   <p>Loading chapter prose and synchronized timeline...</p>
                 </div>
               ) : (
-                <ReaderView
-                  segments={chapterSegments}
-                  activeSegmentId={audioSync.activeSegmentId}
-                  segmentProgress={audioSync.segmentProgress}
-                  isPlaying={audioSync.isPlaying}
-                  onSegmentClick={(segmentId) => {
-                    audioSync.seekToSegment(segmentId);
-                  }}
-                  currentNovel={currentNovel}
-                  currentChapter={currentChapter}
-                  onBack={() => {
-                    if (selectedNovelId || currentNovel?.id) {
-                      handleNavigate('details', selectedNovelId || currentNovel?.id);
-                    } else {
-                      handleNavigate('catalog');
-                    }
-                  }}
-                />
+                <ErrorBoundary friendlyMessage="Couldn't load the reader. Try opening the chapter again.">
+                  <React.Suspense fallback={
+                    <div className="flex flex-col gap-6 p-8 animate-pulse">
+                      <div className="h-8 w-64 bg-[var(--border-subtle)] rounded-xl" />
+                      <div className="h-[60vh] w-full bg-[var(--border-subtle)] rounded-2xl" />
+                      <div className="h-24 w-full bg-[var(--border-subtle)] rounded-2xl" />
+                    </div>
+                  }>
+                    <ReaderView
+                      segments={chapterSegments}
+                      activeSegmentId={audioSync.activeSegmentId}
+                      segmentProgress={audioSync.segmentProgress}
+                      isPlaying={audioSync.isPlaying}
+                      onSegmentClick={(segmentId) => {
+                        audioSync.seekToSegment(segmentId);
+                      }}
+                      currentNovel={currentNovel}
+                      currentChapter={currentChapter}
+                      onBack={() => {
+                        if (selectedNovelId || currentNovel?.id) {
+                          handleNavigate('details', selectedNovelId || currentNovel?.id);
+                        } else {
+                          handleNavigate('catalog');
+                        }
+                      }}
+                    />
+                  </React.Suspense>
+                </ErrorBoundary>
               )}
             </div>
           )}
@@ -421,36 +433,38 @@ export default function App() {
 
         {/* Docked Sticky Bottom Audio Player */}
         {view === 'reader' && chapterManifest && (
-          <AudioPlayer
-            audioRef={audioSync.audioRef}
-            audioUrl={chapterManifest.audio_stream_url}
-            isPlaying={audioSync.isPlaying}
-            currentTimeMs={audioSync.currentTimeMs}
-            totalDurationMs={chapterManifest.total_duration_ms || currentChapter?.total_duration_ms || 0}
-            onToggle={audioSync.toggle}
-            onSetPlaybackRate={audioSync.setPlaybackRate}
-            onSeek={audioSync.seekToTimeMs}
-            onPlay={audioSync.handlePlay}
-            onPause={audioSync.handlePause}
-            onEnded={audioSync.handleEnded}
-            onLoadedMetadata={audioSync.handleLoadedMetadata}
-            currentNovel={currentNovel}
-            currentChapter={currentChapter}
-            playbackMode={audioSync.playbackMode}
-            onTogglePlaybackMode={audioSync.togglePlaybackMode}
-            ttsEngine={audioSync.ttsEngine}
-            onChangeTtsEngine={audioSync.setTtsEngine}
-            onSeekSegment={(dir) => {
-              const currentIdx = chapterSegments.findIndex(
-                (s) => (s.segment_id ?? s.order) === audioSync.activeSegmentId
-              );
-              const targetIdx = Math.max(0, Math.min(chapterSegments.length - 1, (currentIdx >= 0 ? currentIdx : 0) + dir));
-              const targetSeg = chapterSegments[targetIdx];
-              if (targetSeg) {
-                audioSync.seekToSegment(targetSeg.segment_id ?? targetSeg.order);
-              }
-            }}
-          />
+          <ErrorBoundary friendlyMessage="Audio player encountered an issue.">
+            <AudioPlayer
+              audioRef={audioSync.audioRef}
+              audioUrl={chapterManifest.audio_stream_url}
+              isPlaying={audioSync.isPlaying}
+              currentTimeMs={audioSync.currentTimeMs}
+              totalDurationMs={chapterManifest.total_duration_ms || currentChapter?.total_duration_ms || 0}
+              onToggle={audioSync.toggle}
+              onSetPlaybackRate={audioSync.setPlaybackRate}
+              onSeek={audioSync.seekToTimeMs}
+              onPlay={audioSync.handlePlay}
+              onPause={audioSync.handlePause}
+              onEnded={audioSync.handleEnded}
+              onLoadedMetadata={audioSync.handleLoadedMetadata}
+              currentNovel={currentNovel}
+              currentChapter={currentChapter}
+              playbackMode={audioSync.playbackMode}
+              onTogglePlaybackMode={audioSync.togglePlaybackMode}
+              ttsEngine={audioSync.ttsEngine}
+              onChangeTtsEngine={audioSync.setTtsEngine}
+              onSeekSegment={(dir) => {
+                const currentIdx = chapterSegments.findIndex(
+                  (s) => (s.segment_id ?? s.order) === audioSync.activeSegmentId
+                );
+                const targetIdx = Math.max(0, Math.min(chapterSegments.length - 1, (currentIdx >= 0 ? currentIdx : 0) + dir));
+                const targetSeg = chapterSegments[targetIdx];
+                if (targetSeg) {
+                  audioSync.seekToSegment(targetSeg.segment_id ?? targetSeg.order);
+                }
+              }}
+            />
+          </ErrorBoundary>
         )}
 
         {/* Character Cast Roster Drawer */}
@@ -512,5 +526,6 @@ export default function App() {
         )}
       </div>
     </div>
+    </ErrorBoundary>
   );
 }
