@@ -76,7 +76,7 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
       <div className="space-y-6 animate-pulse">
         <div className="h-4 w-32 bg-[var(--border-subtle)] rounded" />
         <div className="rounded-3xl theme-surface border p-8 flex flex-col md:flex-row gap-8">
-          <div className="w-48 sm:w-56 aspect-[2/3] bg-[var(--border-subtle)] rounded-2xl flex-shrink-0" />
+          <div className="w-48 sm:w-56 aspect-[3/4] bg-[var(--border-subtle)] rounded-2xl flex-shrink-0" />
           <div className="flex-1 space-y-4">
             <div className="h-8 w-2/3 bg-[var(--border-subtle)] rounded-lg" />
             <div className="h-4 w-1/3 bg-[var(--border-subtle)] rounded" />
@@ -149,8 +149,8 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
         </div>
 
         <div className="relative z-10 max-w-6xl mx-auto flex flex-col md:flex-row gap-8 items-start">
-          {/* 2:3 Cover Poster (Left) with 3D Gilded Edge */}
-          <div className="w-52 sm:w-64 aspect-[2/3] rounded-2xl overflow-hidden border border-white/20 border-r-[6px] border-r-amber-100/25 shadow-2xl flex-shrink-0 relative group transform hover:scale-102 transition-transform">
+          {/* 3:4 Cover Poster (Left) with 3D Gilded Edge */}
+          <div className="w-52 sm:w-64 aspect-[3/4] rounded-2xl overflow-hidden border border-white/20 border-r-[6px] border-r-amber-100/25 shadow-2xl flex-shrink-0 relative group transform hover:scale-102 transition-transform">
             <NovelCover
               title={novel.title}
               author={novel.author_username}
