@@ -707,15 +707,7 @@ export default function NovelCatalog({
                     onFocus={preloadNovelDetails}
                     onPointerDown={preloadNovelDetails}
                     className="novel-card-hybrid group cursor-pointer"
-                    tabIndex={0}
-                    role="button"
                     aria-label={novel.title}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        onSelectNovel(novel.id);
-                      }
-                    }}
                   >
                     {/* Desktop Column Container / Mobile Flex Row (<640px) */}
                     <div className="flex flex-row sm:flex-col h-full min-w-0">
