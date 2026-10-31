@@ -46,3 +46,4 @@ export default function UploadView({ onOpenUploadModal, onOpenAuth }) {
     </div>
   );
 }
+

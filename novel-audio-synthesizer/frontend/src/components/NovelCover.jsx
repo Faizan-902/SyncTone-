@@ -35,19 +35,19 @@ const COVER_STYLES = {
     subtitle: 'Baker Street Archives',
   },
   classic: {
-    bg: 'bg-gradient-to-br from-[#141824] via-[#1f2638] to-[#0c0e17]',
-    border: 'border-indigo-400/30',
-    spine: 'border-l-indigo-400/50',
-    accentText: 'text-indigo-300',
+    bg: 'bg-gradient-to-br from-[#16171f] via-[#111217] to-[#0a0a0e]',
+    border: 'border-white/10',
+    spine: 'border-l-[var(--accent)]/60',
+    accentText: 'text-[var(--accent)]',
     subText: 'text-slate-300',
-    glow: 'rgba(99, 102, 241, 0.2)',
+    glow: 'rgba(224, 83, 60, 0.2)',
     emblem: (
-      <svg className="w-12 h-12 text-indigo-300/90 mx-auto drop-shadow-[0_0_10px_rgba(129,140,248,0.4)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <svg className="w-12 h-12 text-[var(--accent)]/90 mx-auto drop-shadow-[0_0_12px_rgba(224,83,60,0.4)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
       </svg>
     ),
-    eyebrow: 'LITERARY MASTERPIECE',
-    subtitle: 'Full Cast Edition',
+    eyebrow: 'ATELIER EDITION',
+    subtitle: 'Dramatic Audio Cast',
   },
   fantasy: {
     bg: 'bg-gradient-to-br from-[#1a0e24] via-[#2c143d] to-[#0d0714]',
@@ -86,7 +86,7 @@ export default function NovelCover({
   // If real image URL is valid, render image with rich book spine & ambient shadow
   if (coverUrl && !imgError) {
     return (
-      <div className={`relative overflow-hidden ${className}`}>
+      <div className={`relative overflow-hidden aspect-[2/3] w-full h-full ${className}`}>
         <img
           src={coverUrl}
           alt={title}
@@ -104,11 +104,12 @@ export default function NovelCover({
   // Generative Artistic Hardcover: Rich book design with spine binding, foil borders, and literary emblem
   return (
     <div
-      className={`relative w-full h-full ${style.bg} border ${style.border} border-l-[6px] ${style.spine} flex flex-col justify-between p-4 sm:p-5 select-none overflow-hidden ${className}`}
+      role="img"
+      aria-label={`${title} cover`}
+      className={`relative w-full h-full aspect-[2/3] ${style.bg} border ${style.border} border-l-[6px] ${style.spine} flex flex-col justify-between p-4 sm:p-5 select-none overflow-hidden ${className}`}
       style={{
         boxShadow: `inset 4px 0 12px rgba(0, 0, 0, 0.7), inset 1px 0 0 rgba(255, 255, 255, 0.15), 0 8px 24px ${style.glow}`,
       }}
-      aria-hidden="true"
     >
       {/* Ornate Gold/Foil Inner Border Frame */}
       <div className="absolute inset-2 sm:inset-2.5 border border-white/10 rounded pointer-events-none" />
@@ -142,6 +143,11 @@ export default function NovelCover({
           <p className={`text-[10px] font-mono tracking-widest uppercase font-bold ${style.accentText}`}>
             {style.subtitle}
           </p>
+          {author && (
+            <p className="text-[9px] font-mono text-slate-300 truncate max-w-[140px] mx-auto">
+              By {author}
+            </p>
+          )}
         </div>
       </div>
 

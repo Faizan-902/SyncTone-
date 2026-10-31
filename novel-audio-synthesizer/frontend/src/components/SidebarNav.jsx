@@ -13,6 +13,29 @@ import {
   IconScroll,
 } from './icons';
 
+export const Icon = React.memo(function Icon({ name, className = 'w-5 h-5', ...props }) {
+  switch (name) {
+    case 'soundwave':
+      return <IconSoundwave className={className} {...props} />;
+    case 'book':
+      return <IconBook className={className} {...props} />;
+    case 'plus':
+      return <IconPlus className={className} {...props} />;
+    case 'settings':
+      return <IconSettings className={className} {...props} />;
+    case 'user':
+      return <IconUser className={className} {...props} />;
+    case 'moon':
+      return <IconMoon className={className} {...props} />;
+    case 'sun':
+      return <IconSun className={className} {...props} />;
+    case 'scroll':
+      return <IconScroll className={className} {...props} />;
+    default:
+      return null;
+  }
+});
+
 export default function SidebarNav({
   currentView,
   onNavigate,
@@ -23,7 +46,6 @@ export default function SidebarNav({
   const { user, role, isAuthenticated, isWriterOrAdmin, logout } = useAuth();
   const { theme, cycleTheme } = useTheme();
 
-  const ThemeIcon = theme === 'dark' ? IconMoon : IconSun;
   const themeLabel = theme === 'dark' ? 'Atelier Dark' : 'Editorial Light';
 
   return (
@@ -42,7 +64,7 @@ export default function SidebarNav({
             title="SyncTone Home"
             aria-label="SyncTone Home"
           >
-            <IconSoundwave className="w-5 h-5 text-white" />
+            <Icon name="soundwave" className="w-5 h-5 text-white" />
             <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[var(--bg-surface)]" />
           </button>
 
@@ -59,7 +81,7 @@ export default function SidebarNav({
               title="Novel Library"
               aria-label="Novel Library"
             >
-              <IconBook className="w-5 h-5" />
+              <Icon name="book" className="w-5 h-5" />
               {currentView === 'catalog' && (
                 <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-white rounded-r-full" />
               )}
@@ -75,7 +97,7 @@ export default function SidebarNav({
                 title="Create New Novel"
                 aria-label="Create New Novel"
               >
-                <IconPlus className="w-5 h-5" />
+                <Icon name="plus" className="w-5 h-5" />
               </button>
             )}
 
@@ -88,21 +110,22 @@ export default function SidebarNav({
               title="Settings & Preferences"
               aria-label="Settings"
             >
-              <IconSettings className="w-5 h-5" />
+              <Icon name="settings" className="w-5 h-5" />
             </button>
           </nav>
         </div>
 
         {/* Bottom Actions: Theme Switcher & Account Profile */}
         <div className="flex flex-col items-center gap-3 w-full px-2">
-          {/* Tri-Theme Switcher */}
+          {/* Theme Switcher */}
           <button
             onClick={cycleTheme}
             className="flex items-center justify-center w-10 h-10 rounded-xl theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] border border-transparent hover:border-[var(--border-subtle)] transition"
             title={`Switch Theme (${themeLabel})`}
-            aria-label={`Switch Theme: ${themeLabel}`}
+            aria-label="Switch theme"
+            aria-pressed={theme === 'dark'}
           >
-            <ThemeIcon className="w-5 h-5" />
+            <Icon name={theme === 'dark' ? 'moon' : 'sun'} className="w-5 h-5" />
           </button>
 
           {/* User Account / Sign In */}
@@ -126,7 +149,7 @@ export default function SidebarNav({
               title="Sign in / Register"
               aria-label="Account / Sign In"
             >
-              <IconUser className="w-5 h-5" />
+              <Icon name="user" className="w-5 h-5" />
             </button>
           )}
         </div>
@@ -146,7 +169,7 @@ export default function SidebarNav({
           }`}
           aria-label="Library"
         >
-          <IconBook className="w-5 h-5" />
+          <Icon name="book" className="w-5 h-5" />
           <span>Library</span>
         </button>
 
@@ -156,7 +179,7 @@ export default function SidebarNav({
             className="flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium theme-muted hover:text-[var(--text-main)] transition"
             aria-label="Add Novel"
           >
-            <IconPlus className="w-5 h-5" />
+            <Icon name="plus" className="w-5 h-5" />
             <span>Studio</span>
           </button>
         )}
@@ -164,9 +187,11 @@ export default function SidebarNav({
         <button
           onClick={cycleTheme}
           className="flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium theme-muted hover:text-[var(--text-main)] transition"
-          aria-label="Switch Theme"
+          aria-label="Switch theme"
+          aria-pressed={theme === 'dark'}
+          title={`Switch Theme (${themeLabel})`}
         >
-          <ThemeIcon className="w-5 h-5" />
+          <Icon name={theme === 'dark' ? 'moon' : 'sun'} className="w-5 h-5" />
           <span className="capitalize">{theme}</span>
         </button>
 
@@ -175,7 +200,7 @@ export default function SidebarNav({
           className="flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium theme-muted hover:text-[var(--text-main)] transition"
           aria-label="Settings"
         >
-          <IconSettings className="w-5 h-5" />
+          <Icon name="settings" className="w-5 h-5" />
           <span>Settings</span>
         </button>
 
@@ -196,7 +221,7 @@ export default function SidebarNav({
             className="flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium theme-muted hover:text-[var(--text-main)] transition"
             aria-label="Mobile Sign In"
           >
-            <IconUser className="w-5 h-5" />
+            <Icon name="user" className="w-5 h-5" />
             <span>Sign In</span>
           </button>
         )}

@@ -85,3 +85,4 @@ export default function AdminView({ onNavigateHome, onOpenSettings }) {
     </div>
   );
 }
+

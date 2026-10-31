@@ -8,6 +8,9 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      devOptions: {
+        enabled: true,
+      },
       includeAssets: ['offline.html', 'icon-192.svg', 'icon-512.svg'],
       manifest: {
         name: 'SyncTone — AI Audio Novel Studio',

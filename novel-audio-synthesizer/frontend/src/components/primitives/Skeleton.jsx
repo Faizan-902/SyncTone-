@@ -27,8 +27,8 @@ export function Skeleton({
         className={`w-full p-3 sm:p-3.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] flex flex-col ${className}`}
         {...props}
       >
-        {/* 3:4 Cover Skeleton */}
-        <div className="w-full aspect-[3/4] rounded-lg bg-[var(--bg-hover)] animate-pulse mb-3 border border-[var(--border-subtle)]" />
+        {/* 2:3 Cover Skeleton */}
+        <div className="w-full aspect-[2/3] rounded-lg bg-[var(--bg-hover)] animate-pulse mb-3 border border-[var(--border-subtle)]" />
 
         {/* Eyebrow */}
         <div className="w-20 h-3 rounded bg-[var(--bg-hover)] animate-pulse mb-2" />

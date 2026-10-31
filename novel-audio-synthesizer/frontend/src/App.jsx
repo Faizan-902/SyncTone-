@@ -160,7 +160,7 @@ function AppContent() {
   } else if (pathname === '/admin') {
     view = 'admin';
   } else if (pathname === '/settings') {
-    view = 'settings';
+    view = 'catalog';
   }
 
   // Safe scroll helper
@@ -202,9 +202,17 @@ function AppContent() {
         navigate('/admin');
       } else if (targetView === 'settings') {
         setShowSettings(true);
+        navigate('/settings');
       }
     });
   }, [navigate, selectedNovelId, currentNovel?.id, currentChapter?.id]);
+
+  // Sync /settings route with settings modal
+  useEffect(() => {
+    if (pathname === '/settings') {
+      setShowSettings(true);
+    }
+  }, [pathname]);
 
   // Sync routeNovelId with selectedNovelId
   useEffect(() => {
@@ -632,10 +640,23 @@ function AppContent() {
           )}
 
           {showSettings && (
-            <Suspense fallback={<ModalSkeleton maxWidth="max-w-lg" onClose={() => setShowSettings(false)} />}>
+            <Suspense
+              fallback={
+                <ModalSkeleton
+                  maxWidth="max-w-lg"
+                  onClose={() => {
+                    setShowSettings(false);
+                    if (pathname === '/settings') navigate('/');
+                  }}
+                />
+              }
+            >
               <SettingsModal
                 modelStatus={modelStatus}
-                onClose={() => setShowSettings(false)}
+                onClose={() => {
+                  setShowSettings(false);
+                  if (pathname === '/settings') navigate('/');
+                }}
               />
             </Suspense>
           )}

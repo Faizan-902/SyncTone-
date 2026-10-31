@@ -183,3 +183,4 @@ describe('ttsSanitizer Golden Tests', () => {
     expect(cleaned[2].text).toBe('[IMAGE:img.png]');
   });
 });
+

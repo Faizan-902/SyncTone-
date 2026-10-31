@@ -99,3 +99,4 @@ export default function ProfileView({ onOpenAuth, onNavigateHome }) {
     </div>
   );
 }
+

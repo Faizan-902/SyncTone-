@@ -57,7 +57,7 @@ describe('3-Engine TTS Architecture & UI Components', () => {
     expect(handleChangeEngine).toHaveBeenCalledWith('machine-tts');
   });
 
-  it('SettingsModal displays all 3 TTS engines and their live status', () => {
+  it('SettingsModal displays narration voices and their live status without technical jargon', () => {
     const mockModelStatus = {
       tts: {
         primary_engine: 'msedge-tts (Cloud Neural)',
@@ -74,11 +74,11 @@ describe('3-Engine TTS Architecture & UI Components', () => {
       </ThemeProvider>
     );
 
-    expect(screen.getByText(/1\. Microsoft Edge Neural TTS/i)).toBeInTheDocument();
-    expect(screen.getByText(/2\. Kokoro-TTS ONNX Fallback/i)).toBeInTheDocument();
-    expect(screen.getByText(/3\. Machine Local Speech Synthesis/i)).toBeInTheDocument();
-    expect(screen.getByText(/TTS Synthesis Architecture/i)).toBeInTheDocument();
-    expect(screen.getByText(/Online/i)).toBeInTheDocument();
-    expect(screen.getByText(/Acoustic Ready/i)).toBeInTheDocument();
+    expect(screen.getByText(/1\. Studio Cast Voices/i)).toBeInTheDocument();
+    expect(screen.getByText(/2\. Expressive Offline Voices/i)).toBeInTheDocument();
+    expect(screen.getByText(/3\. Device Speech/i)).toBeInTheDocument();
+    expect(screen.getByText(/Voice Cast & Narration/i)).toBeInTheDocument();
+    expect(screen.getByText(/This voice isn't available right now\. Try another one\./i)).toBeInTheDocument();
+    expect(screen.getByText(/Unavailable/i)).toBeInTheDocument();
   });
 });

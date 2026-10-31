@@ -337,3 +337,8 @@ export function sanitizeSegmentsWithTtsDomCleaner(segments = []) {
 
   return result.length > 0 ? result : segments;
 }
+
+if (typeof window !== 'undefined') {
+  window.__sanitizeTextWithTtsDomCleaner = sanitizeTextWithTtsDomCleaner;
+}
+

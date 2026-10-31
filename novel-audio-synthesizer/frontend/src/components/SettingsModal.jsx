@@ -29,12 +29,12 @@ export default function SettingsModal({ onClose, modelStatus }) {
         </div>
 
         <div className="space-y-4 text-xs">
-          {/* TTS Engines Architecture Status */}
+          {/* Voice Cast & Narration Status */}
           <div className="py-2 border-b border-[var(--border-subtle)] space-y-2">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-semibold theme-heading">TTS Synthesis Architecture</p>
-                <p className="theme-muted text-[11px]">3-Engine Fallback Chain & Live Status</p>
+                <p className="font-semibold theme-heading">Voice Cast & Narration</p>
+                <p className="theme-muted text-[11px]">Multi-voice storytelling & offline support</p>
               </div>
               <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                 Active
@@ -42,23 +42,23 @@ export default function SettingsModal({ onClose, modelStatus }) {
             </div>
 
             <div className="space-y-2 mt-2">
-              {/* Engine 1: Microsoft Edge Neural TTS */}
+              {/* Voice 1: Studio Cast */}
               <div className="p-2.5 rounded-xl theme-card border border-[var(--border-subtle)] flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="font-bold theme-heading">1. Microsoft Edge Neural TTS</span>
+                    <span className="font-bold theme-heading">1. Studio Cast Voices</span>
                   </div>
                   <p className="theme-muted text-[10px] mt-0.5 font-mono">
-                    Cloud Neural • High Fidelity • 12 Multi-Voice Cast
+                    High fidelity • Multi-character cast
                   </p>
                 </div>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-400/10 text-emerald-400 font-bold border border-emerald-400/20">
-                  Online
+                  Ready
                 </span>
               </div>
 
-              {/* Engine 2: Kokoro-TTS ONNX Fallback */}
+              {/* Voice 2: Expressive Offline Voices */}
               <div className="p-2.5 rounded-xl theme-card border border-[var(--border-subtle)] flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-1.5">
@@ -67,12 +67,12 @@ export default function SettingsModal({ onClose, modelStatus }) {
                         modelStatus?.tts?.model_exists ? 'bg-emerald-400' : 'bg-amber-400'
                       }`}
                     />
-                    <span className="font-bold theme-heading">2. Kokoro-TTS ONNX Fallback</span>
+                    <span className="font-bold theme-heading">2. Expressive Offline Voices</span>
                   </div>
                   <p className="theme-muted text-[10px] mt-0.5 font-mono">
                     {modelStatus?.tts?.model_exists
-                      ? 'Local ONNX Weights Loaded'
-                      : 'Local Acoustic Neural Fallback'}
+                      ? 'Local voice package installed'
+                      : "This voice isn't available right now. Try another one."}
                   </p>
                 </div>
                 <span
@@ -82,19 +82,19 @@ export default function SettingsModal({ onClose, modelStatus }) {
                       : 'bg-amber-400/10 text-amber-400 border-amber-400/20'
                   }`}
                 >
-                  {modelStatus?.tts?.model_exists ? 'ONNX Ready' : 'Acoustic Ready'}
+                  {modelStatus?.tts?.model_exists ? 'Ready' : 'Unavailable'}
                 </span>
               </div>
 
-              {/* Engine 3: Machine Local Speech Synthesis */}
+              {/* Voice 3: Device Speech */}
               <div className="p-2.5 rounded-xl theme-card border border-[var(--border-subtle)] flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-sky-400" />
-                    <span className="font-bold theme-heading">3. Machine Local Speech Synthesis</span>
+                    <span className="font-bold theme-heading">3. Device Speech</span>
                   </div>
                   <p className="theme-muted text-[10px] mt-0.5 font-mono">
-                    macOS /usr/bin/say & Web Speech API
+                    Built-in device speech for instant listening anywhere
                   </p>
                 </div>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-400/10 text-sky-400 font-bold border border-sky-400/20">
