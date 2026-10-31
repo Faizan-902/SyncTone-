@@ -43,3 +43,4 @@ export function getAnchorSegmentIdFromPage(pages = [], pageIndex = 0) {
   }
   return null;
 }
+

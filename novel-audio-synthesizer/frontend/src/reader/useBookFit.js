@@ -79,3 +79,4 @@ export function useBookFit(stageRef, opts = {}) {
 }
 
 export default useBookFit;
+

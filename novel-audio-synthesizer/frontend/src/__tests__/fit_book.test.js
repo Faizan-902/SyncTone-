@@ -91,3 +91,4 @@ describe('CONTRACT 4 — derivePageIndexFromAnchor & Reading Anchor', () => {
     expect(getAnchorSegmentIdFromPage(contractPages, 0)).toBe('seg_omega');
   });
 });
+

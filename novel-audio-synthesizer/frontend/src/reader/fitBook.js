@@ -98,3 +98,4 @@ export function fitBook(stage = { w: 0, h: 0 }, opts = {}) {
 }
 
 export default fitBook;
+
