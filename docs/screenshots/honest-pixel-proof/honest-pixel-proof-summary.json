@@ -4,90 +4,236 @@
     "screen": "Home",
     "theme": "dark",
     "viewport": "1440x900",
-    "totalDiffPixels": 0,
+    "totalDiffPixels": 2229,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 2229,
+    "diffSelectors": [
+      {
+        "label": "svg",
+        "count": 38,
+        "isOutside": false,
+        "selector": "svg",
+        "text": ""
+      },
+      {
+        "label": "rect",
+        "count": 90,
+        "isOutside": false,
+        "selector": "rect",
+        "text": ""
+      },
+      {
+        "label": "button.px-3.py-1.5.text-xs (\"Verified Originals\")",
+        "count": 72,
+        "isOutside": false,
+        "selector": "button.px-3.py-1.5.text-xs",
+        "text": "Verified Originals"
+      }
+    ]
   },
   {
     "configId": "novel-detail-dark-1440x900",
     "screen": "Novel Detail",
     "theme": "dark",
     "viewport": "1440x900",
-    "totalDiffPixels": 40,
+    "totalDiffPixels": 128,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 128,
+    "diffSelectors": [
+      {
+        "label": "svg",
+        "count": 38,
+        "isOutside": false,
+        "selector": "svg",
+        "text": ""
+      },
+      {
+        "label": "rect",
+        "count": 90,
+        "isOutside": false,
+        "selector": "rect",
+        "text": ""
+      }
+    ]
   },
   {
     "configId": "reader-normal-dark-1440x900",
     "screen": "Reader Normal",
     "theme": "dark",
     "viewport": "1440x900",
-    "totalDiffPixels": 0,
+    "totalDiffPixels": 128,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 128,
+    "diffSelectors": [
+      {
+        "label": "svg",
+        "count": 38,
+        "isOutside": false,
+        "selector": "svg",
+        "text": ""
+      },
+      {
+        "label": "rect",
+        "count": 90,
+        "isOutside": false,
+        "selector": "rect",
+        "text": ""
+      }
+    ]
   },
   {
     "configId": "reader-3d-dark-1440x900",
     "screen": "Reader 3D",
     "theme": "dark",
     "viewport": "1440x900",
-    "totalDiffPixels": 0,
+    "totalDiffPixels": 128,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 128,
+    "diffSelectors": [
+      {
+        "label": "svg",
+        "count": 38,
+        "isOutside": false,
+        "selector": "svg",
+        "text": ""
+      },
+      {
+        "label": "rect",
+        "count": 90,
+        "isOutside": false,
+        "selector": "rect",
+        "text": ""
+      }
+    ]
   },
   {
     "configId": "settings-modal-dark-1440x900",
     "screen": "Settings Modal",
     "theme": "dark",
     "viewport": "1440x900",
-    "totalDiffPixels": 0,
+    "totalDiffPixels": 6905,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 6905,
+    "diffSelectors": [
+      {
+        "label": "div.fixed.inset-0.bg-black/70 (\"Reading & Audio Preferences Vo\")",
+        "count": 200,
+        "isOutside": false,
+        "selector": "div.fixed.inset-0.bg-black/70",
+        "text": "Reading & Audio Preferences Vo"
+      }
+    ]
   },
   {
     "configId": "auth-modal-dark-1440x900",
     "screen": "Auth Modal",
     "theme": "dark",
     "viewport": "1440x900",
-    "totalDiffPixels": 0,
+    "totalDiffPixels": 6742,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 6742,
+    "diffSelectors": [
+      {
+        "label": "div.fixed.inset-0.z-50 (\"SyncTone DRAMATIC AUDIO Welcom\")",
+        "count": 200,
+        "isOutside": false,
+        "selector": "div.fixed.inset-0.z-50",
+        "text": "SyncTone DRAMATIC AUDIO Welcom"
+      }
+    ]
   },
   {
     "configId": "add-novel-modal-dark-1440x900",
     "screen": "Add Novel Modal",
     "theme": "dark",
     "viewport": "1440x900",
-    "totalDiffPixels": 212,
+    "totalDiffPixels": 6688,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 6688,
+    "diffSelectors": [
+      {
+        "label": "div.fixed.inset-0.z-50 (\"Add New Novel Import EPUB, PDF\")",
+        "count": 200,
+        "isOutside": false,
+        "selector": "div.fixed.inset-0.z-50",
+        "text": "Add New Novel Import EPUB, PDF"
+      }
+    ]
   },
   {
     "configId": "upload-chapter-modal-dark-1440x900",
     "screen": "Upload Chapter Modal",
     "theme": "dark",
     "viewport": "1440x900",
-    "totalDiffPixels": 137,
+    "totalDiffPixels": 1336,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 1336,
+    "diffSelectors": [
+      {
+        "label": "div.fixed.inset-0.z-50 (\"Upload Chapter to A Study in S\")",
+        "count": 200,
+        "isOutside": false,
+        "selector": "div.fixed.inset-0.z-50",
+        "text": "Upload Chapter to A Study in S"
+      }
+    ]
   },
   {
     "configId": "cast-roster-dark-1440x900",
     "screen": "Cast Roster",
     "theme": "dark",
     "viewport": "1440x900",
-    "totalDiffPixels": 40,
+    "totalDiffPixels": 128,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 128,
+    "diffSelectors": [
+      {
+        "label": "svg",
+        "count": 38,
+        "isOutside": false,
+        "selector": "svg",
+        "text": ""
+      },
+      {
+        "label": "rect",
+        "count": 90,
+        "isOutside": false,
+        "selector": "rect",
+        "text": ""
+      }
+    ]
   },
   {
     "configId": "profile-dark-1440x900",
     "screen": "Profile",
     "theme": "dark",
     "viewport": "1440x900",
-    "totalDiffPixels": 128,
+    "totalDiffPixels": 182,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 182,
+    "diffSelectors": [
+      {
+        "label": "svg",
+        "count": 38,
+        "isOutside": false,
+        "selector": "svg",
+        "text": ""
+      },
+      {
+        "label": "rect",
+        "count": 90,
+        "isOutside": false,
+        "selector": "rect",
+        "text": ""
+      },
+      {
+        "label": "button.w-10.h-10.rounded-xl (\"S\")",
+        "count": 54,
+        "isOutside": false,
+        "selector": "button.w-10.h-10.rounded-xl",
+        "text": "S"
+      }
+    ]
   },
   {
     "configId": "home-light-1440x900",
@@ -96,16 +242,18 @@
     "viewport": "1440x900",
     "totalDiffPixels": 0,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 0,
+    "diffSelectors": []
   },
   {
     "configId": "novel-detail-light-1440x900",
     "screen": "Novel Detail",
     "theme": "light",
     "viewport": "1440x900",
-    "totalDiffPixels": 40,
+    "totalDiffPixels": 0,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 0,
+    "diffSelectors": []
   },
   {
     "configId": "reader-normal-light-1440x900",
@@ -114,7 +262,8 @@
     "viewport": "1440x900",
     "totalDiffPixels": 0,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 0,
+    "diffSelectors": []
   },
   {
     "configId": "reader-3d-light-1440x900",
@@ -123,7 +272,8 @@
     "viewport": "1440x900",
     "totalDiffPixels": 0,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 0,
+    "diffSelectors": []
   },
   {
     "configId": "settings-modal-light-1440x900",
@@ -132,7 +282,8 @@
     "viewport": "1440x900",
     "totalDiffPixels": 0,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 0,
+    "diffSelectors": []
   },
   {
     "configId": "auth-modal-light-1440x900",
@@ -141,133 +292,284 @@
     "viewport": "1440x900",
     "totalDiffPixels": 0,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 0,
+    "diffSelectors": []
   },
   {
     "configId": "add-novel-modal-light-1440x900",
     "screen": "Add Novel Modal",
     "theme": "light",
     "viewport": "1440x900",
-    "totalDiffPixels": 212,
+    "totalDiffPixels": 0,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 0,
+    "diffSelectors": []
   },
   {
     "configId": "upload-chapter-modal-light-1440x900",
     "screen": "Upload Chapter Modal",
     "theme": "light",
     "viewport": "1440x900",
-    "totalDiffPixels": 138,
+    "totalDiffPixels": 0,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 0,
+    "diffSelectors": []
   },
   {
     "configId": "cast-roster-light-1440x900",
     "screen": "Cast Roster",
     "theme": "light",
     "viewport": "1440x900",
-    "totalDiffPixels": 40,
+    "totalDiffPixels": 0,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 0,
+    "diffSelectors": []
   },
   {
     "configId": "profile-light-1440x900",
     "screen": "Profile",
     "theme": "light",
     "viewport": "1440x900",
-    "totalDiffPixels": 130,
+    "totalDiffPixels": 0,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 0,
+    "diffSelectors": []
   },
   {
     "configId": "home-dark-1190x770",
     "screen": "Home",
     "theme": "dark",
     "viewport": "1190x770",
-    "totalDiffPixels": 0,
+    "totalDiffPixels": 2229,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 2229,
+    "diffSelectors": [
+      {
+        "label": "svg",
+        "count": 38,
+        "isOutside": false,
+        "selector": "svg",
+        "text": ""
+      },
+      {
+        "label": "rect",
+        "count": 90,
+        "isOutside": false,
+        "selector": "rect",
+        "text": ""
+      },
+      {
+        "label": "button.px-3.py-1.5.text-xs (\"Verified Originals\")",
+        "count": 72,
+        "isOutside": false,
+        "selector": "button.px-3.py-1.5.text-xs",
+        "text": "Verified Originals"
+      }
+    ]
   },
   {
     "configId": "novel-detail-dark-1190x770",
     "screen": "Novel Detail",
     "theme": "dark",
     "viewport": "1190x770",
-    "totalDiffPixels": 40,
+    "totalDiffPixels": 128,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 128,
+    "diffSelectors": [
+      {
+        "label": "svg",
+        "count": 38,
+        "isOutside": false,
+        "selector": "svg",
+        "text": ""
+      },
+      {
+        "label": "rect",
+        "count": 90,
+        "isOutside": false,
+        "selector": "rect",
+        "text": ""
+      }
+    ]
   },
   {
     "configId": "reader-normal-dark-1190x770",
     "screen": "Reader Normal",
     "theme": "dark",
     "viewport": "1190x770",
-    "totalDiffPixels": 0,
+    "totalDiffPixels": 128,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 128,
+    "diffSelectors": [
+      {
+        "label": "svg",
+        "count": 38,
+        "isOutside": false,
+        "selector": "svg",
+        "text": ""
+      },
+      {
+        "label": "rect",
+        "count": 90,
+        "isOutside": false,
+        "selector": "rect",
+        "text": ""
+      }
+    ]
   },
   {
     "configId": "reader-3d-dark-1190x770",
     "screen": "Reader 3D",
     "theme": "dark",
     "viewport": "1190x770",
-    "totalDiffPixels": 0,
+    "totalDiffPixels": 128,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 128,
+    "diffSelectors": [
+      {
+        "label": "svg",
+        "count": 38,
+        "isOutside": false,
+        "selector": "svg",
+        "text": ""
+      },
+      {
+        "label": "rect",
+        "count": 90,
+        "isOutside": false,
+        "selector": "rect",
+        "text": ""
+      }
+    ]
   },
   {
     "configId": "settings-modal-dark-1190x770",
     "screen": "Settings Modal",
     "theme": "dark",
     "viewport": "1190x770",
-    "totalDiffPixels": 0,
+    "totalDiffPixels": 6900,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 6900,
+    "diffSelectors": [
+      {
+        "label": "div.fixed.inset-0.bg-black/70 (\"Reading & Audio Preferences Vo\")",
+        "count": 200,
+        "isOutside": false,
+        "selector": "div.fixed.inset-0.bg-black/70",
+        "text": "Reading & Audio Preferences Vo"
+      }
+    ]
   },
   {
     "configId": "auth-modal-dark-1190x770",
     "screen": "Auth Modal",
     "theme": "dark",
     "viewport": "1190x770",
-    "totalDiffPixels": 0,
+    "totalDiffPixels": 3331,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 3331,
+    "diffSelectors": [
+      {
+        "label": "div.fixed.inset-0.z-50 (\"SyncTone DRAMATIC AUDIO Welcom\")",
+        "count": 200,
+        "isOutside": false,
+        "selector": "div.fixed.inset-0.z-50",
+        "text": "SyncTone DRAMATIC AUDIO Welcom"
+      }
+    ]
   },
   {
     "configId": "add-novel-modal-dark-1190x770",
     "screen": "Add Novel Modal",
     "theme": "dark",
     "viewport": "1190x770",
-    "totalDiffPixels": 212,
+    "totalDiffPixels": 5141,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 5141,
+    "diffSelectors": [
+      {
+        "label": "div.fixed.inset-0.z-50 (\"Add New Novel Import EPUB, PDF\")",
+        "count": 200,
+        "isOutside": false,
+        "selector": "div.fixed.inset-0.z-50",
+        "text": "Add New Novel Import EPUB, PDF"
+      }
+    ]
   },
   {
     "configId": "upload-chapter-modal-dark-1190x770",
     "screen": "Upload Chapter Modal",
     "theme": "dark",
     "viewport": "1190x770",
-    "totalDiffPixels": 0,
+    "totalDiffPixels": 1336,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 1336,
+    "diffSelectors": [
+      {
+        "label": "div.fixed.inset-0.z-50 (\"Upload Chapter to A Study in S\")",
+        "count": 200,
+        "isOutside": false,
+        "selector": "div.fixed.inset-0.z-50",
+        "text": "Upload Chapter to A Study in S"
+      }
+    ]
   },
   {
     "configId": "cast-roster-dark-1190x770",
     "screen": "Cast Roster",
     "theme": "dark",
     "viewport": "1190x770",
-    "totalDiffPixels": 40,
+    "totalDiffPixels": 128,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 128,
+    "diffSelectors": [
+      {
+        "label": "svg",
+        "count": 38,
+        "isOutside": false,
+        "selector": "svg",
+        "text": ""
+      },
+      {
+        "label": "rect",
+        "count": 90,
+        "isOutside": false,
+        "selector": "rect",
+        "text": ""
+      }
+    ]
   },
   {
     "configId": "profile-dark-1190x770",
     "screen": "Profile",
     "theme": "dark",
     "viewport": "1190x770",
-    "totalDiffPixels": 128,
+    "totalDiffPixels": 182,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 182,
+    "diffSelectors": [
+      {
+        "label": "svg",
+        "count": 38,
+        "isOutside": false,
+        "selector": "svg",
+        "text": ""
+      },
+      {
+        "label": "rect",
+        "count": 90,
+        "isOutside": false,
+        "selector": "rect",
+        "text": ""
+      },
+      {
+        "label": "button.w-10.h-10.rounded-xl (\"S\")",
+        "count": 54,
+        "isOutside": false,
+        "selector": "button.w-10.h-10.rounded-xl",
+        "text": "S"
+      }
+    ]
   },
   {
     "configId": "home-light-1190x770",
@@ -276,16 +578,18 @@
     "viewport": "1190x770",
     "totalDiffPixels": 0,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 0,
+    "diffSelectors": []
   },
   {
     "configId": "novel-detail-light-1190x770",
     "screen": "Novel Detail",
     "theme": "light",
     "viewport": "1190x770",
-    "totalDiffPixels": 40,
+    "totalDiffPixels": 0,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 0,
+    "diffSelectors": []
   },
   {
     "configId": "reader-normal-light-1190x770",
@@ -294,7 +598,8 @@
     "viewport": "1190x770",
     "totalDiffPixels": 0,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 0,
+    "diffSelectors": []
   },
   {
     "configId": "reader-3d-light-1190x770",
@@ -303,7 +608,8 @@
     "viewport": "1190x770",
     "totalDiffPixels": 0,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 0,
+    "diffSelectors": []
   },
   {
     "configId": "settings-modal-light-1190x770",
@@ -312,7 +618,8 @@
     "viewport": "1190x770",
     "totalDiffPixels": 0,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 0,
+    "diffSelectors": []
   },
   {
     "configId": "auth-modal-light-1190x770",
@@ -321,16 +628,18 @@
     "viewport": "1190x770",
     "totalDiffPixels": 0,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 0,
+    "diffSelectors": []
   },
   {
     "configId": "add-novel-modal-light-1190x770",
     "screen": "Add Novel Modal",
     "theme": "light",
     "viewport": "1190x770",
-    "totalDiffPixels": 212,
+    "totalDiffPixels": 0,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 0,
+    "diffSelectors": []
   },
   {
     "configId": "upload-chapter-modal-light-1190x770",
@@ -339,24 +648,27 @@
     "viewport": "1190x770",
     "totalDiffPixels": 0,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 0,
+    "diffSelectors": []
   },
   {
     "configId": "cast-roster-light-1190x770",
     "screen": "Cast Roster",
     "theme": "light",
     "viewport": "1190x770",
-    "totalDiffPixels": 40,
+    "totalDiffPixels": 0,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 0,
+    "diffSelectors": []
   },
   {
     "configId": "profile-light-1190x770",
     "screen": "Profile",
     "theme": "light",
     "viewport": "1190x770",
-    "totalDiffPixels": 130,
+    "totalDiffPixels": 0,
     "outsideMaskPixels": 0,
-    "firstLeakSelector": null
+    "insideMaskPixels": 0,
+    "diffSelectors": []
   }
 ]

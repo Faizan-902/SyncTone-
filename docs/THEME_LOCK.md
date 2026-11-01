@@ -2,7 +2,7 @@
 
 **Status**: STRICTLY LOCKED  
 **Approved Palette**: Option B (Modern OKLCH Orange within Atelier Obsidian & Editorial Light)  
-**Selection Origin**: The orange family restores the pre-Cinnabar visual soul predating `d4c4f48`/`1879dd7`. However, rather than reverting wholesale to `556d693` (which used legacy Amber hexes lacking perceptual lightness/chroma uniformity), the specific palette was engineered, contrast-vetted, and approved through the Step B1/B2 preview process: **Candidate D1** for Dark Mode and **Candidate L2** for Light Mode.  
+**Selection Origin**: The orange accent palette restores the project's pre-Cinnabar visual soul predating commits `d4c4f48` and `1879dd7`. The specific color coordinates were engineered, contrast-tested, and selected through the Step B1/B2 preview process: **Candidate D1** (`oklch(0.72 0.200 55)` with dark on-accent text `oklch(0.12 0.010 260)`) for Dark Mode and **Candidate L2** (`oklch(0.52 0.170 48)` with white on-accent text `#ffffff`) for Light Mode.  
 **Pre-Commit Gate**: `npm run theme:check` (Vitest Token Snapshot + Playwright E2E Zero-Color-Delta Suite + Honest Pixel Proof)  
 **Accessibility Audit Policy**: Axe-core `color-contrast` is **WARNING-ONLY, NEVER DISABLED**. Violations are recorded to `docs/contrast-known-issues.md` and reported; colors are never edited to satisfy Axe without explicit written approval.
 

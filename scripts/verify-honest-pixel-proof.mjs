@@ -60,12 +60,6 @@ html.light {
   --card-accent: oklch(0.52 0.170 48) !important;
   --speaker-a: oklch(0.46 0.170 46) !important;
 }
-[class*="bg-[var(--accent)]"], .bg-accent {
-  color: var(--on-accent) !important;
-}
-[class*="bg-[var(--accent)]"] * {
-  color: inherit !important;
-}
 `;
 
 async function waitForServer(url, timeoutMs = 15000) {
@@ -269,7 +263,8 @@ async function compareViaCanvas(page, refBase64, curBase64, accentBoxes, width, 
 
     let totalDiff = 0;
     let outsideDiff = 0;
-    let firstLeakPos = null;
+    let insideDiff = 0;
+    const diffSamples = [];
 
     const THRESHOLD = 12; // allow minor subpixel anti-aliasing jitter
 
@@ -284,13 +279,16 @@ async function compareViaCanvas(page, refBase64, curBase64, accentBoxes, width, 
           totalDiff++;
           if (mask[y * width + x] === 0) {
             outsideDiff++;
-            if (!firstLeakPos) firstLeakPos = { x, y };
+            if (diffSamples.length < 200) diffSamples.push({ x, y, isOutside: true });
+          } else {
+            insideDiff++;
+            if (diffSamples.length < 200) diffSamples.push({ x, y, isOutside: false });
           }
         }
       }
     }
 
-    return { totalDiff, outsideDiff, firstLeakPos };
+    return { totalDiff, outsideDiff, insideDiff, diffSamples };
   }, { refBase64, curBase64, accentBoxes, width, height });
 }
 
@@ -418,13 +416,26 @@ async function main() {
           vp.height
         );
 
-        let firstLeakSelector = null;
-        if (diffData.outsideDiff > 0 && diffData.firstLeakPos) {
-          firstLeakSelector = await curPage.evaluate(({ x, y }) => {
-            const el = document.elementFromPoint(x, y);
-            const cls = el ? (typeof el.className === 'string' ? el.className : el.getAttribute('class') || '') : '';
-            return el ? el.tagName.toLowerCase() + (cls ? '.' + cls.split(' ').slice(0, 2).join('.') : '') : 'unknown';
-          }, diffData.firstLeakPos);
+        let diffSelectors = [];
+        if (diffData.diffSamples && diffData.diffSamples.length > 0) {
+          diffSelectors = await curPage.evaluate((samples) => {
+            const map = {};
+            for (const s of samples) {
+              const el = document.elementFromPoint(s.x, s.y);
+              if (el) {
+                const tag = el.tagName.toLowerCase();
+                const id = el.id ? '#' + el.id : '';
+                const cls = typeof el.className === 'string' ? '.' + el.className.trim().split(/\s+/).slice(0, 3).join('.') : '';
+                const text = (el.innerText || el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 30);
+                const key = `${tag}${id}${cls}${text ? ' ("' + text + '")' : ''}`;
+                if (!map[key]) {
+                  map[key] = { count: 0, isOutside: s.isOutside, selector: tag + id + cls, text };
+                }
+                map[key].count++;
+              }
+            }
+            return Object.entries(map).map(([k, v]) => ({ label: k, ...v }));
+          }, diffData.diffSamples);
         }
 
         results.push({
@@ -434,13 +445,17 @@ async function main() {
           viewport: `${vp.width}x${vp.height}`,
           totalDiffPixels: diffData.totalDiff,
           outsideMaskPixels: diffData.outsideDiff,
-          firstLeakSelector,
+          insideMaskPixels: diffData.insideDiff,
+          diffSelectors,
         });
 
         const status = diffData.outsideDiff === 0 ? 'PASS' : 'FAIL';
-        console.log(`[${status}] ${configId.padEnd(42)} | Total Diff: ${String(diffData.totalDiff).padStart(6)} px | Outside Accent: ${String(diffData.outsideDiff).padStart(3)} px`);
-        if (diffData.outsideDiff > 0 && firstLeakSelector) {
-          console.log(`       Leak at selector: ${firstLeakSelector}`);
+        console.log(`[${status}] ${configId.padEnd(42)} | Total Diff: ${String(diffData.totalDiff).padStart(6)} px | Outside Accent: ${String(diffData.outsideDiff).padStart(3)} px | Inside: ${String(diffData.insideDiff).padStart(5)} px`);
+        if (diffSelectors.length > 0) {
+          for (const ds of diffSelectors) {
+            const type = ds.isOutside ? 'UNINTENDED OUTSIDE' : 'INTENDED ON-ACCENT';
+            console.log(`       [${type}] ${ds.label} (sampled ${ds.count} hits)`);
+          }
         }
 
         await preContext.close();
