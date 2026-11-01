@@ -157,7 +157,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
             {/* Header with Brand Logo & Close Button */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-[var(--accent)] text-white flex items-center justify-center font-bold shadow-sm">
+                <div className="w-8 h-8 rounded-xl bg-[var(--accent)] text-[var(--on-accent)] flex items-center justify-center font-bold shadow-sm">
                   <IconSoundwave className="w-4 h-4" />
                 </div>
                 <div>

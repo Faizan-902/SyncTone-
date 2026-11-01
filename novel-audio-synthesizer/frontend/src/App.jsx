@@ -34,7 +34,9 @@ const UploadChapterModal = React.lazy(() => import('./components/UploadChapterMo
 const SettingsModal = React.lazy(() => import('./components/SettingsModal'));
 const CharacterRoster = React.lazy(() => import('./components/CharacterRoster'));
 
-// Modal preloader triggers for hover/focus
+// Route & modal preloader triggers for hover/focus/pointerdown
+export const preloadNovelDetails = () => import('./components/NovelDetails');
+export const preloadReaderView = () => import('./components/ReaderView');
 export const preloadAuthModal = () => import('./components/AuthModal');
 export const preloadAddNovelModal = () => import('./components/AddNovelModal');
 export const preloadUploadChapterModal = () => import('./components/UploadChapterModal');
@@ -45,51 +47,12 @@ const EMPTY_ARRAY = [];
 
 function RouteSkeleton() {
   return (
-    <div className="flex flex-col gap-6 p-8 animate-pulse max-w-4xl mx-auto" aria-busy="true">
-      <div className="h-8 w-64 bg-[var(--border-subtle)] rounded-xl" />
-      <div className="h-64 w-full bg-[var(--border-subtle)] rounded-2xl" />
-      <div className="h-24 w-full bg-[var(--border-subtle)] rounded-2xl" />
-    </div>
+    <div className="w-full flex-1 min-h-[50vh] bg-[var(--bg-page)]" aria-busy="true" />
   );
 }
 
-function ModalSkeleton({ maxWidth = 'max-w-xl', onClose }) {
-  useEffect(() => {
-    if (!onClose) return;
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleKeyDown, true);
-    return () => window.removeEventListener('keydown', handleKeyDown, true);
-  }, [onClose]);
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-pulse"
-      role="dialog"
-      aria-modal="true"
-      aria-busy="true"
-      onClick={(e) => {
-        if (e.target === e.currentTarget && onClose) onClose();
-      }}
-    >
-      <div className={`w-full ${maxWidth} theme-surface rounded-2xl border theme-border shadow-2xl p-6`}>
-        <div className="flex items-center justify-between pb-4 border-b theme-border">
-          <div className="h-5 w-32 bg-[var(--border-subtle)] rounded-lg" />
-          <div className="h-6 w-6 bg-[var(--border-subtle)] rounded-lg" />
-        </div>
-        <div className="py-6 space-y-4">
-          <div className="h-4 w-3/4 bg-[var(--border-subtle)] rounded-lg" />
-          <div className="h-10 w-full bg-[var(--border-subtle)] rounded-xl" />
-          <div className="h-20 w-full bg-[var(--border-subtle)] rounded-xl" />
-        </div>
-        <div className="flex justify-end gap-3 pt-4 border-t theme-border">
-          <div className="h-9 w-20 bg-[var(--border-subtle)] rounded-xl" />
-          <div className="h-9 w-28 bg-[var(--accent)]/30 rounded-xl" />
-        </div>
-      </div>
-    </div>
-  );
+function ModalSkeleton() {
+  return null;
 }
 
 function AppContent() {
@@ -389,7 +352,7 @@ function AppContent() {
           <main key={view} className="flex-1 w-full px-4 sm:px-8 py-6 motion-view-route">
             {/* Playback Resume Toast */}
             {view === 'reader' && playbackProgress.resumedAtMs !== null && (
-              <div className="mb-4 p-3.5 rounded-2xl bg-[var(--accent)] text-white shadow-xl flex items-center justify-between text-xs animate-slideDown">
+              <div className="mb-4 p-3.5 rounded-2xl bg-[var(--accent)] text-[var(--on-accent)] shadow-xl flex items-center justify-between text-xs animate-slideDown">
                 <div className="flex items-center gap-2.5">
                   <IconClock className="w-4 h-4" />
                   <span>

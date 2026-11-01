@@ -17,7 +17,7 @@ export default function AdminView({ onNavigateHome, onOpenSettings }) {
         </p>
         <button
           onClick={onNavigateHome}
-          className="px-6 py-2.5 rounded-xl bg-[var(--accent)] text-white text-xs font-bold hover:bg-[var(--accent-hover)] transition shadow-sm"
+          className="px-6 py-2.5 rounded-xl bg-[var(--accent)] text-[var(--on-accent)] text-xs font-bold hover:bg-[var(--accent-hover)] transition shadow-sm"
         >
           Return to Library
         </button>
@@ -36,7 +36,7 @@ export default function AdminView({ onNavigateHome, onOpenSettings }) {
         </div>
         <button
           onClick={onOpenSettings}
-          className="px-4 py-2 rounded-xl bg-[var(--accent)] text-white text-xs font-bold hover:bg-[var(--accent-hover)] transition shadow-sm"
+          className="px-4 py-2 rounded-xl bg-[var(--accent)] text-[var(--on-accent)] text-xs font-bold hover:bg-[var(--accent-hover)] transition shadow-sm"
         >
           Voice Settings
         </button>

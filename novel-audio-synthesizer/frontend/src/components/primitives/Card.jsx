@@ -20,7 +20,7 @@ export function Card({
   onPlayClick,
   badge,
   className = '',
-  aspectRatio = '2/3',
+  aspectRatio = '3/4',
   ...props
 }) {
   return (
@@ -28,8 +28,8 @@ export function Card({
       className={`novel-card-hybrid group w-full p-3 sm:p-3.5 ${className}`}
       {...props}
     >
-      {/* 2:3 Aspect Ratio Cover Art */}
-      <div className="relative w-full aspect-[2/3] rounded-lg overflow-hidden bg-[var(--bg-hover)] border border-[var(--border-subtle)] mb-3 shrink-0 flex items-end justify-between p-2">
+      {/* 3:4 Aspect Ratio Cover Art */}
+      <div className="relative w-full aspect-[3/4] rounded-lg overflow-hidden bg-[var(--bg-hover)] border border-[var(--border-subtle)] mb-3 shrink-0 flex items-end justify-between p-2">
         {cover ? (
           <div className="absolute inset-0 w-full h-full">
             {cover}

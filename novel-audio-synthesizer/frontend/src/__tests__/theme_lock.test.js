@@ -6,7 +6,7 @@ import path from 'path';
  * THEME LOCK REGRESSION TEST
  *
  * Visual Identity: Atelier Obsidian (Dark) & Editorial Light (Cold-Press Vellum)
- * Living Accent: Electric Cinnabar Vermilion (oklch 0.67 0.220 36 / 0.52 0.220 34)
+ * Living Accent: Approved Atelier Orange (Dark D1: oklch(0.72 0.200 55) / Light L2: oklch(0.52 0.170 48))
  *
  * HARD CONSTRAINT:
  * NO color, token, shadow color, opacity, gradient, or theme-related value
@@ -14,7 +14,7 @@ import path from 'path';
  * If this test fails, a theme regression was introduced.
  */
 
-function extractCssVariables(cssContent, selectorRegex) {
+function extractAllCssVariables(cssContent, selectorRegex) {
   const match = cssContent.match(selectorRegex);
   if (!match) return {};
   const block = match[1];
@@ -27,66 +27,146 @@ function extractCssVariables(cssContent, selectorRegex) {
   return vars;
 }
 
-describe('Theme Lock: Token & Color Parity', () => {
+describe('Theme Lock: Complete Token & Color Parity', () => {
   const cssPath = path.resolve(__dirname, '../index.css');
   const cssContent = fs.readFileSync(cssPath, 'utf-8');
 
-  it('matches locked tokens for Dark Mode (:root, html.dark)', () => {
-    const darkVars = extractCssVariables(cssContent, /:root,\s*html\.dark\s*\{([^}]+)\}/);
+  const darkVars = extractAllCssVariables(cssContent, /:root,\s*html\.dark\s*\{([\s\S]*?)\n\}/);
+  const lightVars = extractAllCssVariables(cssContent, /html\.light\s*\{([\s\S]*?)\n\}/);
 
-    expect(darkVars['--bg-page']).toBe('oklch(0.13 0.006 260)');
-    expect(darkVars['--bg-surface']).toBe('oklch(0.16 0.008 260)');
-    expect(darkVars['--bg-card']).toBe('oklch(0.19 0.010 260)');
-    expect(darkVars['--bg-hover']).toBe('oklch(0.23 0.012 260)');
-    expect(darkVars['--bg-elevated']).toBe('oklch(0.21 0.010 260)');
+  it('matches all locked custom properties for Dark Mode (:root, html.dark)', () => {
+    // Assert all 74 variables exist and match exact locked values
+    expect(Object.keys(darkVars).length).toBe(74);
 
-    expect(darkVars['--text-main']).toBe('oklch(0.96 0.005 260)');
-    expect(darkVars['--text-sub']).toBe('oklch(0.85 0.008 260)');
-    expect(darkVars['--text-muted']).toBe('oklch(0.74 0.010 260)');
+    expect(darkVars).toMatchObject({
+      '--bg-page': 'oklch(0.13 0.006 260)',
+      '--bg-surface': 'oklch(0.16 0.008 260)',
+      '--bg-card': 'oklch(0.19 0.010 260)',
+      '--bg-hover': 'oklch(0.23 0.012 260)',
+      '--bg-elevated': 'oklch(0.21 0.010 260)',
 
-    expect(darkVars['--accent']).toBe('oklch(0.67 0.220 36)');
-    expect(darkVars['--accent-hover']).toBe('oklch(0.72 0.210 38)');
-    expect(darkVars['--accent-surface']).toBe('rgba(255, 95, 65, 0.12)');
-    expect(darkVars['--on-accent']).toBe('oklch(0.12 0.010 260)');
+      '--text-main': 'oklch(0.96 0.005 260)',
+      '--text-sub': 'oklch(0.85 0.008 260)',
+      '--text-muted': 'oklch(0.74 0.010 260)',
 
-    expect(darkVars['--border-subtle']).toBe('rgba(255, 255, 255, 0.07)');
-    expect(darkVars['--border-strong']).toBe('rgba(255, 255, 255, 0.20)');
-    expect(darkVars['--border-focus']).toBe('oklch(0.70 0.220 36)');
+      '--border-subtle': 'rgba(255, 255, 255, 0.07)',
+      '--border-strong': 'rgba(255, 255, 255, 0.20)',
+      '--border-hover': 'oklch(0.58 0.030 260)',
+      '--border-focus': 'oklch(0.72 0.200 55)',
 
-    expect(darkVars['--speaker-narrator']).toBe('oklch(0.85 0.008 260)');
-    expect(darkVars['--speaker-a']).toBe('oklch(0.72 0.200 36)');
-    expect(darkVars['--speaker-b']).toBe('oklch(0.77 0.140 155)');
-    expect(darkVars['--speaker-c']).toBe('oklch(0.76 0.140 235)');
-    expect(darkVars['--speaker-d']).toBe('oklch(0.76 0.150 320)');
+      '--accent': 'oklch(0.72 0.200 55)',
+      '--accent-hover': 'oklch(0.76 0.190 58)',
+      '--accent-surface': 'rgba(255, 121, 0, 0.12)',
+      '--on-accent': 'oklch(0.12 0.010 260)',
+
+      '--glass-bg': 'rgba(18, 20, 24, 0.85)',
+      '--glass-dock': 'rgba(22, 24, 30, 0.94)',
+
+      '--success': 'oklch(0.78 0.14 145)',
+      '--warning': 'oklch(0.79 0.15 80)',
+      '--danger': 'oklch(0.72 0.20 25)',
+      '--info': 'oklch(0.76 0.14 235)',
+
+      '--speaker-narrator': 'oklch(0.85 0.008 260)',
+      '--speaker-a': 'oklch(0.72 0.200 55)',
+      '--speaker-b': 'oklch(0.77 0.140 155)',
+      '--speaker-c': 'oklch(0.76 0.140 235)',
+      '--speaker-d': 'oklch(0.76 0.150 320)',
+
+      '--top10-fill': 'oklch(0.13 0.006 260)',
+      '--top10-stroke': 'rgba(255, 255, 255, 0.24)',
+      '--top10-active': 'oklch(0.72 0.200 55)',
+
+      '--card-accent': 'oklch(0.72 0.200 55)',
+
+      '--space-0-5': '4px',
+      '--space-1': '8px',
+      '--space-2': '16px',
+      '--space-3': '24px',
+      '--space-4': '32px',
+      '--space-6': '48px',
+      '--space-7': '56px',
+      '--space-8': '64px',
+
+      '--shadow-none': 'none',
+      '--shadow-sm': '0 1px 3px 0 rgba(0, 0, 0, 0.22), 0 1px 2px -1px rgba(0, 0, 0, 0.18)',
+      '--shadow-md': '0 8px 20px -4px rgba(0, 0, 0, 0.32), 0 4px 8px -2px rgba(0, 0, 0, 0.22)',
+      '--shadow-lg': '0 24px 48px -12px rgba(0, 0, 0, 0.48), 0 12px 24px -6px rgba(0, 0, 0, 0.36)',
+
+      '--radius-xs': '4px',
+      '--radius-sm': '6px',
+      '--radius-md': '10px',
+      '--radius-lg': '14px',
+      '--radius-xl': '20px',
+      '--radius-full': '9999px',
+    });
   });
 
-  it('matches locked tokens for Light Mode (html.light)', () => {
-    const lightVars = extractCssVariables(cssContent, /html\.light\s*\{([^}]+)\}/);
+  it('matches all locked custom properties for Light Mode (html.light)', () => {
+    // Assert all 38 variables exist and match exact locked values
+    expect(Object.keys(lightVars).length).toBe(38);
 
-    expect(lightVars['--bg-page']).toBe('oklch(0.985 0.003 240)');
-    expect(lightVars['--bg-surface']).toBe('oklch(1.000 0.000 0)');
-    expect(lightVars['--bg-card']).toBe('oklch(0.955 0.005 240)');
-    expect(lightVars['--bg-hover']).toBe('oklch(0.925 0.008 240)');
-    expect(lightVars['--bg-elevated']).toBe('oklch(1.000 0.000 0)');
+    expect(lightVars).toMatchObject({
+      '--bg-page': 'oklch(0.985 0.003 240)',
+      '--bg-surface': 'oklch(1.000 0.000 0)',
+      '--bg-card': 'oklch(0.955 0.005 240)',
+      '--bg-hover': 'oklch(0.925 0.008 240)',
+      '--bg-elevated': 'oklch(1.000 0.000 0)',
 
-    expect(lightVars['--text-main']).toBe('oklch(0.16 0.010 260)');
-    expect(lightVars['--text-sub']).toBe('oklch(0.29 0.012 260)');
-    expect(lightVars['--text-muted']).toBe('oklch(0.43 0.015 260)');
+      '--text-main': 'oklch(0.16 0.010 260)',
+      '--text-sub': 'oklch(0.29 0.012 260)',
+      '--text-muted': 'oklch(0.43 0.015 260)',
 
-    expect(lightVars['--accent']).toBe('oklch(0.52 0.220 34)');
-    expect(lightVars['--accent-hover']).toBe('oklch(0.45 0.220 32)');
-    expect(lightVars['--accent-surface']).toBe('rgba(220, 60, 40, 0.10)');
-    expect(lightVars['--on-accent']).toBe('oklch(1.00 0.000 0)');
+      '--border-subtle': 'rgba(20, 25, 35, 0.08)',
+      '--border-strong': 'rgba(20, 25, 35, 0.20)',
+      '--border-hover': 'oklch(0.48 0.030 260)',
+      '--border-focus': 'oklch(0.52 0.170 48)',
 
-    expect(lightVars['--border-subtle']).toBe('rgba(20, 25, 35, 0.08)');
-    expect(lightVars['--border-strong']).toBe('rgba(20, 25, 35, 0.20)');
-    expect(lightVars['--border-focus']).toBe('oklch(0.52 0.220 34)');
+      '--accent': 'oklch(0.52 0.170 48)',
+      '--accent-hover': 'oklch(0.46 0.170 46)',
+      '--accent-surface': 'rgba(178, 62, 0, 0.10)',
+      '--on-accent': 'oklch(1.00 0.000 0)',
 
-    expect(lightVars['--speaker-narrator']).toBe('oklch(0.20 0.010 260)');
-    expect(lightVars['--speaker-a']).toBe('oklch(0.46 0.210 34)');
-    expect(lightVars['--speaker-b']).toBe('oklch(0.38 0.120 155)');
-    expect(lightVars['--speaker-c']).toBe('oklch(0.38 0.130 240)');
-    expect(lightVars['--speaker-d']).toBe('oklch(0.40 0.160 330)');
+      '--glass-bg': 'rgba(255, 255, 255, 0.90)',
+      '--glass-dock': 'rgba(255, 255, 255, 0.96)',
+
+      '--success': 'oklch(0.40 0.13 145)',
+      '--warning': 'oklch(0.43 0.15 70)',
+      '--danger': 'oklch(0.43 0.19 25)',
+      '--info': 'oklch(0.38 0.13 240)',
+
+      '--speaker-narrator': 'oklch(0.20 0.010 260)',
+      '--speaker-a': 'oklch(0.46 0.170 46)',
+      '--speaker-b': 'oklch(0.38 0.120 155)',
+      '--speaker-c': 'oklch(0.38 0.130 240)',
+      '--speaker-d': 'oklch(0.40 0.160 330)',
+
+      '--top10-fill': 'oklch(0.985 0.003 240)',
+      '--top10-stroke': 'rgba(20, 25, 35, 0.26)',
+      '--top10-active': 'oklch(0.52 0.170 48)',
+
+      '--card-accent': 'oklch(0.52 0.170 48)',
+    });
+  });
+
+  it('asserts no accent token or hardcoded value contains Cinnabar values (hue 34-38 oklch, rgba, hex)', () => {
+    const cinnabarHexRegex = /#e0533c|#c83d27/i;
+    const cinnabarRgbaRegex = /224,\s*83,\s*60|200,\s*61,\s*39/;
+    const oklchHueRegex = /oklch\(\s*[\d.]+\s+[\d.]+\s+([\d.]+)\s*\)/g;
+
+    const allTokenValues = [...Object.values(darkVars), ...Object.values(lightVars)];
+
+    for (const val of allTokenValues) {
+      expect(val).not.toMatch(cinnabarHexRegex);
+      expect(val).not.toMatch(cinnabarRgbaRegex);
+
+      let m;
+      while ((m = oklchHueRegex.exec(val)) !== null) {
+        const hue = parseFloat(m[1]);
+        const isCinnabarHue = hue >= 34 && hue <= 38;
+        expect(isCinnabarHue).toBe(false);
+      }
+    }
   });
 
   it('matches Tailwind color mappings in tailwind.config.js', async () => {
@@ -110,3 +190,4 @@ describe('Theme Lock: Token & Color Parity', () => {
     expect(tailwindContent).toContain("'text-muted': 'var(--text-muted)'");
   });
 });
+

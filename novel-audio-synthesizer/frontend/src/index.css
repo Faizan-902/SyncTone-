@@ -58,12 +58,12 @@
   --border-subtle: rgba(255, 255, 255, 0.07);
   --border-strong: rgba(255, 255, 255, 0.20);
   --border-hover: oklch(0.58 0.030 260);
-  --border-focus: oklch(0.70 0.220 36);
+  --border-focus: oklch(0.72 0.200 55);
 
-  /* Living Accent: Electric Cinnabar Vermilion */
-  --accent: oklch(0.67 0.220 36);
-  --accent-hover: oklch(0.72 0.210 38);
-  --accent-surface: rgba(255, 95, 65, 0.12);
+  /* Living Accent: Vivid Tangerine Orange */
+  --accent: oklch(0.72 0.200 55);
+  --accent-hover: oklch(0.76 0.190 58);
+  --accent-surface: rgba(255, 121, 0, 0.12);
   --on-accent: oklch(0.12 0.010 260);
 
   /* Glassmorphism */
@@ -78,7 +78,7 @@
 
   /* Speaker Palette (Fixed Lightness & Chroma) */
   --speaker-narrator: oklch(0.85 0.008 260);
-  --speaker-a: oklch(0.72 0.200 36);
+  --speaker-a: oklch(0.72 0.200 55);
   --speaker-b: oklch(0.77 0.140 155);
   --speaker-c: oklch(0.76 0.140 235);
   --speaker-d: oklch(0.76 0.150 320);
@@ -86,10 +86,10 @@
   /* Top 10 Outline Typography */
   --top10-fill: oklch(0.13 0.006 260);
   --top10-stroke: rgba(255, 255, 255, 0.24);
-  --top10-active: oklch(0.67 0.220 36);
+  --top10-active: oklch(0.72 0.200 55);
 
   /* Card Accent Default */
-  --card-accent: oklch(0.67 0.220 36);
+  --card-accent: oklch(0.72 0.200 55);
 
   /* Backward Compatibility Aliases */
   --color-status-success: var(--success);
@@ -166,12 +166,12 @@ html.light {
   --border-subtle: rgba(20, 25, 35, 0.08);
   --border-strong: rgba(20, 25, 35, 0.20);
   --border-hover: oklch(0.48 0.030 260);
-  --border-focus: oklch(0.52 0.220 34);
+  --border-focus: oklch(0.52 0.170 48);
 
-  /* Living Accent: Signal Vermilion */
-  --accent: oklch(0.52 0.220 34);
-  --accent-hover: oklch(0.45 0.220 32);
-  --accent-surface: rgba(220, 60, 40, 0.10);
+  /* Living Accent: Deep Amber Orange */
+  --accent: oklch(0.52 0.170 48);
+  --accent-hover: oklch(0.46 0.170 46);
+  --accent-surface: rgba(178, 62, 0, 0.10);
   --on-accent: oklch(1.00 0.000 0);
 
   /* Glassmorphism */
@@ -186,7 +186,7 @@ html.light {
 
   /* Speakers */
   --speaker-narrator: oklch(0.20 0.010 260);
-  --speaker-a: oklch(0.46 0.210 34);
+  --speaker-a: oklch(0.46 0.170 46);
   --speaker-b: oklch(0.38 0.120 155);
   --speaker-c: oklch(0.38 0.130 240);
   --speaker-d: oklch(0.40 0.160 330);
@@ -194,9 +194,9 @@ html.light {
   /* Top 10 */
   --top10-fill: oklch(0.985 0.003 240);
   --top10-stroke: rgba(20, 25, 35, 0.26);
-  --top10-active: oklch(0.52 0.220 34);
+  --top10-active: oklch(0.52 0.170 48);
 
-  --card-accent: oklch(0.52 0.220 34);
+  --card-accent: oklch(0.52 0.170 48);
 
   --color-status-success: var(--success);
   --color-status-warning: var(--warning);
