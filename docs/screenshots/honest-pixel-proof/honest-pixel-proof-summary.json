@@ -1,0 +1,362 @@
+[
+  {
+    "configId": "home-dark-1440x900",
+    "screen": "Home",
+    "theme": "dark",
+    "viewport": "1440x900",
+    "totalDiffPixels": 0,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "novel-detail-dark-1440x900",
+    "screen": "Novel Detail",
+    "theme": "dark",
+    "viewport": "1440x900",
+    "totalDiffPixels": 40,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "reader-normal-dark-1440x900",
+    "screen": "Reader Normal",
+    "theme": "dark",
+    "viewport": "1440x900",
+    "totalDiffPixels": 0,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "reader-3d-dark-1440x900",
+    "screen": "Reader 3D",
+    "theme": "dark",
+    "viewport": "1440x900",
+    "totalDiffPixels": 0,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "settings-modal-dark-1440x900",
+    "screen": "Settings Modal",
+    "theme": "dark",
+    "viewport": "1440x900",
+    "totalDiffPixels": 0,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "auth-modal-dark-1440x900",
+    "screen": "Auth Modal",
+    "theme": "dark",
+    "viewport": "1440x900",
+    "totalDiffPixels": 0,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "add-novel-modal-dark-1440x900",
+    "screen": "Add Novel Modal",
+    "theme": "dark",
+    "viewport": "1440x900",
+    "totalDiffPixels": 212,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "upload-chapter-modal-dark-1440x900",
+    "screen": "Upload Chapter Modal",
+    "theme": "dark",
+    "viewport": "1440x900",
+    "totalDiffPixels": 137,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "cast-roster-dark-1440x900",
+    "screen": "Cast Roster",
+    "theme": "dark",
+    "viewport": "1440x900",
+    "totalDiffPixels": 40,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "profile-dark-1440x900",
+    "screen": "Profile",
+    "theme": "dark",
+    "viewport": "1440x900",
+    "totalDiffPixels": 128,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "home-light-1440x900",
+    "screen": "Home",
+    "theme": "light",
+    "viewport": "1440x900",
+    "totalDiffPixels": 0,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "novel-detail-light-1440x900",
+    "screen": "Novel Detail",
+    "theme": "light",
+    "viewport": "1440x900",
+    "totalDiffPixels": 40,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "reader-normal-light-1440x900",
+    "screen": "Reader Normal",
+    "theme": "light",
+    "viewport": "1440x900",
+    "totalDiffPixels": 0,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "reader-3d-light-1440x900",
+    "screen": "Reader 3D",
+    "theme": "light",
+    "viewport": "1440x900",
+    "totalDiffPixels": 0,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "settings-modal-light-1440x900",
+    "screen": "Settings Modal",
+    "theme": "light",
+    "viewport": "1440x900",
+    "totalDiffPixels": 0,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "auth-modal-light-1440x900",
+    "screen": "Auth Modal",
+    "theme": "light",
+    "viewport": "1440x900",
+    "totalDiffPixels": 0,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "add-novel-modal-light-1440x900",
+    "screen": "Add Novel Modal",
+    "theme": "light",
+    "viewport": "1440x900",
+    "totalDiffPixels": 212,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "upload-chapter-modal-light-1440x900",
+    "screen": "Upload Chapter Modal",
+    "theme": "light",
+    "viewport": "1440x900",
+    "totalDiffPixels": 138,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "cast-roster-light-1440x900",
+    "screen": "Cast Roster",
+    "theme": "light",
+    "viewport": "1440x900",
+    "totalDiffPixels": 40,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "profile-light-1440x900",
+    "screen": "Profile",
+    "theme": "light",
+    "viewport": "1440x900",
+    "totalDiffPixels": 130,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "home-dark-1190x770",
+    "screen": "Home",
+    "theme": "dark",
+    "viewport": "1190x770",
+    "totalDiffPixels": 0,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "novel-detail-dark-1190x770",
+    "screen": "Novel Detail",
+    "theme": "dark",
+    "viewport": "1190x770",
+    "totalDiffPixels": 40,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "reader-normal-dark-1190x770",
+    "screen": "Reader Normal",
+    "theme": "dark",
+    "viewport": "1190x770",
+    "totalDiffPixels": 0,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "reader-3d-dark-1190x770",
+    "screen": "Reader 3D",
+    "theme": "dark",
+    "viewport": "1190x770",
+    "totalDiffPixels": 0,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "settings-modal-dark-1190x770",
+    "screen": "Settings Modal",
+    "theme": "dark",
+    "viewport": "1190x770",
+    "totalDiffPixels": 0,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "auth-modal-dark-1190x770",
+    "screen": "Auth Modal",
+    "theme": "dark",
+    "viewport": "1190x770",
+    "totalDiffPixels": 0,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "add-novel-modal-dark-1190x770",
+    "screen": "Add Novel Modal",
+    "theme": "dark",
+    "viewport": "1190x770",
+    "totalDiffPixels": 212,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "upload-chapter-modal-dark-1190x770",
+    "screen": "Upload Chapter Modal",
+    "theme": "dark",
+    "viewport": "1190x770",
+    "totalDiffPixels": 0,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "cast-roster-dark-1190x770",
+    "screen": "Cast Roster",
+    "theme": "dark",
+    "viewport": "1190x770",
+    "totalDiffPixels": 40,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "profile-dark-1190x770",
+    "screen": "Profile",
+    "theme": "dark",
+    "viewport": "1190x770",
+    "totalDiffPixels": 128,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "home-light-1190x770",
+    "screen": "Home",
+    "theme": "light",
+    "viewport": "1190x770",
+    "totalDiffPixels": 0,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "novel-detail-light-1190x770",
+    "screen": "Novel Detail",
+    "theme": "light",
+    "viewport": "1190x770",
+    "totalDiffPixels": 40,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "reader-normal-light-1190x770",
+    "screen": "Reader Normal",
+    "theme": "light",
+    "viewport": "1190x770",
+    "totalDiffPixels": 0,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "reader-3d-light-1190x770",
+    "screen": "Reader 3D",
+    "theme": "light",
+    "viewport": "1190x770",
+    "totalDiffPixels": 0,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "settings-modal-light-1190x770",
+    "screen": "Settings Modal",
+    "theme": "light",
+    "viewport": "1190x770",
+    "totalDiffPixels": 0,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "auth-modal-light-1190x770",
+    "screen": "Auth Modal",
+    "theme": "light",
+    "viewport": "1190x770",
+    "totalDiffPixels": 0,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "add-novel-modal-light-1190x770",
+    "screen": "Add Novel Modal",
+    "theme": "light",
+    "viewport": "1190x770",
+    "totalDiffPixels": 212,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "upload-chapter-modal-light-1190x770",
+    "screen": "Upload Chapter Modal",
+    "theme": "light",
+    "viewport": "1190x770",
+    "totalDiffPixels": 0,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "cast-roster-light-1190x770",
+    "screen": "Cast Roster",
+    "theme": "light",
+    "viewport": "1190x770",
+    "totalDiffPixels": 40,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  },
+  {
+    "configId": "profile-light-1190x770",
+    "screen": "Profile",
+    "theme": "light",
+    "viewport": "1190x770",
+    "totalDiffPixels": 130,
+    "outsideMaskPixels": 0,
+    "firstLeakSelector": null
+  }
+]

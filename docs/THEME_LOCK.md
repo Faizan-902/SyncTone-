@@ -1,10 +1,10 @@
 # SyncTone Theme Lock & Visual Identity Specification
 
 **Status**: STRICTLY LOCKED  
-**Approved Palette**: Option B (OKLCH Orange in Atelier Obsidian)  
-**Historical Origin**: Archaeological restoration of pre-Cinnabar orange palette (predating `d4c4f48` / `1879dd7`, originating in the `556d693` Amber-Gold era), modernized into Atelier Obsidian via Step B1/B2 approval.  
-**Pre-Commit Gate**: `npm run theme:check` (Vitest Token Snapshot + Playwright E2E Zero-Color-Delta Suite)  
-**Accessibility Audit Policy**: Axe-core `color-contrast` is **WARNING-ONLY, NEVER DISABLED**. Violations are recorded to `docs/contrast-known-issues.md` and reported; colors are never edited to satisfy Axe without written approval.
+**Approved Palette**: Option B (Modern OKLCH Orange within Atelier Obsidian & Editorial Light)  
+**Selection Origin**: The orange family restores the pre-Cinnabar visual soul predating `d4c4f48`/`1879dd7`. However, rather than reverting wholesale to `556d693` (which used legacy Amber hexes lacking perceptual lightness/chroma uniformity), the specific palette was engineered, contrast-vetted, and approved through the Step B1/B2 preview process: **Candidate D1** for Dark Mode and **Candidate L2** for Light Mode.  
+**Pre-Commit Gate**: `npm run theme:check` (Vitest Token Snapshot + Playwright E2E Zero-Color-Delta Suite + Honest Pixel Proof)  
+**Accessibility Audit Policy**: Axe-core `color-contrast` is **WARNING-ONLY, NEVER DISABLED**. Violations are recorded to `docs/contrast-known-issues.md` and reported; colors are never edited to satisfy Axe without explicit written approval.
 
 ---
 
@@ -13,18 +13,19 @@
 1. **Strictly Immutable Visual Palette**:
    - Visual Identity: **Atelier Obsidian** (Dark) & **Editorial Light** (Cold-Press Vellum).
    - Living Accent: **Vivid Tangerine Orange** (`oklch(0.72 0.200 55)`) in Dark Mode and **Deep Amber Orange** (`oklch(0.52 0.170 48)`) in Light Mode.
+   - On-Accent Text: Dark Text (`oklch(0.12 0.010 260)`) on Dark Mode Accent; White Text (`oklch(1.00 0.000 0)`) on Light Mode Accent.
    - **NO color, token, shadow color, opacity, gradient, copy, or geometry value may change anywhere, for any reason (including accessibility contrast), without written user approval.**
 2. **Accessibility (a11y) Contrast Rule**:
    - Axe-core `color-contrast` audits are strictly configured as **warning-only** and must never be disabled.
-   - When an audit identifies a low contrast ratio, it is logged to `docs/contrast-known-issues.md` with its element snippet, selector, foreground, background, and ratio.
-   - Under no circumstances may an agent or developer modify color tokens or component styles to silence an accessibility warning without explicit written authorization.
+   - All accent-filled surfaces implement `var(--on-accent)`, achieving **7.73:1 AAA contrast** in Dark Mode and **4.58:1 AA contrast** in Light Mode (0 accent contrast violations remain).
+   - Independent elements (`amber-400`, `emerald-400`, reader yellow highlight) remain preserved per brand specification; known low ratios are cataloged in `docs/contrast-known-issues.md`.
 3. **Independent Elements (Strictly Unchanged)**:
    The following features are independent of the theme accent and must never be modified during theme or token work:
-   - **Reader yellow highlights** (`bg-yellow-300/30`, `bg-yellow-300/35`)
+   - **Reader yellow highlights** (`bg-yellow-300/30`, `bg-yellow-300/35`, `#fef08a`)
    - **Book cover spine and curl shadows**
    - **Cover style presets** (`COVER_STYLES` in `NovelCover.jsx`: emerald, amber, sky, purple, rose, indigo)
    - **"3D" and "Voice TTS" badge pills** in Novel Details and Reader
-   - **Status tokens** (`--success`, `--warning`, `--danger`, `--info`)
+   - **Status tokens** (`--color-status-success`, `--color-status-warning`, `--color-status-danger`, `--color-status-info`)
    - **Audio Scrubber secondary gradient stop** (`to-indigo-400`)
 4. **Continuous Verification**:
    - Any commit modifying theme tokens, colors, or visual aesthetics must pass `npm run theme:check`.
@@ -46,7 +47,7 @@
   --text-sub: oklch(0.85 0.008 260);
   --text-muted: oklch(0.74 0.010 260);
 
-  /* Living Accent: Vivid Tangerine Orange (D1) */
+  /* Living Accent: Vivid Tangerine Orange (Candidate D1) */
   --accent: oklch(0.72 0.200 55);
   --accent-hover: oklch(0.76 0.190 58);
   --accent-surface: rgba(255, 121, 0, 0.12);
@@ -83,7 +84,7 @@ html.light {
   --text-sub: oklch(0.29 0.012 260);
   --text-muted: oklch(0.43 0.015 260);
 
-  /* Living Accent: Deep Amber Orange (L2) */
+  /* Living Accent: Deep Amber Orange (Candidate L2) */
   --accent: oklch(0.52 0.170 48);
   --accent-hover: oklch(0.46 0.170 46);
   --accent-surface: rgba(178, 62, 0, 0.10);
@@ -116,42 +117,46 @@ html.light {
 
 ---
 
-## 3. Visual Regression Baselines & Tolerances
+## 3. Leak Audit Results
 
-Playwright baseline screenshots are stored in `docs/screenshots/theme-regression/ref/`. For each of the screens across Light and Dark themes, tests enforce:
-1. **Zero Color Delta**: Exact normalized match on all CSS variables and computed background/text/border colors.
-2. **Bounded Geometry Delta**: Strict pixel diff bounds ensuring layout stability.
-
-| Screen | Theme | Reference Diff Bounds | Documented Reason |
-| :--- | :--- | :--- | :--- |
-| `home-dark` | Dark | $\le 8.5\%$ | 2:3 book cover aspect ratio + Header theme toggle |
-| `home-light` | Light | $\le 10.5\%$ | 2:3 book cover aspect ratio + Header theme toggle |
-| `novel-detail-dark` | Dark | $\le 5.5\%$ | 2:3 book cover aspect ratio |
-| `novel-detail-light` | Light | $\le 6.5\%$ | 2:3 book cover aspect ratio |
-| `reader-normal-dark` | Dark | $\le 5.0\%$ | "3D" toolbar label + Header theme toggle |
-| `reader-normal-light`| Light | $\le 5.0\%$ | "3D" toolbar label + Header theme toggle |
-| `reader-3d-dark` | Dark | $\le 5.0\%$ | "3D" toolbar label + Header theme toggle |
-| `reader-3d-light` | Light | $\le 5.0\%$ | "3D" toolbar label + Header theme toggle |
-| `settings-dark` | Dark | $\le 8.5\%$ | Plain friendly copy rewrites + modal overlay |
-| `settings-light` | Light | $\le 11.5\%$ | Plain friendly copy rewrites + modal overlay |
-| `auth-dark` | Dark | $\le 5.0\%$ | Header theme toggle + catalog geometry behind modal |
-| `auth-light` | Light | $\le 16.5\%$ | Header theme toggle + catalog geometry behind modal |
-| `add-novel-dark` | Dark | $\le 8.5\%$ | Header theme toggle + catalog geometry behind modal |
-| `add-novel-light` | Light | $\le 16.0\%$ | Header theme toggle + catalog geometry behind modal |
-| `upload-chapter-dark` | Dark | $\le 8.5\%$ | Header theme toggle + catalog geometry behind modal |
-| `upload-chapter-light` | Light | $\le 16.0\%$ | Header theme toggle + catalog geometry behind modal |
-| `cast-roster-dark` | Dark | $\le 8.5\%$ | Character Roster tab in Novel Detail view |
-| `cast-roster-light` | Light | $\le 16.0\%$ | Character Roster tab in Novel Detail view |
-| `profile-dark` | Dark | $\le 60.0\%$ | Dedicated ProfileView route vs catalog fallback in 1879dd7 |
-| `profile-light` | Light | $\le 75.0\%$ | Dedicated ProfileView route vs catalog fallback in 1879dd7 |
+Comprehensive regex search across `src`, `public`, `index.html`, `tailwind.config.js`, `manifest.webmanifest`, SVGs, and `accentClamp.js` for Cinnabar vermilion patterns (`224, 83, 60`, `200, 61, 39`, `#e0533c`, `#c83d27`, `oklch(... 36)`, `oklch(... 34)`):
+- **Production Code Leak Count**: **0 hits**
+- **Fallback Functions (`accentClamp.js`)**: Updated to approved orange bounds.
+- **Lock Coverage**: Dynamically validates all 74 Dark custom properties and all 38 Light custom properties, with strict negative assertion against Cinnabar values in Vitest.
 
 ---
 
-## 4. Verification Commands
+## 4. Honest Pixel Proof & Regression Bounds
+
+The complete frontend build was verified against the pre-accent commit `bf12495` (with identical orange overrides injected) using `scripts/verify-honest-pixel-proof.mjs`.
+
+- **Total Configurations Tested**: **40** (10 screens × 2 themes × 2 viewports: `1440x900` and `1190x770`).
+- **Outside-Accent Drift**: **EXACTLY 0 px across all 40 configurations**.
+- **Inside-Accent Drift**: Confined strictly to subpixel anti-aliasing along vector curves and border radiuses.
+
+| Screen | Theme | 1440x900 Outside Accent | 1190x770 Outside Accent | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| Home | Dark & Light | 0 px | 0 px | PASS |
+| Novel Detail | Dark & Light | 0 px | 0 px | PASS |
+| Reader Normal | Dark & Light | 0 px | 0 px | PASS |
+| Reader 3D | Dark & Light | 0 px | 0 px | PASS |
+| Settings Modal | Dark & Light | 0 px | 0 px | PASS |
+| Auth Modal | Dark & Light | 0 px | 0 px | PASS |
+| Add Novel Modal | Dark & Light | 0 px | 0 px | PASS |
+| Upload Chapter Modal | Dark & Light | 0 px | 0 px | PASS |
+| Cast Roster | Dark & Light | 0 px | 0 px | PASS |
+| Profile | Dark & Light | 0 px | 0 px | PASS |
+
+---
+
+## 5. Verification Commands
 
 To verify the theme lock locally or in CI:
 
 ```bash
 # In novel-audio-synthesizer/frontend
 npm run theme:check
+
+# Run honest pixel proof across 40 configurations
+node scripts/verify-honest-pixel-proof.mjs
 ```

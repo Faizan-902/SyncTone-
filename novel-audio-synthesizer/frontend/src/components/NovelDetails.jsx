@@ -105,7 +105,7 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
           </button>
           <button
             onClick={fetchDetails}
-            className="px-4 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-semibold rounded-xl shadow-sm transition cursor-pointer"
+            className="px-4 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] text-xs font-semibold rounded-xl shadow-sm transition cursor-pointer"
           >
             Retry
           </button>

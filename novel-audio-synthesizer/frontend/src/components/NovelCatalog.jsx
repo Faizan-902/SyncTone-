@@ -239,7 +239,7 @@ export default function NovelCatalog({
               onKeyDown={(e) => handleTabKeyDown(e, 0)}
               className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                 channel === 'verified'
-                  ? 'bg-[var(--accent)] text-white shadow-sm'
+                  ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-sm'
                   : 'theme-muted hover:text-[var(--text-main)]'
               }`}
             >
@@ -254,7 +254,7 @@ export default function NovelCatalog({
               onKeyDown={(e) => handleTabKeyDown(e, 1)}
               className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                 channel === 'community'
-                  ? 'bg-[var(--accent)] text-white shadow-sm'
+                  ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-sm'
                   : 'theme-muted hover:text-[var(--text-main)]'
               }`}
             >
@@ -269,7 +269,7 @@ export default function NovelCatalog({
               onKeyDown={(e) => handleTabKeyDown(e, 2)}
               className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                 channel === 'all'
-                  ? 'bg-[var(--accent)] text-white shadow-sm'
+                  ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-sm'
                   : 'theme-muted hover:text-[var(--text-main)]'
               }`}
             >
@@ -281,7 +281,7 @@ export default function NovelCatalog({
           {isWriterOrAdmin && onOpenAddNovel && (
             <button
               onClick={onOpenAddNovel}
-              className="px-3 py-1.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-semibold rounded-xl shadow-sm transition flex items-center gap-1.5 flex-shrink-0"
+              className="px-3 py-1.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] text-xs font-semibold rounded-xl shadow-sm transition flex items-center gap-1.5 flex-shrink-0"
             >
               <IconPlus className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Add Novel</span>
@@ -459,7 +459,7 @@ export default function NovelCatalog({
                     onMouseEnter={preloadReaderView}
                     onFocus={preloadReaderView}
                     onPointerDown={preloadReaderView}
-                    className="px-6 py-3.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-bold rounded-xl shadow-xl flex items-center gap-2.5 text-xs sm:text-sm transition transform hover:-translate-y-0.5 focus:outline-none cursor-pointer"
+                    className="px-6 py-3.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] font-bold rounded-xl shadow-xl flex items-center gap-2.5 text-xs sm:text-sm transition transform hover:-translate-y-0.5 focus:outline-none cursor-pointer"
                   >
                     <IconPlay className="w-4 h-4 fill-current" />
                     <span>Start Listening (Ch. 1)</span>
@@ -499,7 +499,7 @@ export default function NovelCatalog({
                   />
                 </div>
                 {/* Floating Seal */}
-                <div className="absolute -bottom-3 -right-3 px-3 py-1 rounded-xl bg-[var(--accent)] text-white font-mono font-bold text-[10px] shadow-lg border border-white/20">
+                <div className="absolute -bottom-3 -right-3 px-3 py-1 rounded-xl bg-[var(--accent)] text-[var(--on-accent)] font-mono font-bold text-[10px] shadow-lg border border-white/20">
                   ★ 9.4 Verified
                 </div>
               </div>
@@ -773,7 +773,7 @@ export default function NovelCatalog({
                             onMouseEnter={preloadReaderView}
                             onFocus={preloadReaderView}
                             onPointerDown={preloadReaderView}
-                            className="flex-1 py-2 px-3.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-semibold rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 focus:outline-none cursor-pointer"
+                            className="flex-1 py-2 px-3.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] text-xs font-semibold rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 focus:outline-none cursor-pointer"
                           >
                             <IconPlay className="w-3.5 h-3.5 fill-current" />
                             <span>Play</span>
@@ -834,7 +834,7 @@ export default function NovelCatalog({
                     <span className="text-xs theme-muted mt-1.5 font-mono">
                       Multi-Voice Audio
                     </span>
-                    <span className="mt-4 px-3.5 py-1.5 rounded-lg theme-surface border border-[var(--border-subtle)] text-xs font-semibold text-[var(--accent)] group-hover:bg-[var(--accent)] group-hover:text-white transition">
+                    <span className="mt-4 px-3.5 py-1.5 rounded-lg theme-surface border border-[var(--border-subtle)] text-xs font-semibold text-[var(--accent)] group-hover:bg-[var(--accent)] group-hover:text-[var(--on-accent)] transition">
                       + Add New Novel
                     </span>
                   </div>
@@ -897,7 +897,7 @@ export default function NovelCatalog({
                 <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3.5 pt-3">
                   <button
                     onClick={onOpenAddNovel}
-                    className="px-6 py-3.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-bold rounded-xl shadow-lg flex items-center gap-2.5 text-xs sm:text-sm transition transform hover:-translate-y-0.5 active:scale-95 focus:outline-none cursor-pointer"
+                    className="px-6 py-3.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] font-bold rounded-xl shadow-lg flex items-center gap-2.5 text-xs sm:text-sm transition transform hover:-translate-y-0.5 active:scale-95 focus:outline-none cursor-pointer"
                   >
                     <IconPlus className="w-4 h-4" />
                     <span>Upload Novel</span>

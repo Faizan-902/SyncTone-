@@ -60,11 +60,11 @@ export default function SidebarNav({
           {/* Logo Mark */}
           <button
             onClick={() => onNavigate('catalog')}
-            className="group relative flex items-center justify-center w-11 h-11 rounded-xl bg-[var(--accent)] text-white shadow-md hover:scale-105 transition-transform"
+            className="group relative flex items-center justify-center w-11 h-11 rounded-xl bg-[var(--accent)] text-[var(--on-accent)] shadow-md hover:scale-105 transition-transform"
             title="SyncTone Home"
             aria-label="SyncTone Home"
           >
-            <Icon name="soundwave" className="w-5 h-5 text-white" />
+            <Icon name="soundwave" className="w-5 h-5 text-[var(--on-accent)]" />
             <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[var(--bg-surface)]" />
           </button>
 
@@ -75,7 +75,7 @@ export default function SidebarNav({
               onClick={() => onNavigate('catalog')}
               className={`group relative flex items-center justify-center w-11 h-11 rounded-xl transition ${
                 currentView === 'catalog'
-                  ? 'bg-[var(--accent)] text-white shadow-sm'
+                  ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-sm'
                   : 'theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
               }`}
               title="Novel Library"
@@ -133,7 +133,7 @@ export default function SidebarNav({
             <div className="relative group">
               <button
                 onClick={logout}
-                className="w-10 h-10 rounded-xl bg-[var(--accent)] flex items-center justify-center text-white text-xs font-bold uppercase shadow-sm hover:scale-105 transition"
+                className="w-10 h-10 rounded-xl bg-[var(--accent)] flex items-center justify-center text-[var(--on-accent)] text-xs font-bold uppercase shadow-sm hover:scale-105 transition"
                 title={`${user?.username} (${role}) — Click to sign out`}
                 aria-label="User Account"
               >
@@ -210,7 +210,7 @@ export default function SidebarNav({
             className="flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium theme-muted hover:text-rose-400 transition"
             aria-label="Sign Out"
           >
-            <span className="w-5 h-5 rounded-full bg-[var(--accent)] text-white text-[10px] flex items-center justify-center font-bold">
+            <span className="w-5 h-5 rounded-full bg-[var(--accent)] text-[var(--on-accent)] text-[10px] flex items-center justify-center font-bold">
               {user?.username?.[0] || 'U'}
             </span>
             <span>Sign Out</span>

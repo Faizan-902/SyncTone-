@@ -198,7 +198,7 @@ export default function UploadChapterModal({ isOpen, novel, onClose, onChapterUp
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-bold rounded-xl shadow-md transition disabled:opacity-50"
+              className="px-5 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] text-xs font-bold rounded-xl shadow-md transition disabled:opacity-50"
             >
               {isSubmitting ? 'Ingesting...' : 'Upload & Parse Prose'}
             </button>

@@ -148,3 +148,4 @@ async function auditDifferingPixels() {
 }
 
 auditDifferingPixels().catch(console.error);
+

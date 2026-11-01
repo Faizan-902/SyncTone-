@@ -672,7 +672,7 @@ export default function AddNovelModal({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-bold rounded-xl shadow-md transition disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+              className="px-4 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] text-xs font-bold rounded-xl shadow-md transition disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
             >
               <IconPlus className="w-3.5 h-3.5" />
               <span>{isSubmitting ? 'Creating...' : 'Create Novel'}</span>

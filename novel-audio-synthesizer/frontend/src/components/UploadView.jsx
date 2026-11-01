@@ -17,7 +17,7 @@ export default function UploadView({ onOpenUploadModal, onOpenAuth }) {
         </p>
         <button
           onClick={() => onOpenAuth?.('login')}
-          className="px-6 py-2.5 rounded-xl bg-[var(--accent)] text-white text-xs font-bold hover:bg-[var(--accent-hover)] transition shadow-sm"
+          className="px-6 py-2.5 rounded-xl bg-[var(--accent)] text-[var(--on-accent)] text-xs font-bold hover:bg-[var(--accent-hover)] transition shadow-sm"
         >
           Sign In as Writer
         </button>
@@ -37,7 +37,7 @@ export default function UploadView({ onOpenUploadModal, onOpenAuth }) {
         </p>
         <button
           onClick={onOpenUploadModal}
-          className="px-6 py-3 rounded-xl bg-[var(--accent)] text-white text-sm font-bold hover:bg-[var(--accent-hover)] transition shadow-md inline-flex items-center gap-2"
+          className="px-6 py-3 rounded-xl bg-[var(--accent)] text-[var(--on-accent)] text-sm font-bold hover:bg-[var(--accent-hover)] transition shadow-md inline-flex items-center gap-2"
         >
           <IconUpload className="w-4 h-4" />
           <span>Open Novel Studio</span>
