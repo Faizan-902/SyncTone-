@@ -1,5 +1,33 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import fs from 'fs';
+import path from 'path';
+
+function logContrastIssues(results, screenName) {
+  const contrastViolations = results.violations.filter(v => v.id === 'color-contrast');
+  if (contrastViolations.length === 0) return;
+
+  const repoRoot = path.resolve(process.cwd(), process.cwd().endsWith('frontend') ? '../..' : '.');
+  const docPath = path.join(repoRoot, 'docs/contrast-known-issues.md');
+  let content = '';
+
+  for (const violation of contrastViolations) {
+    for (const node of violation.nodes) {
+      const selector = (node.target || []).join(' ');
+      const elementHtml = (node.html || '').replace(/\|/g, '\\|').replace(/\r?\n/g, ' ').slice(0, 80);
+      const data = node.any?.find(c => c.id === 'color-contrast')?.data || {};
+      const fg = data.fgColor || 'N/A';
+      const bg = data.bgColor || 'N/A';
+      const ratio = data.contrastRatio ? `${Number(data.contrastRatio).toFixed(2)}:1` : 'N/A';
+      const expectedRatio = data.expectedContrastRatio || '4.5:1';
+      content += `| ${screenName} | \`${selector}\` | \`${elementHtml}\` | \`${fg}\` | \`${bg}\` | ${ratio} | ${expectedRatio} |\n`;
+    }
+  }
+
+  if (content && fs.existsSync(docPath)) {
+    fs.appendFileSync(docPath, content);
+  }
+}
 
 test.describe('SyncTone Hardening E2E Suite', () => {
 
@@ -91,10 +119,10 @@ test.describe('SyncTone Hardening E2E Suite', () => {
     // Dark Mode Axe
     const darkResults = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa'])
-      .disableRules(['color-contrast'])
       .analyze();
 
-    const criticalDark = darkResults.violations.filter(v => v.impact === 'critical');
+    logContrastIssues(darkResults, 'Home (Dark)');
+    const criticalDark = darkResults.violations.filter(v => v.id !== 'color-contrast' && v.impact === 'critical');
     expect(criticalDark).toEqual([]);
 
     // Switch to Light Mode and check Axe
@@ -105,10 +133,10 @@ test.describe('SyncTone Hardening E2E Suite', () => {
 
       const lightResults = await new AxeBuilder({ page })
         .withTags(['wcag2a', 'wcag2aa'])
-        .disableRules(['color-contrast'])
         .analyze();
 
-      const criticalLight = lightResults.violations.filter(v => v.impact === 'critical');
+      logContrastIssues(lightResults, 'Home (Light)');
+      const criticalLight = lightResults.violations.filter(v => v.id !== 'color-contrast' && v.impact === 'critical');
       expect(criticalLight).toEqual([]);
     }
   });
@@ -310,9 +338,9 @@ test.describe('SyncTone Hardening E2E Suite', () => {
 
     const homeDarkAxe = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa'])
-      .disableRules(['color-contrast'])
       .analyze();
-    const severeHomeDark = homeDarkAxe.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');
+    logContrastIssues(homeDarkAxe, 'Home (Dark)');
+    const severeHomeDark = homeDarkAxe.violations.filter(v => v.id !== 'color-contrast' && (v.impact === 'critical' || v.impact === 'serious'));
     expect(severeHomeDark).toEqual([]);
     await page.screenshot({ path: '../../docs/screenshots/home-dark-2-3-covers.png' });
 
@@ -325,9 +353,9 @@ test.describe('SyncTone Hardening E2E Suite', () => {
 
     const homeLightAxe = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa'])
-      .disableRules(['color-contrast'])
       .analyze();
-    const severeHomeLight = homeLightAxe.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');
+    logContrastIssues(homeLightAxe, 'Home (Light)');
+    const severeHomeLight = homeLightAxe.violations.filter(v => v.id !== 'color-contrast' && (v.impact === 'critical' || v.impact === 'serious'));
     expect(severeHomeLight).toEqual([]);
     await page.screenshot({ path: '../../docs/screenshots/home-light-2-3-covers.png' });
 
@@ -338,9 +366,9 @@ test.describe('SyncTone Hardening E2E Suite', () => {
 
     const settingsLightAxe = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa'])
-      .disableRules(['color-contrast'])
       .analyze();
-    const severeSettingsLight = settingsLightAxe.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');
+    logContrastIssues(settingsLightAxe, 'Settings Modal (Light)');
+    const severeSettingsLight = settingsLightAxe.violations.filter(v => v.id !== 'color-contrast' && (v.impact === 'critical' || v.impact === 'serious'));
     expect(severeSettingsLight).toEqual([]);
     await page.screenshot({ path: '../../docs/screenshots/settings-modal-light.png' });
 
@@ -353,9 +381,9 @@ test.describe('SyncTone Hardening E2E Suite', () => {
 
     const settingsDarkAxe = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa'])
-      .disableRules(['color-contrast'])
       .analyze();
-    const severeSettingsDark = settingsDarkAxe.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');
+    logContrastIssues(settingsDarkAxe, 'Settings Modal (Dark)');
+    const severeSettingsDark = settingsDarkAxe.violations.filter(v => v.id !== 'color-contrast' && (v.impact === 'critical' || v.impact === 'serious'));
     expect(severeSettingsDark).toEqual([]);
     await page.screenshot({ path: '../../docs/screenshots/settings-modal-dark.png' });
 
@@ -367,9 +395,9 @@ test.describe('SyncTone Hardening E2E Suite', () => {
 
     const profileDarkAxe = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa'])
-      .disableRules(['color-contrast'])
       .analyze();
-    const severeProfileDark = profileDarkAxe.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');
+    logContrastIssues(profileDarkAxe, 'Profile (Dark)');
+    const severeProfileDark = profileDarkAxe.violations.filter(v => v.id !== 'color-contrast' && (v.impact === 'critical' || v.impact === 'serious'));
     expect(severeProfileDark).toEqual([]);
     await page.screenshot({ path: '../../docs/screenshots/profile-dark.png' });
 
@@ -382,9 +410,9 @@ test.describe('SyncTone Hardening E2E Suite', () => {
 
     const profileLightAxe = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa'])
-      .disableRules(['color-contrast'])
       .analyze();
-    const severeProfileLight = profileLightAxe.violations.filter(v => v.impact === 'critical' || v.impact === 'serious');
+    logContrastIssues(profileLightAxe, 'Profile (Light)');
+    const severeProfileLight = profileLightAxe.violations.filter(v => v.id !== 'color-contrast' && (v.impact === 'critical' || v.impact === 'serious'));
     expect(severeProfileLight).toEqual([]);
     await page.screenshot({ path: '../../docs/screenshots/profile-light.png' });
   });

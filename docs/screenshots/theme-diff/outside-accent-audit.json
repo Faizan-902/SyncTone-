@@ -1,0 +1,282 @@
+[
+  {
+    "file": "add-novel-dark-1190x770.png",
+    "totalDiff": 11568,
+    "primaryAccent": 11568,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "add-novel-dark-1440x900.png",
+    "totalDiff": 16568,
+    "primaryAccent": 16568,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "add-novel-light-1190x770.png",
+    "totalDiff": 15790,
+    "primaryAccent": 15790,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "add-novel-light-1440x900.png",
+    "totalDiff": 21762,
+    "primaryAccent": 21762,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "auth-dark-1190x770.png",
+    "totalDiff": 16018,
+    "primaryAccent": 16018,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "auth-dark-1440x900.png",
+    "totalDiff": 18534,
+    "primaryAccent": 18534,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "auth-light-1190x770.png",
+    "totalDiff": 19658,
+    "primaryAccent": 19658,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "auth-light-1440x900.png",
+    "totalDiff": 24542,
+    "primaryAccent": 24542,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "cast-roster-dark-1190x770.png",
+    "totalDiff": 19837,
+    "primaryAccent": 19837,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "cast-roster-dark-1440x900.png",
+    "totalDiff": 19837,
+    "primaryAccent": 19837,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "cast-roster-light-1190x770.png",
+    "totalDiff": 19930,
+    "primaryAccent": 19930,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "cast-roster-light-1440x900.png",
+    "totalDiff": 19930,
+    "primaryAccent": 19930,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "home-dark-1190x770.png",
+    "totalDiff": 19837,
+    "primaryAccent": 19837,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "home-dark-1440x900.png",
+    "totalDiff": 19837,
+    "primaryAccent": 19837,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "home-light-1190x770.png",
+    "totalDiff": 19930,
+    "primaryAccent": 19930,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "home-light-1440x900.png",
+    "totalDiff": 19930,
+    "primaryAccent": 19930,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "novel-detail-dark-1190x770.png",
+    "totalDiff": 21058,
+    "primaryAccent": 21058,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "novel-detail-dark-1440x900.png",
+    "totalDiff": 21758,
+    "primaryAccent": 21758,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "novel-detail-light-1190x770.png",
+    "totalDiff": 21136,
+    "primaryAccent": 21136,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "novel-detail-light-1440x900.png",
+    "totalDiff": 21835,
+    "primaryAccent": 21835,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "profile-dark-1190x770.png",
+    "totalDiff": 7046,
+    "primaryAccent": 7046,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "profile-dark-1440x900.png",
+    "totalDiff": 7046,
+    "primaryAccent": 7046,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "profile-light-1190x770.png",
+    "totalDiff": 7046,
+    "primaryAccent": 7046,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "profile-light-1440x900.png",
+    "totalDiff": 7046,
+    "primaryAccent": 7046,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "reader-3d-dark-1190x770.png",
+    "totalDiff": 8169,
+    "primaryAccent": 8169,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "reader-3d-dark-1440x900.png",
+    "totalDiff": 7637,
+    "primaryAccent": 7637,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "reader-3d-light-1190x770.png",
+    "totalDiff": 8213,
+    "primaryAccent": 8213,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "reader-3d-light-1440x900.png",
+    "totalDiff": 7704,
+    "primaryAccent": 7704,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "reader-normal-dark-1190x770.png",
+    "totalDiff": 9330,
+    "primaryAccent": 9330,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "reader-normal-dark-1440x900.png",
+    "totalDiff": 9808,
+    "primaryAccent": 9808,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "reader-normal-light-1190x770.png",
+    "totalDiff": 9757,
+    "primaryAccent": 9757,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "reader-normal-light-1440x900.png",
+    "totalDiff": 10222,
+    "primaryAccent": 10222,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "settings-dark-1190x770.png",
+    "totalDiff": 33319,
+    "primaryAccent": 33319,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "settings-dark-1440x900.png",
+    "totalDiff": 34053,
+    "primaryAccent": 34053,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "settings-light-1190x770.png",
+    "totalDiff": 35517,
+    "primaryAccent": 35517,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "settings-light-1440x900.png",
+    "totalDiff": 36309,
+    "primaryAccent": 36309,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "upload-chapter-dark-1190x770.png",
+    "totalDiff": 11149,
+    "primaryAccent": 11149,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "upload-chapter-dark-1440x900.png",
+    "totalDiff": 13867,
+    "primaryAccent": 13867,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "upload-chapter-light-1190x770.png",
+    "totalDiff": 12380,
+    "primaryAccent": 12380,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  },
+  {
+    "file": "upload-chapter-light-1440x900.png",
+    "totalDiff": 15620,
+    "primaryAccent": 15620,
+    "edgeAntiAliasing": 0,
+    "outsideAccent": 0
+  }
+]

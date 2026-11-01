@@ -44,17 +44,17 @@ describe('Theme Lock: Token & Color Parity', () => {
     expect(darkVars['--text-sub']).toBe('oklch(0.85 0.008 260)');
     expect(darkVars['--text-muted']).toBe('oklch(0.74 0.010 260)');
 
-    expect(darkVars['--accent']).toBe('oklch(0.67 0.220 36)');
-    expect(darkVars['--accent-hover']).toBe('oklch(0.72 0.210 38)');
-    expect(darkVars['--accent-surface']).toBe('rgba(255, 95, 65, 0.12)');
+    expect(darkVars['--accent']).toBe('oklch(0.72 0.200 55)');
+    expect(darkVars['--accent-hover']).toBe('oklch(0.76 0.190 58)');
+    expect(darkVars['--accent-surface']).toBe('rgba(255, 121, 0, 0.12)');
     expect(darkVars['--on-accent']).toBe('oklch(0.12 0.010 260)');
 
     expect(darkVars['--border-subtle']).toBe('rgba(255, 255, 255, 0.07)');
     expect(darkVars['--border-strong']).toBe('rgba(255, 255, 255, 0.20)');
-    expect(darkVars['--border-focus']).toBe('oklch(0.70 0.220 36)');
+    expect(darkVars['--border-focus']).toBe('oklch(0.72 0.200 55)');
 
     expect(darkVars['--speaker-narrator']).toBe('oklch(0.85 0.008 260)');
-    expect(darkVars['--speaker-a']).toBe('oklch(0.72 0.200 36)');
+    expect(darkVars['--speaker-a']).toBe('oklch(0.72 0.200 55)');
     expect(darkVars['--speaker-b']).toBe('oklch(0.77 0.140 155)');
     expect(darkVars['--speaker-c']).toBe('oklch(0.76 0.140 235)');
     expect(darkVars['--speaker-d']).toBe('oklch(0.76 0.150 320)');
@@ -73,17 +73,17 @@ describe('Theme Lock: Token & Color Parity', () => {
     expect(lightVars['--text-sub']).toBe('oklch(0.29 0.012 260)');
     expect(lightVars['--text-muted']).toBe('oklch(0.43 0.015 260)');
 
-    expect(lightVars['--accent']).toBe('oklch(0.52 0.220 34)');
-    expect(lightVars['--accent-hover']).toBe('oklch(0.45 0.220 32)');
-    expect(lightVars['--accent-surface']).toBe('rgba(220, 60, 40, 0.10)');
+    expect(lightVars['--accent']).toBe('oklch(0.52 0.170 48)');
+    expect(lightVars['--accent-hover']).toBe('oklch(0.46 0.170 46)');
+    expect(lightVars['--accent-surface']).toBe('rgba(178, 62, 0, 0.10)');
     expect(lightVars['--on-accent']).toBe('oklch(1.00 0.000 0)');
 
     expect(lightVars['--border-subtle']).toBe('rgba(20, 25, 35, 0.08)');
     expect(lightVars['--border-strong']).toBe('rgba(20, 25, 35, 0.20)');
-    expect(lightVars['--border-focus']).toBe('oklch(0.52 0.220 34)');
+    expect(lightVars['--border-focus']).toBe('oklch(0.52 0.170 48)');
 
     expect(lightVars['--speaker-narrator']).toBe('oklch(0.20 0.010 260)');
-    expect(lightVars['--speaker-a']).toBe('oklch(0.46 0.210 34)');
+    expect(lightVars['--speaker-a']).toBe('oklch(0.46 0.170 46)');
     expect(lightVars['--speaker-b']).toBe('oklch(0.38 0.120 155)');
     expect(lightVars['--speaker-c']).toBe('oklch(0.38 0.130 240)');
     expect(lightVars['--speaker-d']).toBe('oklch(0.40 0.160 330)');

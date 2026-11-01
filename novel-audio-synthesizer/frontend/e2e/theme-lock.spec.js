@@ -50,6 +50,10 @@ const GEOMETRY_THRESHOLDS = {
   'auth-light': 16.5,      // Header theme toggle + catalog geometry behind modal
   'add-novel-dark': 8.5,   // Header theme toggle + catalog geometry behind modal
   'add-novel-light': 16.0, // Header theme toggle + catalog geometry behind modal
+  'upload-chapter-dark': 8.5,
+  'upload-chapter-light': 16.0,
+  'cast-roster-dark': 8.5,
+  'cast-roster-light': 16.0,
   'profile-dark': 60.0,    // Dedicated ProfileView route (was catalog fallback in 1879dd7)
   'profile-light': 75.0,   // Dedicated ProfileView route (was catalog fallback in 1879dd7)
 };
@@ -114,6 +118,10 @@ async function dumpElementStyles(page, screenName, theme) {
 }
 
 async function diffImagesInBrowser(page, refPath, currentScreenshotBuffer) {
+  if (process.env.UPDATE_SNAPSHOTS) {
+    fs.writeFileSync(refPath, currentScreenshotBuffer);
+    return { diffPercent: 0, skipped: false };
+  }
   if (!fs.existsSync(refPath)) return { diffPercent: 0, skipped: true };
   const refB64 = fs.readFileSync(refPath).toString('base64');
   const curB64 = currentScreenshotBuffer.toString('base64');
@@ -207,6 +215,10 @@ function normalizeColor(str) {
 }
 
 function verifyColorParity(current, screenKey) {
+  if (process.env.UPDATE_SNAPSHOTS) {
+    refComputed[screenKey] = current;
+    return;
+  }
   const ref = refComputed[screenKey];
   if (!ref) return;
 
@@ -403,6 +415,65 @@ test.describe('Theme Lock: Zero Color Delta & Visual Bounds', () => {
         expect(diff.diffPercent).toBeLessThanOrEqual(GEOMETRY_THRESHOLDS[screenKey]);
       }
     });
+
+    test(`8. Upload Chapter modal (${theme}) - zero color delta and visual bounds`, async ({ page }) => {
+      await prepareThemePage(page, theme, true);
+      await page.goto(`/?theme=${theme}`);
+      await page.waitForSelector('article.novel-card-hybrid', { timeout: 15000 });
+      const novelCard = page.locator('article.novel-card-hybrid:visible').first();
+      await novelCard.click();
+      await page.waitForSelector('h1', { timeout: 15000 });
+      await page.waitForTimeout(400);
+
+      const uploadChBtn = page.locator('button:visible:has-text("Upload Chapter")').first();
+      if (await uploadChBtn.isVisible()) {
+        await uploadChBtn.click();
+        await page.waitForSelector('div[role="dialog"]', { timeout: 8000 });
+        await page.waitForTimeout(500);
+
+        const screenKey = `upload-chapter-${theme}`;
+        const styles = await dumpElementStyles(page, 'Upload Chapter', theme);
+        verifyColorParity(styles, screenKey);
+
+        const screenshot = await page.screenshot();
+        const diff = await diffImagesInBrowser(page, path.join(REF_DIR, `${screenKey}.png`), screenshot);
+        if (!diff.skipped) {
+          expect(diff.diffPercent).toBeLessThanOrEqual(GEOMETRY_THRESHOLDS[screenKey]);
+        }
+      }
+    });
+
+    test(`9. Cast Roster (${theme}) - zero color delta and visual bounds`, async ({ page }) => {
+      await prepareThemePage(page, theme, false);
+      await page.goto(`/?theme=${theme}`);
+      await page.waitForSelector('article.novel-card-hybrid', { timeout: 15000 });
+      const novelCard = page.locator('article.novel-card-hybrid:visible').first();
+      await novelCard.click();
+      await page.waitForSelector('h1', { timeout: 15000 });
+      await page.waitForTimeout(400);
+
+      const rosterTab = page.locator('button:has-text("Characters"), button:has-text("Cast"), button[aria-label*="Character Roster"]').first();
+      if (await rosterTab.isVisible()) {
+        await rosterTab.click();
+        await page.waitForTimeout(500);
+
+        const screenKey = `cast-roster-${theme}`;
+        const styles = await dumpElementStyles(page, 'Cast Roster', theme);
+        verifyColorParity(styles, screenKey);
+
+        const screenshot = await page.screenshot();
+        const diff = await diffImagesInBrowser(page, path.join(REF_DIR, `${screenKey}.png`), screenshot);
+        if (!diff.skipped) {
+          expect(diff.diffPercent).toBeLessThanOrEqual(GEOMETRY_THRESHOLDS[screenKey]);
+        }
+      }
+    });
   }
+
+  test.afterAll(() => {
+    if (process.env.UPDATE_SNAPSHOTS) {
+      fs.writeFileSync(refComputedPath, JSON.stringify(refComputed, null, 2) + '\n');
+    }
+  });
 
 });
