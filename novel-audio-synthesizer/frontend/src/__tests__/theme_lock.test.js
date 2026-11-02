@@ -215,6 +215,7 @@ describe('Theme Lock: Complete Token & Color Parity', () => {
     expect(tailwindContent).toContain("'text-main': 'var(--text-main)'");
     expect(tailwindContent).toContain("'text-sub': 'var(--text-sub)'");
     expect(tailwindContent).toContain("'text-muted': 'var(--text-muted)'");
+    expect(tailwindContent).toContain("info: 'var(--info)'");
   });
 });
 

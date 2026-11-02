@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 // Curated Earthy Luxury artistic cover styles
 const COVER_STYLES = {
@@ -86,6 +86,10 @@ export default function NovelCover({
   const displayTitle = typeof title === 'string' && title.trim().length > 0 ? title : 'Untitled Novel';
   const displayAuthor = typeof author === 'string' ? author.trim() : '';
   const style = getCoverStyle(displayTitle);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [coverUrl]);
 
   // If real image URL is valid, render image with rich book spine & ambient shadow
   if (coverUrl && !imgError) {

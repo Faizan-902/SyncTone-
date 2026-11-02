@@ -43,6 +43,7 @@ export default {
           success: 'var(--success)',
           warning: 'var(--warning)',
           danger: 'var(--danger)',
+          info: 'var(--info)',
         },
         speaker: {
           narrator: 'var(--speaker-narrator)',

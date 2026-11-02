@@ -229,7 +229,7 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
               )}
               <button
                 className={`px-4 py-3 theme-card hover:border-[var(--border-focus)] rounded-xl text-xs sm:text-sm font-semibold border min-h-[44px] transition cursor-pointer ${
-                  inLibrary ? 'text-status-success border-[var(--color-status-success)]' : ''
+                  inLibrary ? 'text-[var(--success)] border-[var(--success)]' : ''
                 }`}
                 onClick={() => setInLibrary((prev) => !prev)}
               >
