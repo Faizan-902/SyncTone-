@@ -595,17 +595,113 @@ body {
   100% { transform: scaleY(0.4); opacity: 0.7; }
 }
 
+@keyframes eqBounce {
+  0% {
+    transform: scaleY(0.2);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleY(0.35);
+    opacity: 0.7;
+  }
+}
+
 .equalizer-bar {
   transform-origin: bottom;
   will-change: transform, opacity;
   animation: eq-bounce 0.75s ease-in-out infinite alternate;
 }
 
+.eq-bar-1 {
+  height: 100%;
+  transform-origin: bottom;
+  will-change: transform;
+  animation: eqBounce 0.75s ease-in-out infinite alternate;
+  animation-delay: 0ms;
+}
+
+.eq-bar-2 {
+  height: 100%;
+  transform-origin: bottom;
+  will-change: transform;
+  animation: eqBounce 0.75s ease-in-out infinite alternate;
+  animation-delay: 150ms;
+}
+
+.eq-bar-3 {
+  height: 100%;
+  transform-origin: bottom;
+  will-change: transform;
+  animation: eqBounce 0.75s ease-in-out infinite alternate;
+  animation-delay: 300ms;
+}
+
+.paused .eq-bar-1,
+.paused .eq-bar-2,
+.paused .eq-bar-3,
+.eq-paused {
+  animation-play-state: paused !important;
+}
+
+/* Micro-Animation Keyframes & Utility Classes */
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes slideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slideDown {
+  animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .equalizer-bar {
+  .equalizer-bar,
+  .eq-bar-1,
+  .eq-bar-2,
+  .eq-bar-3 {
     animation: none !important;
     transform: scaleY(0.6) !important;
     opacity: 0.8 !important;
+  }
+  .animate-fade-in,
+  .animate-slideDown,
+  .animate-fadeInUp {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
 

@@ -60,7 +60,7 @@ export default function SidebarNav({
           {/* Logo Mark */}
           <button
             onClick={() => onNavigate('catalog')}
-            className="group relative flex items-center justify-center w-11 h-11 rounded-xl bg-[#1A120E] border border-[#A88462]/30 text-[#A88462] shadow-md hover:scale-105 transition-transform"
+            className="group relative flex items-center justify-center w-11 h-11 rounded-xl bg-[#1A120E] border border-[#A88462]/30 text-[#A88462] shadow-md hover:scale-105 active:scale-95 transition-transform duration-100 ease-out"
             title="SyncTone Home"
             aria-label="SyncTone Home"
           >
@@ -73,7 +73,7 @@ export default function SidebarNav({
             {/* Library / Catalog */}
             <button
               onClick={() => onNavigate('catalog')}
-              className={`group relative flex items-center justify-center w-11 h-11 rounded-xl transition ${
+              className={`group relative flex items-center justify-center w-11 h-11 rounded-xl transition-all duration-100 ease-out active:scale-95 ${
                 currentView === 'catalog'
                   ? 'bg-[var(--cta-primary-bg)] text-[var(--cta-primary-text)] shadow-sm'
                   : 'text-[#D5C4AE]/70 hover:text-[#D5C4AE] hover:bg-[#4A4A46]/40'
@@ -93,7 +93,7 @@ export default function SidebarNav({
                 onClick={onOpenAddNovel}
                 onMouseEnter={preloadAddNovelModal}
                 onFocus={preloadAddNovelModal}
-                className="group relative flex items-center justify-center w-11 h-11 rounded-xl text-[#D5C4AE]/70 hover:text-[#D5C4AE] hover:bg-[#4A4A46]/40 transition cursor-pointer"
+                className="group relative flex items-center justify-center w-11 h-11 rounded-xl text-[#D5C4AE]/70 hover:text-[#D5C4AE] hover:bg-[#4A4A46]/40 transition-all duration-100 ease-out active:scale-95 cursor-pointer"
                 title="Create New Novel"
                 aria-label="Create New Novel"
               >
@@ -106,7 +106,7 @@ export default function SidebarNav({
               onClick={onOpenSettings}
               onMouseEnter={preloadSettingsModal}
               onFocus={preloadSettingsModal}
-              className="group relative flex items-center justify-center w-11 h-11 rounded-xl text-[#D5C4AE]/70 hover:text-[#D5C4AE] hover:bg-[#4A4A46]/40 transition cursor-pointer"
+              className="group relative flex items-center justify-center w-11 h-11 rounded-xl text-[#D5C4AE]/70 hover:text-[#D5C4AE] hover:bg-[#4A4A46]/40 transition-all duration-100 ease-out active:scale-95 cursor-pointer"
               title="Settings & Preferences"
               aria-label="Settings"
             >
@@ -120,7 +120,7 @@ export default function SidebarNav({
           {/* Theme Switcher */}
           <button
             onClick={cycleTheme}
-            className="flex items-center justify-center w-10 h-10 rounded-xl text-[#D5C4AE]/70 hover:text-[#D5C4AE] hover:bg-[#4A4A46]/40 border border-transparent hover:border-[#A88462]/30 transition"
+            className="flex items-center justify-center w-10 h-10 rounded-xl text-[#D5C4AE]/70 hover:text-[#D5C4AE] hover:bg-[#4A4A46]/40 border border-transparent hover:border-[#A88462]/30 transition-all duration-100 ease-out active:scale-95"
             title={`Switch Theme (${themeLabel})`}
             aria-label="Switch theme"
             aria-pressed={theme === 'dark'}
@@ -133,7 +133,7 @@ export default function SidebarNav({
             <div className="relative group">
               <button
                 onClick={logout}
-                className="w-10 h-10 rounded-xl bg-[var(--cta-primary-bg)] flex items-center justify-center text-[var(--cta-primary-text)] text-xs font-bold uppercase shadow-sm hover:scale-105 transition"
+                className="w-10 h-10 rounded-xl bg-[var(--cta-primary-bg)] flex items-center justify-center text-[var(--cta-primary-text)] text-xs font-bold uppercase shadow-sm hover:scale-105 active:scale-95 transition-transform duration-100 ease-out"
                 title={`${user?.username} (${role}) — Click to sign out`}
                 aria-label="User Account"
               >
@@ -145,7 +145,7 @@ export default function SidebarNav({
               onClick={() => onOpenAuth('login')}
               onMouseEnter={preloadAuthModal}
               onFocus={preloadAuthModal}
-              className="w-10 h-10 rounded-xl theme-card flex items-center justify-center theme-muted hover:text-[var(--text-main)] border hover:border-[var(--border-focus)] transition"
+              className="w-10 h-10 rounded-xl theme-card flex items-center justify-center theme-muted hover:text-[var(--text-main)] border hover:border-[var(--border-focus)] transition-all duration-100 ease-out active:scale-95"
               title="Sign in / Register"
               aria-label="Account / Sign In"
             >
@@ -164,7 +164,7 @@ export default function SidebarNav({
       >
         <button
           onClick={() => onNavigate('catalog')}
-          className={`flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium transition ${
+          className={`flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium transition-all duration-100 ease-out active:scale-95 ${
             currentView === 'catalog' ? 'text-[var(--accent-text)] font-semibold' : 'theme-muted'
           }`}
           aria-label="Library"
@@ -176,7 +176,7 @@ export default function SidebarNav({
         {isWriterOrAdmin && onOpenAddNovel && (
           <button
             onClick={onOpenAddNovel}
-            className="flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium theme-muted hover:text-[var(--text-main)] transition"
+            className="flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium theme-muted hover:text-[var(--text-main)] transition-all duration-100 ease-out active:scale-95"
             aria-label="Add Novel"
           >
             <Icon name="plus" className="w-5 h-5" />
@@ -186,7 +186,7 @@ export default function SidebarNav({
 
         <button
           onClick={cycleTheme}
-          className="flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium theme-muted hover:text-[var(--text-main)] transition"
+          className="flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium theme-muted hover:text-[var(--text-main)] transition-all duration-100 ease-out active:scale-95"
           aria-label="Switch theme"
           aria-pressed={theme === 'dark'}
           title={`Switch Theme (${themeLabel})`}
@@ -197,7 +197,7 @@ export default function SidebarNav({
 
         <button
           onClick={onOpenSettings}
-          className="flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium theme-muted hover:text-[var(--text-main)] transition"
+          className="flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium theme-muted hover:text-[var(--text-main)] transition-all duration-100 ease-out active:scale-95"
           aria-label="Settings"
         >
           <Icon name="settings" className="w-5 h-5" />
@@ -207,7 +207,7 @@ export default function SidebarNav({
         {isAuthenticated ? (
           <button
             onClick={logout}
-            className="flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium theme-muted hover:text-[var(--danger)] transition"
+            className="flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium theme-muted hover:text-[var(--danger)] transition-all duration-100 ease-out active:scale-95"
             aria-label="Sign Out"
           >
             <span className="w-5 h-5 rounded-full bg-[var(--cta-primary-bg)] text-[var(--cta-primary-text)] text-[10px] flex items-center justify-center font-bold">
@@ -218,7 +218,7 @@ export default function SidebarNav({
         ) : (
           <button
             onClick={() => onOpenAuth('login')}
-            className="flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium theme-muted hover:text-[var(--text-main)] transition"
+            className="flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium theme-muted hover:text-[var(--text-main)] transition-all duration-100 ease-out active:scale-95"
             aria-label="Mobile Sign In"
           >
             <Icon name="user" className="w-5 h-5" />

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 // Curated Earthy Luxury artistic cover styles
-const COVER_STYLES = {
+export const COVER_STYLES = {
   espresso: {
     bg: 'bg-gradient-to-br from-[#1A120E] via-[#2A1B14] to-[#140D0A]',
     border: 'border-[#A88462]/35',
@@ -49,6 +49,22 @@ const COVER_STYLES = {
     eyebrow: 'WALNUT BROWN CHRONICLES',
     edition: 'Master Binding Edition',
   },
+  sage: {
+    bg: 'bg-gradient-to-br from-[#1E271D] via-[#2A3628] to-[#141C13]',
+    border: 'border-[#87A96B]/35',
+    spine: 'border-l-[#87A96B]/65',
+    accentText: 'text-[#87A96B]',
+    subText: 'text-[#D5C4AE]/80',
+    glow: 'rgba(135, 169, 107, 0.28)',
+    emblem: (
+      <svg className="w-10 h-10 sm:w-12 sm:h-12 text-[#87A96B] mx-auto drop-shadow-[0_0_12px_rgba(135,169,107,0.45)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 22C6.5 22 2 17.5 2 12S6.5 2 12 2s10 4.5 10 10c0 5.5-4.5 10-10 10z" strokeWidth="1" opacity="0.35" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m0-12c-2.5 2-4 5-4 8 0 2 1.5 3 4 4m0-12c2.5 2 4 5 4 8 0 2-1.5 3-4 4" />
+      </svg>
+    ),
+    eyebrow: 'BOTANICAL & SAGE',
+    edition: 'Antiquarian Herbarium Edition',
+  },
   charcoal: {
     bg: 'bg-gradient-to-br from-[#4A4A46] via-[#353532] to-[#1E1E1C]',
     border: 'border-[#D5C4AE]/30',
@@ -66,13 +82,19 @@ const COVER_STYLES = {
   },
 };
 
-function getCoverStyle(title = '') {
+export function getCoverStyle(title = '') {
   const safeTitle = typeof title === 'string' ? title : '';
   let hash = 0;
   for (let i = 0; i < safeTitle.length; i++) {
     hash = ((hash << 5) - hash + safeTitle.charCodeAt(i)) | 0;
   }
-  const styles = [COVER_STYLES.espresso, COVER_STYLES.chocolate, COVER_STYLES.walnut, COVER_STYLES.charcoal];
+  const styles = [
+    COVER_STYLES.espresso,
+    COVER_STYLES.chocolate,
+    COVER_STYLES.walnut,
+    COVER_STYLES.sage,
+    COVER_STYLES.charcoal,
+  ];
   return styles[Math.abs(hash) % styles.length];
 }
 

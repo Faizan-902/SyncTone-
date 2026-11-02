@@ -44,7 +44,7 @@ export function Button({
       type={type}
       disabled={disabled || isLoading}
       onClick={onClick}
-      className={`inline-flex items-center justify-center gap-2 rounded-xl transition-all duration-150 cursor-pointer select-none active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 ${sizeClasses} ${variantClasses} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-xl transition-all duration-100 ease-out cursor-pointer select-none active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 ${sizeClasses} ${variantClasses} ${className}`}
       {...props}
     >
       {isLoading ? (

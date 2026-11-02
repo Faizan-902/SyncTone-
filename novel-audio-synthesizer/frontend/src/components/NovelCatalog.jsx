@@ -442,10 +442,12 @@ export default function NovelCatalog({
                     {[1, 2, 3, 4, 5, 6, 7, 8].map((bar) => (
                       <span
                         key={bar}
-                        className="w-0.5 bg-[var(--accent)] rounded-full"
+                        className="w-0.5 bg-[var(--accent)] rounded-full equalizer-bar"
                         style={{
                           height: `${Math.sin(bar) * 6 + 8}px`,
                           opacity: 0.7,
+                          animationDelay: `${bar * 110}ms`,
+                          animationDuration: `${0.65 + (bar % 3) * 0.2}s`,
                         }}
                       />
                     ))}
@@ -584,14 +586,14 @@ export default function NovelCatalog({
                   <button
                     onClick={() => scrollCarousel(-1)}
                     aria-label="Scroll carousel left"
-                    className="p-1.5 rounded-lg theme-card border hover:border-[var(--border-focus)] transition theme-muted hover:text-[var(--text-main)] shadow-xs"
+                    className="p-1.5 rounded-lg theme-card border hover:border-[var(--border-focus)] transition-all duration-100 ease-out active:scale-90 theme-muted hover:text-[var(--text-main)] shadow-xs cursor-pointer"
                   >
                     <IconChevronLeft className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => scrollCarousel(1)}
                     aria-label="Scroll carousel right"
-                    className="p-1.5 rounded-lg theme-card border hover:border-[var(--border-focus)] transition theme-muted hover:text-[var(--text-main)] shadow-xs"
+                    className="p-1.5 rounded-lg theme-card border hover:border-[var(--border-focus)] transition-all duration-100 ease-out active:scale-90 theme-muted hover:text-[var(--text-main)] shadow-xs cursor-pointer"
                   >
                     <IconChevronRight className="w-4 h-4" />
                   </button>

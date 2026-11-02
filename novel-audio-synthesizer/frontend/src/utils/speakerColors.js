@@ -24,7 +24,25 @@ export const SPEAKER_PALETTE = [
     badge: 'bg-[#6B4A2E]/15 text-[#6B4A2E] border-[#6B4A2E]/30',
     ring: 'ring-[#6B4A2E]',
   },
-  // 3. Forest Olive
+  // 3. Sage Green
+  {
+    hex: '#87A96B',
+    bg: 'bg-[#87A96B]/10',
+    border: 'border-[#87A96B]',
+    text: 'text-[#87A96B]',
+    badge: 'bg-[#87A96B]/15 text-[#87A96B] border-[#87A96B]/30',
+    ring: 'ring-[#87A96B]',
+  },
+  // 4. Amber Glow
+  {
+    hex: '#D5851F',
+    bg: 'bg-[#D5851F]/10',
+    border: 'border-[#D5851F]',
+    text: 'text-[#D5851F]',
+    badge: 'bg-[#D5851F]/15 text-[#D5851F] border-[#D5851F]/30',
+    ring: 'ring-[#D5851F]',
+  },
+  // 5. Forest Olive
   {
     hex: '#5FA052',
     bg: 'bg-[#5FA052]/10',
@@ -33,7 +51,7 @@ export const SPEAKER_PALETTE = [
     badge: 'bg-[#5FA052]/15 text-[#5FA052] border-[#5FA052]/30',
     ring: 'ring-[#5FA052]',
   },
-  // 4. Warm Ochre
+  // 6. Warm Ochre
   {
     hex: '#C68A3C',
     bg: 'bg-[#C68A3C]/10',
@@ -42,7 +60,7 @@ export const SPEAKER_PALETTE = [
     badge: 'bg-[#C68A3C]/15 text-[#C68A3C] border-[#C68A3C]/30',
     ring: 'ring-[#C68A3C]',
   },
-  // 5. Soft Sand
+  // 7. Soft Sand
   {
     hex: '#D5C4AE',
     bg: 'bg-[#D5C4AE]/15',
@@ -51,7 +69,7 @@ export const SPEAKER_PALETTE = [
     badge: 'bg-[#D5C4AE]/20 text-[#D5C4AE] border-[#D5C4AE]/35',
     ring: 'ring-[#D5C4AE]',
   },
-  // 6. Deep Espresso
+  // 8. Deep Espresso
   {
     hex: '#1A120E',
     bg: 'bg-[#1A120E]/20',
@@ -60,7 +78,16 @@ export const SPEAKER_PALETTE = [
     badge: 'bg-[#1A120E]/30 text-[#D5C4AE] border-[#40362E]',
     ring: 'ring-[#1A120E]',
   },
-  // 7. Terracotta
+  // 9. Deep Walnut
+  {
+    hex: '#5A3E2B',
+    bg: 'bg-[#5A3E2B]/10',
+    border: 'border-[#5A3E2B]',
+    text: 'text-[#5A3E2B]',
+    badge: 'bg-[#5A3E2B]/15 text-[#5A3E2B] border-[#5A3E2B]/30',
+    ring: 'ring-[#5A3E2B]',
+  },
+  // 10. Terracotta
   {
     hex: '#BA4E3D',
     bg: 'bg-[#BA4E3D]/10',
@@ -69,7 +96,7 @@ export const SPEAKER_PALETTE = [
     badge: 'bg-[#BA4E3D]/15 text-[#BA4E3D] border-[#BA4E3D]/30',
     ring: 'ring-[#BA4E3D]',
   },
-  // 8. Charcoal
+  // 11. Charcoal
   {
     hex: '#4A4A46',
     bg: 'bg-[#4A4A46]/15',
@@ -79,6 +106,10 @@ export const SPEAKER_PALETTE = [
     ring: 'ring-[#4A4A46]',
   },
 ];
+
+export const SAGE_COLOR = SPEAKER_PALETTE[2];
+export const AMBER_COLOR = SPEAKER_PALETTE[3];
+export const WALNUT_DEEP_COLOR = SPEAKER_PALETTE[8];
 
 export const NARRATOR_COLOR = {
   hex: '#D5C4AE',

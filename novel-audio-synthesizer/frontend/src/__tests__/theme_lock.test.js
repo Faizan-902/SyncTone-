@@ -199,6 +199,10 @@ describe('Theme Lock: Complete Token & Color Parity', () => {
     expect(tailwindContent).toContain("charcoal: '#4A4A46'");
     expect(tailwindContent).toContain("gold: '#E5A93C'");
     expect(tailwindContent).toContain("crimson: '#E50914'");
+    expect(tailwindContent).toContain("sage: '#87A96B'");
+    expect(tailwindContent).toContain("'walnut-deep': '#5A3E2B'");
+    expect(tailwindContent).toContain("amber: '#D5851F'");
+    expect(tailwindContent).toContain("'amber-glow': '#D5851F'");
     expect(tailwindContent).not.toContain("cyan: '#06B6D4'");
     expect(tailwindContent).not.toContain("indigo: '#6366F1'");
     expect(tailwindContent).not.toContain("violet: '#8B5CF6'");

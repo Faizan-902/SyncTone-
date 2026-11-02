@@ -29,7 +29,7 @@ export default function TopHeader({
         <div className="flex items-center gap-4 sm:gap-6 min-w-0">
           <button
             onClick={() => onNavigate('catalog')}
-            className="flex items-center gap-2.5 group text-left outline-none flex-shrink-0 cursor-pointer"
+            className="flex items-center gap-2.5 group text-left outline-none flex-shrink-0 cursor-pointer active:scale-95 transition-transform duration-100 ease-out"
             aria-label="SyncTone Home"
           >
             <div className="w-8 h-8 rounded-lg bg-[var(--brand-chocolate,#3A2418)] border border-[var(--brand-bronze,#A88462)]/30 text-[var(--brand-bronze,#A88462)] flex items-center justify-center transition-colors">
@@ -50,7 +50,7 @@ export default function TopHeader({
             <span className="theme-muted opacity-50">/</span>
             <button
               onClick={() => onNavigate('catalog')}
-              className={`hover:text-[var(--text-main)] transition flex-shrink-0 cursor-pointer ${
+              className={`hover:text-[var(--text-main)] active:scale-95 transition-all duration-100 ease-out flex-shrink-0 cursor-pointer ${
                 view === 'catalog' ? 'text-[var(--text-main)] font-semibold' : ''
               }`}
             >
@@ -61,7 +61,7 @@ export default function TopHeader({
                 <span className="theme-muted opacity-50">/</span>
                 <button
                   onClick={() => onNavigate('details')}
-                  className={`hover:text-[var(--text-main)] transition truncate max-w-[180px] cursor-pointer ${
+                  className={`hover:text-[var(--text-main)] active:scale-95 transition-all duration-100 ease-out truncate max-w-[180px] cursor-pointer ${
                     view === 'details' ? 'text-[var(--text-main)] font-semibold' : ''
                   }`}
                   title={currentNovel.title}
@@ -92,7 +92,7 @@ export default function TopHeader({
               onClick={onToggleRoster}
               onMouseEnter={preloadCharacterRoster}
               onFocus={preloadCharacterRoster}
-              className={`px-3 py-1.5 text-xs font-medium rounded-xl border transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`px-3 py-1.5 text-xs font-medium rounded-xl border transition-all duration-100 ease-out active:scale-95 flex items-center gap-1.5 cursor-pointer ${
                 showRoster
                   ? 'bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)] shadow-sm'
                   : 'theme-card hover:border-[var(--border-focus)]'
@@ -109,7 +109,7 @@ export default function TopHeader({
             onClick={onOpenSettings}
             onMouseEnter={preloadSettingsModal}
             onFocus={preloadSettingsModal}
-            className="p-2.5 theme-muted hover:text-[var(--text-main)] rounded-xl hover:bg-[var(--bg-hover)] border border-transparent hover:border-[var(--border-subtle)] transition cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
+            className="p-2.5 theme-muted hover:text-[var(--text-main)] rounded-xl hover:bg-[var(--bg-hover)] border border-transparent hover:border-[var(--border-subtle)] active:scale-95 transition-all duration-100 ease-out cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
             title="Settings & Preferences"
             aria-label="Settings"
           >
@@ -125,7 +125,7 @@ export default function TopHeader({
               </span>
               <button
                 onClick={logout}
-                className="px-3 py-1.5 text-xs theme-muted hover:text-[var(--danger)] rounded-lg hover:bg-[var(--bg-hover)] transition font-medium cursor-pointer"
+                className="px-3 py-1.5 text-xs theme-muted hover:text-[var(--danger)] rounded-lg hover:bg-[var(--bg-hover)] active:scale-95 transition-all duration-100 ease-out font-medium cursor-pointer"
                 title="Sign out of SyncTone"
               >
                 Sign out
@@ -137,7 +137,7 @@ export default function TopHeader({
                 onClick={() => onOpenAuth('login')}
                 onMouseEnter={preloadAuthModal}
                 onFocus={preloadAuthModal}
-                className="px-3.5 py-2 text-xs font-semibold rounded-xl bg-[var(--cta-primary-bg)] hover:bg-[var(--cta-primary-hover)] text-[var(--cta-primary-text)] shadow-sm transition flex items-center gap-1.5 cursor-pointer min-h-[36px]"
+                className="px-3.5 py-2 text-xs font-semibold rounded-xl bg-[var(--cta-primary-bg)] hover:bg-[var(--cta-primary-hover)] text-[var(--cta-primary-text)] shadow-sm active:scale-95 transition-all duration-100 ease-out flex items-center gap-1.5 cursor-pointer min-h-[36px]"
               >
                 <IconUser className="w-3.5 h-3.5" />
                 <span>Sign In</span>

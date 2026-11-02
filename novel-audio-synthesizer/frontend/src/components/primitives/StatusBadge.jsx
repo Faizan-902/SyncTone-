@@ -16,13 +16,25 @@ export function StatusBadge({
   const text = label || children;
 
   const statusConfig = {
+    verified: {
+      colorVar: 'var(--brand-sage, #87A96B)',
+      defaultIcon: '✓',
+    },
     success: {
-      colorVar: 'var(--success, #5FA052)',
+      colorVar: 'var(--brand-sage, #87A96B)',
+      defaultIcon: '✓',
+    },
+    sage: {
+      colorVar: 'var(--brand-sage, #87A96B)',
       defaultIcon: '✓',
     },
     warning: {
       colorVar: 'var(--warning, #C68A3C)',
       defaultIcon: '▲',
+    },
+    amber: {
+      colorVar: 'var(--brand-amber, #D5851F)',
+      defaultIcon: '★',
     },
     danger: {
       colorVar: 'var(--danger, #BA4E3D)',
@@ -31,6 +43,10 @@ export function StatusBadge({
     info: {
       colorVar: 'var(--info, #A88462)',
       defaultIcon: 'ℹ',
+    },
+    walnut: {
+      colorVar: 'var(--brand-walnut-deep, #5A3E2B)',
+      defaultIcon: '●',
     },
     narrator: {
       colorVar: 'var(--speaker-narrator, #D5C4AE)',

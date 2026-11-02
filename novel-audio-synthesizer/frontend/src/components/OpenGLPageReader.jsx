@@ -498,7 +498,7 @@ export default function OpenGLPageReader({
     <div
       className={
         isFocusMode
-          ? 'fixed inset-0 z-50 bg-[#fcfaf6] dark:bg-[#050507] flex flex-col justify-between px-4 sm:px-10 pt-3 pb-24 overflow-y-auto animate-fade-in select-none'
+          ? 'fixed inset-0 z-50 bg-[#fcfaf6] dark:bg-[var(--bg-page,#1A120E)] flex flex-col justify-between px-4 sm:px-10 pt-3 pb-24 overflow-y-auto animate-fade-in select-none'
           : 'space-y-6 animate-fade-in select-none relative'
       }
     >
@@ -533,7 +533,7 @@ export default function OpenGLPageReader({
           className={`
             relative min-h-[640px] sm:min-h-[720px] rounded-3xl
             bg-[#fcfaf6] text-[#1c1917] border border-stone-300/70
-            dark:bg-[#050507] dark:text-[#e5e5ea] dark:border-white/10
+            dark:bg-[var(--bg-page,#1A120E)] dark:text-[var(--text-main,#D5C4AE)] dark:border-white/10
             shadow-2xl overflow-hidden transition-all duration-300 flex flex-col justify-between
             ${isFlipping ? (flipDirection === 'next' ? 'page-curl-flip-next' : 'page-curl-flip-prev') : ''}
           `}
