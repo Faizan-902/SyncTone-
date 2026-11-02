@@ -8,7 +8,7 @@ export default function AdminView({ onNavigateHome, onOpenSettings }) {
   if (role !== 'admin') {
     return (
       <div className="max-w-md mx-auto py-16 px-4 text-center">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[var(--surface-elevated)] border theme-border flex items-center justify-center text-[var(--accent)]">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[var(--bg-elevated)] border theme-border flex items-center justify-center text-[var(--accent-text)]">
           <IconShield className="w-8 h-8" />
         </div>
         <h2 className="text-xl font-bold theme-heading font-serif mb-2">Restricted Access</h2>
@@ -17,7 +17,7 @@ export default function AdminView({ onNavigateHome, onOpenSettings }) {
         </p>
         <button
           onClick={onNavigateHome}
-          className="px-6 py-2.5 rounded-xl bg-[var(--accent)] text-[var(--on-accent)] text-xs font-bold hover:bg-[var(--accent-hover)] transition shadow-sm"
+          className="px-6 py-2.5 rounded-xl bg-[var(--cta-primary-bg)] text-[var(--cta-primary-text)] text-xs font-bold hover:bg-[var(--cta-primary-hover)] transition shadow-sm"
         >
           Return to Library
         </button>
@@ -36,7 +36,7 @@ export default function AdminView({ onNavigateHome, onOpenSettings }) {
         </div>
         <button
           onClick={onOpenSettings}
-          className="px-4 py-2 rounded-xl bg-[var(--accent)] text-[var(--on-accent)] text-xs font-bold hover:bg-[var(--accent-hover)] transition shadow-sm"
+          className="px-4 py-2 rounded-xl bg-[var(--cta-primary-bg)] text-[var(--cta-primary-text)] text-xs font-bold hover:bg-[var(--cta-primary-hover)] transition shadow-sm"
         >
           Voice Settings
         </button>
@@ -45,7 +45,7 @@ export default function AdminView({ onNavigateHome, onOpenSettings }) {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <div className="p-5 rounded-2xl theme-surface border theme-border shadow-sm">
           <div className="flex items-center gap-3 mb-3">
-            <div className="p-2.5 rounded-xl bg-[var(--accent)]/15 text-[var(--accent)]">
+            <div className="p-2.5 rounded-xl bg-[var(--accent)]/15 text-[var(--accent-text)]">
               <IconSoundwave className="w-5 h-5" />
             </div>
             <div>
@@ -58,7 +58,7 @@ export default function AdminView({ onNavigateHome, onOpenSettings }) {
 
         <div className="p-5 rounded-2xl theme-surface border theme-border shadow-sm">
           <div className="flex items-center gap-3 mb-3">
-            <div className="p-2.5 rounded-xl bg-blue-500/15 text-blue-400">
+            <div className="p-2.5 rounded-xl bg-[var(--info)]/15 text-[var(--info)]">
               <IconBook className="w-5 h-5" />
             </div>
             <div>
@@ -71,7 +71,7 @@ export default function AdminView({ onNavigateHome, onOpenSettings }) {
 
         <div className="p-5 rounded-2xl theme-surface border theme-border shadow-sm">
           <div className="flex items-center gap-3 mb-3">
-            <div className="p-2.5 rounded-xl bg-emerald-500/15 text-emerald-400">
+            <div className="p-2.5 rounded-xl bg-[var(--success)]/15 text-[var(--success)]">
               <IconUsers className="w-5 h-5" />
             </div>
             <div>

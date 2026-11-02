@@ -37,59 +37,75 @@
 }
 
 /* ========================================================================= */
-/* SYNCTONE OPTION B: "ATELIER OBSIDIAN" TOKENS (OKLCH TRI-THEME ENGINE)     */
-/* Monolithic Basalt Carbon | Japanese Kozo Washi | Gallery Cold-Press Vellum */
+/* ========================================================================= */
+/* SYNCTONE: "EARTHY LUXURY" TOKENS                                          */
+/* Warm Editorial (Light / Soft Sand) & Nocturne (Dark / Deep Espresso)      */
 /* ========================================================================= */
 
 :root, html.dark {
-  /* Surfaces */
-  --bg-page: oklch(0.13 0.006 260);
-  --bg-surface: oklch(0.16 0.008 260);
-  --bg-card: oklch(0.19 0.010 260);
-  --bg-hover: oklch(0.23 0.012 260);
-  --bg-elevated: oklch(0.21 0.010 260);
+  /* Brand Tokens (Earthy Luxury) */
+  --brand-espresso: #1A120E;
+  --brand-chocolate: #3A2418;
+  --brand-walnut: #6B4A2E;
+  --brand-bronze: #A88462;
+  --brand-sand: #D5C4AE;
+  --brand-charcoal: #4A4A46;
 
-  /* Typography / Text Ratios (AAA Main & Sub, AA Muted >= 4.5:1 on all surfaces) */
-  --text-main: oklch(0.96 0.005 260);
-  --text-sub: oklch(0.85 0.008 260);
-  --text-muted: oklch(0.74 0.010 260);
+  /* Surfaces (Nocturne / Earthy Luxury) */
+  --bg-page: #1A120E;
+  --bg-surface: #3A2418;
+  --bg-card: #3A2418;
+  --bg-hover: #4A4A46;
+  --bg-elevated: #4A4A46;
+
+  /* Typography / Text Ratios (AAA Main & Sub >= 7:1, AA Muted >= 4.5:1) */
+  --text-main: #D5C4AE;
+  --text-sub: #A88462;
+  --text-muted: #8A7A68;
 
   /* Architectural Borders & Affordances */
-  --border-subtle: rgba(255, 255, 255, 0.07);
-  --border-strong: rgba(255, 255, 255, 0.20);
-  --border-hover: oklch(0.58 0.030 260);
-  --border-focus: oklch(0.72 0.200 55);
+  --border-subtle: #40362E;
+  --border-strong: #5A4D42;
+  --border-hover: #71665D;
+  --border-focus: #A88462;
 
-  /* Living Accent: Vivid Tangerine Orange */
-  --accent: oklch(0.72 0.200 55);
-  --accent-hover: oklch(0.76 0.190 58);
-  --accent-surface: rgba(255, 121, 0, 0.12);
-  --on-accent: oklch(0.12 0.010 260);
+  /* Living Accent: Warm Bronze */
+  --accent: #A88462;
+  --accent-hover: #BCA082;
+  --accent-surface: rgba(168, 132, 98, 0.15);
+  --accent-strong: #6B4A2E;
+  --accent-text: #A88462;
+  --on-accent: #1A120E;
+
+  /* Primary Button Contract (Walnut Brown & Soft Sand) */
+  --cta-primary-bg: #6B4A2E;
+  --cta-primary-hover: #7D5737;
+  --cta-primary-text: #D5C4AE;
 
   /* Glassmorphism */
-  --glass-bg: rgba(18, 20, 24, 0.85);
-  --glass-dock: rgba(22, 24, 30, 0.94);
+  --glass-bg: rgba(26, 18, 14, 0.88);
+  --glass-dock: rgba(58, 36, 24, 0.95);
 
   /* Status Tokens */
-  --success: oklch(0.78 0.14 145);
-  --warning: oklch(0.79 0.15 80);
-  --danger: oklch(0.72 0.20 25);
-  --info: oklch(0.76 0.14 235);
+  --success: #5FA052;
+  --warning: #C68A3C;
+  --danger: #BA4E3D;
+  --info: #A88462;
 
-  /* Speaker Palette (Fixed Lightness & Chroma) */
-  --speaker-narrator: oklch(0.85 0.008 260);
-  --speaker-a: oklch(0.72 0.200 55);
-  --speaker-b: oklch(0.77 0.140 155);
-  --speaker-c: oklch(0.76 0.140 235);
-  --speaker-d: oklch(0.76 0.150 320);
+  /* Speaker Palette (Harmonized) */
+  --speaker-narrator: #D5C4AE;
+  --speaker-a: #A88462;
+  --speaker-b: #5FA052;
+  --speaker-c: #6B4A2E;
+  --speaker-d: #BA4E3D;
 
   /* Top 10 Outline Typography */
-  --top10-fill: oklch(0.13 0.006 260);
-  --top10-stroke: rgba(255, 255, 255, 0.24);
-  --top10-active: oklch(0.72 0.200 55);
+  --top10-fill: #1A120E;
+  --top10-stroke: rgba(213, 196, 174, 0.25);
+  --top10-active: #A88462;
 
   /* Card Accent Default */
-  --card-accent: oklch(0.72 0.200 55);
+  --card-accent: #A88462;
 
   /* Backward Compatibility Aliases */
   --color-status-success: var(--success);
@@ -112,9 +128,9 @@
 
   /* 4-Level Elevation Tokens */
   --shadow-none: none;
-  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.22), 0 1px 2px -1px rgba(0, 0, 0, 0.18);
-  --shadow-md: 0 8px 20px -4px rgba(0, 0, 0, 0.32), 0 4px 8px -2px rgba(0, 0, 0, 0.22);
-  --shadow-lg: 0 24px 48px -12px rgba(0, 0, 0, 0.48), 0 12px 24px -6px rgba(0, 0, 0, 0.36);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.28), 0 1px 2px -1px rgba(0, 0, 0, 0.22);
+  --shadow-md: 0 8px 20px -4px rgba(0, 0, 0, 0.42), 0 4px 8px -2px rgba(0, 0, 0, 0.30);
+  --shadow-lg: 0 24px 48px -12px rgba(0, 0, 0, 0.58), 0 12px 24px -6px rgba(0, 0, 0, 0.42);
 
   /* Radius Scale */
   --radius-xs: 4px;
@@ -147,56 +163,61 @@
   --duration-slow: var(--motion-duration-moderate);
 }
 
-
-
 html.light {
-  /* Surfaces (Architectural Cold-Press Vellum) */
-  --bg-page: oklch(0.985 0.003 240);
-  --bg-surface: oklch(1.000 0.000 0);
-  --bg-card: oklch(0.955 0.005 240);
-  --bg-hover: oklch(0.925 0.008 240);
-  --bg-elevated: oklch(1.000 0.000 0);
+  /* Surfaces (Warm Editorial / Soft Sand & Warm Ivory) */
+  --bg-page: #D5C4AE;
+  --bg-surface: #FAF6F0;
+  --bg-card: #F5EFE6;
+  --bg-hover: #E8DDD0;
+  --bg-elevated: #FFFFFF;
 
   /* Typography / Text Ratios */
-  --text-main: oklch(0.16 0.010 260);
-  --text-sub: oklch(0.29 0.012 260);
-  --text-muted: oklch(0.43 0.015 260);
+  --text-main: #1A120E;
+  --text-sub: #4A4A46;
+  --text-muted: #6B5B4E;
 
   /* Borders */
-  --border-subtle: rgba(20, 25, 35, 0.08);
-  --border-strong: rgba(20, 25, 35, 0.20);
-  --border-hover: oklch(0.48 0.030 260);
-  --border-focus: oklch(0.52 0.170 48);
+  --border-subtle: #C8B9A6;
+  --border-strong: #A89885;
+  --border-hover: #8C7E6F;
+  --border-focus: #6B4A2E;
 
-  /* Living Accent: Deep Amber Orange */
-  --accent: oklch(0.52 0.170 48);
-  --accent-hover: oklch(0.46 0.170 46);
-  --accent-surface: rgba(178, 62, 0, 0.10);
-  --on-accent: oklch(1.00 0.000 0);
+  /* Living Accent: Walnut Brown */
+  --accent: #6B4A2E;
+  --accent-hover: #3A2418;
+  --accent-surface: rgba(107, 74, 46, 0.12);
+  --accent-strong: #3A2418;
+  --accent-text: #6B4A2E;
+  --on-accent: #FAF6F0;
+
+  /* Primary Button Contract (Walnut Brown & Soft Sand) */
+  --cta-primary-bg: #6B4A2E;
+  --cta-primary-hover: #3A2418;
+  --cta-primary-text: #D5C4AE;
 
   /* Glassmorphism */
-  --glass-bg: rgba(255, 255, 255, 0.90);
-  --glass-dock: rgba(255, 255, 255, 0.96);
+  --glass-bg: rgba(213, 196, 174, 0.90);
+  --glass-dock: rgba(250, 246, 240, 0.96);
 
-  /* Status */
-  --success: oklch(0.40 0.13 145);
-  --warning: oklch(0.43 0.15 70);
-  --danger: oklch(0.43 0.19 25);
-  --info: oklch(0.38 0.13 240);
+  /* Status Tokens */
+  --success: #386B2F;
+  --warning: #87571B;
+  --danger: #962F22;
+  --info: #6B4A2E;
 
   /* Speakers */
-  --speaker-narrator: oklch(0.20 0.010 260);
-  --speaker-a: oklch(0.46 0.170 46);
-  --speaker-b: oklch(0.38 0.120 155);
-  --speaker-c: oklch(0.38 0.130 240);
-  --speaker-d: oklch(0.40 0.160 330);
+  --speaker-narrator: #1A120E;
+  --speaker-a: #6B4A2E;
+  --speaker-b: #386B2F;
+  --speaker-c: #4A4A46;
+  --speaker-d: #962F22;
 
   /* Top 10 */
-  --top10-fill: oklch(0.985 0.003 240);
-  --top10-stroke: rgba(20, 25, 35, 0.26);
-  --top10-active: oklch(0.52 0.170 48);
+  --top10-fill: #D5C4AE;
+  --top10-stroke: rgba(26, 18, 14, 0.25);
+  --top10-active: #6B4A2E;
 
-  --card-accent: oklch(0.52 0.170 48);
+  --card-accent: #6B4A2E;
 
   --color-status-success: var(--success);
   --color-status-warning: var(--warning);
@@ -240,6 +261,16 @@ body {
 .tabular-nums {
   font-variant-numeric: tabular-nums;
   font-feature-settings: 'tnum' 1;
+}
+
+/* Procedural Book Cover Typography */
+.cover-typeset-title::after {
+  content: attr(data-title);
+  display: block;
+}
+.cover-typeset-author::after {
+  content: attr(data-author);
+  display: block;
 }
 
 /* Fluid Typography Clamp Scale */
@@ -618,7 +649,7 @@ body.focus-fullscreen-mode footer {
 .focus-mode-active article [role="button"][aria-pressed="true"] {
   opacity: 1 !important;
   transform: scale(1.015);
-  box-shadow: 0 16px 36px -6px rgba(250, 204, 21, 0.25), 0 0 24px -2px rgba(250, 204, 21, 0.2) !important;
+  box-shadow: 0 16px 36px -6px rgba(168, 132, 98, 0.25), 0 0 24px -2px rgba(168, 132, 98, 0.2) !important;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 

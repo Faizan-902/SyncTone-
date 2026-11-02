@@ -16,8 +16,8 @@ export default defineConfig({
         name: 'SyncTone — AI Audio Novel Studio',
         short_name: 'SyncTone',
         description: 'Multi-voice neural audio novel synthesizer with synchronized text read-along',
-        theme_color: '#0c0d12',
-        background_color: '#0c0d12',
+        theme_color: '#1A120E',
+        background_color: '#1A120E',
         display: 'standalone',
         icons: [
           {

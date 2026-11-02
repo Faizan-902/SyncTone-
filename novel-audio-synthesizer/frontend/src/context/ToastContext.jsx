@@ -33,7 +33,7 @@ export function ToastProvider({ children }) {
             style={{ animation: 'fadeInUp 0.2s ease' }}
           >
             {toast.type === 'error' && (
-              <span className="text-rose-400 flex-shrink-0">⚠</span>
+              <span className="text-[var(--danger)] flex-shrink-0">⚠</span>
             )}
             <span className="theme-heading">{toast.message}</span>
             <button

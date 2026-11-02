@@ -91,7 +91,7 @@ export default function UploadChapterModal({ isOpen, novel, onClose, onChapterUp
         <div className="p-6 border-b theme-border flex items-center justify-between">
           <div>
             <h2 id="upload-chapter-modal-title" className="text-base font-bold theme-heading flex items-center gap-2">
-              <IconUpload className="w-4 h-4 text-[var(--accent)]" />
+              <IconUpload className="w-4 h-4 text-[var(--accent-text)]" />
               <span>Upload Chapter to {novel.title}</span>
             </h2>
             <p className="text-xs theme-muted mt-0.5">
@@ -109,7 +109,7 @@ export default function UploadChapterModal({ isOpen, novel, onClose, onChapterUp
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
-            <div className="p-3 bg-rose-500/10 text-rose-400 text-xs rounded-xl border border-rose-500/20">
+            <div className="p-3 bg-[var(--danger)]/10 text-[var(--danger)] text-xs rounded-xl border border-[var(--danger)]/20">
               {error}
             </div>
           )}
@@ -161,7 +161,7 @@ export default function UploadChapterModal({ isOpen, novel, onClose, onChapterUp
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold theme-heading">TTS DOM Sanitizer (tts-dom-cleaner)</span>
-                <span className="px-1.5 py-0.2 rounded text-[10px] font-mono uppercase bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                <span className="px-1.5 py-0.2 rounded text-[10px] font-mono uppercase bg-[var(--warning)]/15 text-[var(--warning)] border border-[var(--warning)]/30">
                   Opt-in
                 </span>
               </div>
@@ -176,7 +176,7 @@ export default function UploadChapterModal({ isOpen, novel, onClose, onChapterUp
               aria-checked={useTtsSanitizer}
               onClick={() => setUseTtsSanitizer((prev) => !prev)}
               className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                useTtsSanitizer ? 'bg-[var(--accent)]' : 'bg-white/20'
+                useTtsSanitizer ? 'bg-[var(--accent)]' : 'bg-[var(--border-strong)]'
               }`}
             >
               <span

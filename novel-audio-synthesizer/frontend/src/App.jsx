@@ -428,7 +428,7 @@ function AppContent() {
             {view === 'reader' && (
               <div className="space-y-6">
                 {chapterError && (
-                  <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs">
+                  <div className="p-4 rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 text-[var(--danger)] text-xs">
                     {chapterError}
                   </div>
                 )}

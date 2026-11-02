@@ -6,8 +6,8 @@
  */
 
 const THEME_SURFACES = {
-  dark: { card: '#161922', page: '#0F1117', accent: '#FF7900' },
-  light: { card: '#F3F4F6', page: '#FAFBFD', accent: '#B23E00' },
+  dark: { card: '#3A2418', page: '#1A120E', accent: '#A88462' },
+  light: { card: '#F5EFE6', page: '#D5C4AE', accent: '#6B4A2E' },
 };
 
 const NEED_CONTRAST = 3.0;

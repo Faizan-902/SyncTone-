@@ -27,7 +27,7 @@ import {
 function HogwartsCrest({ className = 'w-44 h-44 sm:w-48 sm:h-48' }) {
   return (
     <div className="flex flex-col items-center justify-center my-3 select-none">
-      <div className="relative p-3.5 rounded-2xl bg-amber-50/70 dark:bg-[#111114] border border-amber-900/15 dark:border-amber-400/20 shadow-sm dark:shadow-md">
+      <div className="relative p-3.5 rounded-2xl bg-[var(--accent-surface)] border border-[var(--border-subtle)] shadow-sm dark:shadow-md">
         <svg
           viewBox="0 0 240 240"
           className={className}
@@ -49,10 +49,10 @@ function HogwartsCrest({ className = 'w-44 h-44 sm:w-48 sm:h-48' }) {
             opacity="0.9"
           />
 
-          {/* Quarter 2: Ravenclaw Blue (Top Right) */}
+          {/* Quarter 2: Charcoal (Top Right) */}
           <path
             d="M120 22 C150 22 185 32 195 70 C195 105 170 120 120 120 L120 22 Z"
-            fill="#0e1a40"
+            fill="#4A4A46"
             opacity="0.9"
           />
 
@@ -363,8 +363,8 @@ export default function OpenGLPageReader({
         >
           <div className="flex items-center gap-2 mb-1">
             {isDialogue ? (
-              <span className="font-sans text-[11px] font-semibold text-[var(--accent)] tracking-wider inline-flex items-center gap-1 select-none">
-                <IconMic className="w-3 h-3 text-[var(--accent)]" />
+              <span className="font-sans text-[11px] font-semibold text-[var(--accent-text)] tracking-wider inline-flex items-center gap-1 select-none">
+                <IconMic className="w-3 h-3 text-[var(--accent-text)]" />
                 <span>{seg.speaker_name || 'Character'}</span>
               </span>
             ) : (
@@ -407,15 +407,20 @@ export default function OpenGLPageReader({
             className={`leading-[1.85] tracking-[0.01em] text-justify indent-6 select-text ${
             isDialogue ? 'italic font-serif theme-main' : 'theme-sub'
           }`}>
-            <mark className="bg-yellow-300/35 text-stone-900 dark:text-amber-100 rounded-xs">
+            <mark className="bg-[rgba(168,132,98,0.20)] text-[var(--text-main)] rounded-xs">
               {tokens.map((token, idx) => {
                 if (idx === activeTokenIdx) {
                   return (
                     <span
                       key={idx}
                       data-active-word="true"
-                      style={{ display: 'inline', textIndent: '0px' }}
-                      className="inline bg-[#FACC15] bg-yellow-400 text-slate-950 font-bold font-semibold rounded-xs"
+                      style={{
+                        display: 'inline',
+                        textIndent: '0px',
+                        backgroundColor: 'var(--brand-bronze, #A88462)',
+                        color: 'var(--brand-espresso, #1A120E)',
+                      }}
+                      className="inline bg-yellow-400 font-bold rounded-xs px-0.5"
                     >
                       {token}
                     </span>
@@ -436,7 +441,7 @@ export default function OpenGLPageReader({
             <mark
               data-active-word="true"
               style={{ display: 'inline', textIndent: '0px' }}
-              className="inline bg-yellow-300/35 text-stone-900 dark:text-amber-100 rounded-xs"
+              className="inline bg-[rgba(168,132,98,0.20)] text-[var(--text-main)] rounded-xs"
             >
               {rawText}
             </mark>
@@ -462,8 +467,8 @@ export default function OpenGLPageReader({
       >
         <div className="flex items-center gap-2 mb-1">
           {isDialogue ? (
-            <span className="font-sans text-[11px] font-semibold text-[var(--accent)] tracking-wider inline-flex items-center gap-1 select-none">
-              <IconMic className="w-3 h-3 text-[var(--accent)]" />
+            <span className="font-sans text-[11px] font-semibold text-[var(--accent-text)] tracking-wider inline-flex items-center gap-1 select-none">
+              <IconMic className="w-3 h-3 text-[var(--accent-text)]" />
               <span>{seg.speaker_name || 'Character'}</span>
             </span>
           ) : (
@@ -473,7 +478,7 @@ export default function OpenGLPageReader({
             </span>
           )}
 
-          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-500 dark:text-yellow-400 bg-amber-400/15 px-2 py-0.5 rounded-full border border-amber-400/30">
+          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[var(--accent-text)] bg-[var(--accent-surface)] px-2 py-0.5 rounded-full border border-[var(--border-focus)]/40">
             <IconSoundwave className="w-3 h-3 animate-pulse" />
             <span>Reading</span>
           </span>
@@ -570,10 +575,10 @@ export default function OpenGLPageReader({
                 {/* On Spread 0, render Chapter Opening Header */}
                 {isSpreadZero && (
                   <div className="text-center space-y-2 mb-4 animate-fade-in">
-                    <h1 className="text-sm sm:text-base font-serif font-bold tracking-widest uppercase text-amber-900 dark:text-amber-200/90">
+                    <h1 className="text-sm sm:text-base font-serif font-bold tracking-widest uppercase text-[var(--accent-text)]">
                       {currentNovel?.title || 'Chapter Opening'}
                     </h1>
-                    <h2 className="text-xs font-mono tracking-wider uppercase text-amber-700 dark:text-amber-400/80">
+                    <h2 className="text-xs font-mono tracking-wider uppercase text-[var(--text-sub)]">
                       {currentChapter?.title || 'Chapter One'}
                     </h2>
                     {!leftHasImage && isHarryPotter ? (
@@ -591,9 +596,9 @@ export default function OpenGLPageReader({
                       </div>
                     ) : (
                       <div className="flex items-center justify-center gap-3 my-4 opacity-60 dark:opacity-50 select-none">
-                        <span className="h-px w-12 bg-gradient-to-r from-transparent to-amber-700/50 dark:to-amber-400/60" />
-                        <span className="text-amber-700 dark:text-amber-400 text-xs">❦</span>
-                        <span className="h-px w-12 bg-gradient-to-l from-transparent to-amber-700/50 dark:to-amber-400/60" />
+                        <span className="h-px w-12 bg-gradient-to-r from-transparent to-[var(--brand-bronze,#A88462)]/50" />
+                        <span className="text-[var(--accent-text)] text-xs">❦</span>
+                        <span className="h-px w-12 bg-gradient-to-l from-transparent to-[var(--brand-bronze,#A88462)]/50" />
                       </div>
                     )}
                   </div>
@@ -643,9 +648,9 @@ export default function OpenGLPageReader({
                 {isCoverActiveOnSpreadZero ? (
                   /* Cover Showcase Panel (Matching Screenshot 1) */
                   <div className="flex-1 flex flex-col items-center justify-center py-4 px-2 text-center animate-fade-in">
-                    <div className="relative group max-w-[340px] sm:max-w-[380px] w-full aspect-[2/3] max-h-[480px] rounded-2xl overflow-hidden shadow-2xl ring-2 ring-amber-500/30 transition-transform duration-300 hover:scale-[1.01]">
+                    <div className="relative group max-w-[340px] sm:max-w-[380px] w-full aspect-[2/3] max-h-[480px] rounded-2xl overflow-hidden shadow-2xl ring-2 ring-[var(--brand-bronze,#A88462)]/30 transition-transform duration-300 hover:scale-[1.01]">
                       {/* MinaLima Ornate Gold Border Frame */}
-                      <div className="absolute inset-0 border-4 border-amber-600/40 rounded-2xl pointer-events-none z-10" />
+                      <div className="absolute inset-0 border-4 border-[var(--brand-bronze,#A88462)]/40 rounded-2xl pointer-events-none z-10" />
                       {currentNovel?.cover_object ? (
                         <img
                           src={currentNovel.cover_object}
@@ -735,7 +740,7 @@ export default function OpenGLPageReader({
             title="Turn to previous spread"
             aria-label="Turn page backward"
           >
-            <div className="w-6 h-6 border-t-2 border-l-2 border-amber-700/30 dark:border-amber-400/20 group-hover:border-amber-600 dark:group-hover:border-amber-400 transition rounded-tl-lg" />
+            <div className="w-6 h-6 border-t-2 border-l-2 border-[var(--brand-walnut,#6B4A2E)]/40 group-hover:border-[var(--brand-bronze,#A88462)] transition rounded-tl-lg" />
           </div>
 
           <div
@@ -744,7 +749,7 @@ export default function OpenGLPageReader({
             title="Turn to next spread"
             aria-label="Turn page forward"
           >
-            <div className="w-6 h-6 border-t-2 border-r-2 border-amber-700/30 dark:border-amber-400/20 group-hover:border-amber-600 dark:group-hover:border-amber-400 transition rounded-tr-lg" />
+            <div className="w-6 h-6 border-t-2 border-r-2 border-[var(--brand-walnut,#6B4A2E)]/40 group-hover:border-[var(--brand-bronze,#A88462)] transition rounded-tr-lg" />
           </div>
         </div>
       </div>
@@ -757,7 +762,7 @@ export default function OpenGLPageReader({
             type="button"
             onClick={handlePrevPage}
             disabled={currentSpreadIndex === 0}
-            className="px-2.5 py-1.5 rounded-xl theme-card border hover:border-amber-400 text-xs font-semibold theme-sub hover:theme-main transition flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:pointer-events-none shadow-xs"
+            className="px-2.5 py-1.5 rounded-xl theme-card border hover:border-[var(--accent)] text-xs font-semibold theme-sub hover:theme-main transition flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:pointer-events-none shadow-xs"
             title="Previous Page (Left Arrow)"
           >
             <IconChevronLeft className="w-3.5 h-3.5" />
@@ -767,7 +772,7 @@ export default function OpenGLPageReader({
             type="button"
             onClick={handleNextPage}
             disabled={currentSpreadIndex >= totalSpreads - 1}
-            className="px-2.5 py-1.5 rounded-xl theme-card border hover:border-amber-400 text-xs font-semibold theme-sub hover:theme-main transition flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:pointer-events-none shadow-xs"
+            className="px-2.5 py-1.5 rounded-xl theme-card border hover:border-[var(--accent)] text-xs font-semibold theme-sub hover:theme-main transition flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:pointer-events-none shadow-xs"
             title="Next Page (Right Arrow)"
           >
             <span>Next Page</span>
@@ -786,7 +791,7 @@ export default function OpenGLPageReader({
             max={totalSpreads - 1}
             value={currentSpreadIndex}
             onChange={(e) => setCurrentSpreadIndex(parseInt(e.target.value, 10))}
-            className="flex-1 h-1.5 accent-amber-400 cursor-pointer"
+            className="flex-1 h-1.5 accent-[var(--accent)] cursor-pointer"
             aria-label="Book spread slider"
           />
           <span className="text-xs font-mono font-bold theme-muted w-12">
@@ -799,7 +804,7 @@ export default function OpenGLPageReader({
           <button
             type="button"
             onClick={() => setShowCoverSpread((prev) => !prev)}
-            className="px-2.5 py-1.5 rounded-xl theme-card border hover:border-amber-400 text-xs font-semibold text-amber-700 dark:text-amber-300 transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+            className="px-2.5 py-1.5 rounded-xl theme-card border hover:border-[var(--accent)] text-xs font-semibold text-[var(--accent-text)] transition flex items-center gap-1.5 cursor-pointer shadow-xs"
             title="Toggle between full Cover Artwork and continuous two-page Prose"
           >
             <IconBook className="w-3.5 h-3.5" />

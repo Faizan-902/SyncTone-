@@ -8,7 +8,7 @@ export default function ProfileView({ onOpenAuth, onNavigateHome }) {
   if (!isAuthenticated) {
     return (
       <div className="max-w-2xl mx-auto py-16 px-4 text-center">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[var(--surface-elevated)] border theme-border flex items-center justify-center text-[var(--accent)]">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[var(--bg-elevated)] border theme-border flex items-center justify-center text-[var(--accent-text)]">
           <IconUser className="w-8 h-8" />
         </div>
         <h2 className="text-xl font-bold theme-heading font-serif mb-2">Member Profile</h2>
@@ -18,7 +18,7 @@ export default function ProfileView({ onOpenAuth, onNavigateHome }) {
         <div className="flex justify-center gap-3">
           <button
             onClick={() => onOpenAuth?.('login')}
-            className="px-6 py-2.5 rounded-xl bg-[var(--accent)] text-[var(--on-accent)] text-xs font-bold hover:bg-[var(--accent-hover)] transition shadow-sm"
+            className="px-6 py-2.5 rounded-xl bg-[var(--cta-primary-bg)] text-[var(--cta-primary-text)] text-xs font-bold hover:bg-[var(--cta-primary-hover)] transition shadow-sm"
           >
             Sign In
           </button>
@@ -39,13 +39,13 @@ export default function ProfileView({ onOpenAuth, onNavigateHome }) {
       <div className="p-6 rounded-2xl theme-surface border theme-border shadow-sm mb-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-[var(--accent)]/15 border border-[var(--accent)]/30 flex items-center justify-center text-[var(--accent)] font-bold text-xl">
+            <div className="w-14 h-14 rounded-2xl bg-[var(--accent)]/15 border border-[var(--accent)]/30 flex items-center justify-center text-[var(--accent-text)] font-bold text-xl">
               {user?.username?.charAt(0)?.toUpperCase() || 'U'}
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-xl font-bold theme-heading font-serif">{user?.username || 'Reader'}</h1>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase font-bold tracking-wider bg-[var(--border-subtle)] text-[var(--accent)] border theme-border">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase font-bold tracking-wider bg-[var(--border-subtle)] text-[var(--accent-text)] border theme-border">
                   {role || 'Reader'}
                 </span>
               </div>
@@ -65,7 +65,7 @@ export default function ProfileView({ onOpenAuth, onNavigateHome }) {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <div className="p-4 rounded-xl theme-surface border theme-border">
           <div className="flex items-center gap-2 theme-muted text-xs mb-1">
-            <IconShield className="w-4 h-4 text-[var(--accent)]" />
+            <IconShield className="w-4 h-4 text-[var(--accent-text)]" />
             <span>Account Role</span>
           </div>
           <p className="text-base font-bold theme-heading capitalize">{role || 'Reader'}</p>
@@ -80,7 +80,7 @@ export default function ProfileView({ onOpenAuth, onNavigateHome }) {
 
         <div className="p-4 rounded-xl theme-surface border theme-border">
           <div className="flex items-center gap-2 theme-muted text-xs mb-1">
-            <IconClock className="w-4 h-4 text-[var(--accent)]" />
+            <IconClock className="w-4 h-4 text-[var(--accent-text)]" />
             <span>Member Status</span>
           </div>
           <p className="text-base font-bold theme-heading text-status-success">Active</p>
@@ -89,7 +89,7 @@ export default function ProfileView({ onOpenAuth, onNavigateHome }) {
 
         <div className="p-4 rounded-xl theme-surface border theme-border">
           <div className="flex items-center gap-2 theme-muted text-xs mb-1">
-            <IconBook className="w-4 h-4 text-[var(--accent)]" />
+            <IconBook className="w-4 h-4 text-[var(--accent-text)]" />
             <span>Library</span>
           </div>
           <p className="text-base font-bold theme-heading">Synchronized</p>

@@ -23,7 +23,7 @@ export default function SynthesisProgressBar({
   const isFailed = status === 'failed';
 
   let StatusIcon = IconMic;
-  let barColor = 'bg-[var(--accent)]';
+  let barColor = 'bg-[var(--brand-bronze,#A88462)]';
 
   if (status === 'parsing') {
     StatusIcon = IconScroll;
@@ -31,10 +31,10 @@ export default function SynthesisProgressBar({
     StatusIcon = IconSoundwave;
   } else if (isComplete) {
     StatusIcon = IconCheck;
-    barColor = 'bg-emerald-500';
+    barColor = 'bg-[var(--success)]';
   } else if (isFailed) {
     StatusIcon = IconX;
-    barColor = 'bg-rose-500';
+    barColor = 'bg-[var(--danger)]';
   }
 
   return (
@@ -45,7 +45,7 @@ export default function SynthesisProgressBar({
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-8 h-8 rounded-xl bg-[var(--accent-surface)] border border-[var(--border-focus)] text-[var(--accent)] flex items-center justify-center flex-shrink-0">
+          <div className="w-8 h-8 rounded-xl bg-[var(--accent-surface)] border border-[var(--border-focus)] text-[var(--accent-text)] flex items-center justify-center flex-shrink-0">
             <StatusIcon className="w-4 h-4" />
           </div>
           <div className="min-w-0">
@@ -54,8 +54,8 @@ export default function SynthesisProgressBar({
                 {status}
               </span>
               {isConnected && !isComplete && !isFailed && (
-                <span className="flex items-center gap-1 text-[11px] text-emerald-400 font-mono font-medium">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                <span className="flex items-center gap-1 text-[11px] text-[var(--success)] font-mono font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] animate-ping" />
                   Live Sync
                 </span>
               )}

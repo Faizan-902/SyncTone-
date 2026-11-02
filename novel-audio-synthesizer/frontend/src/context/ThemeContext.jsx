@@ -50,6 +50,10 @@ export function ThemeProvider({ children }) {
     const root = document.documentElement;
     root.classList.remove('dark', 'light');
     root.classList.add(theme);
+    const metaTheme = document.getElementById('meta-theme-color');
+    if (metaTheme) {
+      metaTheme.setAttribute('content', theme === 'dark' ? '#1A120E' : '#D5C4AE');
+    }
     try {
       localStorage.setItem(STORAGE_THEME_KEY, theme);
     } catch (_) {}

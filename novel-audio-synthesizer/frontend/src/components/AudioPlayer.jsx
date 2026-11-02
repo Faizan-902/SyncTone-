@@ -282,7 +282,7 @@ export default function AudioPlayer({
             <div className="w-full h-1.5 bg-[var(--bg-surface)] border theme-border rounded-full relative overflow-hidden group-hover:h-2.5 transition-all">
               {/* Progress Bar updated with transform: scaleX (Zero Layout Shift) */}
               <div
-                className="h-full w-full bg-gradient-to-r from-[var(--accent)] to-indigo-400 rounded-full will-change-transform"
+                className="h-full w-full bg-gradient-to-r from-[var(--brand-walnut,#6B4A2E)] to-[var(--brand-bronze,#A88462)] rounded-full will-change-transform"
                 style={scrubScaleStyle}
               />
             </div>
@@ -304,7 +304,7 @@ export default function AudioPlayer({
         <div className="flex items-center justify-between gap-3">
           {/* Left: Track Information */}
           <div className="flex items-center gap-3 min-w-0 max-w-[200px] sm:max-w-xs">
-            <div className="w-9 h-9 rounded-xl theme-card border flex items-center justify-center text-[var(--accent)] shadow-xs flex-shrink-0">
+            <div className="w-9 h-9 rounded-xl theme-card border flex items-center justify-center text-[var(--accent-text)] shadow-xs flex-shrink-0">
               {isPlaying ? (
                 <div className="flex items-end gap-0.5 h-4 w-4 justify-center">
                   <span className="w-1 bg-[var(--accent)] rounded-full eq-bar-1" />
@@ -312,7 +312,7 @@ export default function AudioPlayer({
                   <span className="w-1 bg-[var(--accent)] rounded-full eq-bar-3" />
                 </div>
               ) : (
-                <IconSoundwave className="w-4 h-4 text-[var(--accent)]" />
+                <IconSoundwave className="w-4 h-4 text-[var(--accent-text)]" />
               )}
             </div>
 
@@ -351,7 +351,7 @@ export default function AudioPlayer({
             {/* Play / Pause Toggle Button */}
             <button
               onClick={onToggle}
-              className="w-11 h-11 rounded-full bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] font-bold flex items-center justify-center shadow-lg transition-transform duration-120 hover:scale-105 active:scale-95 focus:outline-none cursor-pointer"
+              className="w-11 h-11 rounded-full bg-[var(--cta-primary-bg)] hover:bg-[var(--cta-primary-hover)] text-[var(--cta-primary-text)] font-bold flex items-center justify-center shadow-lg transition-transform duration-120 hover:scale-105 active:scale-95 focus:outline-none cursor-pointer"
               aria-label={isPlaying ? 'Pause audio' : 'Play audio'}
             >
               <span className="transition-all duration-120 transform scale-100 opacity-100 flex items-center justify-center">
@@ -419,7 +419,7 @@ export default function AudioPlayer({
                 onClick={onTogglePlaybackMode}
                 className={`px-2.5 py-1 rounded-lg border text-xs font-mono font-bold transition shadow-xs cursor-pointer flex items-center gap-1.5 ${
                   playbackMode === 'tts'
-                    ? 'bg-amber-400/20 text-amber-300 border-amber-400/40 hover:bg-amber-400/30'
+                    ? 'bg-[var(--warning)]/20 text-[var(--warning)] border-[var(--warning)]/40 hover:bg-[var(--warning)]/30'
                     : 'theme-card hover:border-[var(--border-focus)] theme-sub'
                 }`}
                 title={
@@ -431,7 +431,7 @@ export default function AudioPlayer({
               >
                 <span
                   className={`w-2 h-2 rounded-full ${
-                    playbackMode === 'tts' ? 'bg-amber-400 animate-pulse' : 'bg-slate-400'
+                    playbackMode === 'tts' ? 'bg-[var(--warning)] animate-pulse' : 'bg-[var(--text-muted)]'
                   }`}
                 />
                 <span className="hidden sm:inline">
@@ -466,7 +466,7 @@ export default function AudioPlayer({
                 aria-label={isMuted ? 'Unmute audio' : 'Mute audio'}
               >
                 {isMuted || volume === 0 ? (
-                  <IconVolumeMute className="w-4 h-4 text-rose-400" />
+                  <IconVolumeMute className="w-4 h-4 text-[var(--danger)]" />
                 ) : (
                   <IconVolume className="w-4 h-4" />
                 )}

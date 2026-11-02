@@ -189,7 +189,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
 
             {/* Error Message Box */}
             {displayError && (
-              <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-semibold">
+              <div className="mb-4 p-3 rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 text-[var(--danger)] text-xs font-semibold">
                 {displayError}
               </div>
             )}
@@ -287,7 +287,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                 <button
                   type="button"
                   onClick={() => setMode('register')}
-                  className="text-[var(--accent)] hover:underline font-bold cursor-pointer"
+                  className="text-[var(--accent-text)] hover:underline font-bold cursor-pointer"
                 >
                   Create Account
                 </button>
@@ -298,7 +298,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                 <button
                   type="button"
                   onClick={() => setMode('login')}
-                  className="text-[var(--accent)] hover:underline font-bold cursor-pointer"
+                  className="text-[var(--accent-text)] hover:underline font-bold cursor-pointer"
                 >
                   Sign In
                 </button>

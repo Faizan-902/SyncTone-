@@ -46,13 +46,13 @@ export default function SidebarNav({
   const { user, role, isAuthenticated, isWriterOrAdmin, logout } = useAuth();
   const { theme, cycleTheme } = useTheme();
 
-  const themeLabel = theme === 'dark' ? 'Atelier Dark' : 'Editorial Light';
+  const themeLabel = theme === 'dark' ? 'Midnight Listening' : 'Warm Editorial';
 
   return (
     <>
       {/* Desktop Left Rail (Editorial 72px Navigation) */}
       <aside
-        className="hidden md:flex fixed top-0 left-0 bottom-0 w-[72px] z-50 flex-col items-center justify-between py-6 theme-surface border-r shadow-xl transition-colors duration-200"
+        className="hidden md:flex fixed top-0 left-0 bottom-0 w-[72px] z-50 flex-col items-center justify-between py-6 bg-[#3A2418] border-r border-[var(--border-subtle)] shadow-xl transition-colors duration-200"
         aria-label="Sidebar Navigation"
       >
         {/* Top: Brand Mark & Primary Navigation */}
@@ -60,12 +60,12 @@ export default function SidebarNav({
           {/* Logo Mark */}
           <button
             onClick={() => onNavigate('catalog')}
-            className="group relative flex items-center justify-center w-11 h-11 rounded-xl bg-[var(--accent)] text-[var(--on-accent)] shadow-md hover:scale-105 transition-transform"
+            className="group relative flex items-center justify-center w-11 h-11 rounded-xl bg-[#1A120E] border border-[#A88462]/30 text-[#A88462] shadow-md hover:scale-105 transition-transform"
             title="SyncTone Home"
             aria-label="SyncTone Home"
           >
-            <Icon name="soundwave" className="w-5 h-5 text-[var(--on-accent)]" />
-            <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[var(--bg-surface)]" />
+            <Icon name="soundwave" className="w-5 h-5 text-[#A88462]" />
+            <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[var(--success)] border-2 border-[#3A2418]" />
           </button>
 
           {/* Navigation Links */}
@@ -75,15 +75,15 @@ export default function SidebarNav({
               onClick={() => onNavigate('catalog')}
               className={`group relative flex items-center justify-center w-11 h-11 rounded-xl transition ${
                 currentView === 'catalog'
-                  ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-sm'
-                  : 'theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
+                  ? 'bg-[var(--cta-primary-bg)] text-[var(--cta-primary-text)] shadow-sm'
+                  : 'text-[#D5C4AE]/70 hover:text-[#D5C4AE] hover:bg-[#4A4A46]/40'
               }`}
               title="Novel Library"
               aria-label="Novel Library"
             >
               <Icon name="book" className="w-5 h-5" />
               {currentView === 'catalog' && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-white rounded-r-full" />
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-[var(--cta-primary-text)] rounded-r-full" />
               )}
             </button>
 
@@ -93,7 +93,7 @@ export default function SidebarNav({
                 onClick={onOpenAddNovel}
                 onMouseEnter={preloadAddNovelModal}
                 onFocus={preloadAddNovelModal}
-                className="group relative flex items-center justify-center w-11 h-11 rounded-xl theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition cursor-pointer"
+                className="group relative flex items-center justify-center w-11 h-11 rounded-xl text-[#D5C4AE]/70 hover:text-[#D5C4AE] hover:bg-[#4A4A46]/40 transition cursor-pointer"
                 title="Create New Novel"
                 aria-label="Create New Novel"
               >
@@ -106,7 +106,7 @@ export default function SidebarNav({
               onClick={onOpenSettings}
               onMouseEnter={preloadSettingsModal}
               onFocus={preloadSettingsModal}
-              className="group relative flex items-center justify-center w-11 h-11 rounded-xl theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition cursor-pointer"
+              className="group relative flex items-center justify-center w-11 h-11 rounded-xl text-[#D5C4AE]/70 hover:text-[#D5C4AE] hover:bg-[#4A4A46]/40 transition cursor-pointer"
               title="Settings & Preferences"
               aria-label="Settings"
             >
@@ -120,7 +120,7 @@ export default function SidebarNav({
           {/* Theme Switcher */}
           <button
             onClick={cycleTheme}
-            className="flex items-center justify-center w-10 h-10 rounded-xl theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] border border-transparent hover:border-[var(--border-subtle)] transition"
+            className="flex items-center justify-center w-10 h-10 rounded-xl text-[#D5C4AE]/70 hover:text-[#D5C4AE] hover:bg-[#4A4A46]/40 border border-transparent hover:border-[#A88462]/30 transition"
             title={`Switch Theme (${themeLabel})`}
             aria-label="Switch theme"
             aria-pressed={theme === 'dark'}
@@ -133,7 +133,7 @@ export default function SidebarNav({
             <div className="relative group">
               <button
                 onClick={logout}
-                className="w-10 h-10 rounded-xl bg-[var(--accent)] flex items-center justify-center text-[var(--on-accent)] text-xs font-bold uppercase shadow-sm hover:scale-105 transition"
+                className="w-10 h-10 rounded-xl bg-[var(--cta-primary-bg)] flex items-center justify-center text-[var(--cta-primary-text)] text-xs font-bold uppercase shadow-sm hover:scale-105 transition"
                 title={`${user?.username} (${role}) — Click to sign out`}
                 aria-label="User Account"
               >
@@ -165,7 +165,7 @@ export default function SidebarNav({
         <button
           onClick={() => onNavigate('catalog')}
           className={`flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium transition ${
-            currentView === 'catalog' ? 'text-[var(--accent)] font-semibold' : 'theme-muted'
+            currentView === 'catalog' ? 'text-[var(--accent-text)] font-semibold' : 'theme-muted'
           }`}
           aria-label="Library"
         >
@@ -207,10 +207,10 @@ export default function SidebarNav({
         {isAuthenticated ? (
           <button
             onClick={logout}
-            className="flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium theme-muted hover:text-rose-400 transition"
+            className="flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium theme-muted hover:text-[var(--danger)] transition"
             aria-label="Sign Out"
           >
-            <span className="w-5 h-5 rounded-full bg-[var(--accent)] text-[var(--on-accent)] text-[10px] flex items-center justify-center font-bold">
+            <span className="w-5 h-5 rounded-full bg-[var(--cta-primary-bg)] text-[var(--cta-primary-text)] text-[10px] flex items-center justify-center font-bold">
               {user?.username?.[0] || 'U'}
             </span>
             <span>Sign Out</span>

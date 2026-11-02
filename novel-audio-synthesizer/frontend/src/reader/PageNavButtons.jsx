@@ -22,7 +22,7 @@ export default function PageNavButtons({
         aria-label="Previous Page"
         onClick={onPrev}
         disabled={!canPrev}
-        className={`fixed sm:absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-stone-700 dark:text-white/70 hover:text-stone-950 dark:hover:text-white bg-white/80 hover:bg-white dark:bg-black/40 dark:hover:bg-black/75 backdrop-blur-md border border-stone-300 dark:border-white/10 hover:border-stone-400 dark:hover:border-white/30 transition-all disabled:opacity-0 disabled:pointer-events-none cursor-pointer shadow-xl group ${className}`}
+        className={`fixed sm:absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-[var(--text-sub)] hover:text-[var(--text-main)] bg-[var(--glass-dock)] backdrop-blur-md border border-[var(--border-subtle)] hover:border-[var(--border-focus)] transition-all disabled:opacity-0 disabled:pointer-events-none cursor-pointer shadow-xl group ${className}`}
         title="Previous Page (Left Arrow)"
       >
         <IconChevronLeft className="w-6 h-6 -ml-0.5 group-hover:-translate-x-0.5 transition-transform" />
@@ -34,7 +34,7 @@ export default function PageNavButtons({
         aria-label="Next Page"
         onClick={onNext}
         disabled={!canNext}
-        className={`fixed sm:absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-stone-700 dark:text-white/70 hover:text-stone-950 dark:hover:text-white bg-white/80 hover:bg-white dark:bg-black/40 dark:hover:bg-black/75 backdrop-blur-md border border-stone-300 dark:border-white/10 hover:border-stone-400 dark:hover:border-white/30 transition-all disabled:opacity-0 disabled:pointer-events-none cursor-pointer shadow-xl group ${className}`}
+        className={`fixed sm:absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-[var(--text-sub)] hover:text-[var(--text-main)] bg-[var(--glass-dock)] backdrop-blur-md border border-[var(--border-subtle)] hover:border-[var(--border-focus)] transition-all disabled:opacity-0 disabled:pointer-events-none cursor-pointer shadow-xl group ${className}`}
         title="Next Page (Right Arrow)"
       >
         <IconChevronRight className="w-6 h-6 -mr-0.5 group-hover:translate-x-0.5 transition-transform" />

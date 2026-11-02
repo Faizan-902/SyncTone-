@@ -32,14 +32,14 @@ export default function TopHeader({
             className="flex items-center gap-2.5 group text-left outline-none flex-shrink-0 cursor-pointer"
             aria-label="SyncTone Home"
           >
-            <div className="w-8 h-8 rounded-lg bg-[var(--accent-surface)] border border-[var(--border-focus)] text-[var(--accent)] flex items-center justify-center transition-colors">
-              <IconSoundwave className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-lg bg-[var(--brand-chocolate,#3A2418)] border border-[var(--brand-bronze,#A88462)]/30 text-[var(--brand-bronze,#A88462)] flex items-center justify-center transition-colors">
+              <IconSoundwave className="w-4 h-4 text-[var(--brand-bronze,#A88462)]" />
             </div>
             <div className="flex items-center gap-2">
               <span className="text-base font-bold tracking-tight text-[var(--text-main)] font-display">
                 SyncTone
               </span>
-              <span className="hidden sm:inline-flex items-center px-2 py-0.5 text-[10px] font-mono tracking-wide bg-[var(--accent-surface)] text-[var(--accent)] rounded-md border border-[var(--border-subtle)]">
+              <span className="hidden sm:inline-flex items-center px-2 py-0.5 text-[10px] font-mono tracking-wide bg-[var(--brand-chocolate,#3A2418)] text-[var(--brand-bronze,#A88462)] rounded-md border border-[var(--brand-bronze,#A88462)]/30">
                 Full Cast Audio
               </span>
             </div>
@@ -120,12 +120,12 @@ export default function TopHeader({
           {isAuthenticated ? (
             <div className="flex items-center gap-2 pl-2 border-l border-[var(--border-subtle)]">
               <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono tracking-wide uppercase rounded-md theme-card border">
-                <IconShield className="w-3 h-3 text-[var(--accent)]" />
+                <IconShield className="w-3 h-3 text-[var(--accent-text)]" />
                 {role}
               </span>
               <button
                 onClick={logout}
-                className="px-3 py-1.5 text-xs theme-muted hover:text-rose-400 rounded-lg hover:bg-[var(--bg-hover)] transition font-medium cursor-pointer"
+                className="px-3 py-1.5 text-xs theme-muted hover:text-[var(--danger)] rounded-lg hover:bg-[var(--bg-hover)] transition font-medium cursor-pointer"
                 title="Sign out of SyncTone"
               >
                 Sign out
@@ -137,7 +137,7 @@ export default function TopHeader({
                 onClick={() => onOpenAuth('login')}
                 onMouseEnter={preloadAuthModal}
                 onFocus={preloadAuthModal}
-                className="px-3.5 py-2 text-xs font-semibold rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] shadow-sm transition flex items-center gap-1.5 cursor-pointer min-h-[36px]"
+                className="px-3.5 py-2 text-xs font-semibold rounded-xl bg-[var(--cta-primary-bg)] hover:bg-[var(--cta-primary-hover)] text-[var(--cta-primary-text)] shadow-sm transition flex items-center gap-1.5 cursor-pointer min-h-[36px]"
               >
                 <IconUser className="w-3.5 h-3.5" />
                 <span>Sign In</span>
