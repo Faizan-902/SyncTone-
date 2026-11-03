@@ -732,7 +732,7 @@ export default function NovelCatalog({
 
             {/* Responsive Hybrid Cards Grid */}
             {filteredNovels.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-5">
                 {filteredNovels.map((novel) => (
                   <article
                     key={novel.id}
@@ -756,11 +756,11 @@ export default function NovelCatalog({
                       </div>
 
                       {/* Card Body in Normal Flow */}
-                      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between min-w-0">
+                      <div className="p-3.5 sm:p-4 flex-1 flex flex-col justify-between min-w-0">
                         <div className="min-w-0">
                           {/* Genre / Channel Tag & Match Rating */}
-                          <div className="flex items-center justify-between gap-1 mb-2">
-                            <span className={`text-[11px] font-mono font-bold uppercase tracking-wider truncate px-2.5 py-0.5 rounded-full border ${
+                          <div className="flex items-center justify-between gap-1 mb-1.5">
+                            <span className={`text-[10px] sm:text-[11px] font-mono font-bold uppercase tracking-wider truncate px-2 py-0.5 rounded-full border ${
                               novel.channel === 'verified'
                                 ? 'text-[var(--brand-sage,#87A96B)] border-[var(--brand-sage,#87A96B)]/35 bg-[var(--brand-sage,#87A96B)]/10'
                                 : 'text-[var(--brand-amber,#D5851F)] border-[var(--brand-amber,#D5851F)]/35 bg-[var(--brand-amber,#D5851F)]/10'
@@ -769,50 +769,50 @@ export default function NovelCatalog({
                                 (novel.channel === 'verified' ? 'Verified Original' : 'Community')}
                             </span>
                             <div className="flex items-center gap-1.5 flex-shrink-0">
-                              <span className="text-[11px] font-mono text-[var(--brand-sage,#87A96B)] font-semibold">98% Match</span>
+                              <span className="text-[10px] sm:text-[11px] font-mono text-[var(--brand-sage,#87A96B)] font-semibold">98% Match</span>
                             </div>
                           </div>
 
                           {/* Title: 1 line on desktop, up to 2 lines on mobile */}
                           <h4
-                            className="font-serif text-base sm:text-lg font-bold theme-heading line-clamp-2 sm:line-clamp-1 group-hover:text-[var(--accent-text)] transition-colors"
+                            className="font-serif text-sm sm:text-base font-bold theme-heading line-clamp-2 sm:line-clamp-1 group-hover:text-[var(--accent-text)] transition-colors"
                             title={novel.title}
                           >
                             {novel.title}
                           </h4>
 
                           {/* Author line with exact By ${author_username} for test assertions */}
-                          <p className="text-xs theme-muted mt-1 truncate">
+                          <p className="text-[11px] sm:text-xs theme-muted mt-0.5 truncate">
                             By {novel.author_username || 'SyncTone Author'}
                           </p>
 
                           {/* Narrator Voice Pill */}
-                          <div className="mt-3">
-                            <span className="inline-flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 rounded-lg theme-surface theme-sub border border-[var(--border-subtle)]">
-                              <IconMic className="w-3.5 h-3.5 text-[var(--accent-text)] flex-shrink-0" />
-                              <span className="truncate max-w-[180px]">
+                          <div className="mt-2">
+                            <span className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-mono px-2.5 py-1 rounded-lg theme-surface theme-sub border border-[var(--border-subtle)]">
+                              <IconMic className="w-3 h-3 text-[var(--accent-text)] flex-shrink-0" />
+                              <span className="truncate max-w-[140px] sm:max-w-[160px]">
                                 {novel.narrator_name || 'Lead Narrator'}
                               </span>
                             </span>
                           </div>
 
                           {/* Reserved 2-Line Clamped Synopsis with Exact Line-Height Matching */}
-                          <p className="text-xs theme-sub mt-3 synopsis-reserved-box font-serif leading-relaxed line-clamp-2">
+                          <p className="text-[11px] sm:text-xs theme-sub mt-2 synopsis-reserved-box font-serif leading-relaxed line-clamp-2">
                             {novel.synopsis ||
                               'Multi-voice synchronized audio performance featuring expressive character voices.'}
                           </p>
                         </div>
 
                         {/* Pinned Action Row (Equal heights across all cards) */}
-                        <div className="pt-3.5 mt-4 border-t theme-border flex items-center justify-between gap-2.5">
+                        <div className="pt-2.5 mt-3 border-t theme-border flex items-center justify-between gap-2">
                           <button
                             onClick={(e) => handleStartListening(novel, e)}
                             onMouseEnter={preloadReaderView}
                             onFocus={preloadReaderView}
                             onPointerDown={preloadReaderView}
-                            className="flex-1 py-2 px-3.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] text-xs font-semibold rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 focus:outline-none cursor-pointer"
+                            className="flex-1 py-1.5 px-3 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] text-xs font-semibold rounded-lg shadow-sm transition flex items-center justify-center gap-1.5 focus:outline-none cursor-pointer"
                           >
-                            <IconPlay className="w-3.5 h-3.5 fill-current" />
+                            <IconPlay className="w-3 h-3 fill-current" />
                             <span>Play</span>
                           </button>
                           <button
@@ -823,23 +823,23 @@ export default function NovelCatalog({
                             onMouseEnter={preloadNovelDetails}
                             onFocus={preloadNovelDetails}
                             onPointerDown={preloadNovelDetails}
-                            className="p-2 rounded-xl theme-surface hover:bg-[var(--bg-hover)] theme-sub border border-[var(--border-subtle)] hover:border-[var(--border-hover)] transition focus:outline-none cursor-pointer min-w-[36px] flex items-center justify-center"
+                            className="p-1.5 rounded-lg theme-surface hover:bg-[var(--bg-hover)] theme-sub border border-[var(--border-subtle)] hover:border-[var(--border-hover)] transition focus:outline-none cursor-pointer min-w-[32px] flex items-center justify-center"
                             title="View Novel Details"
                             aria-label="View Novel Details"
                           >
-                            <IconBook className="w-4 h-4" />
+                            <IconBook className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               setNovelToDelete(novel);
                             }}
-                            className="p-2 rounded-xl theme-surface hover:bg-[var(--danger)]/10 theme-sub hover:text-[var(--danger)] border border-[var(--border-subtle)] hover:border-[var(--danger)]/30 transition focus:outline-none cursor-pointer min-w-[36px] flex items-center justify-center"
+                            className="p-1.5 rounded-lg theme-surface hover:bg-[var(--danger)]/10 theme-sub hover:text-[var(--danger)] border border-[var(--border-subtle)] hover:border-[var(--danger)]/30 transition focus:outline-none cursor-pointer min-w-[32px] flex items-center justify-center"
                             title="Delete Novel (Local Dev)"
                             aria-label={`Delete ${novel.title}`}
                             data-testid={`delete-novel-${novel.id}`}
                           >
-                            <IconTrash className="w-4 h-4" />
+                            <IconTrash className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </div>
