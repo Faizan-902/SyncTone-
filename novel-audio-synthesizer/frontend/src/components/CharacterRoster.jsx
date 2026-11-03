@@ -62,6 +62,7 @@ export default function CharacterRoster({
   }, [segments]);
 
   const handleVoiceSelect = async (characterId, newVoiceId) => {
+    if (!newVoiceId) return;
     setErrorMessage(null);
     setSuccessMessage(null);
     setUpdatingId(characterId);

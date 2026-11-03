@@ -104,6 +104,7 @@ describe('Milestone 4 — Character Roster & Voice Overrides', () => {
     await waitFor(() => {
       const selects = screen.getAllByRole('combobox');
       expect(selects.length).toBe(2);
+      expect(screen.getAllByText(/British Wise Elder/i).length).toBe(2);
     });
 
     const harrySelect = screen.getAllByRole('combobox')[0];
@@ -127,6 +128,7 @@ describe('Milestone 4 — Character Roster & Voice Overrides', () => {
 
     await waitFor(() => {
       expect(screen.getAllByRole('combobox').length).toBe(2);
+      expect(screen.getAllByText(/British Wise Elder/i).length).toBe(2);
     });
 
     const harrySelect = screen.getAllByRole('combobox')[0];
