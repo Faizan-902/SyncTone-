@@ -55,7 +55,7 @@ export default {
         brand: {
           espresso: '#1A120E',
           chocolate: '#3A2418',
-          walnut: '#6B4A2E',
+          walnut: '#5A3E2B',
           bronze: '#A88462',
           sand: '#D5C4AE',
           charcoal: '#4A4A46',
@@ -68,7 +68,7 @@ export default {
         },
         espresso: '#1A120E',
         chocolate: '#3A2418',
-        walnut: '#6B4A2E',
+        walnut: '#5A3E2B',
         bronze: '#A88462',
         sand: '#D5C4AE',
         charcoal: '#4A4A46',

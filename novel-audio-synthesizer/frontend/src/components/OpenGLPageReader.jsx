@@ -407,7 +407,7 @@ export default function OpenGLPageReader({
             className={`leading-[1.85] tracking-[0.01em] text-justify indent-6 select-text ${
             isDialogue ? 'italic font-serif theme-main' : 'theme-sub'
           }`}>
-            <mark className="bg-[rgba(168,132,98,0.20)] text-[var(--text-main)] rounded-xs">
+            <mark className="bg-[rgba(213,133,31,0.25)] text-[var(--text-main)] rounded-xs">
               {tokens.map((token, idx) => {
                 if (idx === activeTokenIdx) {
                   return (
@@ -417,10 +417,10 @@ export default function OpenGLPageReader({
                       style={{
                         display: 'inline',
                         textIndent: '0px',
-                        backgroundColor: 'var(--brand-bronze, #A88462)',
+                        backgroundColor: 'var(--brand-amber, #D5851F)',
                         color: 'var(--brand-espresso, #1A120E)',
                       }}
-                      className="inline bg-yellow-400 font-bold rounded-xs px-0.5"
+                      className="inline bg-yellow-400 font-bold rounded-xs px-0.5 shadow-xs"
                     >
                       {token}
                     </span>
@@ -441,7 +441,7 @@ export default function OpenGLPageReader({
             <mark
               data-active-word="true"
               style={{ display: 'inline', textIndent: '0px' }}
-              className="inline bg-[rgba(168,132,98,0.20)] text-[var(--text-main)] rounded-xs"
+              className="inline bg-[rgba(213,133,31,0.25)] text-[var(--text-main)] rounded-xs"
             >
               {rawText}
             </mark>
@@ -565,7 +565,8 @@ export default function OpenGLPageReader({
                 <span className="truncate max-w-[200px]">
                   {currentNovel?.title || 'SyncTone Edition'}
                 </span>
-                <span className="hidden sm:inline">
+                <span className="hidden sm:inline-flex items-center gap-1.5 text-[var(--brand-sage,#87A96B)] font-semibold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-sage,#87A96B)]" />
                   {currentChapter?.title ? `Chapter ${currentChapter.chapter_number || 1}` : 'SyncTone Edition'}
                 </span>
               </div>

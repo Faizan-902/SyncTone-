@@ -224,7 +224,7 @@ export async function runBudgetAndCodebaseAudits() {
     const content = fs.readFileSync(cssPath, 'utf-8');
     expect(content).toContain('--brand-espresso: #1A120E');
     expect(content).toContain('--brand-chocolate: #3A2418');
-    expect(content).toContain('--brand-walnut: #6B4A2E');
+    expect(content).toContain('--brand-walnut: #5A3E2B');
     expect(content).toContain('--brand-bronze: #A88462');
     expect(content).toContain('--brand-sand: #D5C4AE');
     expect(content).toContain('--bg-page: #1A120E');

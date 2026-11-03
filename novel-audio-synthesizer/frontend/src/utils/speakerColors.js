@@ -6,25 +6,16 @@
  */
 
 export const SPEAKER_PALETTE = [
-  // 1. Warm Bronze
+  // 1. Amber Glow (#D5851F)
   {
-    hex: '#A88462',
-    bg: 'bg-[#A88462]/10',
-    border: 'border-[#A88462]',
-    text: 'text-[#A88462]',
-    badge: 'bg-[#A88462]/15 text-[#A88462] border-[#A88462]/30',
-    ring: 'ring-[#A88462]',
+    hex: '#D5851F',
+    bg: 'bg-[#D5851F]/10',
+    border: 'border-[#D5851F]',
+    text: 'text-[#D5851F]',
+    badge: 'bg-[#D5851F]/15 text-[#D5851F] border-[#D5851F]/30',
+    ring: 'ring-[#D5851F]',
   },
-  // 2. Walnut Brown
-  {
-    hex: '#6B4A2E',
-    bg: 'bg-[#6B4A2E]/10',
-    border: 'border-[#6B4A2E]',
-    text: 'text-[#6B4A2E]',
-    badge: 'bg-[#6B4A2E]/15 text-[#6B4A2E] border-[#6B4A2E]/30',
-    ring: 'ring-[#6B4A2E]',
-  },
-  // 3. Sage Green
+  // 2. Sage Green (#87A96B)
   {
     hex: '#87A96B',
     bg: 'bg-[#87A96B]/10',
@@ -33,14 +24,23 @@ export const SPEAKER_PALETTE = [
     badge: 'bg-[#87A96B]/15 text-[#87A96B] border-[#87A96B]/30',
     ring: 'ring-[#87A96B]',
   },
-  // 4. Amber Glow
+  // 3. Walnut Brown (#5A3E2B)
   {
-    hex: '#D5851F',
-    bg: 'bg-[#D5851F]/10',
-    border: 'border-[#D5851F]',
-    text: 'text-[#D5851F]',
-    badge: 'bg-[#D5851F]/15 text-[#D5851F] border-[#D5851F]/30',
-    ring: 'ring-[#D5851F]',
+    hex: '#5A3E2B',
+    bg: 'bg-[#5A3E2B]/10',
+    border: 'border-[#5A3E2B]',
+    text: 'text-[#5A3E2B]',
+    badge: 'bg-[#5A3E2B]/15 text-[#5A3E2B] border-[#5A3E2B]/30',
+    ring: 'ring-[#5A3E2B]',
+  },
+  // 4. Warm Bronze (#A88462)
+  {
+    hex: '#A88462',
+    bg: 'bg-[#A88462]/10',
+    border: 'border-[#A88462]',
+    text: 'text-[#A88462]',
+    badge: 'bg-[#A88462]/15 text-[#A88462] border-[#A88462]/30',
+    ring: 'ring-[#A88462]',
   },
   // 5. Forest Olive
   {
@@ -107,9 +107,9 @@ export const SPEAKER_PALETTE = [
   },
 ];
 
-export const SAGE_COLOR = SPEAKER_PALETTE[2];
-export const AMBER_COLOR = SPEAKER_PALETTE[3];
-export const WALNUT_DEEP_COLOR = SPEAKER_PALETTE[8];
+export const AMBER_COLOR = SPEAKER_PALETTE[0];
+export const SAGE_COLOR = SPEAKER_PALETTE[1];
+export const WALNUT_DEEP_COLOR = SPEAKER_PALETTE[2];
 
 export const NARRATOR_COLOR = {
   hex: '#D5C4AE',

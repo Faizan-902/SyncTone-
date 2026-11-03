@@ -150,7 +150,7 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
 
         <div className="relative z-10 max-w-6xl mx-auto flex flex-col md:flex-row gap-8 items-start">
           {/* 3:4 Cover Poster (Left) with 3D Gilded Edge */}
-          <div className="w-52 sm:w-64 aspect-[3/4] rounded-2xl overflow-hidden border border-[#3A2418] border-r-[6px] border-r-[#6B4A2E] shadow-2xl flex-shrink-0 relative group transform hover:scale-102 transition-transform">
+          <div className="w-52 sm:w-64 aspect-[3/4] rounded-2xl overflow-hidden border border-[#3A2418] border-r-[6px] border-r-[#5A3E2B] shadow-2xl flex-shrink-0 relative group transform hover:scale-102 transition-transform">
             <NovelCover
               title={novel.title}
               author={novel.author_username}
@@ -158,8 +158,13 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
               className="w-full h-full"
             />
             <div className="absolute top-2.5 left-2.5">
-              <span className="px-2 py-0.5 theme-card text-[10px] font-mono font-bold rounded border shadow-sm text-[var(--accent-text)]">
-                {isVerified ? 'VERIFIED ORIGINAL' : 'COMMUNITY'}
+              <span className={`px-3 py-1 rounded-full text-[10px] font-mono font-bold border shadow-sm backdrop-blur-xs flex items-center gap-1.5 ${
+                isVerified
+                  ? 'text-[var(--brand-sage,#87A96B)] border-[var(--brand-sage,#87A96B)]/40 bg-[var(--brand-sage,#87A96B)]/15'
+                  : 'text-[var(--brand-amber,#D5851F)] border-[var(--brand-amber,#D5851F)]/40 bg-[var(--brand-amber,#D5851F)]/15'
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${isVerified ? 'bg-[var(--brand-sage,#87A96B)]' : 'bg-[var(--brand-amber,#D5851F)]'}`} />
+                <span>{isVerified ? 'VERIFIED ORIGINAL' : 'COMMUNITY'}</span>
               </span>
             </div>
           </div>
@@ -167,6 +172,14 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
           {/* Novel Info (Right) */}
           <div className="flex-1 space-y-4 min-w-0">
             <div>
+              {/* Tracked Category Overline: NATURE / FICTION / CINEMATIC AUDIO */}
+              <div className="tracking-[0.25em] text-[10px] uppercase font-mono font-bold text-[var(--brand-bronze,#A88462)] mb-2 flex items-center gap-2">
+                <span>NATURE</span>
+                <span className="opacity-40">/</span>
+                <span>FICTION</span>
+                <span className="opacity-40">/</span>
+                <span>CINEMATIC AUDIO</span>
+              </div>
               <div className="flex items-center gap-2 mb-1.5">
                 <span className="text-[11px] font-mono font-bold text-[var(--accent-text)] uppercase tracking-wider">
                   {novel.global_tone || 'British Fantasy'}
@@ -180,29 +193,31 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
                 {novel.title}
               </h1>
               <p className="text-xs sm:text-sm italic theme-sub mt-1 font-serif">
-                &ldquo;Let the storytelling begin with a complete cast of voices.&rdquo;
+                Stories that feel <span className="text-[var(--brand-amber,#D5851F)] font-normal italic">alive.</span>
               </p>
             </div>
 
             {/* Metadata Badges Row */}
             <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
-              <span className="px-2.5 py-0.5 rounded-md theme-card text-[var(--success)] font-bold border shadow-sm">
-                98% Voice Match
+              <span className="px-3 py-1 rounded-full theme-card text-[var(--brand-sage,#87A96B)] font-bold border border-[var(--brand-sage,#87A96B)]/40 bg-[var(--brand-sage,#87A96B)]/10 shadow-sm flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-sage,#87A96B)]" />
+                <span>98% Voice Match</span>
               </span>
               <span className="theme-muted">2026</span>
-              <span className="px-2 py-0.5 rounded theme-card border text-[11px] font-bold">
+              <span className="px-3 py-1 rounded-full theme-card border text-[11px] font-bold">
                 Ensemble Cast
               </span>
               <span className="theme-muted">
                 {chapters.length} {chapters.length === 1 ? 'Chapter' : 'Chapters'}
               </span>
-              <span className="px-2 py-0.5 rounded theme-card text-[var(--accent-text)] font-bold border shadow-sm flex items-center gap-1">
-                <span>✦ Verified Edition</span>
+              <span className="px-3 py-1 rounded-full theme-card text-[var(--accent-text)] font-bold border border-[var(--brand-amber,#D5851F)]/30 shadow-sm flex items-center gap-1.5">
+                <IconStar className="w-3 h-3 text-[var(--brand-amber,#D5851F)]" />
+                <span>Verified Edition</span>
               </span>
               <span className="theme-muted">Studio Audio</span>
             </div>
 
-            {/* Primary Action Buttons */}
+            {/* Primary Action Buttons: Circular Action CTA */}
             <div className="flex flex-wrap items-center gap-3 pt-2">
               {chapters.length > 0 && (
                 <button
@@ -210,10 +225,12 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
                   onMouseEnter={preloadReaderView}
                   onFocus={preloadReaderView}
                   onPointerDown={preloadReaderView}
-                  className="px-6 py-3 bg-[var(--cta-primary-bg)] hover:bg-[var(--cta-primary-hover)] text-[var(--cta-primary-text)] font-bold rounded-xl shadow-lg flex items-center gap-2 text-xs sm:text-sm min-h-[44px] transition transform hover:-translate-y-0.5 active:scale-95 focus:outline-none cursor-pointer"
+                  className="px-5 sm:px-6 py-3 sm:py-3.5 bg-[var(--cta-primary-bg)] hover:bg-[var(--cta-primary-hover)] text-[var(--cta-primary-text)] font-bold rounded-full border border-[var(--border-subtle)] shadow-xl flex items-center gap-3 text-xs sm:text-sm tracking-wider uppercase transition transform hover:-translate-y-0.5 active:scale-95 focus:outline-none cursor-pointer group min-h-[44px]"
                 >
-                  <IconPlay className="w-4 h-4 fill-current" />
-                  <span>Start Listening (Ch. 1)</span>
+                  <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-[var(--cta-primary-text)]/40 flex items-center justify-center group-hover:scale-105 group-hover:border-[var(--brand-amber)] transition-transform">
+                    <IconPlay className="w-3.5 h-3.5 fill-current ml-0.5 text-[var(--brand-amber,#D5851F)]" />
+                  </span>
+                  <span className="tracking-[0.16em] font-mono text-xs font-bold">Start Listening (Ch. 1)</span>
                 </button>
               )}
               {isWriterOrAdmin && onOpenUploadChapter && (

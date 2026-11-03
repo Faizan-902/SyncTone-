@@ -11,11 +11,11 @@
       "--text-main": "#D5C4AE",
       "--text-sub": "#A88462",
       "--text-muted": "#8A7A68",
-      "--accent": "#A88462",
-      "--accent-hover": "#BCA082",
+      "--accent": "#D5851F",
+      "--accent-hover": "#E59838",
       "--border-subtle": "#40362E",
       "--border-strong": "#5A4D42",
-      "--border-focus": "#A88462"
+      "--border-focus": "#D5851F"
     },
     "body": {
       "background": "rgb(26, 18, 14)",
@@ -32,7 +32,7 @@
     },
     "readerPage": null,
     "toolbarButton": {
-      "background": "rgb(168, 132, 98)",
+      "background": "rgb(135, 169, 107)",
       "borderColor": "rgb(229, 231, 235)",
       "color": "rgb(26, 18, 14)"
     },
@@ -50,11 +50,11 @@
       "--text-main": "#D5C4AE",
       "--text-sub": "#A88462",
       "--text-muted": "#8A7A68",
-      "--accent": "#A88462",
-      "--accent-hover": "#BCA082",
+      "--accent": "#D5851F",
+      "--accent-hover": "#E59838",
       "--border-subtle": "#40362E",
       "--border-strong": "#5A4D42",
-      "--border-focus": "#A88462"
+      "--border-focus": "#D5851F"
     },
     "body": {
       "background": "rgb(26, 18, 14)",
@@ -71,7 +71,7 @@
     },
     "readerPage": null,
     "toolbarButton": {
-      "background": "rgb(168, 132, 98)",
+      "background": "rgb(135, 169, 107)",
       "borderColor": "rgb(229, 231, 235)",
       "color": "rgb(26, 18, 14)"
     },
@@ -89,11 +89,11 @@
       "--text-main": "#D5C4AE",
       "--text-sub": "#A88462",
       "--text-muted": "#8A7A68",
-      "--accent": "#A88462",
-      "--accent-hover": "#BCA082",
+      "--accent": "#D5851F",
+      "--accent-hover": "#E59838",
       "--border-subtle": "#40362E",
       "--border-strong": "#5A4D42",
-      "--border-focus": "#A88462"
+      "--border-focus": "#D5851F"
     },
     "body": {
       "background": "rgb(26, 18, 14)",
@@ -110,7 +110,7 @@
     },
     "readerPage": null,
     "toolbarButton": {
-      "background": "rgb(168, 132, 98)",
+      "background": "rgb(135, 169, 107)",
       "borderColor": "rgb(229, 231, 235)",
       "color": "rgb(26, 18, 14)"
     },
@@ -128,11 +128,11 @@
       "--text-main": "#D5C4AE",
       "--text-sub": "#A88462",
       "--text-muted": "#8A7A68",
-      "--accent": "#A88462",
-      "--accent-hover": "#BCA082",
+      "--accent": "#D5851F",
+      "--accent-hover": "#E59838",
       "--border-subtle": "#40362E",
       "--border-strong": "#5A4D42",
-      "--border-focus": "#A88462"
+      "--border-focus": "#D5851F"
     },
     "body": {
       "background": "rgb(26, 18, 14)",
@@ -167,11 +167,11 @@
       "--text-main": "#D5C4AE",
       "--text-sub": "#A88462",
       "--text-muted": "#8A7A68",
-      "--accent": "#A88462",
-      "--accent-hover": "#BCA082",
+      "--accent": "#D5851F",
+      "--accent-hover": "#E59838",
       "--border-subtle": "#40362E",
       "--border-strong": "#5A4D42",
-      "--border-focus": "#A88462"
+      "--border-focus": "#D5851F"
     },
     "body": {
       "background": "rgb(26, 18, 14)",
@@ -206,11 +206,11 @@
       "--text-main": "#D5C4AE",
       "--text-sub": "#A88462",
       "--text-muted": "#8A7A68",
-      "--accent": "#A88462",
-      "--accent-hover": "#BCA082",
+      "--accent": "#D5851F",
+      "--accent-hover": "#E59838",
       "--border-subtle": "#40362E",
       "--border-strong": "#5A4D42",
-      "--border-focus": "#A88462"
+      "--border-focus": "#D5851F"
     },
     "body": {
       "background": "rgb(26, 18, 14)",
@@ -245,11 +245,11 @@
       "--text-main": "#D5C4AE",
       "--text-sub": "#A88462",
       "--text-muted": "#8A7A68",
-      "--accent": "#A88462",
-      "--accent-hover": "#BCA082",
+      "--accent": "#D5851F",
+      "--accent-hover": "#E59838",
       "--border-subtle": "#40362E",
       "--border-strong": "#5A4D42",
-      "--border-focus": "#A88462"
+      "--border-focus": "#D5851F"
     },
     "body": {
       "background": "rgb(26, 18, 14)",
@@ -266,7 +266,7 @@
     },
     "readerPage": null,
     "toolbarButton": {
-      "background": "rgb(168, 132, 98)",
+      "background": "rgb(135, 169, 107)",
       "borderColor": "rgb(229, 231, 235)",
       "color": "rgb(26, 18, 14)"
     },
@@ -284,11 +284,11 @@
       "--text-main": "#D5C4AE",
       "--text-sub": "#A88462",
       "--text-muted": "#8A7A68",
-      "--accent": "#A88462",
-      "--accent-hover": "#BCA082",
+      "--accent": "#D5851F",
+      "--accent-hover": "#E59838",
       "--border-subtle": "#40362E",
       "--border-strong": "#5A4D42",
-      "--border-focus": "#A88462"
+      "--border-focus": "#D5851F"
     },
     "body": {
       "background": "rgb(26, 18, 14)",
@@ -323,11 +323,11 @@
       "--text-main": "#1A120E",
       "--text-sub": "#4A4A46",
       "--text-muted": "#6B5B4E",
-      "--accent": "#6B4A2E",
+      "--accent": "#5A3E2B",
       "--accent-hover": "#3A2418",
       "--border-subtle": "#C8B9A6",
       "--border-strong": "#A89885",
-      "--border-focus": "#6B4A2E"
+      "--border-focus": "#5A3E2B"
     },
     "body": {
       "background": "rgb(213, 196, 174)",
@@ -344,9 +344,9 @@
     },
     "readerPage": null,
     "toolbarButton": {
-      "background": "rgb(107, 74, 46)",
+      "background": "rgb(135, 169, 107)",
       "borderColor": "rgb(229, 231, 235)",
-      "color": "rgb(250, 246, 240)"
+      "color": "rgb(26, 18, 14)"
     },
     "player": null
   },
@@ -362,11 +362,11 @@
       "--text-main": "#1A120E",
       "--text-sub": "#4A4A46",
       "--text-muted": "#6B5B4E",
-      "--accent": "#6B4A2E",
+      "--accent": "#5A3E2B",
       "--accent-hover": "#3A2418",
       "--border-subtle": "#C8B9A6",
       "--border-strong": "#A89885",
-      "--border-focus": "#6B4A2E"
+      "--border-focus": "#5A3E2B"
     },
     "body": {
       "background": "rgb(213, 196, 174)",
@@ -383,9 +383,9 @@
     },
     "readerPage": null,
     "toolbarButton": {
-      "background": "rgb(107, 74, 46)",
+      "background": "rgb(135, 169, 107)",
       "borderColor": "rgb(229, 231, 235)",
-      "color": "rgb(250, 246, 240)"
+      "color": "rgb(26, 18, 14)"
     },
     "player": null
   },
@@ -401,11 +401,11 @@
       "--text-main": "#1A120E",
       "--text-sub": "#4A4A46",
       "--text-muted": "#6B5B4E",
-      "--accent": "#6B4A2E",
+      "--accent": "#5A3E2B",
       "--accent-hover": "#3A2418",
       "--border-subtle": "#C8B9A6",
       "--border-strong": "#A89885",
-      "--border-focus": "#6B4A2E"
+      "--border-focus": "#5A3E2B"
     },
     "body": {
       "background": "rgb(213, 196, 174)",
@@ -422,9 +422,9 @@
     },
     "readerPage": null,
     "toolbarButton": {
-      "background": "rgb(107, 74, 46)",
+      "background": "rgb(135, 169, 107)",
       "borderColor": "rgb(229, 231, 235)",
-      "color": "rgb(250, 246, 240)"
+      "color": "rgb(26, 18, 14)"
     },
     "player": null
   },
@@ -440,11 +440,11 @@
       "--text-main": "#1A120E",
       "--text-sub": "#4A4A46",
       "--text-muted": "#6B5B4E",
-      "--accent": "#6B4A2E",
+      "--accent": "#5A3E2B",
       "--accent-hover": "#3A2418",
       "--border-subtle": "#C8B9A6",
       "--border-strong": "#A89885",
-      "--border-focus": "#6B4A2E"
+      "--border-focus": "#5A3E2B"
     },
     "body": {
       "background": "rgb(213, 196, 174)",
@@ -479,11 +479,11 @@
       "--text-main": "#1A120E",
       "--text-sub": "#4A4A46",
       "--text-muted": "#6B5B4E",
-      "--accent": "#6B4A2E",
+      "--accent": "#5A3E2B",
       "--accent-hover": "#3A2418",
       "--border-subtle": "#C8B9A6",
       "--border-strong": "#A89885",
-      "--border-focus": "#6B4A2E"
+      "--border-focus": "#5A3E2B"
     },
     "body": {
       "background": "rgb(213, 196, 174)",
@@ -518,11 +518,11 @@
       "--text-main": "#1A120E",
       "--text-sub": "#4A4A46",
       "--text-muted": "#6B5B4E",
-      "--accent": "#6B4A2E",
+      "--accent": "#5A3E2B",
       "--accent-hover": "#3A2418",
       "--border-subtle": "#C8B9A6",
       "--border-strong": "#A89885",
-      "--border-focus": "#6B4A2E"
+      "--border-focus": "#5A3E2B"
     },
     "body": {
       "background": "rgb(213, 196, 174)",
@@ -557,11 +557,11 @@
       "--text-main": "#1A120E",
       "--text-sub": "#4A4A46",
       "--text-muted": "#6B5B4E",
-      "--accent": "#6B4A2E",
+      "--accent": "#5A3E2B",
       "--accent-hover": "#3A2418",
       "--border-subtle": "#C8B9A6",
       "--border-strong": "#A89885",
-      "--border-focus": "#6B4A2E"
+      "--border-focus": "#5A3E2B"
     },
     "body": {
       "background": "rgb(213, 196, 174)",
@@ -578,9 +578,9 @@
     },
     "readerPage": null,
     "toolbarButton": {
-      "background": "rgb(107, 74, 46)",
+      "background": "rgb(135, 169, 107)",
       "borderColor": "rgb(229, 231, 235)",
-      "color": "rgb(250, 246, 240)"
+      "color": "rgb(26, 18, 14)"
     },
     "player": null
   },
@@ -596,11 +596,11 @@
       "--text-main": "#1A120E",
       "--text-sub": "#4A4A46",
       "--text-muted": "#6B5B4E",
-      "--accent": "#6B4A2E",
+      "--accent": "#5A3E2B",
       "--accent-hover": "#3A2418",
       "--border-subtle": "#C8B9A6",
       "--border-strong": "#A89885",
-      "--border-focus": "#6B4A2E"
+      "--border-focus": "#5A3E2B"
     },
     "body": {
       "background": "rgb(213, 196, 174)",
@@ -635,11 +635,11 @@
       "--text-main": "#D5C4AE",
       "--text-sub": "#A88462",
       "--text-muted": "#8A7A68",
-      "--accent": "#A88462",
-      "--accent-hover": "#BCA082",
+      "--accent": "#D5851F",
+      "--accent-hover": "#E59838",
       "--border-subtle": "#40362E",
       "--border-strong": "#5A4D42",
-      "--border-focus": "#A88462"
+      "--border-focus": "#D5851F"
     },
     "body": {
       "background": "rgb(26, 18, 14)",
@@ -674,11 +674,11 @@
       "--text-main": "#1A120E",
       "--text-sub": "#4A4A46",
       "--text-muted": "#6B5B4E",
-      "--accent": "#6B4A2E",
+      "--accent": "#5A3E2B",
       "--accent-hover": "#3A2418",
       "--border-subtle": "#C8B9A6",
       "--border-strong": "#A89885",
-      "--border-focus": "#6B4A2E"
+      "--border-focus": "#5A3E2B"
     },
     "body": {
       "background": "rgb(213, 196, 174)",
@@ -713,11 +713,11 @@
       "--text-main": "#D5C4AE",
       "--text-sub": "#A88462",
       "--text-muted": "#8A7A68",
-      "--accent": "#A88462",
-      "--accent-hover": "#BCA082",
+      "--accent": "#D5851F",
+      "--accent-hover": "#E59838",
       "--border-subtle": "#40362E",
       "--border-strong": "#5A4D42",
-      "--border-focus": "#A88462"
+      "--border-focus": "#D5851F"
     },
     "body": {
       "background": "rgb(26, 18, 14)",
@@ -734,7 +734,7 @@
     },
     "readerPage": null,
     "toolbarButton": {
-      "background": "rgb(168, 132, 98)",
+      "background": "rgb(135, 169, 107)",
       "borderColor": "rgb(229, 231, 235)",
       "color": "rgb(26, 18, 14)"
     },
@@ -752,11 +752,11 @@
       "--text-main": "#1A120E",
       "--text-sub": "#4A4A46",
       "--text-muted": "#6B5B4E",
-      "--accent": "#6B4A2E",
+      "--accent": "#5A3E2B",
       "--accent-hover": "#3A2418",
       "--border-subtle": "#C8B9A6",
       "--border-strong": "#A89885",
-      "--border-focus": "#6B4A2E"
+      "--border-focus": "#5A3E2B"
     },
     "body": {
       "background": "rgb(213, 196, 174)",
@@ -773,9 +773,9 @@
     },
     "readerPage": null,
     "toolbarButton": {
-      "background": "rgb(107, 74, 46)",
+      "background": "rgb(135, 169, 107)",
       "borderColor": "rgb(229, 231, 235)",
-      "color": "rgb(250, 246, 240)"
+      "color": "rgb(26, 18, 14)"
     },
     "player": null
   }

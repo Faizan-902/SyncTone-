@@ -32,15 +32,16 @@ export default function TopHeader({
             className="flex items-center gap-2.5 group text-left outline-none flex-shrink-0 cursor-pointer active:scale-95 transition-transform duration-100 ease-out"
             aria-label="SyncTone Home"
           >
-            <div className="w-8 h-8 rounded-lg bg-[var(--brand-chocolate,#3A2418)] border border-[var(--brand-bronze,#A88462)]/30 text-[var(--brand-bronze,#A88462)] flex items-center justify-center transition-colors">
-              <IconSoundwave className="w-4 h-4 text-[var(--brand-bronze,#A88462)]" />
+            <div className="w-8 h-8 rounded-lg bg-[var(--brand-walnut,#5A3E2B)] border border-[var(--brand-amber,#D5851F)]/40 text-[var(--brand-amber,#D5851F)] flex items-center justify-center transition-colors shadow-xs">
+              <IconSoundwave className="w-4 h-4 text-[var(--brand-amber,#D5851F)]" />
             </div>
             <div className="flex items-center gap-2">
               <span className="text-base font-bold tracking-tight text-[var(--text-main)] font-display">
                 SyncTone
               </span>
-              <span className="hidden sm:inline-flex items-center px-2 py-0.5 text-[10px] font-mono tracking-wide bg-[var(--brand-chocolate,#3A2418)] text-[var(--brand-bronze,#A88462)] rounded-md border border-[var(--brand-bronze,#A88462)]/30">
-                Full Cast Audio
+              <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] font-mono tracking-wider uppercase rounded-full bg-[var(--brand-walnut,#5A3E2B)] text-[var(--brand-sage,#87A96B)] border border-[var(--brand-sage,#87A96B)]/40 font-bold shadow-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-sage,#87A96B)]" />
+                <span>Full Cast Audio</span>
               </span>
             </div>
           </button>
@@ -51,7 +52,9 @@ export default function TopHeader({
             <button
               onClick={() => onNavigate('catalog')}
               className={`hover:text-[var(--text-main)] active:scale-95 transition-all duration-100 ease-out flex-shrink-0 cursor-pointer ${
-                view === 'catalog' ? 'text-[var(--text-main)] font-semibold' : ''
+                view === 'catalog'
+                  ? 'text-[var(--brand-sand,#D5C4AE)] font-semibold bg-[var(--brand-walnut,#5A3E2B)] px-2.5 py-1 rounded-lg border border-[var(--brand-amber,#D5851F)]/40 shadow-xs'
+                  : 'px-2 py-1'
               }`}
             >
               Library
@@ -62,7 +65,9 @@ export default function TopHeader({
                 <button
                   onClick={() => onNavigate('details')}
                   className={`hover:text-[var(--text-main)] active:scale-95 transition-all duration-100 ease-out truncate max-w-[180px] cursor-pointer ${
-                    view === 'details' ? 'text-[var(--text-main)] font-semibold' : ''
+                    view === 'details'
+                      ? 'text-[var(--brand-sand,#D5C4AE)] font-semibold bg-[var(--brand-walnut,#5A3E2B)] px-2.5 py-1 rounded-lg border border-[var(--brand-amber,#D5851F)]/40 shadow-xs'
+                      : 'px-2 py-1'
                   }`}
                   title={currentNovel.title}
                 >
@@ -92,14 +97,14 @@ export default function TopHeader({
               onClick={onToggleRoster}
               onMouseEnter={preloadCharacterRoster}
               onFocus={preloadCharacterRoster}
-              className={`px-3 py-1.5 text-xs font-medium rounded-xl border transition-all duration-100 ease-out active:scale-95 flex items-center gap-1.5 cursor-pointer ${
+              className={`px-3 py-1.5 text-xs font-semibold rounded-xl border transition-all duration-100 ease-out active:scale-95 flex items-center gap-1.5 cursor-pointer ${
                 showRoster
-                  ? 'bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)] shadow-sm'
+                  ? 'bg-[var(--cta-primary-bg)] text-[var(--brand-amber,#D5851F)] border-[var(--brand-amber,#D5851F)]/60 shadow-sm'
                   : 'theme-card hover:border-[var(--border-focus)]'
               }`}
               aria-label="Toggle Cast Roster"
             >
-              <IconUsers className="w-4 h-4" />
+              <IconUsers className="w-4 h-4 text-[var(--brand-sage,#87A96B)]" />
               <span>Cast Roster</span>
             </button>
           )}

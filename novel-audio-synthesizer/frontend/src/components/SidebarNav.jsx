@@ -60,12 +60,12 @@ export default function SidebarNav({
           {/* Logo Mark */}
           <button
             onClick={() => onNavigate('catalog')}
-            className="group relative flex items-center justify-center w-11 h-11 rounded-xl bg-[#1A120E] border border-[#A88462]/30 text-[#A88462] shadow-md hover:scale-105 active:scale-95 transition-transform duration-100 ease-out"
+            className="group relative flex items-center justify-center w-11 h-11 rounded-xl bg-[#1A120E] border border-[var(--brand-amber,#D5851F)]/40 text-[var(--brand-amber,#D5851F)] shadow-md hover:scale-105 active:scale-95 transition-transform duration-100 ease-out"
             title="SyncTone Home"
             aria-label="SyncTone Home"
           >
-            <Icon name="soundwave" className="w-5 h-5 text-[#A88462]" />
-            <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[var(--success)] border-2 border-[#3A2418]" />
+            <Icon name="soundwave" className="w-5 h-5 text-[var(--brand-amber,#D5851F)]" />
+            <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[var(--brand-sage,#87A96B)] border-2 border-[#3A2418]" />
           </button>
 
           {/* Navigation Links */}
@@ -75,7 +75,7 @@ export default function SidebarNav({
               onClick={() => onNavigate('catalog')}
               className={`group relative flex items-center justify-center w-11 h-11 rounded-xl transition-all duration-100 ease-out active:scale-95 ${
                 currentView === 'catalog'
-                  ? 'bg-[var(--cta-primary-bg)] text-[var(--cta-primary-text)] shadow-sm'
+                  ? 'bg-[var(--cta-primary-bg)] text-[var(--cta-primary-text)] border border-[var(--brand-amber,#D5851F)]/40 shadow-sm'
                   : 'text-[#D5C4AE]/70 hover:text-[#D5C4AE] hover:bg-[#4A4A46]/40'
               }`}
               title="Novel Library"
@@ -83,7 +83,7 @@ export default function SidebarNav({
             >
               <Icon name="book" className="w-5 h-5" />
               {currentView === 'catalog' && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-[var(--cta-primary-text)] rounded-r-full" />
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-[var(--brand-amber,#D5851F)] rounded-r-full shadow-[0_0_8px_rgba(213,133,31,0.6)]" />
               )}
             </button>
 

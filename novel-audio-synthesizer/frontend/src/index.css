@@ -46,10 +46,12 @@
   /* Brand Tokens (Earthy Luxury) */
   --brand-espresso: #1A120E;
   --brand-chocolate: #3A2418;
-  --brand-walnut: #6B4A2E;
+  --brand-walnut: #5A3E2B;
   --brand-bronze: #A88462;
   --brand-sand: #D5C4AE;
   --brand-charcoal: #4A4A46;
+  --brand-sage: #87A96B;
+  --brand-amber: #D5851F;
 
   /* Surfaces (Nocturne / Earthy Luxury) */
   --bg-page: #1A120E;
@@ -67,19 +69,19 @@
   --border-subtle: #40362E;
   --border-strong: #5A4D42;
   --border-hover: #71665D;
-  --border-focus: #A88462;
+  --border-focus: #D5851F;
 
-  /* Living Accent: Warm Bronze */
-  --accent: #A88462;
-  --accent-hover: #BCA082;
-  --accent-surface: rgba(168, 132, 98, 0.15);
-  --accent-strong: #6B4A2E;
-  --accent-text: #A88462;
+  /* Living Accent: Amber Glow */
+  --accent: #D5851F;
+  --accent-hover: #E59838;
+  --accent-surface: rgba(213, 133, 31, 0.15);
+  --accent-strong: #5A3E2B;
+  --accent-text: #D5851F;
   --on-accent: #1A120E;
 
   /* Primary Button Contract (Walnut Brown & Soft Sand) */
-  --cta-primary-bg: #6B4A2E;
-  --cta-primary-hover: #7D5737;
+  --cta-primary-bg: #5A3E2B;
+  --cta-primary-hover: #6D4C35;
   --cta-primary-text: #D5C4AE;
 
   /* Glassmorphism */
@@ -87,25 +89,25 @@
   --glass-dock: rgba(58, 36, 24, 0.95);
 
   /* Status Tokens */
-  --success: #5FA052;
-  --warning: #C68A3C;
+  --success: #87A96B;
+  --warning: #D5851F;
   --danger: #BA4E3D;
-  --info: #A88462;
+  --info: #87A96B;
 
   /* Speaker Palette (Harmonized) */
   --speaker-narrator: #D5C4AE;
-  --speaker-a: #A88462;
-  --speaker-b: #5FA052;
-  --speaker-c: #6B4A2E;
+  --speaker-a: #D5851F;
+  --speaker-b: #87A96B;
+  --speaker-c: #A88462;
   --speaker-d: #BA4E3D;
 
   /* Top 10 Outline Typography */
   --top10-fill: #1A120E;
   --top10-stroke: rgba(213, 196, 174, 0.25);
-  --top10-active: #A88462;
+  --top10-active: #D5851F;
 
   /* Card Accent Default */
-  --card-accent: #A88462;
+  --card-accent: #D5851F;
 
   /* Backward Compatibility Aliases */
   --color-status-success: var(--success);
@@ -180,18 +182,18 @@ html.light {
   --border-subtle: #C8B9A6;
   --border-strong: #A89885;
   --border-hover: #8C7E6F;
-  --border-focus: #6B4A2E;
+  --border-focus: #5A3E2B;
 
   /* Living Accent: Walnut Brown */
-  --accent: #6B4A2E;
+  --accent: #5A3E2B;
   --accent-hover: #3A2418;
-  --accent-surface: rgba(107, 74, 46, 0.12);
+  --accent-surface: rgba(90, 62, 43, 0.12);
   --accent-strong: #3A2418;
-  --accent-text: #6B4A2E;
+  --accent-text: #5A3E2B;
   --on-accent: #FAF6F0;
 
   /* Primary Button Contract (Walnut Brown & Soft Sand) */
-  --cta-primary-bg: #6B4A2E;
+  --cta-primary-bg: #5A3E2B;
   --cta-primary-hover: #3A2418;
   --cta-primary-text: #D5C4AE;
 
@@ -201,13 +203,13 @@ html.light {
 
   /* Status Tokens */
   --success: #386B2F;
-  --warning: #87571B;
+  --warning: #D5851F;
   --danger: #962F22;
-  --info: #6B4A2E;
+  --info: #5A3E2B;
 
   /* Speakers */
   --speaker-narrator: #1A120E;
-  --speaker-a: #6B4A2E;
+  --speaker-a: #5A3E2B;
   --speaker-b: #386B2F;
   --speaker-c: #4A4A46;
   --speaker-d: #962F22;
@@ -215,9 +217,9 @@ html.light {
   /* Top 10 */
   --top10-fill: #D5C4AE;
   --top10-stroke: rgba(26, 18, 14, 0.25);
-  --top10-active: #6B4A2E;
+  --top10-active: #5A3E2B;
 
-  --card-accent: #6B4A2E;
+  --card-accent: #5A3E2B;
 
   --color-status-success: var(--success);
   --color-status-warning: var(--warning);
@@ -245,6 +247,76 @@ body {
 .theme-card { background-color: var(--bg-card) !important; border-color: var(--border-subtle) !important; color: var(--text-main) !important; }
 .theme-elevated { background-color: var(--bg-elevated) !important; border-color: var(--border-strong) !important; }
 .theme-border { border-color: var(--border-subtle) !important; }
+
+/* ========================================================================= */
+/* ARCHITECTURAL & BOTANICAL EDITORIAL AESTHETICS                            */
+/* High-end architectural sanctuary & botanical living design language       */
+/* ========================================================================= */
+.architectural-portal {
+  position: relative;
+  border-radius: 24px;
+  overflow: hidden;
+  background: radial-gradient(circle at 75% 25%, #3A2418 0%, #1A120E 65%, #1A120E 100%);
+}
+
+html.light .architectural-portal {
+  background: radial-gradient(circle at 75% 25%, #FAF6F0 0%, #F5EFE6 60%, #D5C4AE 100%);
+}
+
+.fluted-timber {
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(90, 62, 43, 0.45) 0px,
+    rgba(90, 62, 43, 0.45) 6px,
+    rgba(58, 36, 24, 0.65) 6px,
+    rgba(58, 36, 24, 0.65) 12px
+  );
+}
+
+.display-niche {
+  border-radius: 120px 120px 16px 16px;
+  box-shadow: inset 0 8px 24px -4px rgba(213, 133, 31, 0.25), inset 0 2px 8px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(213, 133, 31, 0.2);
+}
+
+.botanical-pill {
+  border-radius: 9999px;
+  background-color: rgba(135, 169, 107, 0.14);
+  color: #87A96B;
+  border: 1px solid rgba(135, 169, 107, 0.35);
+  font-family: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tracked-overline {
+  letter-spacing: 0.25em;
+  font-size: 10px;
+  text-transform: uppercase;
+  font-family: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
+  font-weight: 700;
+}
+
+.hairline-dash {
+  height: 1px;
+  background-color: var(--brand-amber);
+  box-shadow: 0 0 8px rgba(213, 133, 31, 0.6);
+}
+
+.circular-action-cta {
+  border-radius: 9999px;
+  background-color: var(--cta-primary-bg);
+  color: var(--cta-primary-text);
+  border: 1px solid var(--border-subtle);
+  transition: all var(--motion-duration-standard) var(--motion-ease-natural);
+}
+
+.circular-action-cta:hover {
+  background-color: var(--cta-primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -4px rgba(90, 62, 43, 0.4);
+}
 
 /* Accessible Focus Ring */
 .focus-ring:focus-visible {

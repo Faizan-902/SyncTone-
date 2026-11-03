@@ -318,13 +318,13 @@ export default function AudioPlayer({
             <div className="w-full h-1.5 bg-[var(--bg-surface)] border theme-border rounded-full relative overflow-hidden group-hover:h-2.5 transition-all">
               {/* Progress Bar updated with transform: scaleX (Zero Layout Shift) */}
               <div
-                className="h-full w-full bg-gradient-to-r from-[var(--brand-walnut,#6B4A2E)] to-[var(--brand-bronze,#A88462)] rounded-full will-change-transform"
+                className="h-full w-full bg-gradient-to-r from-[var(--brand-walnut,#5A3E2B)] to-[var(--brand-amber,#D5851F)] rounded-full will-change-transform"
                 style={scrubScaleStyle}
               />
             </div>
             {/* Scrubber Thumb Indicator on hover */}
             <div
-              className="absolute w-3.5 h-3.5 rounded-full bg-white shadow-lg pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-120 transform -translate-x-1/2 group-hover:scale-125 border border-black/20"
+              className="absolute w-3.5 h-3.5 rounded-full bg-[var(--brand-amber,#D5851F)] ring-2 ring-[var(--brand-walnut,#5A3E2B)] shadow-[0_0_10px_rgba(213,133,31,0.6)] pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-120 transform -translate-x-1/2 group-hover:scale-125 border border-white/50"
               style={{
                 left: `${progressFraction * 100}%`,
               }}
@@ -386,7 +386,7 @@ export default function AudioPlayer({
             {/* Play / Pause Toggle Button */}
             <button
               onClick={onToggle}
-              className="w-11 h-11 rounded-full bg-[var(--cta-primary-bg)] hover:bg-[var(--cta-primary-hover)] text-[var(--cta-primary-text)] font-bold flex items-center justify-center shadow-lg transition-transform duration-100 ease-out hover:scale-105 active:scale-90 focus:outline-none cursor-pointer"
+              className="w-11 h-11 rounded-full bg-[var(--cta-primary-bg)] hover:bg-[var(--cta-primary-hover)] text-[var(--cta-primary-text)] border border-[var(--brand-amber,#D5851F)]/40 font-bold flex items-center justify-center shadow-lg transition-transform duration-100 ease-out hover:scale-105 active:scale-90 focus:outline-none cursor-pointer"
               aria-label={isPlaying ? 'Pause audio' : 'Play audio'}
             >
               <span className="transition-all duration-120 transform scale-100 opacity-100 flex items-center justify-center">
@@ -503,14 +503,14 @@ export default function AudioPlayer({
                 {isMuted || volume === 0 ? (
                   <IconVolumeMute className="w-4 h-4 text-[var(--danger)]" />
                 ) : (
-                  <IconVolume className="w-4 h-4" />
+                  <IconVolume className="w-4 h-4 text-[var(--brand-sage,#87A96B)]" />
                 )}
               </button>
 
               {/* Volume Slider Popover */}
               {showVolumeSlider && (
                 <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 p-2.5 rounded-xl theme-card border shadow-xl flex flex-col items-center gap-1 z-50 modal-panel-enter origin-bottom">
-                  <span className="text-[10px] font-mono theme-muted">
+                  <span className="text-[10px] font-mono font-bold text-[var(--brand-sage,#87A96B)]">
                     {isMuted ? '0%' : `${Math.round(volume * 100)}%`}
                   </span>
                   <input
@@ -520,7 +520,7 @@ export default function AudioPlayer({
                     step="0.05"
                     value={isMuted ? 0 : volume}
                     onChange={handleVolumeChange}
-                    className="w-20 h-1.5 accent-[var(--accent)] cursor-pointer"
+                    className="w-20 h-1.5 accent-[var(--brand-sage,#87A96B)] cursor-pointer"
                     aria-label="Volume level"
                   />
                 </div>

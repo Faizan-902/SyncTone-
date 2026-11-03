@@ -35,18 +35,18 @@ export const COVER_STYLES = {
     edition: 'Blind-Stamped Edition',
   },
   walnut: {
-    bg: 'bg-gradient-to-br from-[#6B4A2E] via-[#523822] to-[#3A2418]',
-    border: 'border-[#A88462]/40',
-    spine: 'border-l-[#A88462]/70',
+    bg: 'bg-gradient-to-br from-[#5A3E2B] via-[#432D1E] to-[#2B1B10]',
+    border: 'border-[#87A96B]/30',
+    spine: 'border-l-[#5A3E2B]/90',
     accentText: 'text-[#D5C4AE]',
     subText: 'text-[#D5C4AE]/80',
-    glow: 'rgba(107, 74, 46, 0.35)',
+    glow: 'rgba(90, 62, 43, 0.45)',
     emblem: (
-      <svg className="w-10 h-10 sm:w-12 sm:h-12 text-[#A88462] mx-auto drop-shadow-[0_0_12px_rgba(168,132,98,0.4)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <svg className="w-10 h-10 sm:w-12 sm:h-12 text-[#D5851F] mx-auto drop-shadow-[0_0_12px_rgba(213,133,31,0.4)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
       </svg>
     ),
-    eyebrow: 'WALNUT BROWN CHRONICLES',
+    eyebrow: 'WALNUT BROWN MASTERWORK',
     edition: 'Master Binding Edition',
   },
   sage: {
@@ -64,6 +64,22 @@ export const COVER_STYLES = {
     ),
     eyebrow: 'BOTANICAL & SAGE',
     edition: 'Antiquarian Herbarium Edition',
+  },
+  amber: {
+    bg: 'bg-gradient-to-br from-[#3D250E] via-[#2A1807] to-[#170E04]',
+    border: 'border-[#D5851F]/40',
+    spine: 'border-l-[#D5851F]/75',
+    accentText: 'text-[#D5851F]',
+    subText: 'text-[#D5C4AE]/80',
+    glow: 'rgba(213, 133, 31, 0.35)',
+    emblem: (
+      <svg className="w-10 h-10 sm:w-12 sm:h-12 text-[#D5851F] mx-auto drop-shadow-[0_0_12px_rgba(213,133,31,0.5)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+        <circle cx="12" cy="12" r="4" strokeWidth="1" opacity="0.6" />
+      </svg>
+    ),
+    eyebrow: 'AMBER GLOW CHRONICLES',
+    edition: 'Living Amber Illuminated Edition',
   },
   charcoal: {
     bg: 'bg-gradient-to-br from-[#4A4A46] via-[#353532] to-[#1E1E1C]',
@@ -89,11 +105,11 @@ export function getCoverStyle(title = '') {
     hash = ((hash << 5) - hash + safeTitle.charCodeAt(i)) | 0;
   }
   const styles = [
+    COVER_STYLES.amber,
+    COVER_STYLES.sage,
+    COVER_STYLES.walnut,
     COVER_STYLES.espresso,
     COVER_STYLES.chocolate,
-    COVER_STYLES.walnut,
-    COVER_STYLES.sage,
-    COVER_STYLES.charcoal,
   ];
   return styles[Math.abs(hash) % styles.length];
 }

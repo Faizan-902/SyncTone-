@@ -35,15 +35,17 @@ describe('Theme Lock: Complete Token & Color Parity', () => {
   const lightVars = extractAllCssVariables(cssContent, /html\.light\s*\{([\s\S]*?)\n\}/);
 
   it('matches all locked custom properties for Dark Mode (:root, html.dark)', () => {
-    expect(Object.keys(darkVars).length).toBe(85);
+    expect(Object.keys(darkVars).length).toBe(87);
 
     expect(darkVars).toMatchObject({
       '--brand-espresso': '#1A120E',
       '--brand-chocolate': '#3A2418',
-      '--brand-walnut': '#6B4A2E',
+      '--brand-walnut': '#5A3E2B',
       '--brand-bronze': '#A88462',
       '--brand-sand': '#D5C4AE',
       '--brand-charcoal': '#4A4A46',
+      '--brand-sage': '#87A96B',
+      '--brand-amber': '#D5851F',
 
       '--bg-page': '#1A120E',
       '--bg-surface': '#3A2418',
@@ -58,38 +60,38 @@ describe('Theme Lock: Complete Token & Color Parity', () => {
       '--border-subtle': '#40362E',
       '--border-strong': '#5A4D42',
       '--border-hover': '#71665D',
-      '--border-focus': '#A88462',
+      '--border-focus': '#D5851F',
 
-      '--accent': '#A88462',
-      '--accent-hover': '#BCA082',
-      '--accent-surface': 'rgba(168, 132, 98, 0.15)',
-      '--accent-strong': '#6B4A2E',
-      '--accent-text': '#A88462',
+      '--accent': '#D5851F',
+      '--accent-hover': '#E59838',
+      '--accent-surface': 'rgba(213, 133, 31, 0.15)',
+      '--accent-strong': '#5A3E2B',
+      '--accent-text': '#D5851F',
       '--on-accent': '#1A120E',
 
-      '--cta-primary-bg': '#6B4A2E',
-      '--cta-primary-hover': '#7D5737',
+      '--cta-primary-bg': '#5A3E2B',
+      '--cta-primary-hover': '#6D4C35',
       '--cta-primary-text': '#D5C4AE',
 
       '--glass-bg': 'rgba(26, 18, 14, 0.88)',
       '--glass-dock': 'rgba(58, 36, 24, 0.95)',
 
-      '--success': '#5FA052',
-      '--warning': '#C68A3C',
+      '--success': '#87A96B',
+      '--warning': '#D5851F',
       '--danger': '#BA4E3D',
-      '--info': '#A88462',
+      '--info': '#87A96B',
 
       '--speaker-narrator': '#D5C4AE',
-      '--speaker-a': '#A88462',
-      '--speaker-b': '#5FA052',
-      '--speaker-c': '#6B4A2E',
+      '--speaker-a': '#D5851F',
+      '--speaker-b': '#87A96B',
+      '--speaker-c': '#A88462',
       '--speaker-d': '#BA4E3D',
 
       '--top10-fill': '#1A120E',
       '--top10-stroke': 'rgba(213, 196, 174, 0.25)',
-      '--top10-active': '#A88462',
+      '--top10-active': '#D5851F',
 
-      '--card-accent': '#A88462',
+      '--card-accent': '#D5851F',
 
       '--space-0-5': '4px',
       '--space-1': '8px',
@@ -131,16 +133,16 @@ describe('Theme Lock: Complete Token & Color Parity', () => {
       '--border-subtle': '#C8B9A6',
       '--border-strong': '#A89885',
       '--border-hover': '#8C7E6F',
-      '--border-focus': '#6B4A2E',
+      '--border-focus': '#5A3E2B',
 
-      '--accent': '#6B4A2E',
+      '--accent': '#5A3E2B',
       '--accent-hover': '#3A2418',
-      '--accent-surface': 'rgba(107, 74, 46, 0.12)',
+      '--accent-surface': 'rgba(90, 62, 43, 0.12)',
       '--accent-strong': '#3A2418',
-      '--accent-text': '#6B4A2E',
+      '--accent-text': '#5A3E2B',
       '--on-accent': '#FAF6F0',
 
-      '--cta-primary-bg': '#6B4A2E',
+      '--cta-primary-bg': '#5A3E2B',
       '--cta-primary-hover': '#3A2418',
       '--cta-primary-text': '#D5C4AE',
 
@@ -148,21 +150,21 @@ describe('Theme Lock: Complete Token & Color Parity', () => {
       '--glass-dock': 'rgba(250, 246, 240, 0.96)',
 
       '--success': '#386B2F',
-      '--warning': '#87571B',
+      '--warning': '#D5851F',
       '--danger': '#962F22',
-      '--info': '#6B4A2E',
+      '--info': '#5A3E2B',
 
       '--speaker-narrator': '#1A120E',
-      '--speaker-a': '#6B4A2E',
+      '--speaker-a': '#5A3E2B',
       '--speaker-b': '#386B2F',
       '--speaker-c': '#4A4A46',
       '--speaker-d': '#962F22',
 
       '--top10-fill': '#D5C4AE',
       '--top10-stroke': 'rgba(26, 18, 14, 0.25)',
-      '--top10-active': '#6B4A2E',
+      '--top10-active': '#5A3E2B',
 
-      '--card-accent': '#6B4A2E',
+      '--card-accent': '#5A3E2B',
     });
   });
 
@@ -193,7 +195,7 @@ describe('Theme Lock: Complete Token & Color Parity', () => {
     // Brand Earthy Luxury palette
     expect(tailwindContent).toContain("espresso: '#1A120E'");
     expect(tailwindContent).toContain("chocolate: '#3A2418'");
-    expect(tailwindContent).toContain("walnut: '#6B4A2E'");
+    expect(tailwindContent).toContain("walnut: '#5A3E2B'");
     expect(tailwindContent).toContain("bronze: '#A88462'");
     expect(tailwindContent).toContain("sand: '#D5C4AE'");
     expect(tailwindContent).toContain("charcoal: '#4A4A46'");

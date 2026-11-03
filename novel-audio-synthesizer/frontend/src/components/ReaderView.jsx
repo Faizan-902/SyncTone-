@@ -260,7 +260,7 @@ export default function ReaderView({
         <>
           {imageElement}
           {displayText && (
-            <p className={`relative z-10 leading-relaxed p-2.5 rounded-xl bg-[rgba(168,132,98,0.15)] border-l-4 border-[var(--brand-bronze,#A88462)] shadow-xs transition-colors duration-100 ${
+            <p className={`relative z-10 leading-relaxed p-2.5 rounded-xl bg-[rgba(213,133,31,0.25)] border-l-4 border-[var(--brand-amber,#D5851F)] shadow-xs transition-colors duration-100 ${
               isDialogue ? 'italic font-serif text-[var(--text-main)] font-medium' : 'text-[var(--text-main)]'
             }`}>
               {tokens.map((token, idx) => {
@@ -268,7 +268,7 @@ export default function ReaderView({
                   return (
                     <span
                       key={idx}
-                      className="bg-[rgba(168,132,98,0.28)] text-[var(--text-main)] font-bold px-1 py-0.5 rounded shadow-xs ring-1 ring-[var(--brand-bronze,#A88462)]/60 inline-block transition-transform duration-75"
+                      className="bg-[rgba(213,133,31,0.40)] text-[var(--text-main)] font-bold px-1 py-0.5 rounded shadow-xs ring-1 ring-[var(--brand-amber,#D5851F)]/80 inline-block transition-transform duration-75"
                     >
                       {token}
                     </span>
@@ -287,7 +287,7 @@ export default function ReaderView({
       <>
         {imageElement}
         {displayText && (
-          <p className={`relative z-10 leading-relaxed p-2 rounded-lg bg-[rgba(168,132,98,0.15)] border-b-2 border-[var(--brand-bronze,#A88462)] ${
+          <p className={`relative z-10 leading-relaxed p-2 rounded-lg bg-[rgba(213,133,31,0.25)] border-b-2 border-[var(--brand-amber,#D5851F)] ${
             isDialogue ? 'italic theme-main font-serif font-medium' : 'theme-main font-normal'
           }`}>
             {displayText}
@@ -418,8 +418,9 @@ export default function ReaderView({
                 {currentNovel.title}
               </span>
               {currentChapter && (
-                <span className="text-xs theme-muted font-mono truncate hidden sm:inline">
-                  • {currentChapter.title}
+                <span className="text-xs text-[var(--brand-sage,#87A96B)] font-mono font-bold truncate hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[var(--brand-sage,#87A96B)]/15 border border-[var(--brand-sage,#87A96B)]/30">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-sage,#87A96B)] animate-pulse" />
+                  {currentChapter.title}
                 </span>
               )}
             </div>
@@ -642,7 +643,7 @@ export default function ReaderView({
                   group relative p-5 sm:p-6 rounded-2xl border transition-all duration-150 cursor-pointer outline-none select-text
                   ${
                     isActive
-                      ? 'theme-surface border-[var(--brand-bronze,#A88462)]/80 shadow-md ring-1 ring-[var(--brand-bronze,#A88462)]/40 bg-[rgba(168,132,98,0.12)]'
+                      ? 'theme-surface border-[var(--brand-amber,#D5851F)]/80 shadow-md ring-1 ring-[var(--brand-amber,#D5851F)]/40 bg-[rgba(213,133,31,0.12)]'
                       : 'theme-card border-[var(--border-subtle)] hover:border-[var(--border-hover)] hover:bg-[var(--bg-hover)] shadow-xs'
                   }
                 `}
@@ -651,7 +652,7 @@ export default function ReaderView({
                 <div
                   className={`absolute inset-0 rounded-2xl pointer-events-none transition-opacity duration-200 ${
                     isActive
-                      ? 'opacity-100 bg-[rgba(168,132,98,0.10)] ring-1 ring-[var(--brand-bronze,#A88462)]'
+                      ? 'opacity-100 bg-[rgba(213,133,31,0.10)] ring-1 ring-[var(--brand-amber,#D5851F)]'
                       : 'opacity-0'
                   }`}
                   aria-hidden="true"
