@@ -226,7 +226,7 @@ function runFOWTScript(mockLocalStorage) {
     var saved = mockLocalStorage.getItem('synctone_theme') || 'dark';
     if (saved !== 'dark' && saved !== 'light') saved = 'dark';
     appliedClass = saved;
-    metaThemeColor = saved === 'dark' ? '#1A120E' : '#D5C4AE';
+    metaThemeColor = saved === 'dark' ? '#1A120E' : '#FAF8F5';
   } catch (e) {
     appliedClass = 'dark';
     metaThemeColor = '#1A120E';
@@ -282,7 +282,7 @@ test('2.1: Flash-of-Wrong-Theme script handles corrupted localStorage states wit
 
   // Valid states
   assert(runFOWTScript({ getItem: () => 'light' }).appliedClass === 'light', 'Valid light mode should apply "light"');
-  assert(runFOWTScript({ getItem: () => 'light' }).metaThemeColor === '#D5C4AE', 'Light mode meta should be #D5C4AE');
+  assert(runFOWTScript({ getItem: () => 'light' }).metaThemeColor === '#FAF8F5', 'Light mode meta should be #FAF8F5');
   assert(runFOWTScript({ getItem: () => 'dark' }).appliedClass === 'dark', 'Valid dark mode should apply "dark"');
   assert(runFOWTScript({ getItem: () => 'dark' }).metaThemeColor === '#1A120E', 'Dark mode meta should be #1A120E');
 });
@@ -346,10 +346,10 @@ test('2.5: Rapid Theme Toggle Cycle Simulation — 1,000 state transitions', () 
     assert(currentTheme === expectedTheme, `Cycle ${i}: expected ${expectedTheme}, got ${currentTheme}`);
 
     // Verify meta-theme sync contract
-    const metaColor = currentTheme === 'dark' ? '#1A120E' : '#D5C4AE';
+    const metaColor = currentTheme === 'dark' ? '#1A120E' : '#FAF8F5';
     assert(
       (currentTheme === 'dark' && metaColor === '#1A120E') ||
-      (currentTheme === 'light' && metaColor === '#D5C4AE'),
+      (currentTheme === 'light' && metaColor === '#FAF8F5'),
       'Meta theme color must strictly match active theme'
     );
   }

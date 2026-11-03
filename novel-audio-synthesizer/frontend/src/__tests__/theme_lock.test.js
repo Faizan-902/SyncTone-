@@ -120,39 +120,39 @@ describe('Theme Lock: Complete Token & Color Parity', () => {
     expect(Object.keys(lightVars).length).toBe(43);
 
     expect(lightVars).toMatchObject({
-      '--bg-page': '#D5C4AE',
+      '--bg-page': '#FAF8F5',
       '--bg-surface': '#FAF6F0',
-      '--bg-card': '#F5EFE6',
-      '--bg-hover': '#E8DDD0',
+      '--bg-card': '#FFFFFF',
+      '--bg-hover': '#F2EBE1',
       '--bg-elevated': '#FFFFFF',
 
       '--text-main': '#1A120E',
-      '--text-sub': '#4A4A46',
-      '--text-muted': '#6B5B4E',
+      '--text-sub': '#5A3E2B',
+      '--text-muted': '#8C7765',
 
-      '--border-subtle': '#C8B9A6',
-      '--border-strong': '#A89885',
-      '--border-hover': '#8C7E6F',
+      '--border-subtle': '#EAE3D9',
+      '--border-strong': '#D5C4AE',
+      '--border-hover': '#A88462',
       '--border-focus': '#5A3E2B',
 
       '--accent': '#5A3E2B',
       '--accent-hover': '#3A2418',
-      '--accent-surface': 'rgba(90, 62, 43, 0.12)',
+      '--accent-surface': 'rgba(90, 62, 43, 0.10)',
       '--accent-strong': '#3A2418',
       '--accent-text': '#5A3E2B',
-      '--on-accent': '#FAF6F0',
+      '--on-accent': '#FAF8F5',
 
       '--cta-primary-bg': '#5A3E2B',
       '--cta-primary-hover': '#3A2418',
-      '--cta-primary-text': '#D5C4AE',
+      '--cta-primary-text': '#FAF8F5',
 
-      '--glass-bg': 'rgba(213, 196, 174, 0.90)',
-      '--glass-dock': 'rgba(250, 246, 240, 0.96)',
+      '--glass-bg': 'rgba(250, 248, 245, 0.92)',
+      '--glass-dock': 'rgba(255, 255, 255, 0.96)',
 
       '--success': '#386B2F',
       '--warning': '#D5851F',
       '--danger': '#962F22',
-      '--info': '#5A3E2B',
+      '--info': '#87A96B',
 
       '--speaker-narrator': '#1A120E',
       '--speaker-a': '#5A3E2B',
@@ -160,9 +160,9 @@ describe('Theme Lock: Complete Token & Color Parity', () => {
       '--speaker-c': '#4A4A46',
       '--speaker-d': '#962F22',
 
-      '--top10-fill': '#D5C4AE',
-      '--top10-stroke': 'rgba(26, 18, 14, 0.25)',
-      '--top10-active': '#5A3E2B',
+      '--top10-fill': '#FAF8F5',
+      '--top10-stroke': 'rgba(26, 18, 14, 0.20)',
+      '--top10-active': '#D5851F',
 
       '--card-accent': '#5A3E2B',
     });

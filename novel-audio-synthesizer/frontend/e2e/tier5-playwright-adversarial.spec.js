@@ -95,7 +95,7 @@ test.describe('Tier 5: Adversarial Coverage Hardening (Live Browser)', () => {
     if (isDark) {
       expect(finalMeta).toBe('#1A120E');
     } else {
-      expect(finalMeta).toBe('#D5C4AE');
+      expect(finalMeta).toBe('#FAF8F5');
     }
   });
 

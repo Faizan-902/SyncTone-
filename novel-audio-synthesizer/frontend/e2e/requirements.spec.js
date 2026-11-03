@@ -213,7 +213,7 @@ test.describe('Tier 1: Feature Coverage', () => {
     const lightBg = await page.evaluate(() => {
       return window.getComputedStyle(document.documentElement).getPropertyValue('--bg-page').trim();
     });
-    expect(lightBg).toBe('#D5C4AE');
+    expect(lightBg).toBe('#FAF8F5');
 
     // Toggle back to Dark mode
     await themeToggle.click();

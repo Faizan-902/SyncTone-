@@ -7,7 +7,7 @@
 
 const THEME_SURFACES = {
   dark: { card: '#3A2418', page: '#1A120E', accent: '#A88462' },
-  light: { card: '#F5EFE6', page: '#D5C4AE', accent: '#6B4A2E' },
+  light: { card: '#FFFFFF', page: '#FAF8F5', accent: '#5A3E2B' },
 };
 
 const NEED_CONTRAST = 3.0;
