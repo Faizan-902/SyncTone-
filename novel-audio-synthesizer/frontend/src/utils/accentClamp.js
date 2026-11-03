@@ -6,7 +6,7 @@
  */
 
 const THEME_SURFACES = {
-  dark: { card: '#3A2418', page: '#1A120E', accent: '#A88462' },
+  dark: { card: '#281911', page: '#1A120E', accent: '#DFBA53' },
   light: { card: '#FFFFFF', page: '#FAF8F5', accent: '#5A3E2B' },
 };
 

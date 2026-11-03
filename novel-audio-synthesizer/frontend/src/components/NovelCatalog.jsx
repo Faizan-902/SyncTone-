@@ -360,7 +360,7 @@ export default function NovelCatalog({
               className="relative w-full rounded-3xl overflow-hidden p-6 sm:p-12 md:p-16 border theme-border shadow-2xl flex flex-col md:flex-row items-center md:items-end justify-between gap-8 min-h-[480px] sm:min-h-[520px] transition-all duration-300 architectural-portal"
               style={{
                 background:
-                  'radial-gradient(circle at 80% 20%, #3A2418 0%, #1A120E 60%, #1A120E 100%)',
+                  'radial-gradient(circle at 80% 20%, #2E1D13 0%, #1A120E 60%, #0D0A08 100%)',
               }}
               aria-label="Featured Novel Billboard"
               onMouseEnter={() => setIsBillboardPaused(true)}
@@ -368,17 +368,17 @@ export default function NovelCatalog({
               onFocus={() => setIsBillboardPaused(true)}
               onBlur={() => setIsBillboardPaused(false)}
             >
-              {/* Radial Atmospheric Spotlight Glow (Amber Glow & Sage Green) */}
+              {/* Radial Atmospheric Spotlight Glow (Champagne Gold & Warm Bronze) */}
               <div
                 className="absolute inset-0 pointer-events-none opacity-60"
                 style={{
                   backgroundImage:
-                    'radial-gradient(ellipse at 78% 38%, rgba(213, 133, 31, 0.28) 0%, rgba(135, 169, 107, 0.16) 45%, transparent 70%)',
+                    'radial-gradient(ellipse at 78% 38%, rgba(223, 186, 83, 0.30) 0%, rgba(168, 132, 98, 0.16) 45%, transparent 70%)',
                 }}
               />
               {/* Arched Architectural Portal Silhouette */}
               <div className="absolute right-0 top-0 bottom-0 w-1/2 max-w-lg pointer-events-none opacity-30 hidden md:block">
-                <div className="w-full h-full rounded-tl-[160px] border-l border-t border-[var(--brand-amber,#D5851F)]/25 bg-gradient-to-b from-[rgba(213,133,31,0.10)] to-transparent" />
+                <div className="w-full h-full rounded-tl-[160px] border-l border-t border-[var(--brand-champagne,#DFBA53)]/30 bg-gradient-to-b from-[rgba(223,186,83,0.10)] to-transparent" />
               </div>
               {/* Fluted Architectural Timber Edge Accent */}
               <div className="absolute right-0 top-0 bottom-0 w-2.5 fluted-timber opacity-30 pointer-events-none hidden sm:block" />
@@ -398,7 +398,7 @@ export default function NovelCatalog({
                 {/* Eyebrow Badges Row with Channel Indicator & Quick Switcher */}
                 <div className="flex flex-wrap items-center gap-2.5 stagger-1">
                   <span className="px-3 py-1 rounded-full text-[var(--brand-sage,#87A96B)] bg-[var(--brand-sage,#87A96B)]/15 border border-[var(--brand-sage,#87A96B)]/40 text-[11px] font-mono font-bold uppercase tracking-wider shadow-sm flex items-center gap-1.5">
-                    <IconStar className="w-3.5 h-3.5 text-[var(--brand-amber,#D5851F)]" />
+                    <IconStar className="w-3.5 h-3.5 text-[var(--brand-champagne,#DFBA53)]" />
                     <span>Top Pick</span>
                   </span>
                   {/* Channel Badge with Quick Channel Switcher */}
@@ -431,7 +431,7 @@ export default function NovelCatalog({
                 {/* Headline: Display serif with italic flourish + Novel Title */}
                 <div className="space-y-1 stagger-2">
                   <div className="text-3xl sm:text-5xl md:text-6xl font-serif font-bold tracking-tight text-[var(--brand-sand,#D5C4AE)] leading-[1.08] drop-shadow-xl">
-                    Stories that feel <span className="italic font-serif font-normal text-[var(--brand-amber,#D5851F)]">alive.</span>
+                    Stories that feel <span className="italic font-serif font-normal text-[var(--accent)]">alive.</span>
                   </div>
                   <h2
                     onClick={() => onSelectNovel(featuredNovel.id)}

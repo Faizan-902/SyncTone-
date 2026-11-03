@@ -43,7 +43,7 @@
 /* ========================================================================= */
 
 :root, html.dark {
-  /* Brand Tokens (Earthy Luxury) */
+  /* Brand Tokens (Earthy Luxury & Champagne Gold) */
   --brand-espresso: #1A120E;
   --brand-chocolate: #3A2418;
   --brand-walnut: #5A3E2B;
@@ -52,13 +52,16 @@
   --brand-charcoal: #4A4A46;
   --brand-sage: #87A96B;
   --brand-amber: #D5851F;
+  --brand-champagne: #DFBA53;
+  --brand-champagne-light: #F5E2A8;
+  --brand-obsidian: #0D0A08;
 
-  /* Surfaces (Nocturne / Earthy Luxury) */
+  /* Surfaces (Nocturne / Earthy Luxury & Obsidian) */
   --bg-page: #1A120E;
   --bg-surface: #3A2418;
-  --bg-card: #3A2418;
-  --bg-hover: #4A4A46;
-  --bg-elevated: #4A4A46;
+  --bg-card: #281911;
+  --bg-hover: #3D261A;
+  --bg-elevated: #362217;
 
   /* Typography / Text Ratios (AAA Main & Sub >= 7:1, AA Muted >= 4.5:1) */
   --text-main: #D5C4AE;
@@ -66,23 +69,23 @@
   --text-muted: #8A7A68;
 
   /* Architectural Borders & Affordances */
-  --border-subtle: #40362E;
-  --border-strong: #5A4D42;
-  --border-hover: #71665D;
-  --border-focus: #D5851F;
+  --border-subtle: #453224;
+  --border-strong: #634B38;
+  --border-hover: #DFBA53;
+  --border-focus: #DFBA53;
 
-  /* Living Accent: Amber Glow */
-  --accent: #D5851F;
-  --accent-hover: #E59838;
-  --accent-surface: rgba(213, 133, 31, 0.15);
+  /* Living Accent: Radiant Champagne Gold */
+  --accent: #DFBA53;
+  --accent-hover: #EED076;
+  --accent-surface: rgba(223, 186, 83, 0.15);
   --accent-strong: #5A3E2B;
-  --accent-text: #D5851F;
-  --on-accent: #1A120E;
+  --accent-text: #DFBA53;
+  --on-accent: #0D0A08;
 
-  /* Primary Button Contract (Walnut Brown & Soft Sand) */
-  --cta-primary-bg: #5A3E2B;
-  --cta-primary-hover: #6D4C35;
-  --cta-primary-text: #D5C4AE;
+  /* Primary Button Contract (Champagne Gold CTA in dark mode) */
+  --cta-primary-bg: #DFBA53;
+  --cta-primary-hover: #EED076;
+  --cta-primary-text: #0D0A08;
 
   /* Glassmorphism */
   --glass-bg: rgba(26, 18, 14, 0.88);
@@ -104,10 +107,10 @@
   /* Top 10 Outline Typography */
   --top10-fill: #1A120E;
   --top10-stroke: rgba(213, 196, 174, 0.25);
-  --top10-active: #D5851F;
+  --top10-active: #DFBA53;
 
   /* Card Accent Default */
-  --card-accent: #D5851F;
+  --card-accent: #DFBA53;
 
   /* Backward Compatibility Aliases */
   --color-status-success: var(--success);
@@ -181,7 +184,7 @@ html.light {
   /* Architectural Hairline Borders */
   --border-subtle: #EAE3D9;
   --border-strong: #D5C4AE;
-  --border-hover: #A88462;
+  --border-hover: #DFBA53;
   --border-focus: #5A3E2B;
 
   /* Living Accent: Walnut Brown */
@@ -219,7 +222,7 @@ html.light {
   --top10-stroke: rgba(26, 18, 14, 0.20);
   --top10-active: #D5851F;
 
-  --card-accent: #5A3E2B;
+  --card-accent: #DFBA53;
 
   --color-status-success: var(--success);
   --color-status-warning: var(--warning);
@@ -256,7 +259,7 @@ body {
   position: relative;
   border-radius: 24px;
   overflow: hidden;
-  background: radial-gradient(circle at 75% 25%, #3A2418 0%, #1A120E 65%, #1A120E 100%);
+  background: radial-gradient(circle at 80% 20%, #2E1D13 0%, #1A120E 60%, #0D0A08 100%);
 }
 
 html.light .architectural-portal {
@@ -275,8 +278,8 @@ html.light .architectural-portal {
 
 .display-niche {
   border-radius: 120px 120px 16px 16px;
-  box-shadow: inset 0 8px 24px -4px rgba(213, 133, 31, 0.25), inset 0 2px 8px rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(213, 133, 31, 0.2);
+  box-shadow: inset 0 8px 24px -4px rgba(223, 186, 83, 0.25), inset 0 2px 8px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(223, 186, 83, 0.2);
 }
 
 .botanical-pill {
@@ -300,8 +303,8 @@ html.light .architectural-portal {
 
 .hairline-dash {
   height: 1px;
-  background-color: var(--brand-amber);
-  box-shadow: 0 0 8px rgba(213, 133, 31, 0.6);
+  background-color: var(--brand-champagne, #DFBA53);
+  box-shadow: 0 0 8px rgba(223, 186, 83, 0.6);
 }
 
 .circular-action-cta {
@@ -413,12 +416,16 @@ html.light .architectural-portal {
   position: absolute;
   inset: 0;
   border-radius: 18px;
-  border: 1.5px solid var(--card-accent, var(--border-focus));
-  box-shadow: 0 16px 36px -8px rgba(90, 62, 43, 0.16);
+  border: 1.5px solid var(--card-accent, #DFBA53);
+  box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.6), 0 0 20px rgba(223, 186, 83, 0.15);
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--motion-duration-micro) var(--motion-ease-natural);
   will-change: opacity;
+}
+
+html.light .novel-card-hybrid::after {
+  box-shadow: 0 16px 36px -8px rgba(90, 62, 43, 0.16), 0 0 16px rgba(223, 186, 83, 0.12);
 }
 
 @media (hover: hover) {

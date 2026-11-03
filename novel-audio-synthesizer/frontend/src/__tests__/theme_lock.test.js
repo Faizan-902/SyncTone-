@@ -35,7 +35,7 @@ describe('Theme Lock: Complete Token & Color Parity', () => {
   const lightVars = extractAllCssVariables(cssContent, /html\.light\s*\{([\s\S]*?)\n\}/);
 
   it('matches all locked custom properties for Dark Mode (:root, html.dark)', () => {
-    expect(Object.keys(darkVars).length).toBe(87);
+    expect(Object.keys(darkVars).length).toBe(90);
 
     expect(darkVars).toMatchObject({
       '--brand-espresso': '#1A120E',
@@ -46,32 +46,35 @@ describe('Theme Lock: Complete Token & Color Parity', () => {
       '--brand-charcoal': '#4A4A46',
       '--brand-sage': '#87A96B',
       '--brand-amber': '#D5851F',
+      '--brand-champagne': '#DFBA53',
+      '--brand-champagne-light': '#F5E2A8',
+      '--brand-obsidian': '#0D0A08',
 
       '--bg-page': '#1A120E',
       '--bg-surface': '#3A2418',
-      '--bg-card': '#3A2418',
-      '--bg-hover': '#4A4A46',
-      '--bg-elevated': '#4A4A46',
+      '--bg-card': '#281911',
+      '--bg-hover': '#3D261A',
+      '--bg-elevated': '#362217',
 
       '--text-main': '#D5C4AE',
       '--text-sub': '#A88462',
       '--text-muted': '#8A7A68',
 
-      '--border-subtle': '#40362E',
-      '--border-strong': '#5A4D42',
-      '--border-hover': '#71665D',
-      '--border-focus': '#D5851F',
+      '--border-subtle': '#453224',
+      '--border-strong': '#634B38',
+      '--border-hover': '#DFBA53',
+      '--border-focus': '#DFBA53',
 
-      '--accent': '#D5851F',
-      '--accent-hover': '#E59838',
-      '--accent-surface': 'rgba(213, 133, 31, 0.15)',
+      '--accent': '#DFBA53',
+      '--accent-hover': '#EED076',
+      '--accent-surface': 'rgba(223, 186, 83, 0.15)',
       '--accent-strong': '#5A3E2B',
-      '--accent-text': '#D5851F',
-      '--on-accent': '#1A120E',
+      '--accent-text': '#DFBA53',
+      '--on-accent': '#0D0A08',
 
-      '--cta-primary-bg': '#5A3E2B',
-      '--cta-primary-hover': '#6D4C35',
-      '--cta-primary-text': '#D5C4AE',
+      '--cta-primary-bg': '#DFBA53',
+      '--cta-primary-hover': '#EED076',
+      '--cta-primary-text': '#0D0A08',
 
       '--glass-bg': 'rgba(26, 18, 14, 0.88)',
       '--glass-dock': 'rgba(58, 36, 24, 0.95)',
@@ -89,9 +92,9 @@ describe('Theme Lock: Complete Token & Color Parity', () => {
 
       '--top10-fill': '#1A120E',
       '--top10-stroke': 'rgba(213, 196, 174, 0.25)',
-      '--top10-active': '#D5851F',
+      '--top10-active': '#DFBA53',
 
-      '--card-accent': '#D5851F',
+      '--card-accent': '#DFBA53',
 
       '--space-0-5': '4px',
       '--space-1': '8px',
@@ -132,7 +135,7 @@ describe('Theme Lock: Complete Token & Color Parity', () => {
 
       '--border-subtle': '#EAE3D9',
       '--border-strong': '#D5C4AE',
-      '--border-hover': '#A88462',
+      '--border-hover': '#DFBA53',
       '--border-focus': '#5A3E2B',
 
       '--accent': '#5A3E2B',
@@ -164,7 +167,7 @@ describe('Theme Lock: Complete Token & Color Parity', () => {
       '--top10-stroke': 'rgba(26, 18, 14, 0.20)',
       '--top10-active': '#D5851F',
 
-      '--card-accent': '#5A3E2B',
+      '--card-accent': '#DFBA53',
     });
   });
 
@@ -205,6 +208,9 @@ describe('Theme Lock: Complete Token & Color Parity', () => {
     expect(tailwindContent).toContain("'walnut-deep': '#5A3E2B'");
     expect(tailwindContent).toContain("amber: '#D5851F'");
     expect(tailwindContent).toContain("'amber-glow': '#D5851F'");
+    expect(tailwindContent).toContain("champagne: '#DFBA53'");
+    expect(tailwindContent).toContain("'champagne-light': '#F5E2A8'");
+    expect(tailwindContent).toContain("obsidian: '#0D0A08'");
     expect(tailwindContent).not.toContain("cyan: '#06B6D4'");
     expect(tailwindContent).not.toContain("indigo: '#6366F1'");
     expect(tailwindContent).not.toContain("violet: '#8B5CF6'");
