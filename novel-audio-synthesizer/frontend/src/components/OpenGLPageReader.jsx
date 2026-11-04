@@ -4,6 +4,9 @@ import { getSpeakerColor } from '../utils/speakerColors';
 import { parseSegmentImage } from '../utils/segmentUtils';
 import { measureAndPaginateSegments } from '../utils/readerLayoutEngine';
 import NovelCover from './NovelCover';
+import { paginateSegments } from '../reader/paginate';
+import PageNavButtons from '../reader/PageNavButtons';
+import SpineShadowCanvas from '../reader/SpineShadowCanvas';
 import {
   IconArrowLeft,
   IconBook,
@@ -17,106 +20,6 @@ import {
   IconSoundwave,
 } from './icons';
 
-/**
- * Smart paginator that groups segments into realistic literary book pages
- * targeting ~850-1000 characters per page or 3-5 paragraphs.
- */
-function paginateSegments(segments = [], charsPerPage = 850) {
-  if (!segments || segments.length === 0) return [];
-
-  const pages = [];
-  let currentPage = [];
-  let currentChars = 0;
-
-  for (const seg of segments) {
-    const { imgUrl, cleanText } = parseSegmentImage(seg);
-
-    // Standalone illustration: dedicated page
-    if (imgUrl && !cleanText) {
-      if (currentPage.length > 0) {
-        pages.push(currentPage);
-        currentPage = [];
-        currentChars = 0;
-      }
-      pages.push([seg]);
-      continue;
-    }
-
-    let textLen = (cleanText || seg.text || '').length;
-    if (imgUrl && cleanText) {
-      textLen += 450;
-    }
-
-    // If page is not empty and adding this segment exceeds target character count, start new page
-    if (currentPage.length > 0 && currentChars + textLen > charsPerPage && currentPage.length >= 2) {
-      pages.push(currentPage);
-      currentPage = [seg];
-      currentChars = textLen;
-    } else {
-      currentPage.push(seg);
-      currentChars += textLen;
-    }
-  }
-
-  if (currentPage.length > 0) {
-    pages.push(currentPage);
-  }
-
-  // If character-based pagination produced only 1 page but chapter has >= 2 segments,
-  // split segments into smaller pages of at most 2-3 segments per page (or ~450 chars)
-  // so every multi-paragraph chapter has multiple pages and spreads that can turn!
-  if (pages.length === 1 && segments.length >= 2) {
-    const subPages = [];
-    let cur = [];
-    let chars = 0;
-    const maxChars = Math.min(charsPerPage, 450);
-    const maxSegs = segments.length <= 3 ? 1 : 2;
-
-    for (const seg of segments) {
-      const { imgUrl, cleanText } = parseSegmentImage(seg);
-
-      // Standalone illustration: dedicated page
-      if (imgUrl && !cleanText) {
-        if (cur.length > 0) {
-          subPages.push(cur);
-          cur = [];
-          chars = 0;
-        }
-        subPages.push([seg]);
-        continue;
-      }
-
-      let textLen = (cleanText || seg.text || '').length;
-      if (imgUrl && cleanText) {
-        textLen += 450;
-      }
-
-      if (cur.length > 0 && (chars + textLen > maxChars || cur.length >= maxSegs)) {
-        subPages.push(cur);
-        cur = [seg];
-        chars = textLen;
-      } else {
-        cur.push(seg);
-        chars += textLen;
-      }
-    }
-    if (cur.length > 0) {
-      subPages.push(cur);
-    }
-    if (subPages.length > 1) {
-      return subPages;
-    }
-    // Fallback for short segments: 1 per page if <= 3 segments, else 2 per page
-    const fallbackPages = [];
-    const step = segments.length <= 3 ? 1 : 2;
-    for (let i = 0; i < segments.length; i += step) {
-      fallbackPages.push(segments.slice(i, i + step));
-    }
-    return fallbackPages;
-  }
-
-  return pages;
-}
 
 /**
  * High-fidelity Hogwarts Heraldic Crest Ornament matching Apple Books Screenshot 2
@@ -125,7 +28,7 @@ function paginateSegments(segments = [], charsPerPage = 850) {
 function HogwartsCrest({ className = 'w-44 h-44 sm:w-48 sm:h-48' }) {
   return (
     <div className="flex flex-col items-center justify-center my-3 select-none">
-      <div className="relative p-3.5 rounded-2xl bg-amber-50/70 dark:bg-[#111114] border border-amber-900/15 dark:border-amber-400/20 shadow-sm dark:shadow-md">
+      <div className="relative p-3.5 rounded-2xl bg-[var(--accent-surface)] border border-[var(--border-subtle)] shadow-sm dark:shadow-md">
         <svg
           viewBox="0 0 240 240"
           className={className}
@@ -147,10 +50,10 @@ function HogwartsCrest({ className = 'w-44 h-44 sm:w-48 sm:h-48' }) {
             opacity="0.9"
           />
 
-          {/* Quarter 2: Ravenclaw Blue (Top Right) */}
+          {/* Quarter 2: Charcoal (Top Right) */}
           <path
             d="M120 22 C150 22 185 32 195 70 C195 105 170 120 120 120 L120 22 Z"
-            fill="#0e1a40"
+            fill="#4A4A46"
             opacity="0.9"
           />
 
@@ -271,7 +174,6 @@ export default function OpenGLPageReader({
   const [lastJumpPage, setLastJumpPage] = useState(1);
   const [showCoverSpread, setShowCoverSpread] = useState(false);
 
-  const canvasRef = useRef(null);
   const bookContainerRef = useRef(null);
   const autoFlipLockRef = useRef(false);
   const lastAutoFlippedSegRef = useRef(-1);
@@ -421,138 +323,6 @@ export default function OpenGLPageReader({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleNextPage, handlePrevPage]);
 
-  // WebGL / Canvas Hardware-Accelerated 3D Lighting & GoogleBook3D Parametric Simulation
-  // Directly modeled on Moon+ Reader Pro v10.8 (com.flyersoft.curl.GoogleBook3D & Render3D)
-  // Adheres to RENDERMODE_WHEN_DIRTY (0% idle CPU/GPU consumption when page is settled).
-  useEffect(() => {
-    if (typeof navigator !== 'undefined' && navigator.userAgent.includes('jsdom')) {
-      return;
-    }
-    const canvas = canvasRef.current;
-    if (!canvas || typeof canvas.getContext !== 'function') return;
-
-    let ctx;
-    try {
-      ctx = canvas.getContext('2d');
-    } catch (_) {
-      return;
-    }
-    if (!ctx) return;
-
-    let animId = null;
-    let startTime = null;
-    const duration = 280; // ms matching flip transition
-
-    const renderFrame = (t = 1) => {
-      const w = (canvas.width = canvas.parentElement?.clientWidth || 900);
-      const h = (canvas.height = canvas.parentElement?.clientHeight || 650);
-
-      ctx.clearRect(0, 0, w, h);
-
-      // Pass 1: Center Spine Gutter Depth Gradient (Between Left and Right spread pages)
-      const spineGradient = ctx.createLinearGradient(w / 2 - 36, 0, w / 2 + 36, 0);
-      spineGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-      spineGradient.addColorStop(0.5, isDark ? 'rgba(0, 0, 0, 0.30)' : 'rgba(0, 0, 0, 0.12)');
-      spineGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      ctx.fillStyle = spineGradient;
-      ctx.fillRect(w / 2 - 36, 0, 72, h);
-
-      // Pass 2: Outer Page Edge Curvature Shading (book block perspective)
-      const leftEdgeGradient = ctx.createLinearGradient(0, 0, 24, 0);
-      leftEdgeGradient.addColorStop(0, isDark ? 'rgba(0, 0, 0, 0.16)' : 'rgba(0, 0, 0, 0.06)');
-      leftEdgeGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      ctx.fillStyle = leftEdgeGradient;
-      ctx.fillRect(0, 0, 24, h);
-
-      const rightEdgeGradient = ctx.createLinearGradient(w - 24, 0, w, 0);
-      rightEdgeGradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-      rightEdgeGradient.addColorStop(1, isDark ? 'rgba(0, 0, 0, 0.16)' : 'rgba(0, 0, 0, 0.06)');
-      ctx.fillStyle = rightEdgeGradient;
-      ctx.fillRect(w - 24, 0, 24, h);
-
-      // Pass 3 & 4: GoogleBook3D Parametric Vertex Curvature Grid Simulation (during active turn)
-      if (isFlipping && t < 1) {
-        const isNext = flipDirection === 'next';
-        // Parametric wave crest sweeps across the page width
-        const waveProgress = Math.sin(t * Math.PI); // Peak curvature at mid-turn (t = 0.5)
-        const curlX = isNext ? w * (1 - t * 0.55) : w * (t * 0.55);
-        const curlRadius = 60 + waveProgress * 120;
-
-        // Pass 3a: Attached Drop Shadow (mGBShadow) cast on the stationary underpage
-        const shadowGrad = ctx.createRadialGradient(
-          curlX,
-          h * 0.5,
-          10,
-          curlX,
-          h * 0.5,
-          curlRadius + 40
-        );
-        shadowGrad.addColorStop(0, isDark ? 'rgba(0, 0, 0, 0.35)' : 'rgba(0, 0, 0, 0.18)');
-        shadowGrad.addColorStop(0.6, isDark ? 'rgba(0, 0, 0, 0.15)' : 'rgba(0, 0, 0, 0.06)');
-        shadowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = shadowGrad;
-        ctx.fillRect(0, 0, w, h);
-
-        // Pass 3b: Curvature Ridge Wave & Specular Highlight (cylindrical wave crest)
-        const ridgeGrad = ctx.createLinearGradient(
-          curlX - curlRadius * 0.5,
-          0,
-          curlX + curlRadius * 0.5,
-          0
-        );
-        ridgeGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
-        ridgeGrad.addColorStop(
-          0.5,
-          isDark ? 'rgba(250, 204, 21, 0.16)' : 'rgba(255, 255, 255, 0.28)'
-        );
-        ridgeGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = ridgeGrad;
-        ctx.fillRect(curlX - curlRadius * 0.5, 0, curlRadius, h);
-
-        // Pass 4: Page Underside Self-Shadow
-        const selfShadowGrad = ctx.createLinearGradient(
-          isNext ? curlX : curlX - curlRadius,
-          0,
-          isNext ? curlX + curlRadius : curlX,
-          0
-        );
-        selfShadowGrad.addColorStop(0, isDark ? 'rgba(0, 0, 0, 0.24)' : 'rgba(0, 0, 0, 0.12)');
-        selfShadowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = selfShadowGrad;
-        ctx.fillRect(isNext ? curlX : curlX - curlRadius, 0, curlRadius, h);
-      }
-    };
-
-    if (isFlipping) {
-      // Dynamic rendering with requestAnimationFrame during flip animation
-      const animate = (timestamp) => {
-        if (!startTime) startTime = timestamp;
-        const elapsed = timestamp - startTime;
-        const progress = Math.min(1, elapsed / duration);
-        renderFrame(progress);
-
-        if (progress < 1) {
-          animId = requestAnimationFrame(animate);
-        } else {
-          // Render settling static frame (RENDERMODE_WHEN_DIRTY)
-          renderFrame(1);
-        }
-      };
-      animId = requestAnimationFrame(animate);
-    } else {
-      // Settled state: Single render call (0% idle CPU / GPU consumption)
-      renderFrame(1);
-    }
-
-    const handleResize = () => renderFrame(1);
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      if (animId) cancelAnimationFrame(animId);
-    };
-  }, [isFlipping, flipDirection, isDark]);
-
   // Render WTR-Lab TTS Yellow Highlight with intra-segment word tracking and inline EPUB illustrations
   const renderSegmentProse = (seg, isActive) => {
     const segId = seg.segment_id !== undefined ? seg.segment_id : seg.order;
@@ -613,8 +383,8 @@ export default function OpenGLPageReader({
         >
           <div className="flex items-center gap-2 mb-1">
             {isDialogue ? (
-              <span className="font-sans text-[11px] font-semibold text-[var(--accent)] tracking-wider inline-flex items-center gap-1 select-none">
-                <IconMic className="w-3 h-3 text-[var(--accent)]" />
+              <span className="font-sans text-[11px] font-semibold text-[var(--accent-text)] tracking-wider inline-flex items-center gap-1 select-none">
+                <IconMic className="w-3 h-3 text-[var(--accent-text)]" />
                 <span>{seg.speaker_name || 'Character'}</span>
               </span>
             ) : (
@@ -657,15 +427,20 @@ export default function OpenGLPageReader({
             className={`leading-[1.85] tracking-[0.01em] text-justify indent-6 select-text ${
             isDialogue ? 'italic font-serif theme-main' : 'theme-sub'
           }`}>
-            <mark className="bg-yellow-300/35 text-stone-900 dark:text-amber-100 rounded-xs">
+            <mark className="bg-[rgba(213,133,31,0.25)] text-[var(--text-main)] rounded-xs">
               {tokens.map((token, idx) => {
                 if (idx === activeTokenIdx) {
                   return (
                     <span
                       key={idx}
                       data-active-word="true"
-                      style={{ display: 'inline', textIndent: '0px' }}
-                      className="inline bg-[#FACC15] bg-yellow-400 text-slate-950 font-bold font-semibold rounded-xs"
+                      style={{
+                        display: 'inline',
+                        textIndent: '0px',
+                        backgroundColor: 'var(--brand-amber, #D5851F)',
+                        color: 'var(--brand-espresso, #1A120E)',
+                      }}
+                      className="inline bg-yellow-400 font-bold rounded-xs px-0.5 shadow-xs"
                     >
                       {token}
                     </span>
@@ -686,7 +461,7 @@ export default function OpenGLPageReader({
             <mark
               data-active-word="true"
               style={{ display: 'inline', textIndent: '0px' }}
-              className="inline bg-yellow-300/35 text-stone-900 dark:text-amber-100 rounded-xs"
+              className="inline bg-[rgba(213,133,31,0.25)] text-[var(--text-main)] rounded-xs"
             >
               {rawText}
             </mark>
@@ -712,8 +487,8 @@ export default function OpenGLPageReader({
       >
         <div className="flex items-center gap-2 mb-1">
           {isDialogue ? (
-            <span className="font-sans text-[11px] font-semibold text-[var(--accent)] tracking-wider inline-flex items-center gap-1 select-none">
-              <IconMic className="w-3 h-3 text-[var(--accent)]" />
+            <span className="font-sans text-[11px] font-semibold text-[var(--accent-text)] tracking-wider inline-flex items-center gap-1 select-none">
+              <IconMic className="w-3 h-3 text-[var(--accent-text)]" />
               <span>{seg.speaker_name || 'Character'}</span>
             </span>
           ) : (
@@ -723,7 +498,7 @@ export default function OpenGLPageReader({
             </span>
           )}
 
-          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-500 dark:text-yellow-400 bg-amber-400/15 px-2 py-0.5 rounded-full border border-amber-400/30">
+          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[var(--accent-text)] bg-[var(--accent-surface)] px-2 py-0.5 rounded-full border border-[var(--border-focus)]/40">
             <IconSoundwave className="w-3 h-3 animate-pulse" />
             <span>Reading</span>
           </span>
@@ -749,7 +524,7 @@ export default function OpenGLPageReader({
     <div
       className={
         isFocusMode
-          ? 'fixed inset-0 z-50 bg-[#fcfaf6] dark:bg-[#050507] flex flex-col justify-between px-3 sm:px-8 pt-3 pb-24 overflow-hidden animate-fade-in select-none w-screen h-screen'
+          ? 'fixed inset-0 z-50 bg-[#fcfaf6] dark:bg-[var(--bg-page,#1A120E)] flex flex-col justify-between px-3 sm:px-8 pt-3 pb-24 overflow-hidden animate-fade-in select-none w-screen h-screen'
           : 'space-y-6 animate-fade-in select-none relative'
       }
     >
@@ -768,27 +543,13 @@ export default function OpenGLPageReader({
         </div>
       )}
 
-      {/* Minimalist Floating Apple Books Left Chevron (Matching Screenshot 1 & 2) */}
-      <button
-        aria-label="Previous Page"
-        onClick={handlePrevPage}
-        disabled={isPrevDisabled}
-        className="fixed sm:absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-stone-700 dark:text-white/70 hover:text-stone-950 dark:hover:text-white bg-white/80 hover:bg-white dark:bg-black/40 dark:hover:bg-black/75 backdrop-blur-md border border-stone-300 dark:border-white/10 hover:border-stone-400 dark:hover:border-white/30 transition-all disabled:opacity-0 disabled:pointer-events-none cursor-pointer shadow-xl group"
-        title="Previous Page (Left Arrow)"
-      >
-        <IconChevronLeft className="w-6 h-6 -ml-0.5 group-hover:-translate-x-0.5 transition-transform" />
-      </button>
-
-      {/* Minimalist Floating Apple Books Right Chevron (Matching Screenshot 1 & 2) */}
-      <button
-        aria-label="Next Page"
-        onClick={handleNextPage}
-        disabled={isNextDisabled}
-        className="fixed sm:absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-stone-700 dark:text-white/70 hover:text-stone-950 dark:hover:text-white bg-white/80 hover:bg-white dark:bg-black/40 dark:hover:bg-black/75 backdrop-blur-md border border-stone-300 dark:border-white/10 hover:border-stone-400 dark:hover:border-white/30 transition-all disabled:opacity-0 disabled:pointer-events-none cursor-pointer shadow-xl group"
-        title="Next Page (Right Arrow)"
-      >
-        <IconChevronRight className="w-6 h-6 -mr-0.5 group-hover:translate-x-0.5 transition-transform" />
-      </button>
+      {/* Floating Apple Books Chevrons */}
+      <PageNavButtons
+        onPrev={handlePrevPage}
+        onNext={handleNextPage}
+        canPrev={!isPrevDisabled}
+        canNext={!isNextDisabled}
+      />
 
       {/* 3D Apple Books Two-Page Spread Stage */}
       <div className={`relative w-full perspective-1200 ${isFocusMode ? 'flex-1 flex flex-col justify-center my-auto py-1' : 'py-2 sm:py-4'}`}>
@@ -798,7 +559,7 @@ export default function OpenGLPageReader({
           className={`
             relative ${isFocusMode ? 'min-h-[calc(100vh-140px)]' : 'min-h-[640px] sm:min-h-[720px]'} rounded-3xl
             bg-[#fcfaf6] text-[#1c1917] border border-stone-300/70
-            dark:bg-[#050507] dark:text-[#e5e5ea] dark:border-white/10
+            dark:bg-[var(--bg-page,#1A120E)] dark:text-[var(--text-main,#D5C4AE)] dark:border-white/10
             shadow-2xl overflow-hidden transition-all duration-300 flex flex-col justify-between
             ${isFlipping ? (flipDirection === 'next' ? 'page-curl-flip-next' : 'page-curl-flip-prev') : ''}
           `}
@@ -808,7 +569,11 @@ export default function OpenGLPageReader({
           }}
         >
           {/* Hardware-accelerated canvas lighting overlay */}
-          <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none z-20 w-full h-full" />
+          <SpineShadowCanvas
+            isDark={isDark}
+            isFlipping={isFlipping}
+            flipDirection={flipDirection}
+          />
 
           {/* Two-Page Side-by-Side Spread: Left Page (Page 2k) | Right Page (Page 2k + 1) */}
           <div className="relative z-10 flex-1 grid grid-cols-1 lg:grid-cols-2 lg:divide-x lg:divide-stone-300/70 dark:lg:divide-white/10">
@@ -826,7 +591,8 @@ export default function OpenGLPageReader({
                 <span className="truncate max-w-[200px]">
                   {currentNovel?.title || 'SyncTone Edition'}
                 </span>
-                <span className="hidden sm:inline">
+                <span className="hidden sm:inline-flex items-center gap-1.5 text-[var(--brand-sage,#87A96B)] font-semibold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-sage,#87A96B)]" />
                   {currentChapter?.title ? `Chapter ${currentChapter.chapter_number || 1}` : 'SyncTone Edition'}
                 </span>
               </div>
@@ -836,10 +602,10 @@ export default function OpenGLPageReader({
                 {/* On Spread 0, render Chapter Opening Header */}
                 {isSpreadZero && (
                   <div className="text-center space-y-2 mb-4 animate-fade-in">
-                    <h1 className="text-sm sm:text-base font-serif font-bold tracking-widest uppercase text-amber-900 dark:text-amber-200/90">
+                    <h1 className="text-sm sm:text-base font-serif font-bold tracking-widest uppercase text-[var(--accent-text)]">
                       {currentNovel?.title || 'Chapter Opening'}
                     </h1>
-                    <h2 className="text-xs font-mono tracking-wider uppercase text-amber-700 dark:text-amber-400/80">
+                    <h2 className="text-xs font-mono tracking-wider uppercase text-[var(--text-sub)]">
                       {currentChapter?.title || 'Chapter One'}
                     </h2>
                     {!leftHasImage && isHarryPotter ? (
@@ -857,9 +623,9 @@ export default function OpenGLPageReader({
                       </div>
                     ) : (
                       <div className="flex items-center justify-center gap-3 my-4 opacity-60 dark:opacity-50 select-none">
-                        <span className="h-px w-12 bg-gradient-to-r from-transparent to-amber-700/50 dark:to-amber-400/60" />
-                        <span className="text-amber-700 dark:text-amber-400 text-xs">❦</span>
-                        <span className="h-px w-12 bg-gradient-to-l from-transparent to-amber-700/50 dark:to-amber-400/60" />
+                        <span className="h-px w-12 bg-gradient-to-r from-transparent to-[var(--brand-bronze,#A88462)]/50" />
+                        <span className="text-[var(--accent-text)] text-xs">❦</span>
+                        <span className="h-px w-12 bg-gradient-to-l from-transparent to-[var(--brand-bronze,#A88462)]/50" />
                       </div>
                     )}
                   </div>
@@ -909,9 +675,9 @@ export default function OpenGLPageReader({
                 {isCoverActiveOnSpreadZero ? (
                   /* Cover Showcase Panel (Matching Screenshot 1) */
                   <div className="flex-1 flex flex-col items-center justify-center py-4 px-2 text-center animate-fade-in">
-                    <div className="relative group max-w-[340px] sm:max-w-[380px] w-full aspect-[2/3] max-h-[480px] rounded-2xl overflow-hidden shadow-2xl ring-2 ring-amber-500/30 transition-transform duration-300 hover:scale-[1.01]">
+                    <div className="relative group max-w-[340px] sm:max-w-[380px] w-full aspect-[2/3] max-h-[480px] rounded-2xl overflow-hidden shadow-2xl ring-2 ring-[var(--brand-bronze,#A88462)]/30 transition-transform duration-300 hover:scale-[1.01]">
                       {/* MinaLima Ornate Gold Border Frame */}
-                      <div className="absolute inset-0 border-4 border-amber-600/40 rounded-2xl pointer-events-none z-10" />
+                      <div className="absolute inset-0 border-4 border-[var(--brand-bronze,#A88462)]/40 rounded-2xl pointer-events-none z-10" />
                       {currentNovel?.cover_object ? (
                         <img
                           src={currentNovel.cover_object}
@@ -1003,7 +769,7 @@ export default function OpenGLPageReader({
             title="Turn to previous spread"
             aria-label="Turn page backward"
           >
-            <div className="w-6 h-6 border-t-2 border-l-2 border-amber-700/30 dark:border-amber-400/20 group-hover:border-amber-600 dark:group-hover:border-amber-400 transition rounded-tl-lg" />
+            <div className="w-6 h-6 border-t-2 border-l-2 border-[var(--brand-walnut,#6B4A2E)]/40 group-hover:border-[var(--brand-bronze,#A88462)] transition rounded-tl-lg" />
           </div>
 
           <div
@@ -1014,7 +780,7 @@ export default function OpenGLPageReader({
             title="Turn to next spread"
             aria-label="Turn page forward"
           >
-            <div className="w-6 h-6 border-t-2 border-r-2 border-amber-700/30 dark:border-amber-400/20 group-hover:border-amber-600 dark:group-hover:border-amber-400 transition rounded-tr-lg" />
+            <div className="w-6 h-6 border-t-2 border-r-2 border-[var(--brand-walnut,#6B4A2E)]/40 group-hover:border-[var(--brand-bronze,#A88462)] transition rounded-tr-lg" />
           </div>
         </div>
       </div>
@@ -1027,7 +793,7 @@ export default function OpenGLPageReader({
             type="button"
             onClick={handlePrevPage}
             disabled={isPrevDisabled}
-            className="px-2.5 py-1.5 rounded-xl theme-card border hover:border-amber-400 text-xs font-semibold theme-sub hover:theme-main transition flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:pointer-events-none shadow-xs"
+            className="px-2.5 py-1.5 rounded-xl theme-card border hover:border-[var(--accent)] text-xs font-semibold theme-sub hover:theme-main transition flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:pointer-events-none shadow-xs"
             title="Previous Page (Left Arrow)"
           >
             <IconChevronLeft className="w-3.5 h-3.5" />
@@ -1037,7 +803,7 @@ export default function OpenGLPageReader({
             type="button"
             onClick={handleNextPage}
             disabled={isNextDisabled}
-            className="px-2.5 py-1.5 rounded-xl theme-card border hover:border-amber-400 text-xs font-semibold theme-sub hover:theme-main transition flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:pointer-events-none shadow-xs"
+            className="px-2.5 py-1.5 rounded-xl theme-card border hover:border-[var(--accent)] text-xs font-semibold theme-sub hover:theme-main transition flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:pointer-events-none shadow-xs"
             title="Next Page (Right Arrow)"
           >
             <span>Next Page</span>
@@ -1056,7 +822,7 @@ export default function OpenGLPageReader({
             max={totalSpreads - 1}
             value={currentSpreadIndex}
             onChange={(e) => setCurrentSpreadIndex(parseInt(e.target.value, 10))}
-            className="flex-1 h-1.5 accent-amber-400 cursor-pointer"
+            className="flex-1 h-1.5 accent-[var(--accent)] cursor-pointer"
             aria-label="Book spread slider"
           />
           <span className="text-xs font-mono font-bold theme-muted w-12">
@@ -1069,7 +835,7 @@ export default function OpenGLPageReader({
           <button
             type="button"
             onClick={() => setShowCoverSpread((prev) => !prev)}
-            className="px-2.5 py-1.5 rounded-xl theme-card border hover:border-amber-400 text-xs font-semibold text-amber-700 dark:text-amber-300 transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+            className="px-2.5 py-1.5 rounded-xl theme-card border hover:border-[var(--accent)] text-xs font-semibold text-[var(--accent-text)] transition flex items-center gap-1.5 cursor-pointer shadow-xs"
             title="Toggle between full Cover Artwork and continuous two-page Prose"
           >
             <IconBook className="w-3.5 h-3.5" />

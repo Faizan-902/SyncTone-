@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { preloadAuthModal, preloadSettingsModal, preloadCharacterRoster } from '../App';
 import {
   IconSoundwave,
   IconUsers,
@@ -28,18 +29,19 @@ export default function TopHeader({
         <div className="flex items-center gap-4 sm:gap-6 min-w-0">
           <button
             onClick={() => onNavigate('catalog')}
-            className="flex items-center gap-2.5 group text-left outline-none flex-shrink-0 cursor-pointer"
+            className="flex items-center gap-2.5 group text-left outline-none flex-shrink-0 cursor-pointer active:scale-95 transition-transform duration-100 ease-out"
             aria-label="SyncTone Home"
           >
-            <div className="w-8 h-8 rounded-lg bg-[var(--accent-surface)] border border-[var(--border-focus)] text-[var(--accent)] flex items-center justify-center transition-colors">
-              <IconSoundwave className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-lg bg-[var(--brand-walnut,#5A3E2B)] border border-[var(--brand-amber,#D5851F)]/40 text-[var(--brand-amber,#D5851F)] flex items-center justify-center transition-colors shadow-xs">
+              <IconSoundwave className="w-4 h-4 text-[var(--brand-amber,#D5851F)]" />
             </div>
             <div className="flex items-center gap-2">
               <span className="text-base font-bold tracking-tight text-[var(--text-main)] font-display">
                 SyncTone
               </span>
-              <span className="hidden sm:inline-flex items-center px-2 py-0.5 text-[10px] font-mono tracking-wide bg-[var(--accent-surface)] text-[var(--accent)] rounded-md border border-[var(--border-subtle)]">
-                Full Cast Audio
+              <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] font-mono tracking-wider uppercase rounded-full bg-[var(--brand-walnut,#5A3E2B)] text-[var(--brand-sage,#87A96B)] border border-[var(--brand-sage,#87A96B)]/40 font-bold shadow-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-sage,#87A96B)]" />
+                <span>Full Cast Audio</span>
               </span>
             </div>
           </button>
@@ -49,8 +51,10 @@ export default function TopHeader({
             <span className="theme-muted opacity-50">/</span>
             <button
               onClick={() => onNavigate('catalog')}
-              className={`hover:text-[var(--text-main)] transition flex-shrink-0 cursor-pointer ${
-                view === 'catalog' ? 'text-[var(--text-main)] font-semibold' : ''
+              className={`hover:text-[var(--text-main)] active:scale-95 transition-all duration-100 ease-out flex-shrink-0 cursor-pointer ${
+                view === 'catalog'
+                  ? 'text-[var(--brand-sand,#D5C4AE)] font-semibold bg-[var(--brand-walnut,#5A3E2B)] px-2.5 py-1 rounded-lg border border-[var(--brand-amber,#D5851F)]/40 shadow-xs'
+                  : 'px-2 py-1'
               }`}
             >
               Library
@@ -60,8 +64,10 @@ export default function TopHeader({
                 <span className="theme-muted opacity-50">/</span>
                 <button
                   onClick={() => onNavigate('details')}
-                  className={`hover:text-[var(--text-main)] transition truncate max-w-[180px] cursor-pointer ${
-                    view === 'details' ? 'text-[var(--text-main)] font-semibold' : ''
+                  className={`hover:text-[var(--text-main)] active:scale-95 transition-all duration-100 ease-out truncate max-w-[180px] cursor-pointer ${
+                    view === 'details'
+                      ? 'text-[var(--brand-sand,#D5C4AE)] font-semibold bg-[var(--brand-walnut,#5A3E2B)] px-2.5 py-1 rounded-lg border border-[var(--brand-amber,#D5851F)]/40 shadow-xs'
+                      : 'px-2 py-1'
                   }`}
                   title={currentNovel.title}
                 >
@@ -89,14 +95,16 @@ export default function TopHeader({
           {view === 'reader' && (
             <button
               onClick={onToggleRoster}
-              className={`px-3 py-1.5 text-xs font-medium rounded-xl border transition-all flex items-center gap-1.5 cursor-pointer ${
+              onMouseEnter={preloadCharacterRoster}
+              onFocus={preloadCharacterRoster}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-xl border transition-all duration-100 ease-out active:scale-95 flex items-center gap-1.5 cursor-pointer ${
                 showRoster
-                  ? 'bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)] shadow-sm'
+                  ? 'bg-[var(--cta-primary-bg)] text-[var(--brand-amber,#D5851F)] border-[var(--brand-amber,#D5851F)]/60 shadow-sm'
                   : 'theme-card hover:border-[var(--border-focus)]'
               }`}
               aria-label="Toggle Cast Roster"
             >
-              <IconUsers className="w-4 h-4" />
+              <IconUsers className="w-4 h-4 text-[var(--brand-sage,#87A96B)]" />
               <span>Cast Roster</span>
             </button>
           )}
@@ -104,7 +112,9 @@ export default function TopHeader({
           {/* Settings Trigger */}
           <button
             onClick={onOpenSettings}
-            className="p-2.5 theme-muted hover:text-[var(--text-main)] rounded-xl hover:bg-[var(--bg-hover)] border border-transparent hover:border-[var(--border-subtle)] transition cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
+            onMouseEnter={preloadSettingsModal}
+            onFocus={preloadSettingsModal}
+            className="p-2.5 theme-muted hover:text-[var(--text-main)] rounded-xl hover:bg-[var(--bg-hover)] border border-transparent hover:border-[var(--border-subtle)] active:scale-95 transition-all duration-100 ease-out cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
             title="Settings & Preferences"
             aria-label="Settings"
           >
@@ -115,12 +125,12 @@ export default function TopHeader({
           {isAuthenticated ? (
             <div className="flex items-center gap-2 pl-2 border-l border-[var(--border-subtle)]">
               <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono tracking-wide uppercase rounded-md theme-card border">
-                <IconShield className="w-3 h-3 text-[var(--accent)]" />
+                <IconShield className="w-3 h-3 text-[var(--accent-text)]" />
                 {role}
               </span>
               <button
                 onClick={logout}
-                className="px-3 py-1.5 text-xs theme-muted hover:text-rose-400 rounded-lg hover:bg-[var(--bg-hover)] transition font-medium cursor-pointer"
+                className="px-3 py-1.5 text-xs theme-muted hover:text-[var(--danger)] rounded-lg hover:bg-[var(--bg-hover)] active:scale-95 transition-all duration-100 ease-out font-medium cursor-pointer"
                 title="Sign out of SyncTone"
               >
                 Sign out
@@ -130,7 +140,9 @@ export default function TopHeader({
             <div className="flex items-center gap-2 pl-2 border-l border-[var(--border-subtle)]">
               <button
                 onClick={() => onOpenAuth('login')}
-                className="px-3.5 py-2 text-xs font-semibold rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] shadow-sm transition flex items-center gap-1.5 cursor-pointer min-h-[36px]"
+                onMouseEnter={preloadAuthModal}
+                onFocus={preloadAuthModal}
+                className="px-3.5 py-2 text-xs font-semibold rounded-xl bg-[var(--cta-primary-bg)] hover:bg-[var(--cta-primary-hover)] text-[var(--cta-primary-text)] shadow-sm active:scale-95 transition-all duration-100 ease-out flex items-center gap-1.5 cursor-pointer min-h-[36px]"
               >
                 <IconUser className="w-3.5 h-3.5" />
                 <span>Sign In</span>

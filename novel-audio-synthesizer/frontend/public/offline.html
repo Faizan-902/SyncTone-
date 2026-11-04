@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offline — SyncTone</title>
+  <style>
+    :root {
+      --bg: #1A120E;
+      --surface: #3A2418;
+      --border: #40362E;
+      --text: #D5C4AE;
+      --text-muted: #A88462;
+      --accent: #6B4A2E;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+      box-sizing: border-box;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px 32px;
+      max-width: 420px;
+      margin: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+    .icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: rgba(168, 132, 98, 0.15);
+      color: #A88462;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    h1 {
+      font-size: 20px;
+      margin: 0 0 8px;
+      font-weight: 700;
+    }
+    p {
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.5;
+      margin: 0 0 24px;
+    }
+    button {
+      background: var(--accent);
+      color: #D5C4AE;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 24px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="1" y1="1" x2="23" y2="23"></line>
+        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
+        <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
+        <path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path>
+        <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
+        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+        <line x1="12" y1="20" x2="12.01" y2="20"></line>
+      </svg>
+    </div>
+    <h1>You're Offline</h1>
+    <p>Please check your internet connection. Previously loaded chapters and downloaded audio remain accessible.</p>
+    <button onclick="cleanAndReload()">Reconnect</button>
+  </div>
+  <script>
+    function checkConnection() {
+      fetch('/', { method: 'HEAD', cache: 'no-store' })
+        .then(function(res) {
+          if (res.ok) {
+            window.location.reload();
+          }
+        })
+        .catch(function() {});
+    }
+
+    // Auto-reconnect when connection recovers
+    setInterval(checkConnection, 2000);
+    window.addEventListener('online', checkConnection);
+
+    function cleanAndReload() {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(regs) {
+          return Promise.all(regs.map(function(r) { return r.unregister(); }));
+        }).then(function() {
+          if ('caches' in window) {
+            return caches.keys().then(function(keys) {
+              return Promise.all(keys.map(function(k) { return caches.delete(k); }));
+            });
+          }
+        }).catch(function() {}).then(function() {
+          window.location.reload();
+        });
+      } else {
+        window.location.reload();
+      }
+    }
+  </script>
+</body>
+</html>

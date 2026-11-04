@@ -76,6 +76,25 @@ export default function ReaderView({
     [segments, isSanitizerActive]
   );
 
+  // Fullscreen state & toggle
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen().catch(() => {});
+      setIsFullscreen(false);
+    }
+  };
+
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handler);
+    return () => document.removeEventListener('fullscreenchange', handler);
+  }, []);
+
   // Listen to Escape key to exit Focus Mode and toggle full-screen body class
   useEffect(() => {
     if (typeof document !== 'undefined') {
@@ -164,7 +183,7 @@ export default function ReaderView({
   if (!segments || segments.length === 0) {
     return (
       <div className="py-16 sm:py-24 px-4 max-w-xl mx-auto text-center space-y-6 animate-fade-in">
-        <div className="w-16 h-16 rounded-2xl theme-surface border border-[var(--border-subtle)] mx-auto flex items-center justify-center text-[var(--accent)] shadow-sm">
+        <div className="w-16 h-16 rounded-2xl theme-surface border border-[var(--border-subtle)] mx-auto flex items-center justify-center text-[var(--accent-text)] shadow-sm">
           <IconBookOpen className="w-8 h-8" />
         </div>
 
@@ -253,15 +272,15 @@ export default function ReaderView({
         <>
           {imageElement}
           {displayText && (
-            <p className={`relative z-10 leading-[1.85] text-justify hyphens-auto p-2.5 rounded-xl bg-yellow-400/20 dark:bg-yellow-500/20 border-l-4 border-yellow-400 shadow-xs transition-colors duration-100 ${
-              isDialogue ? 'italic font-serif text-slate-900 dark:text-yellow-100 font-medium' : 'text-slate-900 dark:text-yellow-50'
+            <p className={`relative z-10 leading-[1.85] text-justify hyphens-auto p-2.5 rounded-xl bg-[rgba(213,133,31,0.25)] border-l-4 border-[var(--brand-amber,#D5851F)] shadow-xs transition-colors duration-100 ${
+              isDialogue ? 'italic font-serif text-[var(--text-main)] font-medium' : 'text-[var(--text-main)]'
             }`}>
               {tokens.map((token, idx) => {
                 if (idx === activeTokenIdx) {
                   return (
                     <span
                       key={idx}
-                      className="bg-yellow-300 dark:bg-yellow-400 text-slate-950 font-bold px-1 py-0.5 rounded shadow-xs ring-1 ring-yellow-500 inline-block transition-transform duration-75"
+                      className="bg-[rgba(213,133,31,0.40)] text-[var(--text-main)] font-bold px-1 py-0.5 rounded shadow-xs ring-1 ring-[var(--brand-amber,#D5851F)]/80 inline-block transition-transform duration-75"
                     >
                       {token}
                     </span>
@@ -280,7 +299,7 @@ export default function ReaderView({
       <>
         {imageElement}
         {displayText && (
-          <p className={`relative z-10 leading-[1.85] text-justify hyphens-auto p-2 rounded-lg bg-yellow-400/15 dark:bg-yellow-500/15 border-b-2 border-yellow-400 ${
+          <p className={`relative z-10 leading-[1.85] text-justify hyphens-auto p-2 rounded-lg bg-[rgba(213,133,31,0.25)] border-b-2 border-[var(--brand-amber,#D5851F)] ${
             isDialogue ? 'italic theme-main font-serif font-medium' : 'theme-main font-normal'
           }`}>
             {displayText}
@@ -295,7 +314,7 @@ export default function ReaderView({
       {/* Floating Focus Mode Banner */}
       {isFocusMode && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-black/85 backdrop-blur-md text-white text-xs px-4 py-2 rounded-full border border-white/20 shadow-2xl flex items-center gap-3 animate-fade-in">
-          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+          <span className="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse" />
           <span>Focus Mode Active • Press Esc to exit</span>
           <button
             type="button"
@@ -317,7 +336,7 @@ export default function ReaderView({
           <div className="w-full max-w-md theme-surface rounded-3xl shadow-2xl border border-[var(--border-strong)] p-6 modal-panel-enter space-y-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-amber-400/20 text-amber-300 flex items-center justify-center font-bold">
+                <div className="w-8 h-8 rounded-xl bg-[var(--accent-surface)] text-[var(--accent-text)] flex items-center justify-center font-bold">
                   <IconBookOpen className="w-4 h-4" />
                 </div>
                 <div>
@@ -346,15 +365,15 @@ export default function ReaderView({
                     : 'theme-card hover:border-[var(--accent)] hover:scale-102'
                 }`}
               >
-                <div className="w-9 h-9 rounded-xl bg-[var(--accent)]/15 text-[var(--accent)] flex items-center justify-center">
+                <div className="w-9 h-9 rounded-xl bg-[var(--accent)]/15 text-[var(--accent-text)] flex items-center justify-center">
                   <IconBookOpen className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold theme-heading group-hover:text-[var(--accent)] transition">
+                  <h4 className="text-xs font-bold theme-heading group-hover:text-[var(--accent-text)] transition">
                     Normal Mode
                   </h4>
                   <p className="text-[10px] theme-muted mt-1 leading-relaxed">
-                    Continuous vertical scroll with synchronized WTR-Lab yellow voice highlight.
+                    Continuous vertical scroll with synchronized Warm Bronze voice highlight.
                   </p>
                 </div>
               </button>
@@ -365,15 +384,15 @@ export default function ReaderView({
                 onClick={() => handleChooseMode('opengl')}
                 className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-3 group ${
                   readerMode === 'opengl'
-                    ? 'border-amber-400 bg-amber-400/15'
-                    : 'theme-card hover:border-amber-400 hover:scale-102'
+                    ? 'border-[var(--accent)] bg-[var(--accent-surface)]'
+                    : 'theme-card hover:border-[var(--accent)] hover:scale-102'
                 }`}
               >
-                <div className="w-9 h-9 rounded-xl bg-amber-400/20 text-amber-300 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-xl bg-[var(--accent)]/15 text-[var(--accent-text)] flex items-center justify-center">
                   <IconBook className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-amber-300 group-hover:text-amber-200 transition">
+                  <h4 className="text-xs font-bold theme-heading group-hover:text-[var(--accent-text)] transition">
                     Apple Books / Moon+ OpenGL 3D Spread
                   </h4>
                   <p className="text-[10px] theme-muted mt-1 leading-relaxed">
@@ -397,7 +416,7 @@ export default function ReaderView({
           {onBack && (
             <button
               onClick={onBack}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl theme-card border border-[var(--border-subtle)] hover:border-[var(--accent)] hover:text-[var(--accent)] text-xs font-semibold theme-sub transition-all active:scale-95 shadow-xs cursor-pointer min-h-[36px]"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl theme-card border border-[var(--border-subtle)] hover:border-[var(--accent)] hover:text-[var(--accent-text)] text-xs font-semibold theme-sub transition-all active:scale-95 shadow-xs cursor-pointer min-h-[36px]"
               aria-label="Back to novel details"
             >
               <IconArrowLeft className="w-3.5 h-3.5" />
@@ -411,8 +430,9 @@ export default function ReaderView({
                 {currentNovel.title}
               </span>
               {currentChapter && (
-                <span className="text-xs theme-muted font-mono truncate hidden sm:inline">
-                  • {currentChapter.title}
+                <span className="text-xs text-[var(--brand-sage,#87A96B)] font-mono font-bold truncate hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[var(--brand-sage,#87A96B)]/15 border border-[var(--brand-sage,#87A96B)]/30">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-sage,#87A96B)] animate-pulse" />
+                  {currentChapter.title}
                 </span>
               )}
             </div>
@@ -432,7 +452,7 @@ export default function ReaderView({
               onClick={() => setReaderMode('normal')}
               className={`px-2.5 py-1 rounded-md text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
                 readerMode === 'normal'
-                  ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-xs'
+                  ? 'bg-[var(--cta-primary-bg)] text-[var(--cta-primary-text)] shadow-xs'
                   : 'theme-muted hover:text-[var(--text-main)]'
               }`}
               title="Normal continuous vertical scroll mode (WTR-Lab)"
@@ -445,7 +465,7 @@ export default function ReaderView({
               onClick={() => setReaderMode('opengl')}
               className={`px-2.5 py-1 rounded-md text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
                 readerMode === 'opengl'
-                  ? 'bg-amber-400 text-slate-950 font-bold shadow-xs'
+                  ? 'bg-[var(--cta-primary-bg)] text-[var(--cta-primary-text)] shadow-xs'
                   : 'theme-muted hover:text-[var(--text-main)]'
               }`}
               title="Apple Books & Moon+ Reader Pro 3D OpenGL page-turn two-page spread mode"
@@ -466,7 +486,7 @@ export default function ReaderView({
               onClick={() => setFontFamily('serif')}
               className={`px-2.5 py-1 rounded-md text-xs font-serif font-semibold transition cursor-pointer ${
                 fontFamily === 'serif'
-                  ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-xs'
+                  ? 'bg-[var(--cta-primary-bg)] text-[var(--cta-primary-text)] shadow-xs'
                   : 'theme-muted hover:text-[var(--text-main)]'
               }`}
             >
@@ -477,7 +497,7 @@ export default function ReaderView({
               onClick={() => setFontFamily('sans')}
               className={`px-2.5 py-1 rounded-md text-xs font-sans font-semibold transition cursor-pointer ${
                 fontFamily === 'sans'
-                  ? 'bg-[var(--accent)] text-[var(--on-accent)] shadow-xs'
+                  ? 'bg-[var(--cta-primary-bg)] text-[var(--cta-primary-text)] shadow-xs'
                   : 'theme-muted hover:text-[var(--text-main)]'
               }`}
             >
@@ -525,7 +545,7 @@ export default function ReaderView({
             }
             className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer flex items-center gap-1.5 ${
               isSanitizerActive
-                ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-md font-bold'
+                ? 'bg-[var(--cta-primary-bg)] text-[var(--cta-primary-text)] border-[var(--cta-primary-bg)] shadow-md font-bold'
                 : 'theme-surface border-[var(--border-subtle)] theme-muted hover:text-[var(--text-main)]'
             }`}
           >
@@ -538,12 +558,31 @@ export default function ReaderView({
             onClick={() => setIsFocusMode((prev) => !prev)}
             className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer hidden md:inline-flex ${
               isFocusMode
-                ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-md font-bold'
+                ? 'bg-[var(--cta-primary-bg)] text-[var(--cta-primary-text)] border-[var(--cta-primary-bg)] shadow-md font-bold'
                 : 'theme-surface border-[var(--border-subtle)] theme-muted hover:text-[var(--text-main)]'
             }`}
             title="Focus mode (distraction-free spotlight reading)"
           >
             {isFocusMode ? 'Exit Focus' : 'Focus'}
+          </button>
+
+          {/* Fullscreen Toggle */}
+          <button
+            type="button"
+            onClick={toggleFullscreen}
+            className="w-8 h-8 rounded-lg theme-surface border border-[var(--border-subtle)] theme-muted hover:text-[var(--text-main)] transition cursor-pointer flex items-center justify-center"
+            aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+            title={isFullscreen ? 'Exit fullscreen (Esc)' : 'Fullscreen'}
+          >
+            {isFullscreen ? (
+              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 0 2-2h3M3 16h3a2 2 0 0 0 2 2v3"/>
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+              </svg>
+            )}
           </button>
         </div>
       </header>
@@ -620,7 +659,7 @@ export default function ReaderView({
                   group relative p-5 sm:p-6 rounded-2xl border transition-all duration-150 cursor-pointer outline-none select-text
                   ${
                     isActive
-                      ? 'theme-surface border-yellow-400/80 shadow-md ring-1 ring-yellow-400/40 bg-yellow-400/10 dark:bg-yellow-500/15'
+                      ? 'theme-surface border-[var(--brand-amber,#D5851F)]/80 shadow-md ring-1 ring-[var(--brand-amber,#D5851F)]/40 bg-[rgba(213,133,31,0.12)]'
                       : 'theme-card border-[var(--border-subtle)] hover:border-[var(--border-hover)] hover:bg-[var(--bg-hover)] shadow-xs'
                   }
                 `}
@@ -629,7 +668,7 @@ export default function ReaderView({
                 <div
                   className={`absolute inset-0 rounded-2xl pointer-events-none transition-opacity duration-200 ${
                     isActive
-                      ? 'opacity-100 bg-yellow-400/10 ring-1 ring-yellow-400'
+                      ? 'opacity-100 bg-[rgba(213,133,31,0.10)] ring-1 ring-[var(--brand-amber,#D5851F)]'
                       : 'opacity-0'
                   }`}
                   aria-hidden="true"
@@ -638,8 +677,8 @@ export default function ReaderView({
                 {/* Dynamic Speaker Header Row */}
                 <div className="relative z-10 flex items-center justify-between mb-2.5 text-xs font-mono theme-muted">
                   {isDialogue ? (
-                    <span className="font-bold text-[var(--accent)] font-sans flex items-center gap-1.5">
-                      <IconMic className="w-3.5 h-3.5 text-[var(--accent)]" />
+                    <span className="font-bold text-[var(--accent-text)] font-sans flex items-center gap-1.5">
+                      <IconMic className="w-3.5 h-3.5 text-[var(--accent-text)]" />
                       <span>{seg.speaker_name || 'Character'}</span>
                     </span>
                   ) : (
@@ -651,24 +690,24 @@ export default function ReaderView({
 
                   {/* Equalizer Playing Indicator */}
                   {isActive ? (
-                    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-amber-500 dark:text-yellow-400 bg-amber-400/15 px-2.5 py-0.5 rounded-full border border-amber-400/30 shadow-xs">
+                    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-[var(--accent-text)] bg-[var(--accent-surface)] px-2.5 py-0.5 rounded-full border border-[var(--border-focus)]/40 shadow-xs">
                       <span className="flex items-end gap-0.5 h-3 w-3" aria-hidden="true">
                         <span
-                          className="w-0.5 bg-amber-400 rounded-full equalizer-bar h-3"
+                          className="w-0.5 bg-[var(--accent)] rounded-full equalizer-bar h-3"
                           style={{
                             animationDelay: '0ms',
                             animationPlayState: isEqActive ? 'running' : 'paused',
                           }}
                         />
                         <span
-                          className="w-0.5 bg-amber-400 rounded-full equalizer-bar h-3"
+                          className="w-0.5 bg-[var(--accent)] rounded-full equalizer-bar h-3"
                           style={{
                             animationDelay: '200ms',
                             animationPlayState: isEqActive ? 'running' : 'paused',
                           }}
                         />
                         <span
-                          className="w-0.5 bg-amber-400 rounded-full equalizer-bar h-3"
+                          className="w-0.5 bg-[var(--accent)] rounded-full equalizer-bar h-3"
                           style={{
                             animationDelay: '400ms',
                             animationPlayState: isEqActive ? 'running' : 'paused',
@@ -679,7 +718,7 @@ export default function ReaderView({
                     </span>
                   ) : (
                     <span className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-mono theme-muted flex items-center gap-1">
-                      <IconPlay className="w-3 h-3 text-[var(--accent)]" />
+                      <IconPlay className="w-3 h-3 text-[var(--accent-text)]" />
                       <span>Listen from here</span>
                     </span>
                   )}

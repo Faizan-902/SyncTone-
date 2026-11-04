@@ -17,6 +17,20 @@ export class ApiError extends Error {
 
 const API_BASE = '/api';
 
+function getFriendlyError(status, data) {
+  const serverMsg = data && typeof data === 'object' && (data.error || data.detail || data.message);
+  if (status === 401) return 'Please sign in to continue.';
+  if (status === 403) return "You don't have permission to do that.";
+  if (status === 404) return "We couldn't find what you were looking for.";
+  if (status === 429) return 'Too many requests — please wait a moment and try again.';
+  if (status >= 500) return 'Something went wrong on our end. Please try again shortly.';
+  // Use server message only if it doesn't contain technical terms
+  if (serverMsg && !/(status|error|exception|stack|sql|db|mongo|postgres|prisma)/i.test(serverMsg)) {
+    return serverMsg;
+  }
+  return 'Something went wrong. Please try again.';
+}
+
 async function request(endpoint, options = {}) {
   const url = endpoint.startsWith('http') ? endpoint : `${API_BASE}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
 
@@ -42,37 +56,54 @@ async function request(endpoint, options = {}) {
     headers,
   };
 
-  let response;
-  try {
-    response = await fetch(url, config);
-  } catch (networkError) {
-    throw new ApiError(networkError.message || 'Network connection failed', 0, null);
-  }
+  const isGet = !options.method || options.method === 'GET';
+  const maxRetries = isGet ? 2 : 0;
+  let lastError;
 
-  let data = null;
-  const contentType = response.headers.get('content-type') || '';
-  if (contentType.includes('application/json')) {
-    try {
-      data = await response.json();
-    } catch (_) {
-      data = null;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    if (attempt > 0) {
+      await new Promise(r => setTimeout(r, attempt * 1000));
     }
-  } else {
+
     try {
-      data = await response.text();
-    } catch (_) {
-      data = null;
+      const response = await fetch(url, config);
+
+      let data = null;
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        try {
+          data = await response.json();
+        } catch (_) {
+          data = null;
+        }
+      } else {
+        try {
+          data = await response.text();
+        } catch (_) {
+          data = null;
+        }
+      }
+
+      // If 503 and retries remain, keep trying
+      if (response.status === 503 && attempt < maxRetries) {
+        lastError = new ApiError(getFriendlyError(503, null), 503, null);
+        continue;
+      }
+
+      if (!response.ok) {
+        const errorMsg = getFriendlyError(response.status, data);
+        throw new ApiError(errorMsg, response.status, data);
+      }
+
+      return data;
+    } catch (networkError) {
+      if (networkError instanceof ApiError) throw networkError;
+      lastError = new ApiError('Check your connection and try again.', 0, null);
+      if (attempt < maxRetries) continue;
     }
   }
 
-  if (!response.ok) {
-    const errorMsg =
-      (data && typeof data === 'object' && (data.error || data.detail || data.message)) ||
-      `Request failed with status ${response.status}`;
-    throw new ApiError(errorMsg, response.status, data);
-  }
-
-  return data;
+  throw lastError;
 }
 
 export const api = {
@@ -95,7 +126,7 @@ export const api = {
 
   // Novels Endpoints
   novels: {
-    list: (channel) => api.get(`/novels${channel ? `?channel=${encodeURIComponent(channel)}` : ''}`),
+    list: (channel, opts = {}) => api.get(`/novels${channel ? `?channel=${encodeURIComponent(channel)}` : ''}`, opts),
     get: (id) => api.get(`/novels/${id}`),
     create: (novelData) => api.post('/novels', novelData),
     delete: (id) => api.delete(`/novels/${id}`),

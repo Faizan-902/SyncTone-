@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { api, ApiError } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
+import { useDebounce } from '../hooks/useDebounce';
+import { preloadNovelDetails, preloadReaderView } from '../App';
 import NovelCover from './NovelCover';
 import {
   IconSearch,
@@ -11,7 +13,6 @@ import {
   IconSparkles,
   IconPlus,
   IconRefresh,
-  IconSettings,
   IconUser,
   IconChevronLeft,
   IconChevronRight,
@@ -33,6 +34,7 @@ export default function NovelCatalog({
   const [novels, setNovels] = useState([]);
   const [channel, setChannel] = useState('verified'); // 'verified' | 'community' | 'all'
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 200);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [novelToDelete, setNovelToDelete] = useState(null);
@@ -60,25 +62,51 @@ export default function NovelCatalog({
 
   const searchInputRef = useRef(null);
   const carouselRef = useRef(null);
+  const tabRefs = useRef([]);
+  const CHANNELS = ['verified', 'community', 'all'];
+
+  const handleTabKeyDown = (e, idx) => {
+    let nextIdx = idx;
+    if (e.key === 'ArrowRight') {
+      nextIdx = (idx + 1) % CHANNELS.length;
+    } else if (e.key === 'ArrowLeft') {
+      nextIdx = (idx - 1 + CHANNELS.length) % CHANNELS.length;
+    } else if (e.key === 'Home') {
+      nextIdx = 0;
+    } else if (e.key === 'End') {
+      nextIdx = CHANNELS.length - 1;
+    } else {
+      return;
+    }
+    e.preventDefault();
+    setChannel(CHANNELS[nextIdx]);
+    tabRefs.current[nextIdx]?.focus();
+  };
 
   // Fetch novels by channel filter
-  const fetchNovels = async (selectedChannel) => {
+  const fetchNovels = async (selectedChannel, signal) => {
     setIsLoading(true);
     setError(null);
     try {
       const channelParam = selectedChannel === 'all' ? undefined : selectedChannel;
       const data = await api.novels.list(channelParam);
+      if (signal && signal.aborted) return;
       setNovels(data.novels || []);
     } catch (err) {
+      if (signal && signal.aborted) return;
       const msg = err instanceof ApiError ? err.message : err.message || 'Failed to load novel catalog';
       setError(msg);
     } finally {
-      setIsLoading(false);
+      if (!signal || !signal.aborted) {
+        setIsLoading(false);
+      }
     }
   };
 
   useEffect(() => {
-    fetchNovels(channel);
+    const controller = new AbortController();
+    fetchNovels(channel, controller.signal);
+    return () => controller.abort();
   }, [channel]);
 
   // Global "/" keyboard shortcut to focus search
@@ -100,8 +128,8 @@ export default function NovelCatalog({
 
   // Filter novels by search query
   const filteredNovels = useMemo(() => {
-    if (!searchQuery.trim()) return novels;
-    const q = searchQuery.toLowerCase().trim();
+    if (!debouncedSearch.trim()) return novels;
+    const q = debouncedSearch.toLowerCase().trim();
     return novels.filter((n) => {
       const titleMatch = (n.title || '').toLowerCase().includes(q);
       const synopsisMatch = (n.synopsis || '').toLowerCase().includes(q);
@@ -109,7 +137,7 @@ export default function NovelCatalog({
       const narratorMatch = (n.narrator_name || '').toLowerCase().includes(q);
       return titleMatch || synopsisMatch || authorMatch || narratorMatch;
     });
-  }, [novels, searchQuery]);
+  }, [novels, debouncedSearch]);
 
   // Netflix-style automatic billboard rotation state
   const [featuredIndex, setFeaturedIndex] = useState(0);
@@ -122,14 +150,17 @@ export default function NovelCatalog({
 
   // Netflix-style automatic rotation timer (every 6000ms when not paused or searching)
   useEffect(() => {
-    if (searchQuery || isBillboardPaused || novels.length <= 1) return;
+    if (debouncedSearch || isBillboardPaused || novels.length <= 1) return;
+
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReduced) return;
 
     const timer = setInterval(() => {
       setFeaturedIndex((prev) => (prev + 1) % novels.length);
     }, 6000);
 
     return () => clearInterval(timer);
-  }, [searchQuery, isBillboardPaused, novels.length]);
+  }, [debouncedSearch, isBillboardPaused, novels.length]);
 
   // Featured Hero Novel (cycles automatically through novels)
   const featuredNovel = useMemo(() => {
@@ -167,7 +198,7 @@ export default function NovelCatalog({
       {/* ================================================================= */}
       {/* 1. MASTER STICKY GLASS HEADER (Single Unified Header)             */}
       {/* ================================================================= */}
-      <header className="sticky top-0 z-30 -mx-4 sm:-mx-8 px-4 sm:px-8 py-3.5 glass-header border-b flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+      <header className="sticky top-0 z-30 -mx-4 sm:-mx-8 px-4 sm:px-8 lg:px-8 py-3.5 glass-header border-b flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 min-h-[64px]">
         {/* Left: Heading & Instant Search */}
         <div className="flex items-center gap-4 flex-1 max-w-2xl">
           <div className="flex-shrink-0">
@@ -199,36 +230,45 @@ export default function NovelCatalog({
         <div className="flex items-center gap-2.5 overflow-x-auto pb-1 md:pb-0 flex-shrink-0">
           <div className="inline-flex p-1 rounded-xl theme-card border" role="tablist" aria-label="Channel selection">
             <button
+              ref={(el) => (tabRefs.current[0] = el)}
               role="tab"
               aria-selected={channel === 'verified'}
+              tabIndex={channel === 'verified' ? 0 : -1}
               onClick={() => setChannel('verified')}
+              onKeyDown={(e) => handleTabKeyDown(e, 0)}
               className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                 channel === 'verified'
-                  ? 'bg-[var(--accent)] text-white shadow-sm'
+                  ? 'bg-[var(--brand-sage,#87A96B)] text-[#1A120E] font-bold shadow-sm'
                   : 'theme-muted hover:text-[var(--text-main)]'
               }`}
             >
               Verified Originals
             </button>
             <button
+              ref={(el) => (tabRefs.current[1] = el)}
               role="tab"
               aria-selected={channel === 'community'}
+              tabIndex={channel === 'community' ? 0 : -1}
               onClick={() => setChannel('community')}
+              onKeyDown={(e) => handleTabKeyDown(e, 1)}
               className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                 channel === 'community'
-                  ? 'bg-[var(--accent)] text-white shadow-sm'
+                  ? 'bg-[var(--brand-amber,#D5851F)] text-[#1A120E] font-bold shadow-sm'
                   : 'theme-muted hover:text-[var(--text-main)]'
               }`}
             >
               Community Novels
             </button>
             <button
+              ref={(el) => (tabRefs.current[2] = el)}
               role="tab"
               aria-selected={channel === 'all'}
+              tabIndex={channel === 'all' ? 0 : -1}
               onClick={() => setChannel('all')}
+              onKeyDown={(e) => handleTabKeyDown(e, 2)}
               className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                 channel === 'all'
-                  ? 'bg-[var(--accent)] text-white shadow-sm'
+                  ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold shadow-sm'
                   : 'theme-muted hover:text-[var(--text-main)]'
               }`}
             >
@@ -240,7 +280,7 @@ export default function NovelCatalog({
           {isWriterOrAdmin && onOpenAddNovel && (
             <button
               onClick={onOpenAddNovel}
-              className="px-3 py-1.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-semibold rounded-xl shadow-sm transition flex items-center gap-1.5 flex-shrink-0"
+              className="px-3 py-1.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] text-xs font-semibold rounded-xl shadow-sm transition flex items-center gap-1.5 flex-shrink-0"
             >
               <IconPlus className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Add Novel</span>
@@ -257,7 +297,7 @@ export default function NovelCatalog({
               }}
               className="px-3 py-1.5 theme-card border hover:border-[var(--border-focus)] rounded-xl text-xs font-semibold transition flex items-center gap-1.5 flex-shrink-0"
             >
-              <IconUser className="w-3.5 h-3.5 text-[var(--accent)]" />
+              <IconUser className="w-3.5 h-3.5 text-[var(--accent-text)]" />
               <span>{isAuthenticated ? user.username : 'Sign In'}</span>
             </button>
           )}
@@ -266,11 +306,11 @@ export default function NovelCatalog({
 
       {/* Error State with Retry Button */}
       {error && (
-        <div className="p-8 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-center space-y-3">
-          <p className="text-sm font-semibold text-rose-400">{error}</p>
+        <div className="p-8 rounded-2xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 text-center space-y-3">
+          <p className="text-sm font-semibold text-[var(--danger)]">{error}</p>
           <button
             onClick={() => fetchNovels(channel)}
-            className="px-5 py-2 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl shadow-md transition inline-flex items-center gap-2"
+            className="px-5 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] text-xs font-bold rounded-xl shadow-md transition inline-flex items-center gap-2 cursor-pointer"
           >
             <IconRefresh className="w-4 h-4" />
             <span>Retry</span>
@@ -315,12 +355,12 @@ export default function NovelCatalog({
           {/* ================================================================= */}
           {/* 2. CINEMATIC HERO BILLBOARD (Full-Bleed Marquee Banner)           */}
           {/* ================================================================= */}
-          {featuredNovel && !searchQuery && (
+          {featuredNovel && !searchQuery.trim() && (
             <section
-              className="relative w-full rounded-3xl overflow-hidden p-6 sm:p-12 md:p-16 border theme-border shadow-2xl flex flex-col md:flex-row items-center md:items-end justify-between gap-8 min-h-[480px] sm:min-h-[520px] transition-all duration-300"
+              className="relative w-full rounded-3xl overflow-hidden p-6 sm:p-12 md:p-16 border theme-border shadow-2xl flex flex-col md:flex-row items-center md:items-end justify-between gap-8 min-h-[480px] sm:min-h-[520px] transition-all duration-300 architectural-portal"
               style={{
                 background:
-                  'linear-gradient(135deg, rgba(16, 22, 36, 0.98) 0%, rgba(8, 12, 20, 0.99) 100%)',
+                  'radial-gradient(circle at 80% 20%, #2E1D13 0%, #1A120E 60%, #0D0A08 100%)',
               }}
               aria-label="Featured Novel Billboard"
               onMouseEnter={() => setIsBillboardPaused(true)}
@@ -328,22 +368,37 @@ export default function NovelCatalog({
               onFocus={() => setIsBillboardPaused(true)}
               onBlur={() => setIsBillboardPaused(false)}
             >
-              {/* Radial Atmospheric Spotlight Glow */}
+              {/* Radial Atmospheric Spotlight Glow (Champagne Gold & Warm Bronze) */}
               <div
-                className="absolute inset-0 pointer-events-none opacity-45"
+                className="absolute inset-0 pointer-events-none opacity-60"
                 style={{
                   backgroundImage:
-                    'radial-gradient(ellipse at 78% 38%, rgba(99, 102, 241, 0.4) 0%, transparent 65%)',
+                    'radial-gradient(ellipse at 78% 38%, rgba(223, 186, 83, 0.30) 0%, rgba(168, 132, 98, 0.16) 45%, transparent 70%)',
                 }}
               />
+              {/* Arched Architectural Portal Silhouette */}
+              <div className="absolute right-0 top-0 bottom-0 w-1/2 max-w-lg pointer-events-none opacity-30 hidden md:block">
+                <div className="w-full h-full rounded-tl-[160px] border-l border-t border-[var(--brand-champagne,#DFBA53)]/30 bg-gradient-to-b from-[rgba(223,186,83,0.10)] to-transparent" />
+              </div>
+              {/* Fluted Architectural Timber Edge Accent */}
+              <div className="absolute right-0 top-0 bottom-0 w-2.5 fluted-timber opacity-30 pointer-events-none hidden sm:block" />
               <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-page)] via-[var(--bg-page)]/75 to-transparent pointer-events-none" />
 
               {/* Left Column: Atmospheric Typography & High-Impact CTA */}
               <div className="relative z-10 max-w-2xl space-y-4">
+                {/* Tracked Category Overline: NATURE / FICTION / CINEMATIC AUDIO */}
+                <div className="tracking-[0.25em] text-[10px] uppercase font-mono font-bold text-[var(--brand-bronze,#A88462)] flex items-center gap-2 mb-1 stagger-1">
+                  <span>NATURE</span>
+                  <span className="opacity-40">/</span>
+                  <span>FICTION</span>
+                  <span className="opacity-40">/</span>
+                  <span>CINEMATIC AUDIO</span>
+                </div>
+
                 {/* Eyebrow Badges Row with Channel Indicator & Quick Switcher */}
                 <div className="flex flex-wrap items-center gap-2.5 stagger-1">
-                  <span className="px-3 py-1 rounded-lg theme-card text-amber-400 border border-amber-500/30 text-[11px] font-mono font-bold uppercase tracking-wider shadow-sm flex items-center gap-1.5">
-                    <IconStar className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="px-3 py-1 rounded-full text-[var(--brand-sage,#87A96B)] bg-[var(--brand-sage,#87A96B)]/15 border border-[var(--brand-sage,#87A96B)]/40 text-[11px] font-mono font-bold uppercase tracking-wider shadow-sm flex items-center gap-1.5">
+                    <IconStar className="w-3.5 h-3.5 text-[var(--brand-champagne,#DFBA53)]" />
                     <span>Top Pick</span>
                   </span>
                   {/* Channel Badge with Quick Channel Switcher */}
@@ -354,44 +409,49 @@ export default function NovelCatalog({
                         setChannel(featuredNovel.channel);
                       }
                     }}
-                    className="px-2.5 py-1 rounded-lg theme-card theme-sub border text-[11px] font-mono font-semibold cursor-pointer hover:border-[var(--accent)] transition"
+                    className="px-3 py-1 rounded-full theme-card theme-sub border text-[11px] font-mono font-semibold cursor-pointer hover:border-[var(--accent)] transition"
                     title="Click to filter by this channel"
                   >
                     {featuredNovel.channel === 'community' ? 'Community Channel' : 'Verified Channel'}
                   </span>
-                  <span className="px-2.5 py-1 rounded-lg theme-card theme-sub border text-[11px] font-mono font-semibold">
+                  <span className="px-3 py-1 rounded-full theme-card theme-sub border text-[11px] font-mono font-semibold">
                     {featuredNovel.global_tone || 'Dramatic Ensemble'}
                   </span>
-                  <span className="text-xs text-emerald-400 font-mono font-bold flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-xs text-[var(--brand-sage,#87A96B)] font-mono font-bold flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-[var(--brand-sage,#87A96B)] animate-pulse" />
                     <span>Auto-Rotating</span>
                   </span>
                   {isBillboardPaused && (
-                    <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest px-2 py-0.5 rounded bg-white/5 border border-white/10">
+                    <span className="text-[10px] font-mono theme-muted uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[var(--bg-hover)] border border-[var(--border-subtle)]">
                       Paused
                     </span>
                   )}
                 </div>
 
-                {/* Massive Serif Title */}
-                <h2
-                  onClick={() => onSelectNovel(featuredNovel.id)}
-                  className="text-3xl sm:text-5xl md:text-6xl font-bold font-serif tracking-tight text-white leading-[1.1] cursor-pointer hover:text-[var(--accent)] transition-colors drop-shadow-xl stagger-2"
-                >
-                  <span className="sr-only">Featured Spotlight: </span>
-                  {featuredNovel.title}
-                </h2>
+                {/* Headline: Display serif with italic flourish + Novel Title */}
+                <div className="space-y-1 stagger-2">
+                  <div className="text-3xl sm:text-5xl md:text-6xl font-serif font-bold tracking-tight text-[var(--brand-sand,#D5C4AE)] leading-[1.08] drop-shadow-xl">
+                    Stories that feel <span className="italic font-serif font-normal text-[var(--accent)]">alive.</span>
+                  </div>
+                  <h2
+                    onClick={() => onSelectNovel(featuredNovel.id)}
+                    className="text-lg sm:text-2xl md:text-3xl font-serif font-semibold tracking-tight text-[var(--brand-sand,#D5C4AE)]/90 hover:text-[var(--accent-text)] cursor-pointer transition-colors pt-1"
+                  >
+                    <span className="sr-only">Featured Spotlight: </span>
+                    {featuredNovel.title}
+                  </h2>
+                </div>
 
                 {/* Evocative Literary Synopsis */}
-                <p className="text-xs sm:text-sm md:text-base text-slate-300 font-serif line-clamp-3 leading-relaxed max-w-xl drop-shadow-sm stagger-3">
+                <p className="text-xs sm:text-sm md:text-base text-[var(--text-main)]/90 font-serif line-clamp-3 leading-relaxed max-w-xl drop-shadow-sm stagger-3">
                   {featuredNovel.synopsis ||
-                    'An extraordinary world of storytelling brought to life with synchronized multi-voice performance.'}
+                    'Curated stories inspired by nature, designed for a calmer, more intentional way of listening.'}
                 </p>
 
                 {/* Voice Visualizer Widget */}
                 <div className="flex items-center gap-3 py-1 stagger-4">
-                  <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md theme-card border border-white/10 text-[10px] font-mono theme-muted">
-                    <IconSoundwave className="w-3.5 h-3.5 text-[var(--accent)] mr-1" />
+                  <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full theme-card border border-white/10 text-[10px] font-mono theme-muted">
+                    <IconSoundwave className="w-3.5 h-3.5 text-[var(--accent-text)] mr-1" />
                     <span className="text-[var(--text-main)] font-semibold">
                       {featuredNovel.narrator_name || 'Narrator'}
                     </span>
@@ -401,28 +461,38 @@ export default function NovelCatalog({
                     {[1, 2, 3, 4, 5, 6, 7, 8].map((bar) => (
                       <span
                         key={bar}
-                        className="w-0.5 bg-[var(--accent)] rounded-full"
+                        className="w-0.5 bg-[var(--accent)] rounded-full equalizer-bar"
                         style={{
                           height: `${Math.sin(bar) * 6 + 8}px`,
                           opacity: 0.7,
+                          animationDelay: `${bar * 110}ms`,
+                          animationDuration: `${0.65 + (bar % 3) * 0.2}s`,
                         }}
                       />
                     ))}
                   </div>
                 </div>
 
-                {/* Call to Action Buttons */}
+                {/* Call to Action Buttons: Circular Action CTA */}
                 <div className="flex flex-wrap items-center gap-3.5 pt-2 stagger-5">
                   <button
                     onClick={(e) => handleStartListening(featuredNovel, e)}
-                    className="px-6 py-3.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-bold rounded-xl shadow-xl flex items-center gap-2.5 text-xs sm:text-sm transition transform hover:-translate-y-0.5 focus:outline-none cursor-pointer"
+                    onMouseEnter={preloadReaderView}
+                    onFocus={preloadReaderView}
+                    onPointerDown={preloadReaderView}
+                    className="px-5 sm:px-6 py-3 sm:py-3.5 bg-[var(--cta-primary-bg)] hover:bg-[var(--cta-primary-hover)] text-[var(--cta-primary-text)] font-bold rounded-full border border-[var(--border-subtle)] shadow-xl flex items-center gap-3 text-xs sm:text-sm tracking-wider uppercase transition transform hover:-translate-y-0.5 active:scale-95 focus:outline-none cursor-pointer group"
                   >
-                    <IconPlay className="w-4 h-4 fill-current" />
-                    <span>Start Listening (Ch. 1)</span>
+                    <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-[var(--cta-primary-text)]/40 flex items-center justify-center group-hover:scale-105 group-hover:border-[var(--brand-amber)] transition-transform">
+                      <IconPlay className="w-3.5 h-3.5 fill-current ml-0.5 text-[var(--brand-amber,#D5851F)]" />
+                    </span>
+                    <span className="tracking-[0.18em] font-mono text-xs font-bold">Start Listening (Ch. 1)</span>
                   </button>
                   <button
                     onClick={() => onSelectNovel(featuredNovel.id)}
-                    className="px-5 py-3.5 theme-card border font-semibold rounded-xl text-xs sm:text-sm transition hover:border-[var(--border-focus)] focus:outline-none shadow-sm flex items-center gap-2 cursor-pointer"
+                    onMouseEnter={preloadNovelDetails}
+                    onFocus={preloadNovelDetails}
+                    onPointerDown={preloadNovelDetails}
+                    className="px-5 py-3.5 bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-subtle)] font-semibold rounded-full text-xs sm:text-sm transition hover:border-[var(--border-focus)] focus:outline-none shadow-sm flex items-center gap-2 cursor-pointer active:scale-95"
                   >
                     <IconBook className="w-4 h-4" />
                     <span>Novel Details</span>
@@ -433,6 +503,9 @@ export default function NovelCatalog({
               {/* Right Column: 3D Hardcover Physical Book Presentation */}
               <div
                 onClick={() => onSelectNovel(featuredNovel.id)}
+                onMouseEnter={preloadNovelDetails}
+                onFocus={preloadNovelDetails}
+                onPointerDown={preloadNovelDetails}
                 className="relative z-10 w-48 sm:w-60 md:w-64 aspect-[3/4] flex-shrink-0 cursor-pointer group transform hover:scale-105 transition-all duration-300"
                 style={{
                   filter: 'drop-shadow(0 25px 40px rgba(0, 0, 0, 0.85))',
@@ -440,7 +513,7 @@ export default function NovelCatalog({
                 title={featuredNovel.title}
               >
                 {/* 3D Cream Page Edges along the right spine */}
-                <div className="w-full h-full rounded-2xl overflow-hidden shadow-2xl border border-white/20 border-r-[6px] border-r-amber-100/25 transform -rotate-2 group-hover:rotate-0 transition-transform duration-300">
+                <div className="w-full h-full rounded-2xl overflow-hidden shadow-2xl border border-[var(--border-subtle)] border-r-[6px] border-r-[var(--border-strong)] transform -rotate-2 group-hover:rotate-0 transition-transform duration-300">
                   <NovelCover
                     title={featuredNovel.title}
                     author={featuredNovel.author_username}
@@ -448,19 +521,21 @@ export default function NovelCatalog({
                     className="w-full h-full"
                   />
                 </div>
-                {/* Floating Seal */}
-                <div className="absolute -bottom-3 -right-3 px-3 py-1 rounded-xl bg-[var(--accent)] text-white font-mono font-bold text-[10px] shadow-lg border border-white/20">
-                  ★ 9.4 Verified
+                {/* Floating Seal in Botanical Sage & Walnut */}
+                <div className="absolute -bottom-3 -right-3 px-3 py-1 rounded-full bg-[var(--brand-walnut,#5A3E2B)] text-[var(--brand-sand,#D5C4AE)] font-mono font-bold text-[10px] shadow-lg border border-[var(--brand-sage,#87A96B)]/40 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-sage,#87A96B)]" />
+                  <span>Botanical Edition</span>
                 </div>
               </div>
 
-              {/* Netflix-Style Slide Indicator Bars & Carousel Navigation */}
+              {/* Editorial Pagination Indicator: Minimalist hairline dash with numbered counters 01 —— 02 03 */}
               {novels.length > 1 && (
                 <div className="absolute bottom-4 left-6 sm:left-12 right-6 sm:right-12 flex items-center justify-between z-20 pointer-events-auto">
-                  {/* Indicator Bars */}
-                  <div className="flex items-center gap-2">
+                  {/* Numbered Counters with Hairline Dash */}
+                  <div className="flex items-center gap-3 font-mono text-xs select-none">
                     {novels.map((novelItem, idx) => {
                       const isActive = idx === (featuredIndex % novels.length);
+                      const numStr = String(idx + 1).padStart(2, '0');
                       return (
                         <button
                           key={novelItem.id || idx}
@@ -470,17 +545,19 @@ export default function NovelCatalog({
                             setFeaturedIndex(idx);
                           }}
                           aria-label={`Jump to slide ${idx + 1}: ${novelItem.title}`}
-                          className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                          className={`group flex items-center gap-2 cursor-pointer transition-colors duration-200 ${
                             isActive
-                              ? 'w-8 bg-[var(--accent)] shadow-sm'
-                              : 'w-2.5 bg-white/30 hover:bg-white/60'
+                              ? 'text-[var(--brand-sand,#D5C4AE)] font-bold'
+                              : 'text-[#4A4A46] hover:text-[var(--brand-bronze,#A88462)]'
                           }`}
-                        />
+                        >
+                          <span>{numStr}</span>
+                          {isActive && (
+                            <span className="w-7 sm:w-10 h-[1.5px] bg-[var(--brand-amber,#D5851F)] inline-block shadow-[0_0_6px_rgba(213,133,31,0.5)]" />
+                          )}
+                        </button>
                       );
                     })}
-                    <span className="text-[10px] font-mono text-slate-400 ml-1.5 hidden sm:inline">
-                      {(featuredIndex % novels.length) + 1} / {novels.length}
-                    </span>
                   </div>
 
                   {/* Previous / Next Arrows */}
@@ -492,7 +569,7 @@ export default function NovelCatalog({
                         setFeaturedIndex((prev) => (prev - 1 + novels.length) % novels.length);
                       }}
                       aria-label="Previous featured novel"
-                      className="p-1.5 rounded-lg bg-black/40 hover:bg-black/70 border border-white/10 text-white/80 hover:text-white transition backdrop-blur-sm cursor-pointer"
+                      className="p-1.5 rounded-full bg-[#3A2418]/80 hover:bg-[#6B4A2E] border border-[#A88462]/20 text-[#D5C4AE] hover:text-white transition backdrop-blur-sm cursor-pointer active:scale-95"
                     >
                       <IconChevronLeft className="w-3.5 h-3.5" />
                     </button>
@@ -503,7 +580,7 @@ export default function NovelCatalog({
                         setFeaturedIndex((prev) => (prev + 1) % novels.length);
                       }}
                       aria-label="Next featured novel"
-                      className="p-1.5 rounded-lg bg-black/40 hover:bg-black/70 border border-white/10 text-white/80 hover:text-white transition backdrop-blur-sm cursor-pointer"
+                      className="p-1.5 rounded-full bg-[#3A2418]/80 hover:bg-[#6B4A2E] border border-[#A88462]/20 text-[#D5C4AE] hover:text-white transition backdrop-blur-sm cursor-pointer active:scale-95"
                     >
                       <IconChevronRight className="w-3.5 h-3.5" />
                     </button>
@@ -516,12 +593,12 @@ export default function NovelCatalog({
           {/* ================================================================= */}
           {/* 3. SECTION 1: TOP 10 NUMBERED CAROUSEL (<ol> List with Controls)  */}
           {/* ================================================================= */}
-          {top10Novels.length > 0 && !searchQuery && (
+          {top10Novels.length > 0 && !searchQuery.trim() && (
             <section className="space-y-4 pt-2" aria-label="Top 10 Audiobooks">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <h3 className="text-lg sm:text-xl font-bold theme-heading font-serif flex items-center gap-2">
-                    <IconSparkles className="w-5 h-5 text-[var(--accent)]" />
+                    <IconSparkles className="w-5 h-5 text-[var(--accent-text)]" />
                     <span>Top 10 Today in Audiobooks</span>
                   </h3>
                   <span className="hidden sm:inline text-xs theme-muted font-mono">
@@ -534,14 +611,14 @@ export default function NovelCatalog({
                   <button
                     onClick={() => scrollCarousel(-1)}
                     aria-label="Scroll carousel left"
-                    className="p-1.5 rounded-lg theme-card border hover:border-[var(--border-focus)] transition theme-muted hover:text-[var(--text-main)] shadow-xs"
+                    className="p-1.5 rounded-lg theme-card border hover:border-[var(--border-focus)] transition-all duration-100 ease-out active:scale-90 theme-muted hover:text-[var(--text-main)] shadow-xs cursor-pointer"
                   >
                     <IconChevronLeft className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => scrollCarousel(1)}
                     aria-label="Scroll carousel right"
-                    className="p-1.5 rounded-lg theme-card border hover:border-[var(--border-focus)] transition theme-muted hover:text-[var(--text-main)] shadow-xs"
+                    className="p-1.5 rounded-lg theme-card border hover:border-[var(--border-focus)] transition-all duration-100 ease-out active:scale-90 theme-muted hover:text-[var(--text-main)] shadow-xs cursor-pointer"
                   >
                     <IconChevronRight className="w-4 h-4" />
                   </button>
@@ -551,7 +628,9 @@ export default function NovelCatalog({
               {/* Horizontal Scroll Carousel */}
               <ol
                 ref={carouselRef}
-                className="flex gap-4 sm:gap-6 overflow-x-auto pb-6 pt-2 list-none scrollbar-none snap-x"
+                tabIndex={0}
+                aria-label="Top 10 audiobooks"
+                className="flex gap-4 sm:gap-6 overflow-x-auto pb-6 pt-2 list-none scrollbar-none snap-x focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
               >
                 {top10Novels.map((novel, index) => {
                   const rank = index + 1;
@@ -559,6 +638,9 @@ export default function NovelCatalog({
                     <li
                       key={novel.id}
                       onClick={() => onSelectNovel(novel.id)}
+                      onMouseEnter={preloadNovelDetails}
+                      onFocus={preloadNovelDetails}
+                      onPointerDown={preloadNovelDetails}
                       className="top10-card flex-shrink-0 flex items-center cursor-pointer group snap-start relative pl-12 sm:pl-16"
                     >
                       {/* Decorative Outline Rank Number */}
@@ -577,8 +659,18 @@ export default function NovelCatalog({
                             title={novel.title}
                             author={novel.author_username}
                             coverUrl={novel.cover_object}
+                            id={novel.id}
+                            index={rank - 1}
+                            hideEyebrow={true}
                             className="w-full h-full"
                           />
+                          {/* Top 10 Badge featuring Amber Glow and Sage Green */}
+                          <div className="absolute top-2.5 left-2.5 z-20 flex items-center gap-1">
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-[#1A120E]/85 backdrop-blur-xs text-[var(--brand-amber,#D5851F)] border border-[var(--brand-amber,#D5851F)]/40 shadow-xs flex items-center gap-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-sage,#87A96B)]" />
+                              #{rank} TOP 10
+                            </span>
+                          </div>
                         </div>
 
                         {/* Text Body in Normal Flow */}
@@ -643,14 +735,15 @@ export default function NovelCatalog({
 
             {/* Responsive Hybrid Cards Grid */}
             {filteredNovels.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {filteredNovels.map((novel) => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-7">
+                {filteredNovels.map((novel, index) => (
                   <article
                     key={novel.id}
                     onClick={() => onSelectNovel(novel.id)}
-                    className="novel-card-hybrid group cursor-pointer"
-                    tabIndex={0}
-                    role="button"
+                    onMouseEnter={preloadNovelDetails}
+                    onFocus={preloadNovelDetails}
+                    onPointerDown={preloadNovelDetails}
+                    className="novel-card-hybrid group cursor-pointer p-4 sm:p-5 flex flex-col justify-between"
                     aria-label={novel.title}
                     onKeyDown={(e) => {
                       if (e.target !== e.currentTarget && e.target.closest('button, a, input, select')) {
@@ -662,97 +755,99 @@ export default function NovelCatalog({
                       }
                     }}
                   >
-                    {/* Desktop Column Container / Mobile Flex Row (<640px) */}
-                    <div className="flex flex-row sm:flex-col h-full min-w-0">
-                      {/* Cover Zone (Fixed 3:4 aspect ratio) */}
-                      <div className="w-28 sm:w-full aspect-[3/4] relative overflow-hidden flex-shrink-0">
+                    <div className="flex flex-col min-w-0">
+                      {/* Floating Physical Book Volume with Realistic Depth & Elevation */}
+                      <div className="relative aspect-[3/4] w-full rounded-xl overflow-hidden shadow-[0_10px_25px_-5px_rgba(0,0,0,0.22)] group-hover:shadow-[0_18px_36px_-6px_rgba(0,0,0,0.32)] transition-all duration-300 transform group-hover:-translate-y-1 flex-shrink-0">
                         <NovelCover
                           title={novel.title}
                           author={novel.author_username}
                           coverUrl={novel.cover_object}
+                          id={novel.id}
+                          index={index}
                           className="w-full h-full"
                         />
                       </div>
 
-                      {/* Card Body in Normal Flow */}
-                      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between min-w-0">
+                      {/* Streamlined Card Body: Refined Editorial Typography & Proportions */}
+                      <div className="mt-3.5 flex-1 flex flex-col justify-between min-w-0">
                         <div className="min-w-0">
                           {/* Genre / Channel Tag & Match Rating */}
-                          <div className="flex items-center justify-between gap-1 mb-2">
-                            <span className="text-[11px] font-mono font-bold text-[var(--accent)] uppercase tracking-wider truncate">
+                          <div className="flex items-center justify-between gap-1 mb-1.5">
+                            <span className={`text-[10px] sm:text-[11px] font-mono font-bold uppercase tracking-wider truncate px-2 py-0.5 rounded-full border ${
+                              novel.channel === 'verified'
+                                ? 'text-[var(--brand-sage,#87A96B)] border-[var(--brand-sage,#87A96B)]/30 bg-[var(--brand-sage,#87A96B)]/10'
+                                : 'text-[var(--brand-amber,#D5851F)] border-[var(--brand-amber,#D5851F)]/30 bg-[var(--brand-amber,#D5851F)]/10'
+                            }`}>
                               {novel.global_tone ||
                                 (novel.channel === 'verified' ? 'Verified Original' : 'Community')}
                             </span>
-                            <div className="flex items-center gap-1.5 flex-shrink-0">
-                              <span className="text-xs font-mono text-amber-400 font-bold">★ 9.4</span>
-                              <span className="text-[11px] font-mono text-emerald-400 font-semibold">98% Match</span>
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              <span className="text-[10px] sm:text-[11px] font-mono text-[var(--brand-sage,#87A96B)] font-semibold">98% Match</span>
                             </div>
                           </div>
 
-                          {/* Title: 1 line on desktop, up to 2 lines on mobile */}
+                          {/* Title */}
                           <h4
-                            className="font-serif text-base sm:text-lg font-bold theme-heading line-clamp-2 sm:line-clamp-1 group-hover:text-[var(--accent)] transition-colors"
+                            className="font-serif text-base sm:text-lg font-bold theme-heading line-clamp-1 group-hover:text-[var(--accent-text)] transition-colors"
                             title={novel.title}
                           >
                             {novel.title}
                           </h4>
 
-                          {/* Author line with exact By ${author_username} for test assertions */}
-                          <p className="text-xs theme-muted mt-1 truncate">
-                            By {novel.author_username || 'SyncTone Author'}
-                          </p>
-
-                          {/* Narrator Voice Pill */}
-                          <div className="mt-3">
-                            <span className="inline-flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 rounded-lg theme-surface theme-sub border border-[var(--border-subtle)]">
-                              <IconMic className="w-3.5 h-3.5 text-[var(--accent)] flex-shrink-0" />
-                              <span className="truncate max-w-[180px]">
-                                {novel.narrator_name || 'Lead Narrator'}
-                              </span>
+                          {/* Author credit line with integrated narrator pill */}
+                          <div className="flex items-center justify-between text-xs theme-muted mt-1 gap-2">
+                            <span className="truncate">
+                              By {novel.author_username || 'SyncTone Author'}
                             </span>
+                            {novel.narrator_name && (
+                              <span className="text-[10px] font-mono theme-sub opacity-85 truncate flex items-center gap-1 flex-shrink-0" title={`Narrator: ${novel.narrator_name}`}>
+                                <IconMic className="w-2.5 h-2.5 text-[var(--accent-text)]" />
+                                <span className="truncate max-w-[110px]">{novel.narrator_name}</span>
+                              </span>
+                            )}
                           </div>
-
-                          {/* Reserved 2-Line Clamped Synopsis with Exact Line-Height Matching */}
-                          <p className="text-xs theme-sub mt-3 synopsis-reserved-box font-serif leading-relaxed line-clamp-2">
-                            {novel.synopsis ||
-                              'Multi-voice synchronized audio performance featuring expressive character voices.'}
-                          </p>
-                        </div>
-
-                        {/* Pinned Action Row (Equal heights across all cards) */}
-                        <div className="pt-3.5 mt-4 border-t theme-border flex items-center justify-between gap-2.5">
-                          <button
-                            onClick={(e) => handleStartListening(novel, e)}
-                            className="flex-1 py-2 px-3.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-semibold rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 focus:outline-none cursor-pointer"
-                          >
-                            <IconPlay className="w-3.5 h-3.5 fill-current" />
-                            <span>Play</span>
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onSelectNovel(novel.id);
-                            }}
-                            className="p-2 rounded-xl theme-surface hover:bg-[var(--bg-hover)] theme-sub border border-[var(--border-subtle)] hover:border-[var(--border-hover)] transition focus:outline-none cursor-pointer min-w-[36px] flex items-center justify-center"
-                            title="View Novel Details"
-                            aria-label="View Novel Details"
-                          >
-                            <IconBook className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setNovelToDelete(novel);
-                            }}
-                            className="p-2 rounded-xl theme-surface hover:bg-rose-500/10 theme-sub hover:text-rose-400 border border-[var(--border-subtle)] hover:border-rose-500/30 transition focus:outline-none cursor-pointer min-w-[36px] flex items-center justify-center"
-                            title="Delete Novel (Local Dev)"
-                            aria-label={`Delete ${novel.title}`}
-                            data-testid={`delete-novel-${novel.id}`}
-                          >
-                            <IconTrash className="w-4 h-4" />
-                          </button>
                         </div>
                       </div>
+                    </div>
+
+                    {/* Tactile Action Row */}
+                    <div className="pt-3 mt-3 border-t theme-border flex items-center justify-between gap-2">
+                      <button
+                        onClick={(e) => handleStartListening(novel, e)}
+                        onMouseEnter={preloadReaderView}
+                        onFocus={preloadReaderView}
+                        onPointerDown={preloadReaderView}
+                        className="flex-1 py-1.5 px-3 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] text-xs font-semibold rounded-xl shadow-xs transition-all duration-150 active:scale-95 flex items-center justify-center gap-1.5 focus:outline-none cursor-pointer"
+                      >
+                        <IconPlay className="w-3.5 h-3.5 fill-current" />
+                        <span>Play</span>
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelectNovel(novel.id);
+                        }}
+                        onMouseEnter={preloadNovelDetails}
+                        onFocus={preloadNovelDetails}
+                        onPointerDown={preloadNovelDetails}
+                        className="p-1.5 rounded-xl theme-surface hover:bg-[var(--bg-hover)] theme-sub border border-[var(--border-subtle)] hover:border-[var(--border-hover)] transition-all duration-150 active:scale-95 focus:outline-none cursor-pointer min-w-[34px] flex items-center justify-center"
+                        title="View Novel Details"
+                        aria-label="View Novel Details"
+                      >
+                        <IconBook className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setNovelToDelete(novel);
+                        }}
+                        className="p-1.5 rounded-xl theme-surface hover:bg-[var(--danger)]/10 theme-sub hover:text-[var(--danger)] border border-[var(--border-subtle)] hover:border-[var(--danger)]/30 transition-all duration-150 active:scale-95 focus:outline-none cursor-pointer min-w-[34px] flex items-center justify-center"
+                        title="Delete Novel (Local Dev)"
+                        aria-label={`Delete ${novel.title}`}
+                        data-testid={`delete-novel-${novel.id}`}
+                      >
+                        <IconTrash className="w-4 h-4" />
+                      </button>
                     </div>
                   </article>
                 ))}
@@ -761,7 +856,7 @@ export default function NovelCatalog({
                 {onOpenAddNovel && (
                   <div
                     onClick={onOpenAddNovel}
-                    className="novel-card-hybrid group cursor-pointer border-2 border-dashed border-[var(--border-subtle)] hover:border-[var(--accent)] flex flex-col items-center justify-center p-8 text-center transition bg-[var(--bg-card)]/40 hover:bg-[var(--bg-card)] min-h-[380px]"
+                    className="novel-card-hybrid group cursor-pointer border-2 border-dashed border-[var(--border-subtle)] hover:border-[var(--accent)] flex flex-col items-center justify-center p-8 text-center transition bg-[var(--bg-card)]/40 hover:bg-[var(--bg-card)] h-full min-h-[480px]"
                     tabIndex={0}
                     role="button"
                     aria-label="Upload Novel"
@@ -772,16 +867,16 @@ export default function NovelCatalog({
                       }
                     }}
                   >
-                    <div className="w-14 h-14 rounded-2xl theme-surface border border-[var(--border-subtle)] group-hover:border-[var(--accent)] text-[var(--accent)] flex items-center justify-center mb-4 shadow-sm transition-transform group-hover:scale-105">
+                    <div className="w-14 h-14 rounded-2xl theme-surface border border-[var(--border-subtle)] group-hover:border-[var(--accent)] text-[var(--accent-text)] flex items-center justify-center mb-4 shadow-sm transition-transform group-hover:scale-105">
                       <IconPlus className="w-7 h-7" />
                     </div>
-                    <span className="text-base font-bold theme-heading group-hover:text-[var(--accent)] transition">
+                    <span className="text-base font-bold theme-heading group-hover:text-[var(--accent-text)] transition">
                       Upload Novel
                     </span>
                     <span className="text-xs theme-muted mt-1.5 font-mono">
                       Multi-Voice Audio
                     </span>
-                    <span className="mt-4 px-3.5 py-1.5 rounded-lg theme-surface border border-[var(--border-subtle)] text-xs font-semibold text-[var(--accent)] group-hover:bg-[var(--accent)] group-hover:text-white transition">
+                    <span className="mt-4 px-3.5 py-1.5 rounded-lg theme-surface border border-[var(--border-subtle)] text-xs font-semibold text-[var(--accent-text)] group-hover:bg-[var(--accent)] group-hover:text-[var(--on-accent)] transition">
                       + Add New Novel
                     </span>
                   </div>
@@ -802,15 +897,15 @@ export default function NovelCatalog({
               className="absolute inset-0 pointer-events-none opacity-25"
               style={{
                 backgroundImage:
-                  'radial-gradient(ellipse at 85% 20%, rgba(224, 75, 56, 0.25) 0%, transparent 60%), radial-gradient(ellipse at 15% 80%, rgba(99, 102, 241, 0.2) 0%, transparent 60%)',
+                  'radial-gradient(ellipse at 85% 20%, rgba(168, 132, 98, 0.20) 0%, transparent 60%), radial-gradient(ellipse at 15% 80%, rgba(107, 74, 46, 0.15) 0%, transparent 60%)',
               }}
             />
 
             <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
               {/* Left Column: Benefit Copy & Feature Badges */}
               <div className="space-y-4 max-w-2xl text-center lg:text-left">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full theme-card border border-[var(--border-subtle)] text-[11px] font-mono font-bold text-[var(--accent)] tracking-wider uppercase">
-                  <IconSparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full theme-card border border-[var(--border-subtle)] text-[11px] font-mono font-bold text-[var(--accent-text)] tracking-wider uppercase">
+                  <IconSparkles className="w-3.5 h-3.5 text-[var(--accent-text)]" />
                   <span>Author Studio & Publishing</span>
                 </div>
 
@@ -827,15 +922,15 @@ export default function NovelCatalog({
                 {/* Feature Badges Row */}
                 <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-1 text-xs font-mono">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl theme-card border theme-sub">
-                    <IconMic className="w-3.5 h-3.5 text-[var(--accent)]" />
+                    <IconMic className="w-3.5 h-3.5 text-[var(--accent-text)]" />
                     <span>Multi-Voice Casting</span>
                   </span>
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl theme-card border theme-sub">
-                    <IconSoundwave className="w-3.5 h-3.5 text-emerald-400" />
+                    <IconSoundwave className="w-3.5 h-3.5 text-[var(--success)]" />
                     <span>Synchronized Audio</span>
                   </span>
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl theme-card border theme-sub">
-                    <IconBook className="w-3.5 h-3.5 text-amber-400" />
+                    <IconBook className="w-3.5 h-3.5 text-[var(--warning)]" />
                     <span>Follow-Along Prose</span>
                   </span>
                 </div>
@@ -844,7 +939,7 @@ export default function NovelCatalog({
                 <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3.5 pt-3">
                   <button
                     onClick={onOpenAddNovel}
-                    className="px-6 py-3.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-bold rounded-xl shadow-lg flex items-center gap-2.5 text-xs sm:text-sm transition transform hover:-translate-y-0.5 active:scale-95 focus:outline-none cursor-pointer"
+                    className="px-6 py-3.5 bg-[var(--cta-primary-bg)] hover:bg-[var(--cta-primary-hover)] text-[var(--cta-primary-text)] font-bold rounded-xl shadow-lg flex items-center gap-2.5 text-xs sm:text-sm transition transform hover:-translate-y-0.5 active:scale-95 focus:outline-none cursor-pointer"
                   >
                     <IconPlus className="w-4 h-4" />
                     <span>Upload Novel</span>
@@ -861,48 +956,16 @@ export default function NovelCatalog({
                 </div>
               </div>
 
-              {/* Right Column: Visual Graphic / Manuscript Preview Card */}
-              <div className="w-full max-w-sm flex-shrink-0">
-                <div className="rounded-2xl p-6 theme-card border border-[var(--border-subtle)] shadow-xl space-y-4 relative group hover:border-[var(--border-focus)] transition-colors">
-                  <div className="flex items-center justify-between pb-3 border-b theme-border">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-rose-500/80" />
-                      <div className="w-3 h-3 rounded-full bg-amber-500/80" />
-                      <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
-                    </div>
-                    <span className="text-[10px] font-mono theme-muted uppercase tracking-wider">
-                      Audio Manuscript Studio
-                    </span>
+              {/* Right Column: Architectural Display Niche with Warm Amber Glow */}
+              <div className="w-full max-w-xs flex-shrink-0 flex justify-center">
+                <div className="w-48 h-56 display-niche bg-[#1A120E] p-6 flex flex-col items-center justify-center text-center space-y-3 relative overflow-hidden group border border-[var(--brand-amber,#D5851F)]/30 shadow-xl">
+                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_40%,rgba(213,133,31,0.22)_0%,transparent_70%)] pointer-events-none" />
+                  <div className="w-12 h-12 rounded-full bg-[var(--cta-primary-bg)] border border-[var(--brand-amber,#D5851F)]/40 flex items-center justify-center text-[var(--brand-amber,#D5851F)] shadow-lg relative z-10">
+                    <IconMic className="w-5 h-5 text-[var(--brand-amber,#D5851F)]" />
                   </div>
-
-                  <div className="space-y-2.5 font-serif text-xs leading-relaxed">
-                    <div className="p-3 rounded-xl theme-surface border border-[var(--border-subtle)] space-y-1">
-                      <div className="flex items-center justify-between text-[10px] font-mono text-[var(--accent)] font-bold">
-                        <span>NARRATOR</span>
-                        <span className="text-emerald-400 font-semibold">Cast Assigned</span>
-                      </div>
-                      <p className="theme-sub italic">
-                        &ldquo;The rain began to fall in Baker Street, tapping rhythmically against the glass...&rdquo;
-                      </p>
-                    </div>
-
-                    <div className="p-3 rounded-xl theme-surface border border-[var(--border-subtle)] space-y-1">
-                      <div className="flex items-center justify-between text-[10px] font-mono text-amber-400 font-bold">
-                        <span>LEAD CHARACTER</span>
-                        <span className="text-emerald-400 font-semibold">Cast Assigned</span>
-                      </div>
-                      <p className="theme-heading font-medium">
-                        &ldquo;Data! Data! Data! I can't make bricks without clay.&rdquo;
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="pt-2 flex items-center justify-between text-[11px] font-mono theme-muted border-t theme-border">
-                    <span>Ready for audio</span>
-                    <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      Studio Ready
-                    </span>
+                  <div className="relative z-10 space-y-1">
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--brand-sage,#87A96B)]">Studio Ready</span>
+                    <p className="text-xs font-serif theme-heading font-medium">Neural Voice Casting</p>
                   </div>
                 </div>
               </div>
@@ -923,7 +986,7 @@ export default function NovelCatalog({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-rose-500/15 text-rose-400 flex-shrink-0">
+              <div className="p-2.5 rounded-xl bg-[var(--danger)]/15 text-[var(--danger)] flex-shrink-0">
                 <IconTrash className="w-5 h-5" />
               </div>
               <div>
@@ -938,7 +1001,7 @@ export default function NovelCatalog({
             </p>
 
             {deleteNovelError && (
-              <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs">
+              <div className="p-2.5 rounded-lg bg-[var(--danger)]/10 border border-[var(--danger)]/30 text-[var(--danger)] text-xs">
                 {deleteNovelError}
               </div>
             )}
@@ -957,7 +1020,7 @@ export default function NovelCatalog({
                 type="button"
                 onClick={handleConfirmDelete}
                 disabled={isDeletingNovel}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                className="px-4 py-2 bg-[var(--danger)] hover:opacity-90 text-white rounded-xl text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 data-testid="confirm-delete-novel-btn"
               >
                 {isDeletingNovel ? (

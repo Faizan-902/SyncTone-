@@ -19,6 +19,14 @@ function formatTime(ms) {
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
 
+function formatHoverTime(ms) {
+  if (!ms || isNaN(ms) || ms < 0) return '00:00';
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
+
 const SPEED_OPTIONS = [0.75, 1.0, 1.25, 1.5, 2.0];
 
 export default function AudioPlayer({
@@ -46,6 +54,8 @@ export default function AudioPlayer({
   const [volume, setVolume] = useState(1.0);
   const [isMuted, setIsMuted] = useState(false);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
+  const [hoverTimeMs, setHoverTimeMs] = useState(null);
+  const [hoverFraction, setHoverFraction] = useState(0);
   const scrubberTrackRef = useRef(null);
 
   const progressFraction = totalDurationMs > 0 ? Math.min(1, Math.max(0, currentTimeMs / totalDurationMs)) : 0;
@@ -73,6 +83,18 @@ export default function AudioPlayer({
 
   const handleScrubberClick = (e) => {
     handleSeekFromClientX(e.clientX);
+  };
+
+  const handleScrubberMouseMove = (e) => {
+    if (!scrubberTrackRef.current || totalDurationMs <= 0) return;
+    const rect = scrubberTrackRef.current.getBoundingClientRect();
+    const fraction = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    setHoverFraction(fraction);
+    setHoverTimeMs(Math.round(fraction * totalDurationMs));
+  };
+
+  const handleScrubberMouseLeave = () => {
+    setHoverTimeMs(null);
   };
 
   const handleKeyDown = (e) => {
@@ -279,6 +301,8 @@ export default function AudioPlayer({
           <div
             ref={scrubberTrackRef}
             onClick={handleScrubberClick}
+            onMouseMove={handleScrubberMouseMove}
+            onMouseLeave={handleScrubberMouseLeave}
             onKeyDown={handleKeyDown}
             tabIndex={0}
             role="slider"
@@ -288,17 +312,29 @@ export default function AudioPlayer({
             aria-valuenow={Math.floor(currentTimeMs / 1000)}
             className="flex-1 py-3 cursor-pointer relative flex items-center group focus:outline-none"
           >
+            {/* Scrubber timecode hover preview badge */}
+            {hoverTimeMs !== null && (
+              <div
+                className="absolute -top-7 pointer-events-none transform -translate-x-1/2 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-[var(--bg-surface)] text-[var(--text-main)] border theme-border shadow-md z-30 transition-transform duration-75"
+                style={{
+                  left: `${hoverFraction * 100}%`,
+                }}
+              >
+                {formatHoverTime(hoverTimeMs)}
+              </div>
+            )}
+
             {/* Background Track */}
             <div className="w-full h-1.5 bg-[var(--bg-surface)] border theme-border rounded-full relative overflow-hidden group-hover:h-2.5 transition-all">
               {/* Progress Bar updated with transform: scaleX (Zero Layout Shift) */}
               <div
-                className="h-full w-full bg-gradient-to-r from-[var(--accent)] to-indigo-400 rounded-full will-change-transform"
+                className="h-full w-full bg-gradient-to-r from-[var(--brand-walnut,#5A3E2B)] to-[var(--brand-amber,#D5851F)] rounded-full will-change-transform"
                 style={scrubScaleStyle}
               />
             </div>
             {/* Scrubber Thumb Indicator on hover */}
             <div
-              className="absolute w-3.5 h-3.5 rounded-full bg-white shadow-lg pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-120 transform -translate-x-1/2 group-hover:scale-125 border border-black/20"
+              className="absolute w-3.5 h-3.5 rounded-full bg-[var(--brand-amber,#D5851F)] ring-2 ring-[var(--brand-walnut,#5A3E2B)] shadow-[0_0_10px_rgba(213,133,31,0.6)] pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-120 transform -translate-x-1/2 group-hover:scale-125 border border-white/50"
               style={{
                 left: `${progressFraction * 100}%`,
               }}
@@ -314,16 +350,15 @@ export default function AudioPlayer({
         <div className="flex items-center justify-between gap-2 sm:gap-3 flex-nowrap min-w-0">
           {/* Left: Track Information */}
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 max-w-[130px] sm:max-w-[200px] md:max-w-xs flex-shrink">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl theme-card border flex items-center justify-center text-[var(--accent)] shadow-xs flex-shrink-0">
-              {isPlaying ? (
-                <div className="flex items-end gap-0.5 h-4 w-4 justify-center">
-                  <span className="w-1 bg-[var(--accent)] rounded-full eq-bar-1" />
-                  <span className="w-1 bg-[var(--accent)] rounded-full eq-bar-2" />
-                  <span className="w-1 bg-[var(--accent)] rounded-full eq-bar-3" />
-                </div>
-              ) : (
-                <IconSoundwave className="w-4 h-4 text-[var(--accent)]" />
-              )}
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl theme-card border flex items-center justify-center text-[var(--accent-text)] shadow-xs flex-shrink-0">
+              <div
+                className={`flex items-end gap-0.5 h-4 w-4 justify-center ${isPlaying ? '' : 'paused eq-paused'}`}
+                aria-label={isPlaying ? 'Audio playing visualizer' : 'Audio paused visualizer'}
+              >
+                <span className="w-1 bg-[var(--accent)] rounded-full eq-bar-1" />
+                <span className="w-1 bg-[var(--accent)] rounded-full eq-bar-2" />
+                <span className="w-1 bg-[var(--accent)] rounded-full eq-bar-3" />
+              </div>
             </div>
 
             <div className="min-w-0">
@@ -341,7 +376,7 @@ export default function AudioPlayer({
             {/* Skip -10s */}
             <button
               onClick={() => handleSkip(-10)}
-              className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition flex items-center justify-center cursor-pointer"
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] active:scale-90 transition-transform duration-100 ease-out flex items-center justify-center cursor-pointer"
               title="Skip back 10 seconds (J)"
               aria-label="Skip back 10 seconds"
             >
@@ -351,7 +386,7 @@ export default function AudioPlayer({
             {/* Previous Turn */}
             <button
               onClick={() => onSeekSegment && onSeekSegment(-1)}
-              className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition flex items-center justify-center cursor-pointer"
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] active:scale-90 transition-transform duration-100 ease-out flex items-center justify-center cursor-pointer"
               title="Previous dialogue turn"
               aria-label="Previous turn"
             >
@@ -361,7 +396,7 @@ export default function AudioPlayer({
             {/* Play / Pause Toggle Button */}
             <button
               onClick={onToggle}
-              className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] font-bold flex items-center justify-center shadow-lg transition-transform duration-120 hover:scale-105 active:scale-95 focus:outline-none cursor-pointer"
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[var(--cta-primary-bg)] hover:bg-[var(--cta-primary-hover)] text-[var(--cta-primary-text)] border border-[var(--brand-amber,#D5851F)]/40 font-bold flex items-center justify-center shadow-lg transition-transform duration-100 ease-out hover:scale-105 active:scale-90 focus:outline-none cursor-pointer"
               aria-label={isPlaying ? 'Pause audio' : 'Play audio'}
             >
               <span className="transition-all duration-120 transform scale-100 opacity-100 flex items-center justify-center">
@@ -376,7 +411,7 @@ export default function AudioPlayer({
             {/* Next Turn */}
             <button
               onClick={() => onSeekSegment && onSeekSegment(1)}
-              className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition flex items-center justify-center cursor-pointer"
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] active:scale-90 transition-transform duration-100 ease-out flex items-center justify-center cursor-pointer"
               title="Next dialogue turn"
               aria-label="Next turn"
             >
@@ -386,7 +421,7 @@ export default function AudioPlayer({
             {/* Skip +10s */}
             <button
               onClick={() => handleSkip(10)}
-              className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition flex items-center justify-center cursor-pointer"
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] active:scale-90 transition-transform duration-100 ease-out flex items-center justify-center cursor-pointer"
               title="Skip forward 10 seconds (L)"
               aria-label="Skip forward 10 seconds"
             >
@@ -435,7 +470,7 @@ export default function AudioPlayer({
                 onClick={onTogglePlaybackMode}
                 className={`px-2 sm:px-2.5 py-1 rounded-lg border text-xs font-mono font-bold transition shadow-xs cursor-pointer flex items-center gap-1.5 ${
                   playbackMode === 'tts'
-                    ? 'bg-amber-400/20 text-amber-300 border-amber-400/40 hover:bg-amber-400/30'
+                    ? 'bg-[var(--warning)]/20 text-[var(--warning)] border-[var(--warning)]/40 hover:bg-[var(--warning)]/30'
                     : 'theme-card hover:border-[var(--border-focus)] theme-sub'
                 }`}
                 title={
@@ -447,7 +482,7 @@ export default function AudioPlayer({
               >
                 <span
                   className={`w-2 h-2 rounded-full ${
-                    playbackMode === 'tts' ? 'bg-amber-400 animate-pulse' : 'bg-slate-400'
+                    playbackMode === 'tts' ? 'bg-[var(--warning)] animate-pulse' : 'bg-[var(--text-muted)]'
                   }`}
                 />
                 <span className="hidden md:inline">
@@ -482,16 +517,16 @@ export default function AudioPlayer({
                 aria-label={isMuted ? 'Unmute audio' : 'Mute audio'}
               >
                 {isMuted || volume === 0 ? (
-                  <IconVolumeMute className="w-4 h-4 text-rose-400" />
+                  <IconVolumeMute className="w-4 h-4 text-[var(--danger)]" />
                 ) : (
-                  <IconVolume className="w-4 h-4" />
+                  <IconVolume className="w-4 h-4 text-[var(--brand-sage,#87A96B)]" />
                 )}
               </button>
 
               {/* Volume Slider Popover */}
               {showVolumeSlider && (
                 <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 p-2.5 rounded-xl theme-card border shadow-xl flex flex-col items-center gap-1 z-50 modal-panel-enter origin-bottom">
-                  <span className="text-[10px] font-mono theme-muted">
+                  <span className="text-[10px] font-mono font-bold text-[var(--brand-sage,#87A96B)]">
                     {isMuted ? '0%' : `${Math.round(volume * 100)}%`}
                   </span>
                   <input
@@ -501,7 +536,7 @@ export default function AudioPlayer({
                     step="0.05"
                     value={isMuted ? 0 : volume}
                     onChange={handleVolumeChange}
-                    className="w-20 h-1.5 accent-[var(--accent)] cursor-pointer"
+                    className="w-20 h-1.5 accent-[var(--brand-sage,#87A96B)] cursor-pointer"
                     aria-label="Volume level"
                   />
                 </div>

@@ -93,6 +93,7 @@ export default function CharacterRoster({
   }, [segments]);
 
   const handleVoiceSelect = async (characterId, newVoiceId) => {
+    if (!newVoiceId) return;
     setErrorMessage(null);
     setSuccessMessage(null);
     setUpdatingId(characterId);
@@ -141,7 +142,7 @@ export default function CharacterRoster({
       <div className="flex items-center justify-between p-5 border-b theme-border theme-card">
         <div>
           <h2 className="text-base font-bold theme-heading flex items-center gap-2">
-            <IconUsers className="w-4 h-4 text-[var(--accent)]" />
+            <IconUsers className="w-4 h-4 text-[var(--accent-text)]" />
             <span>Character Roster</span>
           </h2>
           <p className="text-xs theme-muted mt-0.5">
@@ -159,21 +160,21 @@ export default function CharacterRoster({
 
       {/* Alerts */}
       {errorMessage && (
-        <div className="mx-4 mt-3 p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 text-xs flex items-center justify-between">
+        <div className="mx-4 mt-3 p-3 bg-[var(--danger)]/10 border border-[var(--danger)]/20 rounded-xl text-[var(--danger)] text-xs flex items-center justify-between">
           <span>{errorMessage}</span>
-          <button onClick={() => setErrorMessage(null)} className="text-rose-400 font-bold ml-2">
+          <button onClick={() => setErrorMessage(null)} className="text-[var(--danger)] font-bold ml-2">
             <IconX className="w-3.5 h-3.5" />
           </button>
         </div>
       )}
 
       {successMessage && (
-        <div className="mx-4 mt-3 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400 text-xs flex items-center justify-between">
+        <div className="mx-4 mt-3 p-3 bg-[var(--success)]/10 border border-[var(--success)]/20 rounded-xl text-[var(--success)] text-xs flex items-center justify-between">
           <span className="flex items-center gap-1.5">
             <IconCheck className="w-3.5 h-3.5" />
             <span>{successMessage}</span>
           </span>
-          <button onClick={() => setSuccessMessage(null)} className="text-emerald-400 font-bold ml-2">
+          <button onClick={() => setSuccessMessage(null)} className="text-[var(--success)] font-bold ml-2">
             <IconX className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -199,7 +200,10 @@ export default function CharacterRoster({
                 {/* Character Name & Dialogue count */}
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-bold theme-heading text-sm flex items-center gap-1.5 min-w-0 truncate">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[var(--accent)] flex-shrink-0" />
+                    <span
+                      className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: getSpeakerColor(char.id).hex }}
+                    />
                     <span className="truncate">{char.name}</span>
                   </span>
                   <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -257,7 +261,7 @@ export default function CharacterRoster({
                       </select>
                     ) : (
                       <span className="text-xs font-semibold theme-sub theme-surface px-2.5 py-1 rounded-lg border flex items-center gap-1 font-mono">
-                        <IconLock className="w-3 h-3 text-[var(--accent)]" />
+                        <IconLock className="w-3 h-3 text-[var(--accent-text)]" />
                         <span>{char.voiceId}</span>
                       </span>
                     )}

@@ -1,4 +1,5 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
+import { LazyMotion, domAnimation, m, useReducedMotion } from 'framer-motion';
 import { api, ApiError } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 import { extractChaptersFromText, parseNovelFileClientSide } from '../utils/ebookParser';
@@ -48,6 +49,28 @@ export default function AddNovelModal({
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const fileInputRef = useRef(null);
+  const triggerRef = useRef(null);
+  const prefersReduced = useReducedMotion();
+
+  const backdropVariants = { hidden: { opacity: 0 }, visible: { opacity: 1 } };
+  const panelVariants = prefersReduced
+    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
+    : { hidden: { opacity: 0, scale: 0.95 }, visible: { opacity: 1, scale: 1 } };
+
+  // Store trigger element when modal opens; restore focus on close
+  useEffect(() => {
+    if (isOpen) {
+      triggerRef.current = document.activeElement;
+    }
+  }, [isOpen]);
+
+  // ESC key handler
+  useEffect(() => {
+    if (!isOpen) return;
+    const h = (e) => { if (e.key === 'Escape') { onClose(); if (triggerRef.current) triggerRef.current.focus(); } };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -333,20 +356,34 @@ export default function AddNovelModal({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm modal-scrim-enter"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div className="w-full max-w-xl theme-surface rounded-2xl shadow-2xl border overflow-hidden modal-panel-enter max-h-[90vh] flex flex-col">
+    <LazyMotion features={domAnimation}>
+      <m.div
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="add-novel-modal-title"
+        variants={backdropVariants}
+        initial="hidden"
+        animate="visible"
+        exit="hidden"
+        transition={{ duration: 0.2 }}
+      >
+        <m.div
+          className="w-full max-w-xl theme-surface rounded-2xl shadow-2xl border overflow-hidden max-h-[90vh] flex flex-col"
+          variants={panelVariants}
+          initial="hidden"
+          animate="visible"
+          exit="hidden"
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+        >
         {/* Modal Header */}
         <div className="p-5 border-b theme-border flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-[var(--accent)]/15 text-[var(--accent)]">
+            <div className="p-2 rounded-xl bg-[var(--accent)]/15 text-[var(--accent-text)]">
               <IconBook className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-bold theme-heading font-serif">Add New Novel</h2>
+              <h2 id="add-novel-modal-title" className="text-base font-bold theme-heading font-serif">Add New Novel</h2>
               <p className="text-[11px] theme-muted">
                 Import EPUB, PDF, TXT or author your novel with synchronized audio
               </p>
@@ -365,14 +402,14 @@ export default function AddNovelModal({
         <form onSubmit={(e) => handleSubmit(e, false)} className="p-6 space-y-4 overflow-y-auto flex-1">
           {/* Auth Warning Banner */}
           {!isAuthenticated && (
-            <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
+            <div className="p-3 bg-[var(--warning)]/10 border border-[var(--warning)]/20 text-[var(--warning)] text-xs rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
               <span>Sign in with an author account to publish directly to the catalog.</span>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <button
                   type="button"
                   onClick={handleDemoLogin}
                   disabled={isLoggingIn}
-                  className="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/40 rounded-lg font-bold text-[11px] transition cursor-pointer"
+                  className="px-2.5 py-1 bg-[var(--warning)]/20 hover:bg-[var(--warning)]/30 text-[var(--warning)] border border-[var(--warning)]/40 rounded-lg font-bold text-[11px] transition cursor-pointer"
                 >
                   {isLoggingIn ? 'Logging in...' : 'Quick Demo Author Login'}
                 </button>
@@ -383,7 +420,7 @@ export default function AddNovelModal({
                       onClose();
                       onOpenAuth('login');
                     }}
-                    className="font-bold underline text-amber-200 hover:text-white cursor-pointer text-[11px]"
+                    className="font-bold underline text-[var(--warning)] hover:text-[var(--text-main)] cursor-pointer text-[11px]"
                   >
                     Sign In
                   </button>
@@ -394,7 +431,7 @@ export default function AddNovelModal({
 
           {/* Error Message */}
           {error && (
-            <div className="p-3 bg-rose-500/10 text-rose-400 text-xs rounded-xl border border-rose-500/20">
+            <div className="p-3 bg-[var(--danger)]/10 text-[var(--danger)] text-xs rounded-xl border border-[var(--danger)]/20">
               {error}
             </div>
           )}
@@ -480,19 +517,19 @@ export default function AddNovelModal({
                 {isParsingFile ? (
                   <div className="py-4 flex flex-col items-center gap-2">
                     <div className="w-8 h-8 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
-                    <span className="text-xs font-semibold text-[var(--accent)]">
+                    <span className="text-xs font-semibold text-[var(--accent-text)]">
                       Analyzing manuscript & extracting chapters...
                     </span>
                   </div>
                 ) : (
                   <>
-                    <div className="p-3 rounded-2xl bg-[var(--accent)]/10 text-[var(--accent)] shadow-sm">
+                    <div className="p-3 rounded-2xl bg-[var(--accent)]/10 text-[var(--accent-text)] shadow-sm">
                       <IconUpload className="w-6 h-6" />
                     </div>
                     <div>
                       <p className="text-xs font-bold theme-heading">
                         Drag & drop your novel manuscript here, or{' '}
-                        <span className="text-[var(--accent)] underline">Browse Files</span>
+                        <span className="text-[var(--accent-text)] underline">Browse Files</span>
                       </p>
                       <p className="text-[11px] theme-muted mt-1">
                         Supports EPUB, MOBI, AZW3, FB2, PDF, TXT, Markdown, and HTML files
@@ -513,22 +550,22 @@ export default function AddNovelModal({
               </div>
             ) : (
               /* Status Card when File is Successfully Extracted */
-              <div className="p-4 rounded-2xl theme-card border border-emerald-500/30 bg-emerald-500/5 space-y-3">
+              <div className="p-4 rounded-2xl theme-card border border-[var(--success)]/30 bg-[var(--success)]/5 space-y-3">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="p-2 rounded-xl bg-emerald-500/15 text-emerald-400 flex-shrink-0">
+                    <div className="p-2 rounded-xl bg-[var(--success)]/15 text-[var(--success)] flex-shrink-0">
                       <IconCheck className="w-4 h-4" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[var(--success)]/20 text-[var(--success)] border border-[var(--success)]/30">
                           {uploadedFile.format}
                         </span>
                         <p className="text-xs font-bold text-white truncate max-w-[200px] sm:max-w-xs">
                           {uploadedFile.name}
                         </p>
                       </div>
-                      <p className="text-[11px] text-emerald-400/90 font-mono mt-0.5">
+                      <p className="text-[11px] text-[var(--success)]/90 font-mono mt-0.5">
                         {uploadedFile.size} • {uploadedFile.chapterCount} chapters ready to read
                       </p>
                     </div>
@@ -546,7 +583,7 @@ export default function AddNovelModal({
                       type="button"
                       onClick={handleRemoveFile}
                       aria-label="Remove uploaded file"
-                      className="p-1.5 rounded-lg theme-muted hover:text-rose-400 hover:bg-rose-500/10 transition"
+                      className="p-1.5 rounded-lg theme-muted hover:text-[var(--danger)] hover:bg-[var(--danger)]/10 transition"
                       title="Remove file"
                     >
                       <IconX className="w-4 h-4" />
@@ -556,8 +593,8 @@ export default function AddNovelModal({
 
                 {/* Collapsible Extracted Chapter Preview */}
                 {previewOpen && (
-                  <div className="pt-2 border-t border-emerald-500/20 space-y-2">
-                    <div className="flex items-center justify-between text-[11px] font-mono text-emerald-300">
+                  <div className="pt-2 border-t border-[var(--success)]/20 space-y-2">
+                    <div className="flex items-center justify-between text-[11px] font-mono text-[var(--success)]">
                       <span>Detected Chapters ({parsedChapters.length})</span>
                       <span>Ready for Reader & Synthesis</span>
                     </div>
@@ -567,7 +604,7 @@ export default function AddNovelModal({
                           key={ch.chapter_number || idx}
                           className="p-2.5 rounded-xl bg-black/30 border border-white/10 text-xs space-y-1"
                         >
-                          <div className="flex items-center justify-between font-bold text-[var(--accent)]">
+                          <div className="flex items-center justify-between font-bold text-[var(--accent-text)]">
                             <span>{ch.title || `Chapter ${idx + 1}`}</span>
                             <span className="text-[10px] font-mono theme-muted">
                               {ch.raw_text?.length || 0} chars
@@ -590,7 +627,7 @@ export default function AddNovelModal({
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold theme-heading">TTS DOM Sanitizer (tts-dom-cleaner)</span>
-                <span className="px-1.5 py-0.2 rounded text-[10px] font-mono uppercase bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                <span className="px-1.5 py-0.2 rounded text-[10px] font-mono uppercase bg-[var(--warning)]/15 text-[var(--warning)] border border-[var(--warning)]/30">
                   Opt-in
                 </span>
               </div>
@@ -605,7 +642,7 @@ export default function AddNovelModal({
               aria-checked={useTtsSanitizer}
               onClick={() => setUseTtsSanitizer((prev) => !prev)}
               className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                useTtsSanitizer ? 'bg-[var(--accent)]' : 'bg-white/20'
+                useTtsSanitizer ? 'bg-[var(--accent)]' : 'bg-[var(--border-strong)]'
               }`}
             >
               <span
@@ -690,7 +727,7 @@ export default function AddNovelModal({
                 type="button"
                 onClick={(e) => handleSubmit(e, true)}
                 disabled={isSubmitting || isParsingFile}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-md transition disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+                className="px-4 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] text-xs font-bold rounded-xl shadow-md transition disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
               >
                 <IconPlay className="w-3.5 h-3.5 fill-current" />
                 <span>{isSubmitting ? 'Creating & Ingesting...' : 'Create & Read Now'}</span>
@@ -700,14 +737,15 @@ export default function AddNovelModal({
             <button
               type="submit"
               disabled={isSubmitting || isParsingFile}
-              className="px-4 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-bold rounded-xl shadow-md transition disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+              className="px-4 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] text-xs font-bold rounded-xl shadow-md transition disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
             >
               <IconPlus className="w-3.5 h-3.5" />
               <span>{isParsingFile ? 'Analyzing File...' : isSubmitting ? 'Creating...' : 'Create Novel'}</span>
             </button>
           </div>
         </form>
-      </div>
-    </div>
+      </m.div>
+    </m.div>
+  </LazyMotion>
   );
 }

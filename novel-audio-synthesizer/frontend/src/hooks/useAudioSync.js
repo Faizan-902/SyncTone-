@@ -520,7 +520,7 @@ export function useAudioSync(timeline = [], onSegmentChange = null) {
 
   // Synchronized animation loop (60fps audio clock for Studio Track mode)
   const syncLoop = useCallback(() => {
-    if (!audioRef.current) return;
+    if (!audioRef.current || !isPlaying) return;
 
     const timeSec = audioRef.current.currentTime;
     const timeMs = Math.round(timeSec * 1000);
@@ -560,8 +560,10 @@ export function useAudioSync(timeline = [], onSegmentChange = null) {
       setCurrentTimeMs(timeMs);
     }
 
-    rafRef.current = requestAnimationFrame(syncLoop);
-  }, [timeline, onSegmentChange]);
+    if (isPlaying) {
+      rafRef.current = requestAnimationFrame(syncLoop);
+    }
+  }, [timeline, onSegmentChange, isPlaying]);
 
   useEffect(() => {
     if (isPlaying && playbackMode === 'studio') {
