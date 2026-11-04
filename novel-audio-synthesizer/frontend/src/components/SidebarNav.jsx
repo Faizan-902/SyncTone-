@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
+import { preloadAuthModal, preloadAddNovelModal, preloadSettingsModal } from '../App';
 import {
   IconSoundwave,
   IconBook,
@@ -12,6 +13,29 @@ import {
   IconScroll,
 } from './icons';
 
+export const Icon = React.memo(function Icon({ name, className = 'w-5 h-5', ...props }) {
+  switch (name) {
+    case 'soundwave':
+      return <IconSoundwave className={className} {...props} />;
+    case 'book':
+      return <IconBook className={className} {...props} />;
+    case 'plus':
+      return <IconPlus className={className} {...props} />;
+    case 'settings':
+      return <IconSettings className={className} {...props} />;
+    case 'user':
+      return <IconUser className={className} {...props} />;
+    case 'moon':
+      return <IconMoon className={className} {...props} />;
+    case 'sun':
+      return <IconSun className={className} {...props} />;
+    case 'scroll':
+      return <IconScroll className={className} {...props} />;
+    default:
+      return null;
+  }
+});
+
 export default function SidebarNav({
   currentView,
   onNavigate,
@@ -22,14 +46,13 @@ export default function SidebarNav({
   const { user, role, isAuthenticated, isWriterOrAdmin, logout } = useAuth();
   const { theme, cycleTheme } = useTheme();
 
-  const ThemeIcon = theme === 'dark' ? IconMoon : IconSun;
-  const themeLabel = theme === 'dark' ? 'Atelier Dark' : 'Editorial Light';
+  const themeLabel = theme === 'dark' ? 'Midnight Listening' : 'Warm Editorial';
 
   return (
     <>
       {/* Desktop Left Rail (Editorial 72px Navigation) */}
       <aside
-        className="hidden md:flex fixed top-0 left-0 bottom-0 w-[72px] z-50 flex-col items-center justify-between py-6 theme-surface border-r shadow-xl transition-colors duration-200"
+        className="hidden md:flex fixed top-0 left-0 bottom-0 w-[72px] z-50 flex-col items-center justify-between py-6 bg-[#3A2418] border-r border-[var(--border-subtle)] shadow-xl transition-colors duration-200"
         aria-label="Sidebar Navigation"
       >
         {/* Top: Brand Mark & Primary Navigation */}
@@ -37,12 +60,12 @@ export default function SidebarNav({
           {/* Logo Mark */}
           <button
             onClick={() => onNavigate('catalog')}
-            className="group relative flex items-center justify-center w-11 h-11 rounded-xl bg-[var(--accent)] text-white shadow-md hover:scale-105 transition-transform"
+            className="group relative flex items-center justify-center w-11 h-11 rounded-xl bg-[#1A120E] border border-[var(--brand-amber,#D5851F)]/40 text-[var(--brand-amber,#D5851F)] shadow-md hover:scale-105 active:scale-95 transition-transform duration-100 ease-out"
             title="SyncTone Home"
             aria-label="SyncTone Home"
           >
-            <IconSoundwave className="w-5 h-5 text-white" />
-            <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[var(--bg-surface)]" />
+            <Icon name="soundwave" className="w-5 h-5 text-[var(--brand-amber,#D5851F)]" />
+            <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[var(--brand-sage,#87A96B)] border-2 border-[#3A2418]" />
           </button>
 
           {/* Navigation Links */}
@@ -50,17 +73,17 @@ export default function SidebarNav({
             {/* Library / Catalog */}
             <button
               onClick={() => onNavigate('catalog')}
-              className={`group relative flex items-center justify-center w-11 h-11 rounded-xl transition ${
+              className={`group relative flex items-center justify-center w-11 h-11 rounded-xl transition-all duration-100 ease-out active:scale-95 ${
                 currentView === 'catalog'
-                  ? 'bg-[var(--accent)] text-white shadow-sm'
-                  : 'theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
+                  ? 'bg-[var(--cta-primary-bg)] text-[var(--cta-primary-text)] border border-[var(--brand-amber,#D5851F)]/40 shadow-sm'
+                  : 'text-[#D5C4AE]/70 hover:text-[#D5C4AE] hover:bg-[#4A4A46]/40'
               }`}
               title="Novel Library"
               aria-label="Novel Library"
             >
-              <IconBook className="w-5 h-5" />
+              <Icon name="book" className="w-5 h-5" />
               {currentView === 'catalog' && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-white rounded-r-full" />
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-[var(--brand-amber,#D5851F)] rounded-r-full shadow-[0_0_8px_rgba(213,133,31,0.6)]" />
               )}
             </button>
 
@@ -68,36 +91,41 @@ export default function SidebarNav({
             {isWriterOrAdmin && onOpenAddNovel && (
               <button
                 onClick={onOpenAddNovel}
-                className="group relative flex items-center justify-center w-11 h-11 rounded-xl theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition cursor-pointer"
+                onMouseEnter={preloadAddNovelModal}
+                onFocus={preloadAddNovelModal}
+                className="group relative flex items-center justify-center w-11 h-11 rounded-xl text-[#D5C4AE]/70 hover:text-[#D5C4AE] hover:bg-[#4A4A46]/40 transition-all duration-100 ease-out active:scale-95 cursor-pointer"
                 title="Create New Novel"
                 aria-label="Create New Novel"
               >
-                <IconPlus className="w-5 h-5" />
+                <Icon name="plus" className="w-5 h-5" />
               </button>
             )}
 
             {/* Settings */}
             <button
               onClick={onOpenSettings}
-              className="group relative flex items-center justify-center w-11 h-11 rounded-xl theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition cursor-pointer"
+              onMouseEnter={preloadSettingsModal}
+              onFocus={preloadSettingsModal}
+              className="group relative flex items-center justify-center w-11 h-11 rounded-xl text-[#D5C4AE]/70 hover:text-[#D5C4AE] hover:bg-[#4A4A46]/40 transition-all duration-100 ease-out active:scale-95 cursor-pointer"
               title="Settings & Preferences"
               aria-label="Settings"
             >
-              <IconSettings className="w-5 h-5" />
+              <Icon name="settings" className="w-5 h-5" />
             </button>
           </nav>
         </div>
 
         {/* Bottom Actions: Theme Switcher & Account Profile */}
         <div className="flex flex-col items-center gap-3 w-full px-2">
-          {/* Tri-Theme Switcher */}
+          {/* Theme Switcher */}
           <button
             onClick={cycleTheme}
-            className="flex items-center justify-center w-10 h-10 rounded-xl theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] border border-transparent hover:border-[var(--border-subtle)] transition"
+            className="flex items-center justify-center w-10 h-10 rounded-xl text-[#D5C4AE]/70 hover:text-[#D5C4AE] hover:bg-[#4A4A46]/40 border border-transparent hover:border-[#A88462]/30 transition-all duration-100 ease-out active:scale-95"
             title={`Switch Theme (${themeLabel})`}
-            aria-label={`Switch Theme: ${themeLabel}`}
+            aria-label="Switch theme"
+            aria-pressed={theme === 'dark'}
           >
-            <ThemeIcon className="w-5 h-5" />
+            <Icon name={theme === 'dark' ? 'moon' : 'sun'} className="w-5 h-5" />
           </button>
 
           {/* User Account / Sign In */}
@@ -105,7 +133,7 @@ export default function SidebarNav({
             <div className="relative group">
               <button
                 onClick={logout}
-                className="w-10 h-10 rounded-xl bg-[var(--accent)] flex items-center justify-center text-white text-xs font-bold uppercase shadow-sm hover:scale-105 transition"
+                className="w-10 h-10 rounded-xl bg-[var(--cta-primary-bg)] flex items-center justify-center text-[var(--cta-primary-text)] text-xs font-bold uppercase shadow-sm hover:scale-105 active:scale-95 transition-transform duration-100 ease-out"
                 title={`${user?.username} (${role}) — Click to sign out`}
                 aria-label="User Account"
               >
@@ -115,11 +143,13 @@ export default function SidebarNav({
           ) : (
             <button
               onClick={() => onOpenAuth('login')}
-              className="w-10 h-10 rounded-xl theme-card flex items-center justify-center theme-muted hover:text-[var(--text-main)] border hover:border-[var(--border-focus)] transition"
+              onMouseEnter={preloadAuthModal}
+              onFocus={preloadAuthModal}
+              className="w-10 h-10 rounded-xl theme-card flex items-center justify-center theme-muted hover:text-[var(--text-main)] border hover:border-[var(--border-focus)] transition-all duration-100 ease-out active:scale-95"
               title="Sign in / Register"
               aria-label="Account / Sign In"
             >
-              <IconUser className="w-5 h-5" />
+              <Icon name="user" className="w-5 h-5" />
             </button>
           )}
         </div>
@@ -134,51 +164,53 @@ export default function SidebarNav({
       >
         <button
           onClick={() => onNavigate('catalog')}
-          className={`flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium transition ${
-            currentView === 'catalog' ? 'text-[var(--accent)] font-semibold' : 'theme-muted'
+          className={`flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium transition-all duration-100 ease-out active:scale-95 ${
+            currentView === 'catalog' ? 'text-[var(--accent-text)] font-semibold' : 'theme-muted'
           }`}
           aria-label="Library"
         >
-          <IconBook className="w-5 h-5" />
+          <Icon name="book" className="w-5 h-5" />
           <span>Library</span>
         </button>
 
         {isWriterOrAdmin && onOpenAddNovel && (
           <button
             onClick={onOpenAddNovel}
-            className="flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium theme-muted hover:text-[var(--text-main)] transition"
+            className="flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium theme-muted hover:text-[var(--text-main)] transition-all duration-100 ease-out active:scale-95"
             aria-label="Add Novel"
           >
-            <IconPlus className="w-5 h-5" />
+            <Icon name="plus" className="w-5 h-5" />
             <span>Studio</span>
           </button>
         )}
 
         <button
           onClick={cycleTheme}
-          className="flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium theme-muted hover:text-[var(--text-main)] transition"
-          aria-label="Switch Theme"
+          className="flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium theme-muted hover:text-[var(--text-main)] transition-all duration-100 ease-out active:scale-95"
+          aria-label="Switch theme"
+          aria-pressed={theme === 'dark'}
+          title={`Switch Theme (${themeLabel})`}
         >
-          <ThemeIcon className="w-5 h-5" />
+          <Icon name={theme === 'dark' ? 'moon' : 'sun'} className="w-5 h-5" />
           <span className="capitalize">{theme}</span>
         </button>
 
         <button
           onClick={onOpenSettings}
-          className="flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium theme-muted hover:text-[var(--text-main)] transition"
+          className="flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium theme-muted hover:text-[var(--text-main)] transition-all duration-100 ease-out active:scale-95"
           aria-label="Settings"
         >
-          <IconSettings className="w-5 h-5" />
+          <Icon name="settings" className="w-5 h-5" />
           <span>Settings</span>
         </button>
 
         {isAuthenticated ? (
           <button
             onClick={logout}
-            className="flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium theme-muted hover:text-rose-400 transition"
+            className="flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium theme-muted hover:text-[var(--danger)] transition-all duration-100 ease-out active:scale-95"
             aria-label="Sign Out"
           >
-            <span className="w-5 h-5 rounded-full bg-[var(--accent)] text-white text-[10px] flex items-center justify-center font-bold">
+            <span className="w-5 h-5 rounded-full bg-[var(--cta-primary-bg)] text-[var(--cta-primary-text)] text-[10px] flex items-center justify-center font-bold">
               {user?.username?.[0] || 'U'}
             </span>
             <span>Sign Out</span>
@@ -186,10 +218,10 @@ export default function SidebarNav({
         ) : (
           <button
             onClick={() => onOpenAuth('login')}
-            className="flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium theme-muted hover:text-[var(--text-main)] transition"
+            className="flex flex-col items-center gap-1 py-1 px-3 rounded-lg text-xs font-medium theme-muted hover:text-[var(--text-main)] transition-all duration-100 ease-out active:scale-95"
             aria-label="Mobile Sign In"
           >
-            <IconUser className="w-5 h-5" />
+            <Icon name="user" className="w-5 h-5" />
             <span>Sign In</span>
           </button>
         )}

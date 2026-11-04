@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { LazyMotion, domAnimation, m, useReducedMotion } from 'framer-motion';
 import { api, ApiError } from '../services/api';
 import { sanitizeTextWithTtsDomCleaner } from '../utils/ttsSanitizer';
 import { IconUpload, IconX } from './icons';
@@ -10,6 +11,29 @@ export default function UploadChapterModal({ isOpen, novel, onClose, onChapterUp
   const [useTtsSanitizer, setUseTtsSanitizer] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+
+  const triggerRef = useRef(null);
+  const prefersReduced = useReducedMotion();
+
+  const backdropVariants = { hidden: { opacity: 0 }, visible: { opacity: 1 } };
+  const panelVariants = prefersReduced
+    ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
+    : { hidden: { opacity: 0, scale: 0.95 }, visible: { opacity: 1, scale: 1 } };
+
+  // Store trigger element on open; restore focus on close
+  useEffect(() => {
+    if (isOpen) {
+      triggerRef.current = document.activeElement;
+    }
+  }, [isOpen]);
+
+  // ESC key handler
+  useEffect(() => {
+    if (!isOpen) return;
+    const h = (e) => { if (e.key === 'Escape') { onClose(); if (triggerRef.current) triggerRef.current.focus(); } };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [isOpen, onClose]);
 
   if (!isOpen || !novel) return null;
 
@@ -44,16 +68,30 @@ export default function UploadChapterModal({ isOpen, novel, onClose, onChapterUp
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm modal-scrim-enter"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div className="w-full max-w-xl theme-surface rounded-2xl shadow-2xl border overflow-hidden modal-panel-enter">
+    <LazyMotion features={domAnimation}>
+      <m.div
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="upload-chapter-modal-title"
+        variants={backdropVariants}
+        initial="hidden"
+        animate="visible"
+        exit="hidden"
+        transition={{ duration: 0.2 }}
+      >
+        <m.div
+          className="w-full max-w-xl theme-surface rounded-2xl shadow-2xl border overflow-hidden"
+          variants={panelVariants}
+          initial="hidden"
+          animate="visible"
+          exit="hidden"
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+        >
         <div className="p-6 border-b theme-border flex items-center justify-between">
           <div>
-            <h2 className="text-base font-bold theme-heading flex items-center gap-2">
-              <IconUpload className="w-4 h-4 text-[var(--accent)]" />
+            <h2 id="upload-chapter-modal-title" className="text-base font-bold theme-heading flex items-center gap-2">
+              <IconUpload className="w-4 h-4 text-[var(--accent-text)]" />
               <span>Upload Chapter to {novel.title}</span>
             </h2>
             <p className="text-xs theme-muted mt-0.5">
@@ -71,7 +109,7 @@ export default function UploadChapterModal({ isOpen, novel, onClose, onChapterUp
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
-            <div className="p-3 bg-rose-500/10 text-rose-400 text-xs rounded-xl border border-rose-500/20">
+            <div className="p-3 bg-[var(--danger)]/10 text-[var(--danger)] text-xs rounded-xl border border-[var(--danger)]/20">
               {error}
             </div>
           )}
@@ -123,7 +161,7 @@ export default function UploadChapterModal({ isOpen, novel, onClose, onChapterUp
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold theme-heading">TTS DOM Sanitizer (tts-dom-cleaner)</span>
-                <span className="px-1.5 py-0.2 rounded text-[10px] font-mono uppercase bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                <span className="px-1.5 py-0.2 rounded text-[10px] font-mono uppercase bg-[var(--warning)]/15 text-[var(--warning)] border border-[var(--warning)]/30">
                   Opt-in
                 </span>
               </div>
@@ -138,7 +176,7 @@ export default function UploadChapterModal({ isOpen, novel, onClose, onChapterUp
               aria-checked={useTtsSanitizer}
               onClick={() => setUseTtsSanitizer((prev) => !prev)}
               className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                useTtsSanitizer ? 'bg-[var(--accent)]' : 'bg-white/20'
+                useTtsSanitizer ? 'bg-[var(--accent)]' : 'bg-[var(--border-strong)]'
               }`}
             >
               <span
@@ -160,13 +198,14 @@ export default function UploadChapterModal({ isOpen, novel, onClose, onChapterUp
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-bold rounded-xl shadow-md transition disabled:opacity-50"
+              className="px-5 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] text-xs font-bold rounded-xl shadow-md transition disabled:opacity-50"
             >
               {isSubmitting ? 'Ingesting...' : 'Upload & Parse Prose'}
             </button>
           </div>
         </form>
-      </div>
-    </div>
+      </m.div>
+    </m.div>
+  </LazyMotion>
   );
 }

@@ -37,59 +37,80 @@
 }
 
 /* ========================================================================= */
-/* SYNCTONE OPTION B: "ATELIER OBSIDIAN" TOKENS (OKLCH TRI-THEME ENGINE)     */
-/* Monolithic Basalt Carbon | Japanese Kozo Washi | Gallery Cold-Press Vellum */
+/* ========================================================================= */
+/* SYNCTONE: "EARTHY LUXURY" TOKENS                                          */
+/* Warm Editorial (Light / Soft Sand) & Nocturne (Dark / Deep Espresso)      */
 /* ========================================================================= */
 
 :root, html.dark {
-  /* Surfaces */
-  --bg-page: oklch(0.13 0.006 260);
-  --bg-surface: oklch(0.16 0.008 260);
-  --bg-card: oklch(0.19 0.010 260);
-  --bg-hover: oklch(0.23 0.012 260);
-  --bg-elevated: oklch(0.21 0.010 260);
+  /* Brand Tokens (Earthy Luxury & Champagne Gold) */
+  --brand-espresso: #1A120E;
+  --brand-chocolate: #3A2418;
+  --brand-walnut: #5A3E2B;
+  --brand-bronze: #A88462;
+  --brand-sand: #D5C4AE;
+  --brand-charcoal: #4A4A46;
+  --brand-sage: #87A96B;
+  --brand-amber: #D5851F;
+  --brand-champagne: #DFBA53;
+  --brand-champagne-light: #F5E2A8;
+  --brand-obsidian: #0D0A08;
 
-  /* Typography / Text Ratios (AAA Main & Sub, AA Muted >= 4.5:1 on all surfaces) */
-  --text-main: oklch(0.96 0.005 260);
-  --text-sub: oklch(0.85 0.008 260);
-  --text-muted: oklch(0.74 0.010 260);
+  /* Surfaces (Nocturne / Earthy Luxury & Obsidian) */
+  --bg-page: #1A120E;
+  --bg-surface: #3A2418;
+  --bg-card: #281911;
+  --bg-hover: #3D261A;
+  --bg-elevated: #362217;
+
+  /* Typography / Text Ratios (AAA Main & Sub >= 7:1, AA Muted >= 4.5:1) */
+  --text-main: #D5C4AE;
+  --text-sub: #A88462;
+  --text-muted: #8A7A68;
 
   /* Architectural Borders & Affordances */
-  --border-subtle: rgba(255, 255, 255, 0.07);
-  --border-strong: rgba(255, 255, 255, 0.20);
-  --border-hover: oklch(0.58 0.030 260);
-  --border-focus: oklch(0.70 0.220 36);
+  --border-subtle: #453224;
+  --border-strong: #634B38;
+  --border-hover: #DFBA53;
+  --border-focus: #DFBA53;
 
-  /* Living Accent: Electric Cinnabar Vermilion */
-  --accent: oklch(0.67 0.220 36);
-  --accent-hover: oklch(0.72 0.210 38);
-  --accent-surface: rgba(255, 95, 65, 0.12);
-  --on-accent: oklch(0.12 0.010 260);
+  /* Living Accent: Radiant Champagne Gold */
+  --accent: #DFBA53;
+  --accent-hover: #EED076;
+  --accent-surface: rgba(223, 186, 83, 0.15);
+  --accent-strong: #5A3E2B;
+  --accent-text: #DFBA53;
+  --on-accent: #0D0A08;
+
+  /* Primary Button Contract (Champagne Gold CTA in dark mode) */
+  --cta-primary-bg: #DFBA53;
+  --cta-primary-hover: #EED076;
+  --cta-primary-text: #0D0A08;
 
   /* Glassmorphism */
-  --glass-bg: rgba(18, 20, 24, 0.85);
-  --glass-dock: rgba(22, 24, 30, 0.94);
+  --glass-bg: rgba(26, 18, 14, 0.88);
+  --glass-dock: rgba(58, 36, 24, 0.95);
 
   /* Status Tokens */
-  --success: oklch(0.78 0.14 145);
-  --warning: oklch(0.79 0.15 80);
-  --danger: oklch(0.72 0.20 25);
-  --info: oklch(0.76 0.14 235);
+  --success: #87A96B;
+  --warning: #D5851F;
+  --danger: #BA4E3D;
+  --info: #87A96B;
 
-  /* Speaker Palette (Fixed Lightness & Chroma) */
-  --speaker-narrator: oklch(0.85 0.008 260);
-  --speaker-a: oklch(0.72 0.200 36);
-  --speaker-b: oklch(0.77 0.140 155);
-  --speaker-c: oklch(0.76 0.140 235);
-  --speaker-d: oklch(0.76 0.150 320);
+  /* Speaker Palette (Harmonized) */
+  --speaker-narrator: #D5C4AE;
+  --speaker-a: #D5851F;
+  --speaker-b: #87A96B;
+  --speaker-c: #A88462;
+  --speaker-d: #BA4E3D;
 
   /* Top 10 Outline Typography */
-  --top10-fill: oklch(0.13 0.006 260);
-  --top10-stroke: rgba(255, 255, 255, 0.24);
-  --top10-active: oklch(0.67 0.220 36);
+  --top10-fill: #1A120E;
+  --top10-stroke: rgba(213, 196, 174, 0.25);
+  --top10-active: #DFBA53;
 
   /* Card Accent Default */
-  --card-accent: oklch(0.67 0.220 36);
+  --card-accent: #DFBA53;
 
   /* Backward Compatibility Aliases */
   --color-status-success: var(--success);
@@ -112,9 +133,9 @@
 
   /* 4-Level Elevation Tokens */
   --shadow-none: none;
-  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.22), 0 1px 2px -1px rgba(0, 0, 0, 0.18);
-  --shadow-md: 0 8px 20px -4px rgba(0, 0, 0, 0.32), 0 4px 8px -2px rgba(0, 0, 0, 0.22);
-  --shadow-lg: 0 24px 48px -12px rgba(0, 0, 0, 0.48), 0 12px 24px -6px rgba(0, 0, 0, 0.36);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.28), 0 1px 2px -1px rgba(0, 0, 0, 0.22);
+  --shadow-md: 0 8px 20px -4px rgba(0, 0, 0, 0.42), 0 4px 8px -2px rgba(0, 0, 0, 0.30);
+  --shadow-lg: 0 24px 48px -12px rgba(0, 0, 0, 0.58), 0 12px 24px -6px rgba(0, 0, 0, 0.42);
 
   /* Radius Scale */
   --radius-xs: 4px;
@@ -147,56 +168,61 @@
   --duration-slow: var(--motion-duration-moderate);
 }
 
-
-
 html.light {
-  /* Surfaces (Architectural Cold-Press Vellum) */
-  --bg-page: oklch(0.985 0.003 240);
-  --bg-surface: oklch(1.000 0.000 0);
-  --bg-card: oklch(0.955 0.005 240);
-  --bg-hover: oklch(0.925 0.008 240);
-  --bg-elevated: oklch(1.000 0.000 0);
+  /* Surfaces (Warm Alabaster / Sunlit Linen & Crisp Warm Ivory) */
+  --bg-page: #FAF8F5;
+  --bg-surface: #FAF6F0;
+  --bg-card: #FFFFFF;
+  --bg-hover: #F2EBE1;
+  --bg-elevated: #FFFFFF;
 
-  /* Typography / Text Ratios */
-  --text-main: oklch(0.16 0.010 260);
-  --text-sub: oklch(0.29 0.012 260);
-  --text-muted: oklch(0.43 0.015 260);
+  /* Typography / Text Ratios (Deep Roasted Walnut & Warm Umber) */
+  --text-main: #1A120E;
+  --text-sub: #5A3E2B;
+  --text-muted: #8C7765;
 
-  /* Borders */
-  --border-subtle: rgba(20, 25, 35, 0.08);
-  --border-strong: rgba(20, 25, 35, 0.20);
-  --border-hover: oklch(0.48 0.030 260);
-  --border-focus: oklch(0.52 0.220 34);
+  /* Architectural Hairline Borders */
+  --border-subtle: #EAE3D9;
+  --border-strong: #D5C4AE;
+  --border-hover: #DFBA53;
+  --border-focus: #5A3E2B;
 
-  /* Living Accent: Signal Vermilion */
-  --accent: oklch(0.52 0.220 34);
-  --accent-hover: oklch(0.45 0.220 32);
-  --accent-surface: rgba(220, 60, 40, 0.10);
-  --on-accent: oklch(1.00 0.000 0);
+  /* Living Accent: Walnut Brown */
+  --accent: #5A3E2B;
+  --accent-hover: #3A2418;
+  --accent-surface: rgba(90, 62, 43, 0.10);
+  --accent-strong: #3A2418;
+  --accent-text: #5A3E2B;
+  --on-accent: #FAF8F5;
+
+  /* Primary Button Contract (Walnut Brown & Warm Alabaster) */
+  --cta-primary-bg: #5A3E2B;
+  --cta-primary-hover: #3A2418;
+  --cta-primary-text: #FAF8F5;
 
   /* Glassmorphism */
-  --glass-bg: rgba(255, 255, 255, 0.90);
+  --glass-bg: rgba(250, 248, 245, 0.92);
   --glass-dock: rgba(255, 255, 255, 0.96);
 
-  /* Status */
-  --success: oklch(0.40 0.13 145);
-  --warning: oklch(0.43 0.15 70);
-  --danger: oklch(0.43 0.19 25);
-  --info: oklch(0.38 0.13 240);
+  /* Status Tokens (Sage Green, Amber Glow, Terracotta) */
+  --success: #386B2F;
+  --warning: #D5851F;
+  --danger: #962F22;
+  --info: #87A96B;
 
   /* Speakers */
-  --speaker-narrator: oklch(0.20 0.010 260);
-  --speaker-a: oklch(0.46 0.210 34);
-  --speaker-b: oklch(0.38 0.120 155);
-  --speaker-c: oklch(0.38 0.130 240);
-  --speaker-d: oklch(0.40 0.160 330);
+  --speaker-narrator: #1A120E;
+  --speaker-a: #5A3E2B;
+  --speaker-b: #386B2F;
+  --speaker-c: #4A4A46;
+  --speaker-d: #962F22;
 
   /* Top 10 */
-  --top10-fill: oklch(0.985 0.003 240);
-  --top10-stroke: rgba(20, 25, 35, 0.26);
-  --top10-active: oklch(0.52 0.220 34);
+  --top10-fill: #FAF8F5;
+  --top10-stroke: rgba(26, 18, 14, 0.20);
+  --top10-active: #D5851F;
 
-  --card-accent: oklch(0.52 0.220 34);
+  --card-accent: #DFBA53;
 
   --color-status-success: var(--success);
   --color-status-warning: var(--warning);
@@ -225,6 +251,76 @@ body {
 .theme-elevated { background-color: var(--bg-elevated) !important; border-color: var(--border-strong) !important; }
 .theme-border { border-color: var(--border-subtle) !important; }
 
+/* ========================================================================= */
+/* ARCHITECTURAL & BOTANICAL EDITORIAL AESTHETICS                            */
+/* High-end architectural sanctuary & botanical living design language       */
+/* ========================================================================= */
+.architectural-portal {
+  position: relative;
+  border-radius: 24px;
+  overflow: hidden;
+  background: radial-gradient(circle at 80% 20%, #2E1D13 0%, #1A120E 60%, #0D0A08 100%);
+}
+
+html.light .architectural-portal {
+  background: radial-gradient(circle at 75% 25%, #FFFFFF 0%, #FAF6F0 60%, #EAE3D9 100%);
+}
+
+.fluted-timber {
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(90, 62, 43, 0.45) 0px,
+    rgba(90, 62, 43, 0.45) 6px,
+    rgba(58, 36, 24, 0.65) 6px,
+    rgba(58, 36, 24, 0.65) 12px
+  );
+}
+
+.display-niche {
+  border-radius: 120px 120px 16px 16px;
+  box-shadow: inset 0 8px 24px -4px rgba(223, 186, 83, 0.25), inset 0 2px 8px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(223, 186, 83, 0.2);
+}
+
+.botanical-pill {
+  border-radius: 9999px;
+  background-color: rgba(135, 169, 107, 0.14);
+  color: #87A96B;
+  border: 1px solid rgba(135, 169, 107, 0.35);
+  font-family: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tracked-overline {
+  letter-spacing: 0.25em;
+  font-size: 10px;
+  text-transform: uppercase;
+  font-family: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
+  font-weight: 700;
+}
+
+.hairline-dash {
+  height: 1px;
+  background-color: var(--brand-champagne, #DFBA53);
+  box-shadow: 0 0 8px rgba(223, 186, 83, 0.6);
+}
+
+.circular-action-cta {
+  border-radius: 9999px;
+  background-color: var(--cta-primary-bg);
+  color: var(--cta-primary-text);
+  border: 1px solid var(--border-subtle);
+  transition: all var(--motion-duration-standard) var(--motion-ease-natural);
+}
+
+.circular-action-cta:hover {
+  background-color: var(--cta-primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -4px rgba(90, 62, 43, 0.4);
+}
+
 /* Accessible Focus Ring */
 .focus-ring:focus-visible {
   outline: 2px solid var(--accent);
@@ -240,6 +336,16 @@ body {
 .tabular-nums {
   font-variant-numeric: tabular-nums;
   font-feature-settings: 'tnum' 1;
+}
+
+/* Procedural Book Cover Typography */
+.cover-typeset-title::after {
+  content: attr(data-title);
+  display: block;
+}
+.cover-typeset-author::after {
+  content: attr(data-author);
+  display: block;
 }
 
 /* Fluid Typography Clamp Scale */
@@ -291,31 +397,35 @@ body {
   position: relative;
   background-color: var(--bg-card);
   border: 1px solid var(--border-subtle);
-  border-radius: 14px;
+  border-radius: 18px;
   overflow: hidden;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 20px -2px rgba(90, 62, 43, 0.06);
   transition: transform var(--motion-duration-micro) var(--motion-ease-natural);
   will-change: transform;
 }
 
 .novel-card-hybrid:active {
-  transform: scale(0.98);
+  transform: scale(0.985);
 }
 
 .novel-card-hybrid::after {
   content: '';
   position: absolute;
   inset: 0;
-  border-radius: 14px;
-  border: 1.5px solid var(--card-accent, var(--border-focus));
-  box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.35);
+  border-radius: 18px;
+  border: 1.5px solid var(--card-accent, #DFBA53);
+  box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.6), 0 0 20px rgba(223, 186, 83, 0.15);
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--motion-duration-micro) var(--motion-ease-natural);
   will-change: opacity;
+}
+
+html.light .novel-card-hybrid::after {
+  box-shadow: 0 16px 36px -8px rgba(90, 62, 43, 0.16), 0 0 16px rgba(223, 186, 83, 0.12);
 }
 
 @media (hover: hover) {
@@ -564,17 +674,113 @@ body {
   100% { transform: scaleY(0.4); opacity: 0.7; }
 }
 
+@keyframes eqBounce {
+  0% {
+    transform: scaleY(0.2);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleY(0.35);
+    opacity: 0.7;
+  }
+}
+
 .equalizer-bar {
   transform-origin: bottom;
   will-change: transform, opacity;
   animation: eq-bounce 0.75s ease-in-out infinite alternate;
 }
 
+.eq-bar-1 {
+  height: 100%;
+  transform-origin: bottom;
+  will-change: transform;
+  animation: eqBounce 0.75s ease-in-out infinite alternate;
+  animation-delay: 0ms;
+}
+
+.eq-bar-2 {
+  height: 100%;
+  transform-origin: bottom;
+  will-change: transform;
+  animation: eqBounce 0.75s ease-in-out infinite alternate;
+  animation-delay: 150ms;
+}
+
+.eq-bar-3 {
+  height: 100%;
+  transform-origin: bottom;
+  will-change: transform;
+  animation: eqBounce 0.75s ease-in-out infinite alternate;
+  animation-delay: 300ms;
+}
+
+.paused .eq-bar-1,
+.paused .eq-bar-2,
+.paused .eq-bar-3,
+.eq-paused {
+  animation-play-state: paused !important;
+}
+
+/* Micro-Animation Keyframes & Utility Classes */
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes slideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slideDown {
+  animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .equalizer-bar {
+  .equalizer-bar,
+  .eq-bar-1,
+  .eq-bar-2,
+  .eq-bar-3 {
     animation: none !important;
     transform: scaleY(0.6) !important;
     opacity: 0.8 !important;
+  }
+  .animate-fade-in,
+  .animate-slideDown,
+  .animate-fadeInUp {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
 
@@ -618,7 +824,7 @@ body.focus-fullscreen-mode footer {
 .focus-mode-active article [role="button"][aria-pressed="true"] {
   opacity: 1 !important;
   transform: scale(1.015);
-  box-shadow: 0 16px 36px -6px rgba(250, 204, 21, 0.25), 0 0 24px -2px rgba(250, 204, 21, 0.2) !important;
+  box-shadow: 0 16px 36px -6px rgba(168, 132, 98, 0.25), 0 0 24px -2px rgba(168, 132, 98, 0.2) !important;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
