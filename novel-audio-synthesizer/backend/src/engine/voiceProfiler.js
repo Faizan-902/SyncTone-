@@ -280,7 +280,30 @@ const EDGE_TO_KOKORO_MAP = {
   'en-GB-NoahNeural': 'am_michael',
   'en-GB-SoniaNeural': 'af_sarah',
   'en-GB-OliverNeural': 'bm_george',
+  bm_fable: 'bm_george',
+  bf_isabella: 'bf_emma',
+  am_puck: 'am_adam',
+  mac_daniel: 'bm_george',
+  mac_serena: 'bf_emma',
+  mac_reed: 'bm_daniel',
+  mac_rocko: 'am_michael',
+  mac_shelley: 'af_bella',
+  mac_grandpa: 'am_george',
+  mac_flo: 'af_sarah',
+  mac_moira: 'bf_emma',
 };
+
+const PARADEE_VOICE_LIST = ['bm_fable', 'bf_isabella', 'am_puck', 'af_heart'];
+const MACHINE_EXTRA_VOICE_LIST = [
+  'mac_daniel',
+  'mac_serena',
+  'mac_reed',
+  'mac_rocko',
+  'mac_shelley',
+  'mac_grandpa',
+  'mac_flo',
+  'mac_moira',
+];
 
 const voiceProfiler = new VoiceProfiler();
 
@@ -289,4 +312,6 @@ module.exports = {
   VOICE_PALETTE,
   VOICE_CATALOG,
   EDGE_TO_KOKORO_MAP,
+  PARADEE_VOICE_LIST,
+  MACHINE_EXTRA_VOICE_LIST,
 };

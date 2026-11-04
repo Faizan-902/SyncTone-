@@ -561,6 +561,11 @@ router.post('/synthesize/:chapter_id', authenticateUser, async (req, res) => {
 
     const activeAssignments = voiceProfiler.getAllAssignments();
     const preferredEngine = req.body?.engine || req.query?.engine || 'auto';
+    const { buildMixedCastPlan } = require('../engine/mixedVoiceRouter');
+    const castPlan =
+      String(preferredEngine).toLowerCase() === 'paradee-mixed'
+        ? buildMixedCastPlan(chapterDoc.segments)
+        : null;
 
     for (let i = 0; i < total; i++) {
       const seg = chapterDoc.segments[i];
@@ -583,7 +588,13 @@ router.post('/synthesize/:chapter_id', authenticateUser, async (req, res) => {
         seg.text,
         effectiveVoiceId,
         1.0,
-        preferredEngine
+        preferredEngine,
+        {
+          characterId: seg.character_id || seg.speaker_id || '',
+          speakerName: seg.speaker_name || '',
+          isNarrator: seg.type === 'narration' || String(seg.character_id || '').toLowerCase() === 'narrator',
+          castPlan,
+        }
       );
 
       const rawBuf = result.audio_buffer || result.pcm_buffer;

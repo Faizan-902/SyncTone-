@@ -304,7 +304,7 @@ export default function App() {
           setChapterSegments(parsedRes.segments);
         }
       }
-      const synthRes = await api.chapters.synthesize(currentChapter.id);
+      const synthRes = await api.chapters.synthesize(currentChapter.id, audioSync.ttsEngine);
       const manifest = synthRes?.manifest || synthRes;
       if (manifest && (manifest.timeline || manifest.audio_url || manifest.total_duration_ms)) {
         setHasStudioAudio(true);

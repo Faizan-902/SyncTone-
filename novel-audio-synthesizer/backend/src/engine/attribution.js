@@ -16,7 +16,92 @@ class AttributionEngine {
     }
   }
 
+  async resolveChapterWithGemini(segments, knownCharacters = []) {
+    const apiKey = config.gemini?.apiKey || process.env.GEMINI_API_KEY || '';
+    const model = config.gemini?.model || process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+    if (!apiKey || !Array.isArray(segments) || segments.length === 0) {
+      return null;
+    }
+
+    const unresolvedIndices = [];
+    segments.forEach((seg, idx) => {
+      if (
+        seg.type === 'dialogue' &&
+        (seg.speaker_id === 'unresolved' || !seg.speaker_name || seg.speaker_name === 'Unknown Speaker')
+      ) {
+        unresolvedIndices.push(idx);
+      }
+    });
+
+    if (unresolvedIndices.length === 0) {
+      return segments;
+    }
+
+    const windowLines = segments.slice(0, 120).map((s, idx) => ({
+      index: idx,
+      type: s.type,
+      current_speaker: s.speaker_name || 'Unknown',
+      text: String(s.text || '').slice(0, 400),
+    }));
+
+    const prompt = `Resolve the speaker for all unresolved dialogue segments in this chapter excerpt.
+Known characters: ${knownCharacters.length > 0 ? knownCharacters.join(', ') : 'Infer from context'}.
+Return ONLY a JSON array of objects: [{"index": number, "speaker_name": "Canonical Name", "confidence": 0.92}].
+Excerpt:
+${JSON.stringify(windowLines)}`;
+
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.1,
+          responseMimeType: 'application/json',
+        },
+      }),
+    });
+
+    if (!res.ok) {
+      throw new Error(`Gemini attribution HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    const rawText = data?.candidates?.[0]?.content?.parts?.map((p) => p.text || '').join('') || '[]';
+    const resolutions = JSON.parse(rawText.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim());
+    if (!Array.isArray(resolutions)) {
+      return null;
+    }
+
+    const byIndex = new Map(resolutions.map((r) => [Number(r.index), r]));
+    return segments.map((seg, idx) => {
+      if (!byIndex.has(idx)) return seg;
+      const match = byIndex.get(idx);
+      const name = String(match.speaker_name || '').trim();
+      if (!name) return seg;
+      return {
+        ...seg,
+        speaker_name: name,
+        speaker_id: name.toLowerCase().replace(/[^a-z0-9]/g, '_'),
+        attribution_confidence: typeof match.confidence === 'number' ? match.confidence : 0.9,
+        attribution_source: 'gemini_ai',
+      };
+    });
+  }
+
   async resolveUnattributed(segments, knownCharacters) {
+    if (config.gemini?.apiKey || process.env.GEMINI_API_KEY) {
+      try {
+        const geminiResolved = await this.resolveChapterWithGemini(segments, knownCharacters);
+        if (geminiResolved) {
+          return geminiResolved;
+        }
+      } catch (_geminiErr) {
+        // Fall through to local Ollama / heuristic alternation
+      }
+    }
+
     const isOllamaUp = await this.checkAvailability();
     const updated = [...segments];
 

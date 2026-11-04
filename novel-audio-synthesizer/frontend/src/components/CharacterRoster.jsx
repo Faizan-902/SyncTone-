@@ -10,6 +10,37 @@ import {
   IconMic,
 } from './icons';
 
+const PARADEE_VOICE_OPTIONS = [
+  { id: 'bm_fable', label: 'Fable — British Narrator/Lead (bm_fable)' },
+  { id: 'bf_isabella', label: 'Isabella — British Female Lead (bf_isabella)' },
+  { id: 'am_puck', label: 'Puck — Dynamic Male Lead (am_puck)' },
+  { id: 'af_heart', label: 'Heart — Warm Female Lead (af_heart)' },
+];
+
+const MACHINE_EXTRA_VOICE_OPTIONS = [
+  { id: 'mac_reed', label: 'Reed — British Male Extra (mac_reed)' },
+  { id: 'mac_moira', label: 'Moira — Irish Female Extra (mac_moira)' },
+  { id: 'mac_rocko', label: 'Rocko — Deep Male Extra (mac_rocko)' },
+  { id: 'mac_shelley', label: 'Shelley — Clear Female Extra (mac_shelley)' },
+  { id: 'mac_grandpa', label: 'Grandpa — Elder Male Extra (mac_grandpa)' },
+  { id: 'mac_flo', label: 'Flo — Mature Female Extra (mac_flo)' },
+  { id: 'mac_daniel', label: 'Daniel — Classic UK Male (mac_daniel)' },
+  { id: 'mac_serena', label: 'Serena — Classic UK Female (mac_serena)' },
+];
+
+function getVoiceTierBadge(voiceId = '', rankIdx = 0) {
+  if (['bm_fable', 'bf_isabella', 'am_puck', 'af_heart'].includes(voiceId)) {
+    return { label: 'Paradee-8M', color: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' };
+  }
+  if (String(voiceId).startsWith('mac_')) {
+    return { label: 'Machine Extra', color: 'text-sky-400 border-sky-500/30 bg-sky-500/10' };
+  }
+  if (rankIdx < 3) {
+    return { label: 'Primary Cast (Paradee Slot)', color: 'text-indigo-400 border-indigo-500/30 bg-indigo-500/10' };
+  }
+  return { label: '5th+ Extra (Machine Slot)', color: 'text-amber-400 border-amber-500/30 bg-amber-500/10' };
+}
+
 export default function CharacterRoster({
   chapterId,
   segments = [],
@@ -156,8 +187,9 @@ export default function CharacterRoster({
             No speaking characters detected in this chapter.
           </div>
         ) : (
-          characters.map((char) => {
+          characters.map((char, idx) => {
             const isUpdating = updatingId === char.id;
+            const tierBadge = getVoiceTierBadge(char.voiceId, idx);
 
             return (
               <div
@@ -165,14 +197,19 @@ export default function CharacterRoster({
                 className="p-4 theme-card rounded-2xl border space-y-3 transition-transform duration-120 hover:-translate-y-0.5 active:scale-[0.99]"
               >
                 {/* Character Name & Dialogue count */}
-                <div className="flex items-center justify-between">
-                  <span className="font-bold theme-heading text-sm flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[var(--accent)]" />
-                    {char.name}
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-bold theme-heading text-sm flex items-center gap-1.5 min-w-0 truncate">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[var(--accent)] flex-shrink-0" />
+                    <span className="truncate">{char.name}</span>
                   </span>
-                  <span className="text-[11px] font-mono theme-muted theme-surface px-2 py-0.5 rounded-md border">
-                    {char.segmentCount} line{char.segmentCount === 1 ? '' : 's'}
-                  </span>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${tierBadge.color}`}>
+                      {tierBadge.label}
+                    </span>
+                    <span className="text-[11px] font-mono theme-muted theme-surface px-2 py-0.5 rounded-md border">
+                      {char.segmentCount} line{char.segmentCount === 1 ? '' : 's'}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Sample Quote */}
@@ -196,11 +233,27 @@ export default function CharacterRoster({
                         onChange={(e) => handleVoiceSelect(char.id, e.target.value)}
                         className="text-xs px-2 py-1.5 theme-surface border rounded-xl focus:outline-none focus:border-[var(--border-focus)] transition font-medium theme-heading disabled:opacity-50 min-w-0 max-w-[210px] truncate"
                       >
-                        {Object.entries(availableVoices).map(([archetype, voiceId]) => (
-                          <option key={archetype} value={voiceId}>
-                            {archetype} ({voiceId})
-                          </option>
-                        ))}
+                        <optgroup label="Edge / Kokoro & Archetypes">
+                          {Object.entries(availableVoices).map(([archetype, voiceId]) => (
+                            <option key={archetype} value={voiceId}>
+                              {archetype} ({voiceId})
+                            </option>
+                          ))}
+                        </optgroup>
+                        <optgroup label="Paradee-8M Neural (Primary 4)">
+                          {PARADEE_VOICE_OPTIONS.map((opt) => (
+                            <option key={`paradee_${opt.id}`} value={opt.id}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </optgroup>
+                        <optgroup label="Machine Extra Voices (5th+ Cast)">
+                          {MACHINE_EXTRA_VOICE_OPTIONS.map((opt) => (
+                            <option key={`machine_${opt.id}`} value={opt.id}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </optgroup>
                       </select>
                     ) : (
                       <span className="text-xs font-semibold theme-sub theme-surface px-2.5 py-1 rounded-lg border flex items-center gap-1 font-mono">

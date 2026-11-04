@@ -35,7 +35,9 @@ export default function AddNovelModal({
   const [isParsingFile, setIsParsingFile] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null); // { name, size, format, chapterCount }
   const [coverObject, setCoverObject] = useState(null);
-  const [rawParsedChapters, setRawParsedChapters] = useState([]); // [{ chapter_number, title, raw_text }]
+  const [rawParsedChapters, setRawParsedChapters] = useState([]); // [{ chapter_number, title, raw_text, segments? }]
+  const [parsedCharacters, setParsedCharacters] = useState([]);
+  const [parserEngine, setParserEngine] = useState('heuristic'); // 'heuristic' | 'gemini' | 'unlimited-ocr'
   const [useTtsSanitizer, setUseTtsSanitizer] = useState(false);
 
   const parsedChapters = useMemo(
@@ -100,17 +102,22 @@ export default function AddNovelModal({
         try {
           const formData = new FormData();
           formData.append('file', file);
-          parsedResult = await api.novels.parseFile(formData);
+          formData.append('parser_engine', parserEngine);
+          parsedResult = await api.novels.parseFile(formData, parserEngine);
         } catch (uploadErr) {
           console.warn('[Upload Parse API Warning]:', uploadErr);
           // Strategy 2: If multipart failed (e.g. proxy issue), try base64 fallback for files < 50MB
           if (file.size < 50 * 1024 * 1024) {
             try {
               const base64 = await readFileAsBase64(file);
-              parsedResult = await api.novels.parseFile({
-                file_name: file.name,
-                file_base64: base64,
-              });
+              parsedResult = await api.novels.parseFile(
+                {
+                  file_name: file.name,
+                  file_base64: base64,
+                  parser_engine: parserEngine,
+                },
+                parserEngine
+              );
             } catch (b64Err) {
               console.error('[Base64 Parse Fallback Error]:', b64Err);
             }
@@ -138,11 +145,13 @@ export default function AddNovelModal({
         setSynopsis(resolvedSynopsis);
         setCoverObject(parsedResult.cover_object || null);
         setRawParsedChapters(parsedResult.chapters);
+        setParsedCharacters(Array.isArray(parsedResult.characters) ? parsedResult.characters : []);
         setUploadedFile({
           name: file.name,
           size: `${(file.size / 1024).toFixed(1)} KB`,
           format: formatBadge,
           chapterCount: parsedResult.chapters.length,
+          parserEngine: parsedResult.parser_engine || parserEngine,
         });
         return;
       }
@@ -221,6 +230,7 @@ export default function AddNovelModal({
     setUploadedFile(null);
     setCoverObject(null);
     setRawParsedChapters([]);
+    setParsedCharacters([]);
     setPreviewOpen(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -269,6 +279,8 @@ export default function AddNovelModal({
         channel,
         global_tone: globalTone.trim(),
         cover_object: coverObject || null,
+        parser_engine: parserEngine,
+        characters: parsedCharacters,
         chapters: parsedChapters,
       });
 
@@ -386,6 +398,51 @@ export default function AddNovelModal({
               {error}
             </div>
           )}
+
+          {/* ================================================================= */}
+          {/* 3-TIER AI MANUSCRIPT PARSER & ATTRIBUTION SELECTOR                 */}
+          {/* ================================================================= */}
+          <div className="p-3.5 rounded-2xl theme-card border border-[var(--border-subtle)] space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <label
+                htmlFor="parser-engine-select"
+                className="text-xs font-bold theme-heading flex items-center gap-1.5"
+              >
+                <IconSparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
+                <span>AI Manuscript Parser & Speaker Attribution</span>
+              </label>
+              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[var(--accent)]/15 text-[var(--accent)] border border-[var(--accent)]/30">
+                3-Tier Pipeline
+              </span>
+            </div>
+
+            <select
+              id="parser-engine-select"
+              aria-label="Select Manuscript Parser Engine"
+              data-testid="parser-engine-selector"
+              value={parserEngine}
+              onChange={(e) => setParserEngine(e.target.value)}
+              className="w-full px-3 py-2 text-xs theme-surface border rounded-xl focus:outline-none focus:border-[var(--border-focus)] transition font-mono font-semibold"
+            >
+              <option value="heuristic">
+                Tier 1: Fast Local Heuristic (Default — Clean EPUB / TXT / PDF)
+              </option>
+              <option value="gemini">
+                Tier 2: Google Gemini Multimodal AI (Scanned PDF / Noisy OCR + Smart Cast)
+              </option>
+              <option value="unlimited-ocr">
+                Tier 3: Baidu Unlimited-OCR vLLM (Self-Hosted Vision Layout & BBox OCR)
+              </option>
+            </select>
+
+            <p className="text-[11px] theme-muted leading-relaxed">
+              {parserEngine === 'gemini'
+                ? 'Uses Gemini Flash multimodal vision to reconstruct noisy/scanned pages and attribute complex unquoted multi-party dialogue.'
+                : parserEngine === 'unlimited-ocr'
+                ? 'Connects to Baidu Unlimited-OCR (vLLM) to extract layout-aware Markdown and figure bounding boxes before dialogue attribution.'
+                : 'Zero-latency local extraction via PyMuPDF / ebooklib / foliate-js with deterministic regex and alternation speaker attribution.'}
+            </p>
+          </div>
 
           {/* ================================================================= */}
           {/* DRAG & DROP NOVEL FILE DROPZONE ("DROPBOX")                        */}

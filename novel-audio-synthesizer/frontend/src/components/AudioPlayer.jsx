@@ -396,7 +396,7 @@ export default function AudioPlayer({
 
           {/* Right: Audio Speed, Playback Engine Mode & Volume Controls */}
           <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-            {/* 3-Engine Selector Pill / Dropdown */}
+            {/* Multi-Engine Selector Pill / Dropdown */}
             {onChangeTtsEngine && (
               <div className="relative flex items-center">
                 <select
@@ -411,12 +411,18 @@ export default function AudioPlayer({
                       ? 'Microsoft Edge Cloud Neural TTS'
                       : ttsEngine === 'kokoro-tts'
                       ? 'Kokoro-TTS Local ONNX Fallback'
+                      : ttsEngine === 'paradee-tts'
+                      ? 'Paradee-8M-v1.2 Micro Neural ONNX'
+                      : ttsEngine === 'paradee-mixed'
+                      ? 'Paradee-8M (Primary 4) + Machine TTS (5th+ Cast)'
                       : 'Machine Local OS Speech Synthesis'
                   }`}
                   aria-label="Select TTS Engine"
                 >
                   <option value="msedge-tts">Microsoft TTS</option>
                   <option value="kokoro-tts">Kokoro-TTS</option>
+                  <option value="paradee-tts">Paradee-8M</option>
+                  <option value="paradee-mixed">Paradee + Machine (Mixed)</option>
                   <option value="machine-tts">Machine TTS</option>
                 </select>
               </div>

@@ -6,6 +6,10 @@ const os = require('os');
 const WebSocket = require('ws');
 const { config } = require('../config');
 const { VOICE_CATALOG } = require('./voiceProfiler');
+const {
+  mapToParadeeVoice,
+  resolveMixedVoiceForCharacter,
+} = require('./mixedVoiceRouter');
 
 const MAC_VOICE_MAP = {
   'en-GB-RyanNeural': 'Daniel',
@@ -28,6 +32,19 @@ const MAC_VOICE_MAP = {
   af_nicole: 'Sandy (English (UK))',
   af_sarah: 'Kate (Enhanced)',
   af_sky: 'Shelley (English (UK))',
+  // Paradee-8M voice IDs mapped for macOS fallback if needed
+  bm_fable: 'Daniel',
+  bf_isabella: 'Serena (Premium)',
+  am_puck: 'Reed (English (UK))',
+  // Machine Extra Voice Pool (5th+ cast slots & explicit selection)
+  mac_daniel: 'Daniel',
+  mac_serena: 'Serena (Premium)',
+  mac_reed: 'Reed (English (UK))',
+  mac_rocko: 'Rocko (English (UK))',
+  mac_shelley: 'Shelley (English (UK))',
+  mac_grandpa: 'Grandpa (English (UK))',
+  mac_flo: 'Flo (English (UK))',
+  mac_moira: 'Moira',
 };
 
 const KOKORO_TO_EDGE_MAP = {
@@ -43,6 +60,17 @@ const KOKORO_TO_EDGE_MAP = {
   bm_george: 'en-GB-RyanNeural',
   bf_emma: 'en-GB-LibbyNeural',
   bm_daniel: 'en-GB-AlfieNeural',
+  bm_fable: 'en-GB-RyanNeural',
+  bf_isabella: 'en-GB-LibbyNeural',
+  am_puck: 'en-GB-ThomasNeural',
+  mac_daniel: 'en-GB-RyanNeural',
+  mac_serena: 'en-GB-LibbyNeural',
+  mac_reed: 'en-GB-AlfieNeural',
+  mac_rocko: 'en-GB-NoahNeural',
+  mac_shelley: 'en-GB-SoniaNeural',
+  mac_grandpa: 'en-GB-ArthurNeural',
+  mac_flo: 'en-GB-SoniaNeural',
+  mac_moira: 'en-GB-LibbyNeural',
 };
 
 const EDGE_TO_KOKORO_MAP = {
@@ -111,21 +139,30 @@ class TTSEngine {
     this.bytesPerSec = 6000; // 48kbps CBR = 6000 bytes/sec
     this.modelPath = path.resolve(config.paths.modelsDir, 'kokoro-v0_19.onnx');
     this.voicesPath = path.resolve(config.paths.modelsDir, 'voices.bin');
+    this.paradeeModelPath = config.paradee?.onnxFile || path.resolve(config.paths.modelsDir, 'paradee/paradee_int8.onnx');
+    this.paradeeConfigPath = config.paradee?.configFile || path.resolve(config.paths.modelsDir, 'paradee/config.json');
+    this.paradeeWorkerScript = path.resolve(__dirname, '../scripts/paradeeWorker.py');
   }
 
   async checkModelAvailable() {
     const modelExists = fs.existsSync(this.modelPath);
     const voicesExists = fs.existsSync(this.voicesPath);
+    const paradeeExists = fs.existsSync(this.paradeeModelPath) && fs.existsSync(this.paradeeConfigPath);
     return {
       primary_engine: 'msedge-tts (Cloud Neural)',
       fallback_engine: 'kokoro-tts (Local ONNX)',
+      paradee_engine: 'paradee-tts (Paradee-8M-v1.2 Micro ONNX)',
+      mixed_engine: 'paradee-mixed (Paradee-8M Primary + Machine-TTS Extra Cast)',
       machine_engine: 'machine-tts (Local OS Speech)',
-      engines: ['msedge-tts', 'kokoro-tts', 'machine-tts'],
+      engines: ['msedge-tts', 'kokoro-tts', 'paradee-tts', 'paradee-mixed', 'machine-tts'],
       cloud_ready: true,
       model_exists: modelExists,
       voices_exists: voicesExists,
       model_path: this.modelPath,
       voices_path: this.voicesPath,
+      paradee_ready: paradeeExists,
+      paradee_model_path: this.paradeeModelPath,
+      paradee_voices: ['bm_fable', 'bf_isabella', 'am_puck', 'af_heart'],
       initialized: true,
     };
   }
@@ -661,8 +698,145 @@ sf.write(out_wav, final_samples, sr, subtype="PCM_16")
     };
   }
 
-  // --- Public Interface: 3-Engine Architecture (Selectable + Fallback Chain) ---
-  async synthesizeSegment(text, voiceId, speed = 1.0, preferredEngine = 'auto') {
+  // --- ENGINE 4: Paradee-8M-v1.2 (Local Micro 8.5MB Int8 ONNX) ---
+  async synthesizeWithParadee(text, voiceId, speed = 1.0) {
+    const trimmed = (text || '').trim();
+    const paradeeVoice = mapToParadeeVoice(voiceId);
+    if (!trimmed) {
+      return {
+        audio_buffer: Buffer.alloc(0),
+        duration_ms: 0,
+        format: 'pcm',
+        engine: 'paradee-tts',
+        resolved_voice_id: paradeeVoice,
+      };
+    }
+
+    const paradeeExists =
+      fs.existsSync(this.paradeeModelPath) &&
+      fs.existsSync(this.paradeeConfigPath) &&
+      fs.existsSync(this.paradeeWorkerScript);
+
+    if (paradeeExists && !process.env.SYNCTONE_DISABLE_PARADEE_ONNX) {
+      const tmpWavPath = path.join(
+        os.tmpdir(),
+        `paradee_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.wav`
+      );
+      try {
+        const pythonBin = getPythonBin();
+        child_process.execFileSync(
+          pythonBin,
+          [
+            this.paradeeWorkerScript,
+            '--model',
+            this.paradeeModelPath,
+            '--config',
+            this.paradeeConfigPath,
+            '--text',
+            trimmed,
+            '--voice',
+            paradeeVoice,
+            '--speed',
+            String(speed || 1.0),
+            '--out',
+            tmpWavPath,
+          ],
+          { timeout: 25000 }
+        );
+
+        if (fs.existsSync(tmpWavPath)) {
+          const wavBuf = fs.readFileSync(tmpWavPath);
+          fs.unlinkSync(tmpWavPath);
+
+          let pcmBuffer;
+          const dataIdx = wavBuf.indexOf(Buffer.from('data'));
+          if (dataIdx !== -1 && dataIdx + 8 <= wavBuf.length) {
+            const dataLen = wavBuf.readUInt32LE(dataIdx + 4);
+            pcmBuffer =
+              dataLen > 0 && dataIdx + 8 + dataLen <= wavBuf.length
+                ? wavBuf.subarray(dataIdx + 8, dataIdx + 8 + dataLen)
+                : wavBuf.subarray(dataIdx + 8);
+          } else {
+            pcmBuffer = wavBuf.subarray(44);
+          }
+
+          const durationMs = Math.max(
+            100,
+            Math.round((pcmBuffer.length / 2 / this.sampleRate) * 1000)
+          );
+          return {
+            audio_buffer: pcmBuffer,
+            duration_ms: durationMs,
+            format: 'pcm',
+            engine: 'paradee-tts',
+            resolved_voice_id: paradeeVoice,
+          };
+        }
+      } catch (paradeeErr) {
+        if (fs.existsSync(tmpWavPath)) {
+          try {
+            fs.unlinkSync(tmpWavPath);
+          } catch (_) {}
+        }
+        console.warn(`[TTSEngine] Paradee-8M ONNX synthesis failed: ${paradeeErr.message}`);
+      }
+    }
+
+    // Fallback when Paradee ONNX is unavailable: delegate to Machine TTS or silent test buffer
+    const fallbackRes = await this.synthesizeWithMachine(trimmed, paradeeVoice, speed);
+    return {
+      ...fallbackRes,
+      engine: 'paradee-tts',
+      resolved_voice_id: paradeeVoice,
+    };
+  }
+
+  // --- ENGINE 5: Mixed Paradee-8M (Primary 4 Cast) + Machine-TTS (5th+ Extra Cast) ---
+  async synthesizeWithParadeeMixed(text, voiceId, speed = 1.0, mixContext = {}) {
+    const trimmed = (text || '').trim();
+    if (!trimmed) {
+      return {
+        audio_buffer: Buffer.alloc(0),
+        duration_ms: 0,
+        format: 'pcm',
+        engine: 'paradee-mixed',
+        sub_engine: 'paradee-tts',
+      };
+    }
+
+    const resolved = resolveMixedVoiceForCharacter({
+      characterId: mixContext.characterId || mixContext.character_id || '',
+      speakerName: mixContext.speakerName || mixContext.speaker_name || '',
+      voiceId,
+      isNarrator: Boolean(mixContext.isNarrator || mixContext.is_narrator),
+      castSlot: mixContext.castSlot ?? mixContext.cast_slot ?? null,
+      castPlan: mixContext.castPlan || null,
+      gender: mixContext.gender || '',
+    });
+
+    const effectiveSpeed = Number(((speed || 1.0) * (resolved.rateMultiplier || 1.0)).toFixed(2));
+
+    if (resolved.engine === 'machine-tts') {
+      const macRes = await this.synthesizeWithMachine(trimmed, resolved.voiceId, effectiveSpeed);
+      return {
+        ...macRes,
+        engine: 'paradee-mixed',
+        sub_engine: 'machine-tts',
+        resolved_voice_id: resolved.voiceId,
+      };
+    }
+
+    const paradeeRes = await this.synthesizeWithParadee(trimmed, resolved.voiceId, effectiveSpeed);
+    return {
+      ...paradeeRes,
+      engine: 'paradee-mixed',
+      sub_engine: 'paradee-tts',
+      resolved_voice_id: resolved.voiceId,
+    };
+  }
+
+  // --- Public Interface: 5-Engine Architecture (Selectable + Fallback Chain) ---
+  async synthesizeSegment(text, voiceId, speed = 1.0, preferredEngine = 'auto', mixContext = {}) {
     const trimmed = (text || '').trim();
     if (!trimmed) {
       return {
@@ -675,12 +849,22 @@ sf.write(out_wav, final_samples, sr, subtype="PCM_16")
 
     const engineChoice = (preferredEngine || 'auto').toLowerCase();
 
-    // 1. Explicit Machine TTS
+    // 1. Explicit Machine TTS (Untouched standalone engine)
     if (engineChoice === 'machine-tts') {
       return await this.synthesizeWithMachine(trimmed, voiceId, speed);
     }
 
-    // 2. Explicit Kokoro TTS
+    // 2. Explicit Paradee-8M + Machine Mixed Mode
+    if (engineChoice === 'paradee-mixed') {
+      return await this.synthesizeWithParadeeMixed(trimmed, voiceId, speed, mixContext);
+    }
+
+    // 3. Explicit Paradee-8M Neural TTS
+    if (engineChoice === 'paradee-tts') {
+      return await this.synthesizeWithParadee(trimmed, voiceId, speed);
+    }
+
+    // 4. Explicit Kokoro TTS
     if (engineChoice === 'kokoro-tts') {
       try {
         return await this.synthesizeWithKokoro(trimmed, voiceId, speed);

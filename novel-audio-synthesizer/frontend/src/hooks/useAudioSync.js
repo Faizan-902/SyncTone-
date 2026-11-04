@@ -1,4 +1,128 @@
-import { useRef, useState, useCallback, useEffect } from 'react';
+import { useRef, useState, useCallback, useEffect, useMemo } from 'react';
+
+const PARADEE_VOICE_IDS = new Set(['af_heart', 'am_puck', 'bf_isabella', 'bm_fable']);
+
+const MACHINE_EXTRA_PROFILES = [
+  { id: 'mac_reed', matchName: 'reed', gender: 'male', pitch: 0.92, rate: 0.98 },
+  { id: 'mac_moira', matchName: 'moira', gender: 'female', pitch: 1.06, rate: 1.0 },
+  { id: 'mac_rocko', matchName: 'rocko', gender: 'male', pitch: 0.85, rate: 0.96 },
+  { id: 'mac_shelley', matchName: 'shelley', gender: 'female', pitch: 1.1, rate: 1.02 },
+  { id: 'mac_grandpa', matchName: 'grandpa', gender: 'male', pitch: 0.8, rate: 0.92 },
+  { id: 'mac_flo', matchName: 'flo', gender: 'female', pitch: 1.14, rate: 0.97 },
+  { id: 'mac_daniel', matchName: 'daniel', gender: 'male', pitch: 0.96, rate: 1.03 },
+  { id: 'mac_serena', matchName: 'serena', gender: 'female', pitch: 1.04, rate: 0.99 },
+];
+
+function inferEntryGender(entry) {
+  const g = String(entry?.gender || '').toLowerCase();
+  if (g === 'female' || g === 'f') return 'female';
+  if (g === 'male' || g === 'm') return 'male';
+  const v = String(entry?.voice_id || entry?.assigned_voice_id || '').toLowerCase();
+  if (
+    v.startsWith('af_') ||
+    v.startsWith('bf_') ||
+    v.includes('sonia') ||
+    v.includes('libby') ||
+    v.includes('maisie') ||
+    v.includes('jenny') ||
+    v.includes('aria') ||
+    v.includes('natasha') ||
+    v.includes('clara') ||
+    v.includes('emily') ||
+    v.includes('serena') ||
+    v.includes('shelley') ||
+    v.includes('flo') ||
+    v.includes('moira')
+  ) {
+    return 'female';
+  }
+  return 'male';
+}
+
+export function buildClientMixedCastMap(timeline = []) {
+  const castMap = new Map();
+  castMap.set('narrator', {
+    engine: 'paradee-tts',
+    voiceId: 'bm_fable',
+    slot: 1,
+  });
+
+  const charStats = new Map();
+  for (const seg of timeline) {
+    const rawKey = String(seg.character_id || seg.speaker_id || seg.speaker_name || 'narrator')
+      .trim()
+      .toLowerCase();
+    if (!rawKey || rawKey === 'narrator' || rawKey === 'unresolved' || seg.type === 'narration') {
+      continue;
+    }
+    const existing = charStats.get(rawKey);
+    if (existing) {
+      existing.count += 1;
+    } else {
+      charStats.set(rawKey, {
+        key: rawKey,
+        count: 1,
+        voiceId: seg.assigned_voice_id || seg.voice_id || '',
+        gender: inferEntryGender(seg),
+      });
+    }
+  }
+
+  const ranked = Array.from(charStats.values()).sort((a, b) => b.count - a.count);
+  const availableParadee = ['bf_isabella', 'am_puck', 'af_heart'];
+  const usedParadee = new Set(['bm_fable']);
+
+  // Primary 3 speaking characters -> Paradee-8M neural voices
+  const primary = ranked.slice(0, 3);
+  primary.forEach((char, idx) => {
+    if (PARADEE_VOICE_IDS.has(char.voiceId)) {
+      usedParadee.add(char.voiceId);
+      castMap.set(char.key, {
+        engine: 'paradee-tts',
+        voiceId: char.voiceId,
+        slot: idx + 2,
+      });
+      return;
+    }
+    let chosen = null;
+    if (char.gender === 'female') {
+      chosen = ['bf_isabella', 'af_heart'].find((v) => !usedParadee.has(v));
+    } else {
+      chosen = ['am_puck', 'bm_fable'].find((v) => !usedParadee.has(v));
+    }
+    if (!chosen) {
+      chosen = availableParadee.find((v) => !usedParadee.has(v)) || availableParadee[idx % availableParadee.length];
+    }
+    usedParadee.add(chosen);
+    castMap.set(char.key, {
+      engine: 'paradee-tts',
+      voiceId: chosen,
+      slot: idx + 2,
+    });
+  });
+
+  // 5th+ extra characters -> Machine-TTS extra voice pool
+  const extras = ranked.slice(3);
+  extras.forEach((char, idx) => {
+    const explicitMac = MACHINE_EXTRA_PROFILES.find((p) => p.id === char.voiceId);
+    const pool = MACHINE_EXTRA_PROFILES.filter((p) => p.gender === char.gender);
+    const profile =
+      explicitMac ||
+      (pool.length > 0 ? pool[idx % pool.length] : MACHINE_EXTRA_PROFILES[idx % MACHINE_EXTRA_PROFILES.length]);
+
+    castMap.set(char.key, {
+      engine: 'machine-tts',
+      voiceId: profile.id,
+      matchName: profile.matchName,
+      pitch: profile.pitch,
+      rate: profile.rate,
+      castSlot: idx,
+      slot: idx + 5,
+    });
+  });
+
+  return castMap;
+}
 
 /**
  * Binary search (O(log N)) to find active segment based on current playback timestamp in milliseconds.
@@ -54,8 +178,11 @@ export function useAudioSync(timeline = [], onSegmentChange = null) {
   const [playbackMode, setPlaybackMode] = useState(isBrowserEnv ? 'tts' : 'studio');
   const ttsReadAlongEnabled = playbackMode === 'tts';
 
-  // 3-Engine Selection: 'msedge-tts' | 'kokoro-tts' | 'machine-tts'
+  // 5-Engine Selection: 'msedge-tts' | 'kokoro-tts' | 'paradee-tts' | 'paradee-mixed' | 'machine-tts'
   const [ttsEngine, setTtsEngine] = useState('msedge-tts');
+
+  // Memoized mixed-mode cast map (Paradee-8M for Narrator + top 3 primary characters; Machine-TTS for 5th+ extras)
+  const mixedCastMap = useMemo(() => buildClientMixedCastMap(timeline), [timeline]);
 
   // Stop any active Web Speech or secondary audio
   const stopSpeech = useCallback(() => {
@@ -146,9 +273,13 @@ export function useAudioSync(timeline = [], onSegmentChange = null) {
       const voiceId = entry.voice_id || '';
       const speakerName = (entry.speaker_name || entry.character_id || 'narrator').toLowerCase();
 
-      // 1. Match voice_id or character
-      if (voiceId) {
-        chosenVoice = enVoices.find((v) => v.name.toLowerCase().includes(voiceId.toLowerCase()));
+      // 1. Match voice_id, mac_* profile, or character
+      if (entry._matchName) {
+        chosenVoice = enVoices.find((v) => v.name.toLowerCase().includes(entry._matchName.toLowerCase()));
+      }
+      if (!chosenVoice && voiceId) {
+        const cleanVoiceMatch = voiceId.replace(/^mac_/i, '').toLowerCase();
+        chosenVoice = enVoices.find((v) => v.name.toLowerCase().includes(cleanVoiceMatch));
       }
 
       // 2. Fallback to British / English character profile
@@ -174,7 +305,10 @@ export function useAudioSync(timeline = [], onSegmentChange = null) {
       }
 
       // Assign character pitch & rate
-      if (speakerName.includes('narrator')) {
+      if (typeof entry._pitch === 'number') {
+        utterance.pitch = entry._pitch;
+        utterance.rate = typeof entry._rate === 'number' ? entry._rate : 1.0;
+      } else if (speakerName.includes('narrator')) {
         utterance.pitch = 1.0;
         utterance.rate = 1.0;
       } else {
@@ -235,18 +369,81 @@ export function useAudioSync(timeline = [], onSegmentChange = null) {
         return;
       }
 
-      // If user selected machine-tts directly in browser
+      // If user selected machine-tts directly in browser (preserved 100% untouched)
       if (ttsEngine === 'machine-tts') {
         speakWithSpeechSynthesis(entry, targetSegId, myGen);
         return;
       }
 
+      // Resolve voice & sub-engine when paradee-mixed is active
+      let targetVoiceId = entry.assigned_voice_id || entry.voice_id || 'en-GB-RyanNeural';
+      let targetEngine = ttsEngine || 'msedge-tts';
+      let extraSlotParam = '';
+
+      if (ttsEngine === 'paradee-mixed') {
+        const speakerKey = String(
+          entry.character_id || entry.speaker_id || entry.speaker_name || 'narrator'
+        )
+          .trim()
+          .toLowerCase();
+        const explicitVoice = entry.assigned_voice_id || entry.voice_id || '';
+        let resolved = null;
+
+        if (PARADEE_VOICE_IDS.has(explicitVoice)) {
+          resolved = { engine: 'paradee-tts', voiceId: explicitVoice };
+        } else if (String(explicitVoice).startsWith('mac_')) {
+          const prof =
+            MACHINE_EXTRA_PROFILES.find((p) => p.id === explicitVoice) ||
+            MACHINE_EXTRA_PROFILES[0];
+          resolved = {
+            engine: 'machine-tts',
+            voiceId: prof.id,
+            matchName: prof.matchName,
+            pitch: prof.pitch,
+            rate: prof.rate,
+            castSlot: 0,
+          };
+        } else {
+          resolved = mixedCastMap.get(speakerKey) || {
+            engine: 'paradee-tts',
+            voiceId: 'bm_fable',
+          };
+        }
+
+        if (resolved.engine === 'machine-tts') {
+          const browserVoices =
+            typeof window !== 'undefined' && window.speechSynthesis
+              ? window.speechSynthesis.getVoices() || []
+              : [];
+          if (browserVoices.length > 0) {
+            speakWithSpeechSynthesis(
+              {
+                ...entry,
+                voice_id: resolved.voiceId,
+                _matchName: resolved.matchName,
+                _pitch: resolved.pitch,
+                _rate: resolved.rate,
+              },
+              targetSegId,
+              myGen
+            );
+            return;
+          }
+          targetVoiceId = resolved.voiceId;
+          targetEngine = 'paradee-mixed';
+          extraSlotParam = `&cast_slot=${encodeURIComponent(resolved.castSlot ?? 0)}`;
+        } else {
+          targetVoiceId = resolved.voiceId;
+          targetEngine = 'paradee-tts';
+        }
+      }
+
       // Try /api/voices/speak with selected engine if not previously failed
       if (!apiSpeakFailedRef.current && typeof Audio !== 'undefined') {
-        const voiceParam = encodeURIComponent(entry.voice_id || 'en-GB-RyanNeural');
+        const voiceParam = encodeURIComponent(targetVoiceId);
         const textParam = encodeURIComponent(cleanText);
-        const engineParam = encodeURIComponent(ttsEngine || 'msedge-tts');
-        const speakUrl = `/api/voices/speak?text=${textParam}&voice_id=${voiceParam}&engine=${engineParam}`;
+        const engineParam = encodeURIComponent(targetEngine);
+        const speakUrl = `/api/voices/speak?text=${textParam}&voice_id=${voiceParam}&engine=${engineParam}${extraSlotParam}`;
 
         if (!secondaryAudioRef.current) {
           secondaryAudioRef.current = new Audio();
@@ -294,7 +491,7 @@ export function useAudioSync(timeline = [], onSegmentChange = null) {
         speakWithSpeechSynthesis(entry, targetSegId, myGen);
       }
     },
-    [timeline, advanceToNextSegment, speakWithSpeechSynthesis, ttsEngine, stopSpeech]
+    [timeline, advanceToNextSegment, speakWithSpeechSynthesis, ttsEngine, mixedCastMap, stopSpeech]
   );
 
   speakActiveSegmentRef.current = speakActiveSegment;
@@ -549,6 +746,7 @@ export function useAudioSync(timeline = [], onSegmentChange = null) {
     ttsEngine,
     setTtsEngine: changeTtsEngine,
     changeTtsEngine,
+    mixedCastMap,
     seekToSegment,
     seekToTimeMs,
     play,

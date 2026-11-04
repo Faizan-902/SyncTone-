@@ -8,6 +8,7 @@ const { pool } = require('../db');
 const { Chapter } = require('../models');
 const { parseChapter } = require('../engine/textParser');
 const { voiceProfiler } = require('../engine/voiceProfiler');
+const { parseUploadedManuscript } = require('../engine/parsers');
 const { optionalAuth } = require('../middleware/auth');
 
 const router = Router();
@@ -115,16 +116,28 @@ router.post('/novels/parse-file', upload.single('file'), async (req, res) => {
       return res.status(400).json({ error: 'No file provided. Send multipart form with "file" or JSON with "file_base64".' });
     }
 
+    const parserEngine = (req.body?.parser_engine || req.query?.parser_engine || 'heuristic')
+      .toString()
+      .toLowerCase()
+      .trim();
+
     const scriptPath = path.resolve(__dirname, '../scripts/parseUploadedBook.py');
     const venvPython = path.resolve(__dirname, '../../../kokoro-tts-backend/.venv/bin/python');
     const pythonBin = fs.existsSync(venvPython) ? venvPython : 'python3';
-    const pyOutput = child_process.execFileSync(pythonBin, [scriptPath, tmpPath, originalName], {
-      maxBuffer: 50 * 1024 * 1024,
-      timeout: 60000,
-      encoding: 'utf-8',
-    });
 
-    const parsed = JSON.parse(pyOutput);
+    const runLocalExtractor = async (targetPath) => {
+      const pyOutput = child_process.execFileSync(pythonBin, [scriptPath, targetPath, originalName], {
+        maxBuffer: 50 * 1024 * 1024,
+        timeout: 60000,
+        encoding: 'utf-8',
+      });
+      return JSON.parse(pyOutput);
+    };
+
+    const parsed = await parseUploadedManuscript(tmpPath, {
+      parserEngine,
+      runLocalExtractor,
+    });
     if (parsed.error && (!parsed.chapters || parsed.chapters.length === 0)) {
       return res.status(500).json({ error: parsed.error });
     }
@@ -140,7 +153,11 @@ router.post('/novels/parse-file', upload.single('file'), async (req, res) => {
     return res.json({
       title: finalTitle,
       synopsis: parsed.synopsis || '',
-      cover_object: parsed.cover_object || null,
+      global_tone: parsed.global_tone || null,
+      cover_object: parsed.cover_object || parsed.cover_url || null,
+      parser_engine: parsed.parser_engine || parserEngine,
+      parser_fallback_reason: parsed.parser_fallback_reason || null,
+      characters: parsed.characters || [],
       chapters: parsed.chapters || [],
     });
   } catch (err) {
@@ -336,8 +353,12 @@ router.post('/novels', optionalAuth, async (req, res) => {
             : `Chapter ${chNum}`;
           const rawText = ch.raw_text || ch.text || '';
 
-          // Parse chapter text into attributed segments and assign distinct character voices
-          const parsedData = parseChapter(rawText, chTitle, String(chNum));
+          // Parse chapter text into attributed segments (or preserve pre-attributed AI segments from Gemini)
+          const preAttributedSegments =
+            Array.isArray(ch.segments) && ch.segments.length > 0 ? ch.segments : null;
+          const parsedData = preAttributedSegments
+            ? { segments: preAttributedSegments }
+            : parseChapter(rawText, chTitle, String(chNum));
           const voicedSegments = voiceProfiler.applyVoicesToSegments(parsedData.segments || []);
 
           let currentMs = 0;
@@ -377,8 +398,8 @@ router.post('/novels', optionalAuth, async (req, res) => {
               assigned_voice_id: voiceId,
               start_ms,
               end_ms,
-              confidence: s.attribution_confidence !== undefined ? s.attribution_confidence : 1.0,
-              source: s.attribution_source || 'narrator_default',
+              confidence: s.attribution_confidence !== undefined ? s.attribution_confidence : (s.confidence !== undefined ? s.confidence : 1.0),
+              source: s.attribution_source || s.source || 'narrator_default',
             };
           });
 

@@ -54,6 +54,11 @@ async function handleSpeak(req, res) {
     const voice_id = (req.query.voice_id || req.body?.voice_id || 'en-GB-RyanNeural').toString().trim();
     const speed = parseFloat(req.query.speed || req.body?.speed) || 1.0;
     const engine = req.query.engine || req.body?.engine || 'auto';
+    const characterId = (req.query.character_id || req.body?.character_id || '').toString().trim();
+    const speakerName = (req.query.speaker_name || req.body?.speaker_name || '').toString().trim();
+    const castSlot = req.query.cast_slot ?? req.body?.cast_slot ?? null;
+    const isNarrator = req.query.is_narrator === 'true' || req.body?.is_narrator === true || characterId.toLowerCase() === 'narrator';
+    const gender = (req.query.gender || req.body?.gender || '').toString().trim();
 
     // Strip image markers and normalize text
     let cleanText = String(rawText !== undefined && rawText !== null ? rawText : 'Hello, this is a sample preview.');
@@ -63,13 +68,19 @@ async function handleSpeak(req, res) {
       cleanText = ' ';
     }
 
-    const cacheKey = `${engine}:${voice_id}:${speed}:${cleanText}`;
+    const cacheKey = `${engine}:${voice_id}:${characterId}:${castSlot ?? ''}:${speed}:${cleanText}`;
     if (speakCache.has(cacheKey)) {
       const cached = speakCache.get(cacheKey);
       return sendAudioBuffer(req, res, cached.buffer, cached.mimeType, cached.engine);
     }
 
-    const result = await ttsEngine.synthesizeSegment(cleanText, String(voice_id), speed, String(engine));
+    const result = await ttsEngine.synthesizeSegment(cleanText, String(voice_id), speed, String(engine), {
+      characterId,
+      speakerName,
+      castSlot,
+      isNarrator,
+      gender,
+    });
 
     let finalBuffer = result.audio_buffer;
     let mimeType = result.format === 'mp3' ? 'audio/mpeg' : 'audio/wav';
@@ -124,6 +135,9 @@ router.post('/voices/assign', authenticateUser, requireRole('writer', 'admin'), 
     'am_adam', 'af_heart', 'af_bella', 'af_nicole', 'af_sarah',
     'am_michael', 'am_george', 'bm_george', 'bf_emma', 'bm_daniel',
     'am_onyx', 'af_sky',
+    'bm_fable', 'bf_isabella', 'am_puck',
+    'mac_daniel', 'mac_serena', 'mac_reed', 'mac_rocko',
+    'mac_shelley', 'mac_grandpa', 'mac_flo', 'mac_moira',
   ]);
 
   if (!validVoices.has(new_voice_id)) {
@@ -204,8 +218,14 @@ router.post('/voices/assign', authenticateUser, requireRole('writer', 'admin'), 
       await runPgUpdate(effectiveVoiceId);
     } catch (pgErr) {
       if (pgErr.code === '23503') {
-        const kokoroFallback = EDGE_TO_KOKORO_MAP[effectiveVoiceId] || 'am_adam';
-        await runPgUpdate(kokoroFallback);
+        try {
+          const { ensureVoiceCatalog } = require('../scripts/seedDemos');
+          await ensureVoiceCatalog(pool);
+          await runPgUpdate(effectiveVoiceId);
+        } catch (_retryErr) {
+          const kokoroFallback = EDGE_TO_KOKORO_MAP[effectiveVoiceId] || 'am_adam';
+          await runPgUpdate(kokoroFallback);
+        }
       } else {
         throw pgErr;
       }

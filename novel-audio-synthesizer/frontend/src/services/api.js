@@ -100,11 +100,22 @@ export const api = {
     create: (novelData) => api.post('/novels', novelData),
     delete: (id) => api.delete(`/novels/${id}`),
     uploadChapter: (novelId, chapterData) => api.post(`/novels/${novelId}/chapters`, chapterData),
-    parseFile: (payload) => {
+    parseFile: (payload, parserEngine = 'heuristic') => {
       if (typeof FormData !== 'undefined' && payload instanceof FormData) {
-        return request('/novels/parse-file', { method: 'POST', body: payload });
+        if (parserEngine && !payload.has('parser_engine')) {
+          payload.append('parser_engine', parserEngine);
+        }
+        const resolvedEngine = payload.get('parser_engine') || parserEngine || 'heuristic';
+        return request(
+          `/novels/parse-file?parser_engine=${encodeURIComponent(resolvedEngine)}`,
+          { method: 'POST', body: payload }
+        );
       }
-      return api.post('/novels/parse-file', payload);
+      const bodyPayload =
+        payload && typeof payload === 'object'
+          ? { parser_engine: parserEngine, ...payload }
+          : payload;
+      return api.post('/novels/parse-file', bodyPayload);
     },
     uploadAsset: (payload) => {
       if (typeof FormData !== 'undefined' && payload instanceof FormData) {
@@ -121,8 +132,10 @@ export const api = {
     getSegments: (id) => api.get(`/chapters/${id}/segments`),
     getManifest: (id) => api.get(`/manifest/${id}`),
     uploadDirect: (text, title) => api.post('/upload', { text, title }),
-    parse: (chapterId) => api.post(`/parse/${chapterId}`),
-    synthesize: (chapterId) => api.post(`/synthesize/${chapterId}`),
+    parse: (chapterId, parserEngine) =>
+      api.post(`/parse/${chapterId}`, parserEngine ? { parser_engine: parserEngine } : undefined),
+    synthesize: (chapterId, engine) =>
+      api.post(`/synthesize/${chapterId}`, engine ? { engine } : undefined),
   },
 
   // Voices Endpoints

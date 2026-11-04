@@ -101,6 +101,88 @@ export default function SettingsModal({ onClose, modelStatus }) {
                   Ready
                 </span>
               </div>
+
+              {/* Engine 4: Paradee-8M Micro ONNX */}
+              <div className="p-2.5 rounded-xl theme-card border border-[var(--border-subtle)] flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className={`w-2 h-2 rounded-full ${
+                        modelStatus?.paradee?.model_exists ? 'bg-emerald-400' : 'bg-indigo-400'
+                      }`}
+                    />
+                    <span className="font-bold theme-heading">4. Paradee-8M Micro ONNX</span>
+                  </div>
+                  <p className="theme-muted text-[10px] mt-0.5 font-mono">
+                    sahilmahendrakar/Paradee-8M-v1.2 • 8.5MB int8 • 4 Neural Voices
+                  </p>
+                </div>
+                <span
+                  className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold border ${
+                    modelStatus?.paradee?.model_exists
+                      ? 'bg-emerald-400/10 text-emerald-400 border-emerald-400/20'
+                      : 'bg-indigo-400/10 text-indigo-400 border-indigo-400/20'
+                  }`}
+                >
+                  {modelStatus?.paradee?.model_exists ? 'Paradee Ready' : 'Micro ONNX'}
+                </span>
+              </div>
+
+              {/* Engine 5: Paradee + Machine Mixed Cast Mode */}
+              <div className="p-2.5 rounded-xl theme-card border border-[var(--border-subtle)] flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+                    <span className="font-bold theme-heading">5. Paradee + Machine Mixed Cast Mode</span>
+                  </div>
+                  <p className="theme-muted text-[10px] mt-0.5 font-mono">
+                    Paradee-8M (Narrator + Top 3 Cast) + Machine-TTS (5th+ Extras)
+                  </p>
+                </div>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-400/10 text-purple-300 font-bold border border-purple-400/20">
+                  Hybrid Ready
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* 3-Tier AI Manuscript Parsers Status */}
+          <div className="py-2 border-b border-[var(--border-subtle)] space-y-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-semibold theme-heading">AI Manuscript Parsers</p>
+                <p className="theme-muted text-[11px]">3-Tier Book Extraction & Dialogue Attribution</p>
+              </div>
+              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                Pluggable
+              </span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-1.5 pt-1">
+              <div className="p-2 rounded-lg theme-card border border-[var(--border-subtle)]">
+                <p className="font-bold theme-heading text-[10px]">Heuristic</p>
+                <p className="text-[9px] font-mono text-emerald-400 mt-0.5">Local Ready</p>
+              </div>
+              <div className="p-2 rounded-lg theme-card border border-[var(--border-subtle)]">
+                <p className="font-bold theme-heading text-[10px]">Gemini AI</p>
+                <p
+                  className={`text-[9px] font-mono mt-0.5 ${
+                    modelStatus?.parsers?.gemini?.configured ? 'text-emerald-400' : 'text-amber-400'
+                  }`}
+                >
+                  {modelStatus?.parsers?.gemini?.configured ? 'API Ready' : 'Fallback Mode'}
+                </p>
+              </div>
+              <div className="p-2 rounded-lg theme-card border border-[var(--border-subtle)]">
+                <p className="font-bold theme-heading text-[10px]">Unlimited-OCR</p>
+                <p
+                  className={`text-[9px] font-mono mt-0.5 ${
+                    modelStatus?.parsers?.['unlimited-ocr']?.reachable ? 'text-emerald-400' : 'text-slate-400'
+                  }`}
+                >
+                  {modelStatus?.parsers?.['unlimited-ocr']?.reachable ? 'vLLM Online' : 'vLLM Offline'}
+                </p>
+              </div>
             </div>
           </div>
 
