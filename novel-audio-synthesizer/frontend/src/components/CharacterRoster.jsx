@@ -33,10 +33,10 @@ function getVoiceTierBadge(voiceId = '', rankIdx = 0) {
     return { label: 'Paradee-8M', color: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' };
   }
   if (String(voiceId).startsWith('mac_')) {
-    return { label: 'Machine Extra', color: 'text-sky-400 border-sky-500/30 bg-sky-500/10' };
+    return { label: 'Machine Extra', color: 'text-amber-400 border-amber-500/30 bg-amber-500/10' };
   }
   if (rankIdx < 3) {
-    return { label: 'Primary Cast (Paradee Slot)', color: 'text-indigo-400 border-indigo-500/30 bg-indigo-500/10' };
+    return { label: 'Primary Cast (Paradee Slot)', color: 'text-sage border-sage/30 bg-sage/10' };
   }
   return { label: '5th+ Extra (Machine Slot)', color: 'text-amber-400 border-amber-500/30 bg-amber-500/10' };
 }

@@ -39,6 +39,7 @@ export default defineConfig({
           '**/*.{css,html,svg,woff2}',
           '**/index-*.js',
           '**/react-vendor-*.js',
+          '**/router-vendor-*.js',
           '**/registerSW.js',
         ],
         globIgnores: [
@@ -104,11 +105,15 @@ export default defineConfig({
           if (
             id.includes('node_modules/react/') ||
             id.includes('node_modules/react-dom/') ||
-            id.includes('node_modules/scheduler/') ||
+            id.includes('node_modules/scheduler/')
+          ) {
+            return 'react-vendor';
+          }
+          if (
             id.includes('node_modules/react-router/') ||
             id.includes('node_modules/react-router-dom/')
           ) {
-            return 'react-vendor';
+            return 'router-vendor';
           }
         },
       },

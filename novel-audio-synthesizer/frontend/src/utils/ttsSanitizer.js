@@ -12,6 +12,9 @@ const DEFAULT_REMOVE_PATTERNS = [
   /Addeddate\s+\d{4}-\d{2}-\d{2}/i,
   /Boxid\s+IA\d+/i,
   /Scanner\s+Internet Archive/i,
+  /^\s*Notice\s*[:\.]?\s*$/i,
+  /Created with hocr-to-epub/i,
+  /hocr-to-epub/i,
 ];
 
 const BLOCK_TAG_DETECT_REGEX = /<(?:p|div|br|h[1-6]|article|section|blockquote|li|tr|table)\b/i;

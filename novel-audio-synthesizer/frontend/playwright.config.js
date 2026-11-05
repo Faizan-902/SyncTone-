@@ -12,6 +12,12 @@ export default defineConfig({
     baseURL: 'http://localhost:5174',
     trace: 'on-first-retry',
   },
+  webServer: {
+    command: 'npm run preview -- --port 5174',
+    port: 5174,
+    reuseExistingServer: !process.env.CI,
+    timeout: 30000,
+  },
   projects: [
     {
       name: 'chromium',

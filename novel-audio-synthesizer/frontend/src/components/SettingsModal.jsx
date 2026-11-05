@@ -256,7 +256,7 @@ export default function SettingsModal({
                   <div className="flex items-center gap-1.5">
                     <span
                       className={`w-2 h-2 rounded-full ${
-                        paradeeAvailable ? 'bg-emerald-400' : 'bg-indigo-400'
+                        paradeeAvailable ? 'bg-emerald-400' : 'bg-amber-400'
                       }`}
                     />
                     <span className="font-bold theme-heading">4. Paradee-8M Micro ONNX</span>
@@ -274,7 +274,7 @@ export default function SettingsModal({
                   className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold border ${
                     paradeeAvailable
                       ? 'bg-emerald-400/10 text-emerald-400 border-emerald-400/20'
-                      : 'bg-indigo-400/10 text-indigo-400 border-indigo-400/20'
+                      : 'bg-amber-400/10 text-amber-400 border-amber-400/20'
                   }`}
                 >
                   {paradeeAvailable ? 'Paradee Ready' : 'OS Fallback'}
@@ -319,7 +319,7 @@ export default function SettingsModal({
                 <p className="font-semibold theme-heading">AI Manuscript Parsers</p>
                 <p className="theme-muted text-[11px]">3-Tier Book Extraction & Dialogue Attribution</p>
               </div>
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
                 Pluggable
               </span>
             </div>

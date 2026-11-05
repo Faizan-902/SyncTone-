@@ -49,7 +49,7 @@ export function renderPageToCanvas(pageSegments = [], width = 450, height = 650,
 
   // 1. Draw Theme Background (Parchment in Light Mode, Obsidian Slate in Dark Mode)
   if (isDark) {
-    ctx.fillStyle = '#050507';
+    ctx.fillStyle = '#1A120E';
     ctx.fillRect(0, 0, width, height);
   } else {
     ctx.fillStyle = '#fcfaf6';

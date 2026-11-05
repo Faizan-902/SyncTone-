@@ -9,7 +9,6 @@ import { useAuth } from './hooks/useAuth';
 import { useAudioSync } from './hooks/useAudioSync';
 import { usePlaybackProgress } from './hooks/usePlaybackProgress';
 import { useSynthesisProgress } from './hooks/useSynthesisProgress';
-import { sanitizeSegmentsWithTtsDomCleaner } from './utils/ttsSanitizer';
 import { api } from './services/api';
 
 import SidebarNav from './components/SidebarNav';
@@ -109,10 +108,27 @@ function AppContent() {
   }, []);
 
   // Sanitized timeline when TTS Clean is active
-  const effectiveTimeline = useMemo(() => {
-    const rawTimeline = chapterManifest?.timeline ?? EMPTY_ARRAY;
-    return useTtsSanitizer ? sanitizeSegmentsWithTtsDomCleaner(rawTimeline) : rawTimeline;
+  const [sanitizedTimeline, setSanitizedTimeline] = useState(null);
+  useEffect(() => {
+    if (!useTtsSanitizer || !chapterManifest?.timeline) {
+      setSanitizedTimeline(null);
+      return;
+    }
+    let cancelled = false;
+    import('./utils/ttsSanitizer').then(({ sanitizeSegmentsWithTtsDomCleaner }) => {
+      if (!cancelled) {
+        setSanitizedTimeline(sanitizeSegmentsWithTtsDomCleaner(chapterManifest.timeline));
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [chapterManifest?.timeline, useTtsSanitizer]);
+
+  const effectiveTimeline = useMemo(() => {
+    if (useTtsSanitizer && sanitizedTimeline) return sanitizedTimeline;
+    return chapterManifest?.timeline ?? EMPTY_ARRAY;
+  }, [chapterManifest?.timeline, useTtsSanitizer, sanitizedTimeline]);
 
   // Audio Synchronization Hook with chapter auto-advance callback
   const onChapterEndedRef = useRef(null);

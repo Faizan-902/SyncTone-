@@ -294,11 +294,13 @@ function cleanExtractedText(raw) {
     .replace(/The Internet Archive was founded in 1996[\s\S]*?(?:digital format\.|archive\.org)/gi, '')
     .replace(/This book is available for free download in a number of formats[^\n]*/gi, '')
     .replace(/Access-restricted-item\s+true[^\n]*/gi, '')
+    .replace(/Created with hocr-to-epub[^\n]*/gi, '')
+    .replace(/hocr-to-epub[^\n]*/gi, '')
     .replace(/(?:Addeddate|Boxid|Camera|Collection_set|External-identifier|Foldoutcount|Identifier|Invoice|Ocr|Ocr_detected_lang|Ocr_module_version|Page_number_confidence|Pages|Scanner)\s+[:=]?\s*[^\n]*/gi, '');
   return stripped
     .split(/\r?\n/)
     .map((line) => line.trim())
-    .filter((line) => !/^(?:Page\s+\d+|\d{1,4})$/i.test(line))
+    .filter((line) => !/^(?:Page\s+\d+|\d{1,4}|Notice\s*[:\.]?)$/i.test(line))
     .join('\n')
     .replace(/[ \t]+/g, ' ')
     .replace(/\n{3,}/g, '\n\n')
