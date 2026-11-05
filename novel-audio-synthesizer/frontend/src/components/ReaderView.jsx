@@ -31,6 +31,8 @@ export default function ReaderView({
   onSegmentClick,
   currentNovel,
   currentChapter,
+  chapters = [],
+  onSelectChapter = null,
   onBack,
   onRetry,
   onNextChapter,
@@ -41,6 +43,21 @@ export default function ReaderView({
   const activeElementRef = useRef(null);
   const prevActiveIdRef = useRef(-1);
   const isAutoScrollingRef = useRef(false);
+
+  const currentChapterIdx = React.useMemo(() => {
+    if (!chapters || !currentChapter) return -1;
+    return chapters.findIndex((c) => c.id === currentChapter.id);
+  }, [chapters, currentChapter]);
+
+  const prevChapter = React.useMemo(() => {
+    if (!chapters || currentChapterIdx <= 0) return null;
+    return chapters[currentChapterIdx - 1];
+  }, [chapters, currentChapterIdx]);
+
+  const nextChapter = React.useMemo(() => {
+    if (!chapters || currentChapterIdx < 0 || currentChapterIdx >= chapters.length - 1) return null;
+    return chapters[currentChapterIdx + 1];
+  }, [chapters, currentChapterIdx]);
 
   // Reader mode: 'normal' (WTR-Lab scroll) vs 'opengl' (Moon+ Reader Pro 3D book)
   const [readerMode, setReaderMode] = useState('normal');
@@ -430,10 +447,57 @@ export default function ReaderView({
                 {currentNovel.title}
               </span>
               {currentChapter && (
-                <span className="text-xs text-[var(--brand-sage,#87A96B)] font-mono font-bold truncate hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[var(--brand-sage,#87A96B)]/15 border border-[var(--brand-sage,#87A96B)]/30">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-sage,#87A96B)] animate-pulse" />
-                  {currentChapter.title}
-                </span>
+                chapters && chapters.length > 1 ? (
+                  <div className="hidden sm:inline-flex items-center gap-1">
+                    <button
+                      type="button"
+                      disabled={!prevChapter}
+                      onClick={() => prevChapter && onSelectChapter?.(prevChapter.id)}
+                      className="px-1.5 py-0.5 rounded-full text-xs text-[var(--brand-sage,#87A96B)] bg-[var(--brand-sage,#87A96B)]/15 border border-[var(--brand-sage,#87A96B)]/30 hover:bg-[var(--brand-sage,#87A96B)]/25 disabled:opacity-30 disabled:pointer-events-none cursor-pointer transition font-bold"
+                      title="Previous Chapter"
+                      aria-label="Previous Chapter"
+                    >
+                      ‹
+                    </button>
+                    <div className="relative inline-flex items-center">
+                      <span className="text-xs text-[var(--brand-sage,#87A96B)] font-mono font-bold truncate inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[var(--brand-sage,#87A96B)]/15 border border-[var(--brand-sage,#87A96B)]/30">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-sage,#87A96B)] animate-pulse shrink-0" />
+                        <select
+                          value={currentChapter.id}
+                          onChange={(e) => onSelectChapter?.(e.target.value)}
+                          className="bg-transparent text-[var(--brand-sage,#87A96B)] font-mono font-bold text-xs cursor-pointer focus:outline-none appearance-none pr-3 truncate max-w-[180px]"
+                          aria-label="Select Chapter"
+                        >
+                          {chapters.map((ch) => (
+                            <option
+                              key={ch.id}
+                              value={ch.id}
+                              className="bg-[var(--bg-surface)] text-[var(--text-main)]"
+                            >
+                              {ch.title || `Chapter ${ch.chapter_number}`}
+                            </option>
+                          ))}
+                        </select>
+                        <span className="pointer-events-none text-[10px] opacity-70 -ml-2.5">▾</span>
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={!nextChapter}
+                      onClick={() => nextChapter && onSelectChapter?.(nextChapter.id)}
+                      className="px-1.5 py-0.5 rounded-full text-xs text-[var(--brand-sage,#87A96B)] bg-[var(--brand-sage,#87A96B)]/15 border border-[var(--brand-sage,#87A96B)]/30 hover:bg-[var(--brand-sage,#87A96B)]/25 disabled:opacity-30 disabled:pointer-events-none cursor-pointer transition font-bold"
+                      title="Next Chapter"
+                      aria-label="Next Chapter"
+                    >
+                      ›
+                    </button>
+                  </div>
+                ) : (
+                  <span className="text-xs text-[var(--brand-sage,#87A96B)] font-mono font-bold truncate hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[var(--brand-sage,#87A96B)]/15 border border-[var(--brand-sage,#87A96B)]/30">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-sage,#87A96B)] animate-pulse" />
+                    {currentChapter.title}
+                  </span>
+                )
               )}
             </div>
           )}
@@ -729,6 +793,42 @@ export default function ReaderView({
               </div>
             );
           })}
+
+          {/* Chapter Navigation Footer at End of Prose */}
+          {(prevChapter || nextChapter || onNextChapter) && (
+            <div className="pt-10 pb-6 border-t theme-border flex items-center justify-between text-xs font-mono">
+              {prevChapter ? (
+                <button
+                  type="button"
+                  onClick={() => onSelectChapter?.(prevChapter.id)}
+                  className="px-3 py-1.5 rounded-xl theme-card border hover:border-[var(--accent)] theme-sub hover:theme-main transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <span>‹ {prevChapter.title || `Chapter ${prevChapter.chapter_number}`}</span>
+                </button>
+              ) : (
+                <div />
+              )}
+              {nextChapter ? (
+                <button
+                  type="button"
+                  onClick={() => (onSelectChapter ? onSelectChapter(nextChapter.id) : onNextChapter?.())}
+                  className="px-3.5 py-1.5 rounded-xl bg-[var(--cta-primary-bg)] text-[var(--cta-primary-text)] font-semibold transition cursor-pointer flex items-center gap-1.5 shadow-xs"
+                >
+                  <span>Next: {nextChapter.title || `Chapter ${nextChapter.chapter_number}`} ›</span>
+                </button>
+              ) : onNextChapter ? (
+                <button
+                  type="button"
+                  onClick={onNextChapter}
+                  className="px-3.5 py-1.5 rounded-xl bg-[var(--cta-primary-bg)] text-[var(--cta-primary-text)] font-semibold transition cursor-pointer flex items-center gap-1.5 shadow-xs"
+                >
+                  <span>Next Chapter ›</span>
+                </button>
+              ) : (
+                <div />
+              )}
+            </div>
+          )}
         </article>
       )}
     </div>

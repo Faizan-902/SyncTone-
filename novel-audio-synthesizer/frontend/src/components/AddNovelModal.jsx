@@ -21,6 +21,7 @@ export default function AddNovelModal({
   onNovelCreated,
   onSelectChapter,
   onOpenAuth,
+  initialParserEngine,
 }) {
   const { user, isAuthenticated, isWriterOrAdmin, login, register } = useAuth();
   const [title, setTitle] = useState('');
@@ -36,9 +37,20 @@ export default function AddNovelModal({
   const [isParsingFile, setIsParsingFile] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null); // { name, size, format, chapterCount }
   const [coverObject, setCoverObject] = useState(null);
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [rawParsedChapters, setRawParsedChapters] = useState([]); // [{ chapter_number, title, raw_text, segments? }]
   const [parsedCharacters, setParsedCharacters] = useState([]);
-  const [parserEngine, setParserEngine] = useState('heuristic'); // 'heuristic' | 'gemini' | 'unlimited-ocr'
+  const [parserEngine, setParserEngine] = useState(() => {
+    try {
+      return (
+        initialParserEngine ||
+        (typeof window !== 'undefined' && localStorage.getItem('synctone_parser_engine')) ||
+        'heuristic'
+      );
+    } catch (_) {
+      return initialParserEngine || 'heuristic';
+    }
+  }); // 'heuristic' | 'gemini' | 'unlimited-ocr'
   const [useTtsSanitizer, setUseTtsSanitizer] = useState(false);
 
   const parsedChapters = useMemo(
@@ -49,6 +61,7 @@ export default function AddNovelModal({
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const fileInputRef = useRef(null);
+  const customCoverInputRef = useRef(null);
   const triggerRef = useRef(null);
   const prefersReduced = useReducedMotion();
 
@@ -96,6 +109,28 @@ export default function AddNovelModal({
       reader.readAsText(file);
     });
 
+  // Handle author custom cover upload
+  const handleCustomCoverUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingCover(true);
+    setError(null);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await api.novels.uploadAsset(formData);
+      if (res?.url) {
+        setCoverObject(res.url);
+      }
+    } catch (err) {
+      console.error('[Upload Cover Error]:', err);
+      setError('Failed to upload custom cover image: ' + (err.message || 'Unknown error'));
+    } finally {
+      setIsUploadingCover(false);
+      if (customCoverInputRef.current) customCoverInputRef.current.value = '';
+    }
+  };
+
   // Process dropped or selected novel file
   const processFile = async (file) => {
     if (!file) return;
@@ -114,13 +149,20 @@ export default function AddNovelModal({
     try {
       let parsedResult = null;
 
-      // Strategy 0: Direct client-side parsing for MOBI, AZW3, KF8, FB2, FBZ
-      const clientSideOnlyExtensions = ['mobi', 'azw3', 'kf8', 'fb2', 'fbz'];
-      if (clientSideOnlyExtensions.includes(ext)) {
-        parsedResult = await parseNovelFileClientSide(file, {
-          uploadAsset: api.novels.uploadAsset,
-        });
-      } else {
+      // Strategy 0: Direct client-side parsing (foliate-js / pdfjs-dist) when parserEngine === 'heuristic'
+      const clientSideFormats = ['epub', 'mobi', 'azw3', 'kf8', 'fb2', 'fbz', 'pdf'];
+      if (parserEngine === 'heuristic' && clientSideFormats.includes(ext)) {
+        try {
+          parsedResult = await parseNovelFileClientSide(file, {
+            uploadAsset: api.novels.uploadAsset,
+          });
+        } catch (clientErr) {
+          console.warn('[Client-Side parseNovelFileClientSide Notice]:', clientErr);
+        }
+      }
+
+      // If client-side didn't handle it or parserEngine is AI (gemini/unlimited-ocr), use backend parser
+      if (!parsedResult || !parsedResult.chapters || parsedResult.chapters.length === 0) {
         // Strategy 1: Fast Multipart FormData stream to backend parser
         try {
           const formData = new FormData();
@@ -458,7 +500,13 @@ export default function AddNovelModal({
               aria-label="Select Manuscript Parser Engine"
               data-testid="parser-engine-selector"
               value={parserEngine}
-              onChange={(e) => setParserEngine(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setParserEngine(val);
+                try {
+                  localStorage.setItem('synctone_parser_engine', val);
+                } catch (_) {}
+              }}
               className="w-full px-3 py-2 text-xs theme-surface border rounded-xl focus:outline-none focus:border-[var(--border-focus)] transition font-mono font-semibold"
             >
               <option value="heuristic">
@@ -477,7 +525,7 @@ export default function AddNovelModal({
                 ? 'Uses Gemini Flash multimodal vision to reconstruct noisy/scanned pages and attribute complex unquoted multi-party dialogue.'
                 : parserEngine === 'unlimited-ocr'
                 ? 'Connects to Baidu Unlimited-OCR (vLLM) to extract layout-aware Markdown and figure bounding boxes before dialogue attribution.'
-                : 'Zero-latency local extraction via PyMuPDF / ebooklib / foliate-js with deterministic regex and alternation speaker attribution.'}
+                : 'Zero-latency local extraction via foliate-js / pdfjs-dist / pypdf with deterministic regex and alternation speaker attribution.'}
             </p>
           </div>
 
@@ -709,6 +757,65 @@ export default function AddNovelModal({
               placeholder="Brief summary or description of the story..."
               className="w-full px-3.5 py-2.5 text-xs theme-card border rounded-xl placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--border-focus)] transition resize-none"
             />
+          </div>
+
+          {/* Cover Image (Optional — Auto-extracted or Upload Custom) */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-semibold theme-sub uppercase tracking-wider font-mono">
+                Cover Image (Optional — Auto-extracted from EPUB/PDF or Upload Custom)
+              </label>
+              {coverObject && (
+                <button
+                  type="button"
+                  onClick={() => setCoverObject(null)}
+                  className="text-[11px] text-[var(--danger)] hover:underline cursor-pointer"
+                >
+                  Remove Cover
+                </button>
+              )}
+            </div>
+
+            <input
+              ref={customCoverInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              className="hidden"
+              onChange={handleCustomCoverUpload}
+            />
+
+            <div className="p-3 rounded-xl theme-card border flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                {coverObject ? (
+                  <img
+                    src={coverObject}
+                    alt="Novel Cover Preview"
+                    className="w-12 h-16 object-cover rounded-lg border theme-border flex-shrink-0 shadow-sm"
+                  />
+                ) : (
+                  <div className="w-12 h-16 rounded-lg border border-dashed theme-border flex items-center justify-center text-[10px] theme-muted flex-shrink-0 bg-white/5">
+                    No Cover
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <p className="text-xs font-medium theme-heading truncate">
+                    {coverObject ? 'Cover Artwork Ready' : 'Auto-extracted from manuscript or upload custom image'}
+                  </p>
+                  <p className="text-[11px] theme-muted truncate">
+                    {coverObject || 'PNG, JPG, or WEBP (3:4 ratio recommended)'}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => customCoverInputRef.current?.click()}
+                disabled={isUploadingCover}
+                className="px-3 py-1.5 rounded-lg theme-card border text-xs font-semibold hover:border-[var(--border-focus)] transition flex-shrink-0 cursor-pointer"
+              >
+                {isUploadingCover ? 'Uploading...' : coverObject ? 'Change Cover' : 'Upload Cover'}
+              </button>
+            </div>
           </div>
 
           {/* Modal Actions Footer */}

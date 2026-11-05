@@ -110,6 +110,7 @@ export const api = {
   get: (endpoint, options) => request(endpoint, { method: 'GET', ...options }),
   post: (endpoint, body, options) => request(endpoint, { method: 'POST', body, ...options }),
   put: (endpoint, body, options) => request(endpoint, { method: 'PUT', body, ...options }),
+  patch: (endpoint, body, options) => request(endpoint, { method: 'PATCH', body, ...options }),
   delete: (endpoint, options) => request(endpoint, { method: 'DELETE', ...options }),
 
   // Auth Endpoints
@@ -129,6 +130,7 @@ export const api = {
     list: (channel, opts = {}) => api.get(`/novels${channel ? `?channel=${encodeURIComponent(channel)}` : ''}`, opts),
     get: (id) => api.get(`/novels/${id}`),
     create: (novelData) => api.post('/novels', novelData),
+    patch: (id, data) => api.patch(`/novels/${id}`, data),
     delete: (id) => api.delete(`/novels/${id}`),
     uploadChapter: (novelId, chapterData) => api.post(`/novels/${novelId}/chapters`, chapterData),
     parseFile: (payload, parserEngine = 'heuristic') => {
@@ -189,7 +191,7 @@ export const api = {
 
   // Status & Health
   status: {
-    models: () => api.get('/status/models'),
+    models: (opts = {}) => api.get(`/status/models${opts && opts.probe ? '?probe=true' : ''}`),
     health: () => request('/health'),
   },
 };

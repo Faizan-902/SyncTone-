@@ -622,6 +622,79 @@ router.get('/novels/:id', async (req, res) => {
 });
 
 /**
+ * PATCH /api/novels/:id
+ * Updates specific novel metadata fields: cover_object, title, synopsis, global_tone, channel.
+ */
+router.patch('/novels/:id', optionalAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id || !UUID_REGEX.test(id)) {
+      return res.status(400).json({ error: 'Invalid novel UUID format.' });
+    }
+
+    const { cover_object, title, synopsis, global_tone, channel } = req.body || {};
+
+    const fields = [];
+    const values = [];
+    let idx = 1;
+
+    if (cover_object !== undefined) {
+      fields.push(`cover_object = $${idx++}`);
+      values.push(cover_object);
+    }
+    if (title !== undefined && typeof title === 'string' && title.trim()) {
+      fields.push(`title = $${idx++}`);
+      values.push(title.trim());
+    }
+    if (synopsis !== undefined) {
+      fields.push(`synopsis = $${idx++}`);
+      values.push(synopsis);
+    }
+    if (global_tone !== undefined) {
+      fields.push(`global_tone = $${idx++}`);
+      values.push(global_tone);
+    }
+    if (channel !== undefined) {
+      const normalizedChannel = channel ? channel.toLowerCase().trim() : 'verified';
+      if (!ALLOWED_CHANNELS.includes(normalizedChannel)) {
+        return res.status(400).json({
+          error: `Invalid channel. Allowed values: ${ALLOWED_CHANNELS.join(', ')}.`,
+        });
+      }
+      fields.push(`channel = $${idx++}`);
+      values.push(normalizedChannel);
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ error: 'No valid fields provided for update.' });
+    }
+
+    fields.push(`updated_at = NOW()`);
+    values.push(id);
+
+    const query = `
+      UPDATE novels
+      SET ${fields.join(', ')}
+      WHERE id = $${idx}
+      RETURNING id, title, synopsis, global_tone, channel, cover_object, added_by, created_at, updated_at;
+    `;
+
+    const result = await pool.query(query, values);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Novel not found.' });
+    }
+
+    return res.json({
+      message: 'Novel updated successfully',
+      novel: result.rows[0],
+    });
+  } catch (err) {
+    console.error('[Update Novel Error]:', err.message);
+    return res.status(500).json({ error: `Failed to update novel: ${err.message}` });
+  }
+});
+
+/**
  * DELETE /api/novels/:id
  * Permanently deletes a novel, cascading across PostgreSQL tables
  * (chapters, characters, character_aliases, novel_profile_job_targets,

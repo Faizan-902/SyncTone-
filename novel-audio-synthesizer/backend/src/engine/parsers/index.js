@@ -60,6 +60,17 @@ async function parseUploadedManuscript(filePath, options = {}) {
     }
   }
 
+  if (engine === 'ollama') {
+    if (typeof runLocalExtractor !== 'function') {
+      throw new Error('runLocalExtractor callback is required for ollama parser.');
+    }
+    const heuristicData = await runLocalExtractor(filePath);
+    return {
+      ...heuristicData,
+      parser_engine: 'ollama',
+    };
+  }
+
   if (typeof runLocalExtractor !== 'function') {
     throw new Error('runLocalExtractor callback is required for heuristic parser.');
   }
@@ -78,22 +89,45 @@ async function getParsersStatus(options = {}) {
   const geminiModel = config.gemini?.model || process.env.GEMINI_MODEL || 'gemini-2.5-flash';
   const unlimitedOcrStatus = await checkUnlimitedOcrAvailable(options);
 
+  let ollamaAvailable = false;
+  try {
+    const ollamaUrl = (options.ollamaUrl || config.ollama?.url || 'http://localhost:11434').replace(/\/+$/, '');
+    const fetchImpl = options.fetchImpl || global.fetch;
+    const res = await fetchImpl(`${ollamaUrl}/api/tags`, { method: 'GET', signal: AbortSignal.timeout(1200) });
+    ollamaAvailable = res.ok;
+  } catch (_) {
+    ollamaAvailable = false;
+  }
+
+  const ocrStatus = {
+    available: unlimitedOcrStatus.available,
+    reachable: unlimitedOcrStatus.available,
+    url: unlimitedOcrStatus.url,
+    model: unlimitedOcrStatus.model,
+    label: 'Baidu Unlimited-OCR (Self-Hosted vLLM)',
+  };
+
   return {
     heuristic: {
       available: true,
+      reachable: true,
       label: 'Fast Local Heuristic (EPUB / PDF / TXT)',
     },
     gemini: {
       available: geminiConfigured,
+      reachable: geminiConfigured,
       configured: geminiConfigured,
       model: geminiModel,
       label: `Google Gemini Multimodal (${geminiModel})`,
     },
-    unlimited_ocr: {
-      available: unlimitedOcrStatus.available,
-      url: unlimitedOcrStatus.url,
-      model: unlimitedOcrStatus.model,
-      label: 'Baidu Unlimited-OCR (Self-Hosted vLLM)',
+    unlimited_ocr: ocrStatus,
+    'unlimited-ocr': ocrStatus,
+    ollama: {
+      available: ollamaAvailable,
+      reachable: ollamaAvailable,
+      url: config.ollama?.url || 'http://localhost:11434',
+      model: config.ollama?.model || 'llama3:8b',
+      label: 'Local Ollama Engine',
     },
   };
 }

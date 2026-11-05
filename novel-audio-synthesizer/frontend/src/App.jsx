@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
 import {
   BrowserRouter,
   useInRouterContext,
@@ -83,6 +83,30 @@ function AppContent() {
   const [showSettings, setShowSettings] = useState(false);
   const [modelStatus, setModelStatus] = useState(null);
   const [useTtsSanitizer, setUseTtsSanitizer] = useState(false);
+  const [defaultParserEngine, setDefaultParserEngine] = useState(() => {
+    try {
+      return localStorage.getItem('synctone_parser_engine') || 'heuristic';
+    } catch (_) {
+      return 'heuristic';
+    }
+  });
+
+  const handleSelectParserEngine = useCallback((engine) => {
+    setDefaultParserEngine(engine);
+    try {
+      localStorage.setItem('synctone_parser_engine', engine);
+    } catch (_) {}
+  }, []);
+
+  const handleProbeStatus = useCallback(async () => {
+    try {
+      const res = await api.status.models({ probe: true });
+      if (res) setModelStatus(res);
+      return res;
+    } catch (_) {
+      return null;
+    }
+  }, []);
 
   // Sanitized timeline when TTS Clean is active
   const effectiveTimeline = useMemo(() => {
@@ -90,8 +114,13 @@ function AppContent() {
     return useTtsSanitizer ? sanitizeSegmentsWithTtsDomCleaner(rawTimeline) : rawTimeline;
   }, [chapterManifest?.timeline, useTtsSanitizer]);
 
-  // Audio Synchronization Hook (60fps loop with binary search)
-  const audioSync = useAudioSync(effectiveTimeline);
+  // Audio Synchronization Hook with chapter auto-advance callback
+  const onChapterEndedRef = useRef(null);
+  const handleChapterEnded = useCallback(() => {
+    onChapterEndedRef.current?.();
+  }, []);
+
+  const audioSync = useAudioSync(effectiveTimeline, { onChapterEnded: handleChapterEnded });
 
   // Playback Progress Hook (auto-resume & throttled persistence)
   const playbackProgress = usePlaybackProgress({
@@ -338,6 +367,23 @@ function AppContent() {
     loadChapterById(chapter.id, novel);
   };
 
+  // Auto-advance to next chapter when current chapter completes
+  useEffect(() => {
+    onChapterEndedRef.current = () => {
+      if (!currentChapter || novelChapters.length === 0) return;
+      const idx = novelChapters.findIndex((c) => c.id === currentChapter.id);
+      const nextCh =
+        idx >= 0 && idx + 1 < novelChapters.length
+          ? novelChapters[idx + 1]
+          : novelChapters.find(
+              (c) => Number(c.chapter_number) === Number(currentChapter.chapter_number) + 1
+            );
+      if (nextCh) {
+        handleSelectChapter(currentNovel, nextCh);
+      }
+    };
+  }, [currentChapter, novelChapters, currentNovel, handleSelectChapter]);
+
   const handleOpenAuth = (mode = 'login') => {
     setAuthMode(typeof mode === 'string' ? mode : 'login');
     setShowAuthModal(true);
@@ -516,6 +562,13 @@ function AppContent() {
                         }}
                         currentNovel={currentNovel}
                         currentChapter={currentChapter}
+                        chapters={novelChapters}
+                        onSelectChapter={(chapterId) => {
+                          const targetCh = novelChapters.find((c) => c.id === chapterId);
+                          if (targetCh) {
+                            handleSelectChapter(currentNovel, targetCh);
+                          }
+                        }}
                         useTtsSanitizer={useTtsSanitizer}
                         onToggleTtsSanitizer={() => setUseTtsSanitizer((prev) => !prev)}
                         onRetry={() => {
@@ -601,6 +654,7 @@ function AppContent() {
                   onPlay={audioSync.handlePlay}
                   onPause={audioSync.handlePause}
                   onEnded={audioSync.handleEnded}
+                  onError={audioSync.handleAudioError}
                   onLoadedMetadata={audioSync.handleLoadedMetadata}
                   currentNovel={currentNovel}
                   currentChapter={currentChapter}
@@ -670,6 +724,7 @@ function AppContent() {
                 onClose={() => setShowAddNovelModal(false)}
                 onOpenAuth={handleOpenAuth}
                 onSelectChapter={handleSelectChapter}
+                initialParserEngine={defaultParserEngine}
                 onNovelCreated={(newNovel, firstChapter) => {
                   if (firstChapter) {
                     handleSelectChapter(newNovel, firstChapter);
@@ -708,6 +763,11 @@ function AppContent() {
             >
               <SettingsModal
                 modelStatus={modelStatus}
+                ttsEngine={audioSync.ttsEngine}
+                onSelectTtsEngine={audioSync.setTtsEngine}
+                defaultParserEngine={defaultParserEngine}
+                onSelectParserEngine={handleSelectParserEngine}
+                onProbeStatus={handleProbeStatus}
                 onClose={() => {
                   setShowSettings(false);
                   if (pathname === '/settings') navigate('/');

@@ -1,9 +1,104 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { IconSettings, IconX } from './icons';
+import { api } from '../services/api';
 
-export default function SettingsModal({ onClose, modelStatus }) {
+export default function SettingsModal({
+  onClose,
+  modelStatus: initialModelStatus,
+  ttsEngine: propTtsEngine,
+  onSelectTtsEngine,
+  defaultParserEngine: propDefaultParserEngine,
+  onSelectParserEngine,
+  onProbeStatus,
+}) {
   const { theme, setTheme, fontFamily, setFontFamily, fontSize, increaseFontSize, decreaseFontSize } = useTheme();
+
+  const [modelStatus, setModelStatus] = useState(initialModelStatus || null);
+  const [probing, setProbing] = useState(false);
+  const [deviceVoiceCount, setDeviceVoiceCount] = useState(0);
+
+  const [localTtsEngine, setLocalTtsEngine] = useState(() => {
+    try {
+      return localStorage.getItem('synctone_tts_engine') || 'msedge-tts';
+    } catch (_) {
+      return 'msedge-tts';
+    }
+  });
+
+  const [localParserEngine, setLocalParserEngine] = useState(() => {
+    try {
+      return localStorage.getItem('synctone_parser_engine') || 'heuristic';
+    } catch (_) {
+      return 'heuristic';
+    }
+  });
+
+  const activeEngine = propTtsEngine || localTtsEngine;
+  const activeParser = propDefaultParserEngine || localParserEngine;
+
+  useEffect(() => {
+    if (initialModelStatus) {
+      setModelStatus(initialModelStatus);
+    }
+  }, [initialModelStatus]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      const updateVoices = () => {
+        try {
+          const v = window.speechSynthesis.getVoices();
+          setDeviceVoiceCount(v ? v.length : 0);
+        } catch (_) {}
+      };
+      updateVoices();
+      window.speechSynthesis.onvoiceschanged = updateVoices;
+      return () => {
+        window.speechSynthesis.onvoiceschanged = null;
+      };
+    }
+  }, []);
+
+  const handleSelectEngine = useCallback(
+    (engine) => {
+      setLocalTtsEngine(engine);
+      try {
+        localStorage.setItem('synctone_tts_engine', engine);
+      } catch (_) {}
+      onSelectTtsEngine?.(engine);
+    },
+    [onSelectTtsEngine]
+  );
+
+  const handleSelectParser = useCallback(
+    (parser) => {
+      setLocalParserEngine(parser);
+      try {
+        localStorage.setItem('synctone_parser_engine', parser);
+      } catch (_) {}
+      onSelectParserEngine?.(parser);
+    },
+    [onSelectParserEngine]
+  );
+
+  const handleProbeAll = useCallback(async () => {
+    setProbing(true);
+    try {
+      if (onProbeStatus) {
+        const res = await onProbeStatus();
+        if (res) setModelStatus(res);
+      } else {
+        const res = await api.status.models({ probe: true });
+        if (res) setModelStatus(res);
+      }
+    } catch (_) {
+    } finally {
+      setProbing(false);
+    }
+  }, [onProbeStatus]);
+
+  const kokoroAvailable = Boolean(modelStatus?.kokoro?.available || modelStatus?.tts?.model_exists);
+  const paradeeAvailable = Boolean(modelStatus?.paradee?.model_exists || modelStatus?.paradee?.available || modelStatus?.tts?.paradee_ready);
 
   return (
     <div
@@ -36,82 +131,140 @@ export default function SettingsModal({ onClose, modelStatus }) {
                 <p className="font-semibold theme-heading">Voice Cast & Narration</p>
                 <p className="theme-muted text-[11px]">Multi-voice storytelling & offline support</p>
               </div>
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[var(--success)]/20 text-[var(--success)] border border-[var(--success)]/30">
-                Active
-              </span>
+              <button
+                type="button"
+                onClick={handleProbeAll}
+                disabled={probing}
+                className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[var(--success)]/20 hover:bg-[var(--success)]/30 text-[var(--success)] border border-[var(--success)]/30 transition cursor-pointer flex items-center gap-1"
+                title="Probe real engine readiness"
+              >
+                {probing ? 'Probing...' : 'Check / Test'}
+              </button>
             </div>
 
             <div className="space-y-2 mt-2">
               {/* Voice 1: Studio Cast */}
-              <div className="p-2.5 rounded-xl theme-card border border-[var(--border-subtle)] flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => handleSelectEngine('msedge-tts')}
+                className={`w-full text-left p-2.5 rounded-xl theme-card border transition cursor-pointer flex items-center justify-between ${
+                  activeEngine === 'msedge-tts'
+                    ? 'border-[var(--accent-text)] ring-1 ring-[var(--accent-text)] bg-[var(--bg-hover)]'
+                    : 'border-[var(--border-subtle)] hover:bg-[var(--bg-hover)]/60'
+                }`}
+              >
                 <div>
                   <div className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-[var(--success)] animate-pulse" />
                     <span className="font-bold theme-heading">1. Studio Cast Voices</span>
+                    {activeEngine === 'msedge-tts' && (
+                      <span className="text-[9px] font-mono font-semibold px-1.5 py-0.2 rounded bg-[var(--accent-text)]/15 text-[var(--accent-text)]">
+                        Active
+                      </span>
+                    )}
                   </div>
                   <p className="theme-muted text-[10px] mt-0.5 font-mono">
                     High fidelity • Multi-character cast
                   </p>
                 </div>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[var(--success)]/10 text-[var(--success)] font-bold border border-[var(--success)]/20">
-                  Ready
+                  {modelStatus?.tts?.edge_available !== false ? 'Cloud Ready' : 'Ready'}
                 </span>
-              </div>
+              </button>
 
               {/* Voice 2: Expressive Offline Voices */}
-              <div className="p-2.5 rounded-xl theme-card border border-[var(--border-subtle)] flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => handleSelectEngine('kokoro-tts')}
+                className={`w-full text-left p-2.5 rounded-xl theme-card border transition cursor-pointer flex items-center justify-between ${
+                  activeEngine === 'kokoro-tts'
+                    ? 'border-[var(--accent-text)] ring-1 ring-[var(--accent-text)] bg-[var(--bg-hover)]'
+                    : 'border-[var(--border-subtle)] hover:bg-[var(--bg-hover)]/60'
+                }`}
+              >
                 <div>
                   <div className="flex items-center gap-1.5">
                     <span
                       className={`w-2 h-2 rounded-full ${
-                        modelStatus?.tts?.model_exists ? 'bg-[var(--success)]' : 'bg-[var(--warning)]'
+                        kokoroAvailable ? 'bg-[var(--success)]' : 'bg-[var(--warning)]'
                       }`}
                     />
                     <span className="font-bold theme-heading">2. Expressive Offline Voices</span>
+                    {activeEngine === 'kokoro-tts' && (
+                      <span className="text-[9px] font-mono font-semibold px-1.5 py-0.2 rounded bg-[var(--accent-text)]/15 text-[var(--accent-text)]">
+                        Active
+                      </span>
+                    )}
                   </div>
                   <p className="theme-muted text-[10px] mt-0.5 font-mono">
-                    {modelStatus?.tts?.model_exists
+                    {kokoroAvailable
                       ? 'Local voice package installed'
                       : "This voice isn't available right now. Try another one."}
                   </p>
                 </div>
                 <span
                   className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold border ${
-                    modelStatus?.tts?.model_exists
+                    kokoroAvailable
                       ? 'bg-[var(--success)]/10 text-[var(--success)] border-[var(--success)]/20'
                       : 'bg-[var(--warning)]/10 text-[var(--warning)] border-[var(--warning)]/20'
                   }`}
                 >
-                  {modelStatus?.tts?.model_exists ? 'Ready' : 'Unavailable'}
+                  {kokoroAvailable ? 'Ready' : 'Unavailable'}
                 </span>
-              </div>
+              </button>
 
               {/* Voice 3: Device Speech */}
-              <div className="p-2.5 rounded-xl theme-card border border-[var(--border-subtle)] flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => handleSelectEngine('machine-tts')}
+                className={`w-full text-left p-2.5 rounded-xl theme-card border transition cursor-pointer flex items-center justify-between ${
+                  activeEngine === 'machine-tts'
+                    ? 'border-[var(--accent-text)] ring-1 ring-[var(--accent-text)] bg-[var(--bg-hover)]'
+                    : 'border-[var(--border-subtle)] hover:bg-[var(--bg-hover)]/60'
+                }`}
+              >
                 <div>
                   <div className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-[var(--info)]" />
                     <span className="font-bold theme-heading">3. Device Speech</span>
+                    {activeEngine === 'machine-tts' && (
+                      <span className="text-[9px] font-mono font-semibold px-1.5 py-0.2 rounded bg-[var(--accent-text)]/15 text-[var(--accent-text)]">
+                        Active
+                      </span>
+                    )}
                   </div>
                   <p className="theme-muted text-[10px] mt-0.5 font-mono">
                     Built-in device speech for instant listening anywhere
                   </p>
                 </div>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[var(--info)]/10 text-[var(--info)] font-bold border border-[var(--info)]/20">
-                  Ready
+                  {deviceVoiceCount > 0 ? `Device Ready (${deviceVoiceCount})` : 'Device Ready'}
                 </span>
-              </div>
+              </button>
 
               {/* Engine 4: Paradee-8M Micro ONNX */}
-              <div className="p-2.5 rounded-xl theme-card border border-[var(--border-subtle)] flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => handleSelectEngine('paradee-tts')}
+                className={`w-full text-left p-2.5 rounded-xl theme-card border transition cursor-pointer flex items-center justify-between ${
+                  activeEngine === 'paradee-tts'
+                    ? 'border-[var(--accent-text)] ring-1 ring-[var(--accent-text)] bg-[var(--bg-hover)]'
+                    : 'border-[var(--border-subtle)] hover:bg-[var(--bg-hover)]/60'
+                }`}
+              >
                 <div>
                   <div className="flex items-center gap-1.5">
                     <span
                       className={`w-2 h-2 rounded-full ${
-                        modelStatus?.paradee?.model_exists ? 'bg-emerald-400' : 'bg-indigo-400'
+                        paradeeAvailable ? 'bg-emerald-400' : 'bg-indigo-400'
                       }`}
                     />
                     <span className="font-bold theme-heading">4. Paradee-8M Micro ONNX</span>
+                    {activeEngine === 'paradee-tts' && (
+                      <span className="text-[9px] font-mono font-semibold px-1.5 py-0.2 rounded bg-[var(--accent-text)]/15 text-[var(--accent-text)]">
+                        Active
+                      </span>
+                    )}
                   </div>
                   <p className="theme-muted text-[10px] mt-0.5 font-mono">
                     sahilmahendrakar/Paradee-8M-v1.2 • 8.5MB int8 • 4 Neural Voices
@@ -119,21 +272,34 @@ export default function SettingsModal({ onClose, modelStatus }) {
                 </div>
                 <span
                   className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold border ${
-                    modelStatus?.paradee?.model_exists
+                    paradeeAvailable
                       ? 'bg-emerald-400/10 text-emerald-400 border-emerald-400/20'
                       : 'bg-indigo-400/10 text-indigo-400 border-indigo-400/20'
                   }`}
                 >
-                  {modelStatus?.paradee?.model_exists ? 'Paradee Ready' : 'Micro ONNX'}
+                  {paradeeAvailable ? 'Paradee Ready' : 'OS Fallback'}
                 </span>
-              </div>
+              </button>
 
               {/* Engine 5: Paradee + Machine Mixed Cast Mode */}
-              <div className="p-2.5 rounded-xl theme-card border border-[var(--border-subtle)] flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => handleSelectEngine('paradee-mixed')}
+                className={`w-full text-left p-2.5 rounded-xl theme-card border transition cursor-pointer flex items-center justify-between ${
+                  activeEngine === 'paradee-mixed'
+                    ? 'border-[var(--accent-text)] ring-1 ring-[var(--accent-text)] bg-[var(--bg-hover)]'
+                    : 'border-[var(--border-subtle)] hover:bg-[var(--bg-hover)]/60'
+                }`}
+              >
                 <div>
                   <div className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
                     <span className="font-bold theme-heading">5. Paradee + Machine Mixed Cast Mode</span>
+                    {activeEngine === 'paradee-mixed' && (
+                      <span className="text-[9px] font-mono font-semibold px-1.5 py-0.2 rounded bg-[var(--accent-text)]/15 text-[var(--accent-text)]">
+                        Active
+                      </span>
+                    )}
                   </div>
                   <p className="theme-muted text-[10px] mt-0.5 font-mono">
                     Paradee-8M (Narrator + Top 3 Cast) + Machine-TTS (5th+ Extras)
@@ -142,7 +308,7 @@ export default function SettingsModal({ onClose, modelStatus }) {
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-400/10 text-purple-300 font-bold border border-purple-400/20">
                   Hybrid Ready
                 </span>
-              </div>
+              </button>
             </div>
           </div>
 
@@ -158,13 +324,40 @@ export default function SettingsModal({ onClose, modelStatus }) {
               </span>
             </div>
 
-            <div className="grid grid-cols-3 gap-1.5 pt-1">
-              <div className="p-2 rounded-lg theme-card border border-[var(--border-subtle)]">
-                <p className="font-bold theme-heading text-[10px]">Heuristic</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-1">
+              <button
+                type="button"
+                onClick={() => handleSelectParser('heuristic')}
+                className={`text-left p-2 rounded-lg theme-card border transition cursor-pointer ${
+                  activeParser === 'heuristic'
+                    ? 'border-[var(--accent-text)] ring-1 ring-[var(--accent-text)] bg-[var(--bg-hover)]'
+                    : 'border-[var(--border-subtle)] hover:bg-[var(--bg-hover)]/60'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <p className="font-bold theme-heading text-[10px]">Heuristic</p>
+                  {activeParser === 'heuristic' && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-text)]" />
+                  )}
+                </div>
                 <p className="text-[9px] font-mono text-emerald-400 mt-0.5">Local Ready</p>
-              </div>
-              <div className="p-2 rounded-lg theme-card border border-[var(--border-subtle)]">
-                <p className="font-bold theme-heading text-[10px]">Gemini AI</p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSelectParser('gemini')}
+                className={`text-left p-2 rounded-lg theme-card border transition cursor-pointer ${
+                  activeParser === 'gemini'
+                    ? 'border-[var(--accent-text)] ring-1 ring-[var(--accent-text)] bg-[var(--bg-hover)]'
+                    : 'border-[var(--border-subtle)] hover:bg-[var(--bg-hover)]/60'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <p className="font-bold theme-heading text-[10px]">Gemini AI</p>
+                  {activeParser === 'gemini' && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-text)]" />
+                  )}
+                </div>
                 <p
                   className={`text-[9px] font-mono mt-0.5 ${
                     modelStatus?.parsers?.gemini?.configured ? 'text-emerald-400' : 'text-amber-400'
@@ -172,17 +365,63 @@ export default function SettingsModal({ onClose, modelStatus }) {
                 >
                   {modelStatus?.parsers?.gemini?.configured ? 'API Ready' : 'Fallback Mode'}
                 </p>
-              </div>
-              <div className="p-2 rounded-lg theme-card border border-[var(--border-subtle)]">
-                <p className="font-bold theme-heading text-[10px]">Unlimited-OCR</p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSelectParser('unlimited-ocr')}
+                className={`text-left p-2 rounded-lg theme-card border transition cursor-pointer ${
+                  activeParser === 'unlimited-ocr'
+                    ? 'border-[var(--accent-text)] ring-1 ring-[var(--accent-text)] bg-[var(--bg-hover)]'
+                    : 'border-[var(--border-subtle)] hover:bg-[var(--bg-hover)]/60'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <p className="font-bold theme-heading text-[10px]">Unlimited-OCR</p>
+                  {activeParser === 'unlimited-ocr' && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-text)]" />
+                  )}
+                </div>
                 <p
                   className={`text-[9px] font-mono mt-0.5 ${
-                    modelStatus?.parsers?.['unlimited-ocr']?.reachable ? 'text-emerald-400' : 'text-slate-400'
+                    modelStatus?.parsers?.['unlimited-ocr']?.reachable || modelStatus?.parsers?.unlimited_ocr?.reachable
+                      ? 'text-emerald-400'
+                      : 'text-slate-400'
                   }`}
                 >
-                  {modelStatus?.parsers?.['unlimited-ocr']?.reachable ? 'vLLM Online' : 'vLLM Offline'}
+                  {modelStatus?.parsers?.['unlimited-ocr']?.reachable || modelStatus?.parsers?.unlimited_ocr?.reachable
+                    ? 'vLLM Online'
+                    : 'vLLM Offline'}
                 </p>
-              </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSelectParser('ollama')}
+                className={`text-left p-2 rounded-lg theme-card border transition cursor-pointer ${
+                  activeParser === 'ollama'
+                    ? 'border-[var(--accent-text)] ring-1 ring-[var(--accent-text)] bg-[var(--bg-hover)]'
+                    : 'border-[var(--border-subtle)] hover:bg-[var(--bg-hover)]/60'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <p className="font-bold theme-heading text-[10px]">Ollama</p>
+                  {activeParser === 'ollama' && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-text)]" />
+                  )}
+                </div>
+                <p
+                  className={`text-[9px] font-mono mt-0.5 ${
+                    modelStatus?.parsers?.ollama?.available || modelStatus?.llm?.available
+                      ? 'text-emerald-400'
+                      : 'text-slate-400'
+                  }`}
+                >
+                  {modelStatus?.parsers?.ollama?.available || modelStatus?.llm?.available
+                    ? 'Local LLM'
+                    : 'Offline'}
+                </p>
+              </button>
             </div>
           </div>
 

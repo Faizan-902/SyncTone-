@@ -155,7 +155,18 @@ const isBrowserEnv =
   typeof navigator !== 'undefined' &&
   !navigator.userAgent.includes('jsdom');
 
-export function useAudioSync(timeline = [], onSegmentChange = null) {
+export function useAudioSync(timeline = [], onSegmentChangeOrOptions = null, maybeOnChapterEnded = null) {
+  let onSegmentChange = null;
+  let onChapterEnded = null;
+
+  if (typeof onSegmentChangeOrOptions === 'function') {
+    onSegmentChange = onSegmentChangeOrOptions;
+    onChapterEnded = maybeOnChapterEnded;
+  } else if (onSegmentChangeOrOptions && typeof onSegmentChangeOrOptions === 'object') {
+    onSegmentChange = onSegmentChangeOrOptions.onSegmentChange || null;
+    onChapterEnded = onSegmentChangeOrOptions.onChapterEnded || null;
+  }
+
   const audioRef = useRef(null);
   const secondaryAudioRef = useRef(null);
   const rafRef = useRef(0);
@@ -176,6 +187,11 @@ export function useAudioSync(timeline = [], onSegmentChange = null) {
   // In real browser: default to 'tts' so every chapter (1-17 & EPUB) has live multi-voice speech!
   // In jsdom/Vitest: default to 'studio' so all 54 existing tests run undisturbed!
   const [playbackMode, setPlaybackMode] = useState(isBrowserEnv ? 'tts' : 'studio');
+  const playbackModeRef = useRef(playbackMode);
+  useEffect(() => {
+    playbackModeRef.current = playbackMode;
+  }, [playbackMode]);
+
   const ttsReadAlongEnabled = playbackMode === 'tts';
 
   // 5-Engine Selection: 'msedge-tts' | 'kokoro-tts' | 'paradee-tts' | 'paradee-mixed' | 'machine-tts'
@@ -216,8 +232,9 @@ export function useAudioSync(timeline = [], onSegmentChange = null) {
 
   // Auto-advance helper to next segment
   const advanceToNextSegment = useCallback(
-    (currentSegId) => {
+    (currentSegId, expectedGen = null) => {
       if (speechCancelledRef.current) return;
+      if (expectedGen !== null && expectedGen !== speechGenRef.current) return;
       const currentIdx = timeline.findIndex(
         (t) => (t.segment_id !== undefined ? t.segment_id : t.order) === currentSegId
       );
@@ -240,9 +257,12 @@ export function useAudioSync(timeline = [], onSegmentChange = null) {
         lastActiveSegIdRef.current = -1;
         setActiveSegmentId(-1);
         setSegmentProgress(0);
+        if (onChapterEnded) {
+          onChapterEnded();
+        }
       }
     },
-    [timeline, onSegmentChange]
+    [timeline, onSegmentChange, onChapterEnded]
   );
 
   // Speak segment with Web Speech Synthesis (distinct British/English voices & pitch per character)
@@ -590,7 +610,27 @@ export function useAudioSync(timeline = [], onSegmentChange = null) {
     lastActiveSegIdRef.current = -1;
     setActiveSegmentId(-1);
     setSegmentProgress(0);
-  }, [stopSpeech]);
+    if (onChapterEnded) {
+      onChapterEnded();
+    }
+  }, [stopSpeech, onChapterEnded]);
+
+  const handleAudioError = useCallback(() => {
+    // On studio audio failure or 404, immediately switch to 'tts' mode to continue reading uninterrupted
+    if (playbackModeRef.current === 'studio') {
+      playbackModeRef.current = 'tts';
+      setPlaybackMode('tts');
+      if (isPlaying) {
+        const currentId =
+          activeSegmentId !== -1
+            ? activeSegmentId
+            : timeline[0]?.segment_id ?? timeline[0]?.order ?? 1;
+        if (currentId !== -1 && speakActiveSegmentRef.current) {
+          speakActiveSegmentRef.current(currentId, 0);
+        }
+      }
+    }
+  }, [isPlaying, activeSegmentId, timeline]);
 
   const handleLoadedMetadata = useCallback((eOrDur) => {
     const dur = typeof eOrDur === 'number' ? eOrDur : (eOrDur?.currentTarget?.duration || 0);
@@ -759,6 +799,8 @@ export function useAudioSync(timeline = [], onSegmentChange = null) {
     handlePause,
     handleEnded,
     handleLoadedMetadata,
+    handleAudioError,
+    handleError: handleAudioError,
     speakSegment: speakActiveSegment,
     stopSpeech,
   };

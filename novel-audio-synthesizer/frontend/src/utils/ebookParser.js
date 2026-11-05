@@ -37,7 +37,16 @@ export function extractChaptersFromText(rawText, novelTitle) {
   }
 
   const cleanText = rawText.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-  const lines = cleanText.split('\n');
+  const normalizedText = cleanText.replace(
+    new RegExp(
+      '^(?:[ \\t]*)(CHAPTER\\s+(?:\\d+|[ivxlcdm]+|' +
+        WORD_NUMBERS +
+        ')|PROLOGUE|EPILOGUE)(?:\\s*[:.\\-–—]\\s*|\\s+)([A-Z][a-z].{25,})$',
+      'gim'
+    ),
+    '$1\n\n$2'
+  );
+  const lines = normalizedText.split('\n');
 
   const headingMatches = [];
   for (let i = 0; i < lines.length; i++) {
@@ -233,6 +242,9 @@ export function extractTextFromHtmlDoc(doc) {
         const blocks = clone.querySelectorAll(tag);
         blocks.forEach((el) => {
           try {
+            if (/^(?:h[1-6])$/i.test(tag) && typeof el.before === 'function') {
+              el.before('\n\n');
+            }
             if (typeof el.after === 'function') {
               el.after('\n\n');
             } else if (el.parentNode) {
@@ -254,13 +266,35 @@ export function extractTextFromHtmlDoc(doc) {
   return '';
 }
 
+const BOILERPLATE_TITLE_REGEX =
+  /^(?:notice|cover|title(?:\s+page)?|copyright|dedication|table of contents|contents|page\s+\d+|split_\d+)$/i;
+
+function flattenToc(tocList) {
+  if (!Array.isArray(tocList)) return [];
+  const flat = [];
+  for (const item of tocList) {
+    if (!item) continue;
+    flat.push(item);
+    if (Array.isArray(item.subitems) && item.subitems.length > 0) {
+      flat.push(...flattenToc(item.subitems));
+    }
+  }
+  return flat;
+}
+
 function cleanExtractedText(raw) {
   if (!raw) return '';
   const stripped = raw
     .replace(/The text on this page is estimated to be only \d+\.?\d*% accurate[^\n]*/gi, '')
-    .replace(/This book was produced in EPUB format by the Internet Archive[\s\S]*?(?:reading sequence\.|errors\.|volunteer\.)/gi, '')
-    .replace(/Notice:\s*The book may not offer the correct reading sequence[^\n]*/gi, '')
-    .replace(/This book is available for free download in a number of formats[^\n]*/gi, '');
+    .replace(/This book was produced in EPUB format by the Internet Archive[\s\S]*?(?:reading sequence\.|errors\.|volunteer\.|formats\.)/gi, '')
+    .replace(/Notice:\s*The book may not offer the correct reading sequence[\s\S]*?(?:correct order\.|improve the scanning process\.|archive\.org)/gi, '')
+    .replace(/The book may not offer the correct reading sequence because of missing or misordered pages[\s\S]*?(?:correct order\.|improve the scanning process\.|archive\.org)/gi, '')
+    .replace(/The hidden page numbering which may be available to your ereader[^\n]*/gi, '')
+    .replace(/The Internet Archive is working to improve the scanning process[^\n]*/gi, '')
+    .replace(/The Internet Archive was founded in 1996[\s\S]*?(?:digital format\.|archive\.org)/gi, '')
+    .replace(/This book is available for free download in a number of formats[^\n]*/gi, '')
+    .replace(/Access-restricted-item\s+true[^\n]*/gi, '')
+    .replace(/(?:Addeddate|Boxid|Camera|Collection_set|External-identifier|Foldoutcount|Identifier|Invoice|Ocr|Ocr_detected_lang|Ocr_module_version|Page_number_confidence|Pages|Scanner)\s+[:=]?\s*[^\n]*/gi, '');
   return stripped
     .split(/\r?\n/)
     .map((line) => line.trim())
@@ -388,7 +422,7 @@ export async function parseEbookWithFoliate(file, uploadAssetFn) {
       synopsis = synopsis.replace(/<[^>]+>/g, '').trim();
     }
 
-    // Extract cover
+    // Extract cover (multi-tier: getCover -> landmarks -> manifest -> early section DOM)
     let cover_object = null;
     try {
       if (typeof book.getCover === 'function') {
@@ -398,11 +432,53 @@ export async function parseEbookWithFoliate(file, uploadAssetFn) {
         }
       }
     } catch (covErr) {
-      console.warn('[parseEbookWithFoliate] Cover extraction failed:', covErr);
+      console.warn('[parseEbookWithFoliate] Cover extraction via getCover failed:', covErr);
     }
 
-    // Iterate sections (up to 60 sections)
-    const rawSections = Array.isArray(book.sections) ? book.sections.slice(0, 60) : [];
+    // Secondary cover check: book.landmarks
+    if (!cover_object && Array.isArray(book.landmarks)) {
+      try {
+        const coverLandmark = book.landmarks.find(
+          (l) => l && (l.type === 'cover' || (typeof l.rel === 'string' && l.rel.includes('cover')))
+        );
+        if (coverLandmark?.href && typeof book.loadBlob === 'function') {
+          const blob = await book.loadBlob(coverLandmark.href);
+          if (blob) {
+            cover_object = await uploadCoverBlobIfPossible(blob, uploadAssetFn, 'cover.jpg');
+          }
+        }
+      } catch (landmarkErr) {
+        console.warn('[parseEbookWithFoliate] Cover extraction via landmarks failed:', landmarkErr);
+      }
+    }
+
+    // Tertiary cover check: book.resources?.manifest
+    if (!cover_object && book.resources?.manifest) {
+      try {
+        const manifest = book.resources.manifest;
+        const entries = Array.isArray(manifest) ? manifest : Object.values(manifest);
+        const coverItem = entries.find(
+          (it) =>
+            it &&
+            ((it.mediaType && it.mediaType.startsWith('image/')) ||
+              (it['media-type'] && it['media-type'].startsWith('image/'))) &&
+            (it.id?.toLowerCase().includes('cover') ||
+              it.href?.toLowerCase().includes('cover') ||
+              (typeof it.properties === 'string' && it.properties.includes('cover-image')))
+        );
+        if (coverItem?.href && typeof book.loadBlob === 'function') {
+          const blob = await book.loadBlob(coverItem.href);
+          if (blob) {
+            cover_object = await uploadCoverBlobIfPossible(blob, uploadAssetFn, 'cover.jpg');
+          }
+        }
+      } catch (manifestErr) {
+        console.warn('[parseEbookWithFoliate] Cover extraction via manifest failed:', manifestErr);
+      }
+    }
+
+    // Iterate sections (parse all sections, without artificial limit)
+    const rawSections = Array.isArray(book.sections) ? book.sections : [];
     const collectedSections = [];
 
     for (let i = 0; i < rawSections.length; i++) {
@@ -421,6 +497,26 @@ export async function parseEbookWithFoliate(file, uploadAssetFn) {
 
       if (!doc) continue;
 
+      // Quaternary cover check from early section DOM (e.g. Calibre SVG covers or first-page images)
+      if (!cover_object && i < 3 && typeof doc.querySelector === 'function') {
+        try {
+          const imgEl = doc.querySelector('image[*|href], image[href], img[src]');
+          if (imgEl && typeof book.loadBlob === 'function') {
+            const imgSrc =
+              imgEl.getAttribute('xlink:href') ||
+              imgEl.getAttribute('href') ||
+              imgEl.getAttribute('src');
+            if (imgSrc) {
+              const resolvedHref = section.resolveHref ? section.resolveHref(imgSrc) : imgSrc;
+              const blob = await book.loadBlob(resolvedHref);
+              if (blob) {
+                cover_object = await uploadCoverBlobIfPossible(blob, uploadAssetFn, 'cover.jpg');
+              }
+            }
+          }
+        } catch (_) {}
+      }
+
       let sectionHeading = '';
       if (typeof section.title === 'string' && section.title.trim()) {
         sectionHeading = section.title.trim();
@@ -434,42 +530,133 @@ export async function parseEbookWithFoliate(file, uploadAssetFn) {
 
       const text = extractTextFromHtmlDoc(doc);
       collectedSections.push({
+        index: i,
         heading: sectionHeading,
         raw_text: text,
       });
     }
 
-    // Filter out tiny frontmatter/empty sections (< 20 chars) unless it's the only section
-    let valid = collectedSections.filter((s) => s.raw_text.length >= 20);
-    if (valid.length === 0 && collectedSections.length > 0) {
-      const nonEmpty = collectedSections.filter((s) => s.raw_text.length > 0);
-      if (nonEmpty.length > 0) {
-        valid = [nonEmpty[0]];
+    // Attempt TOC-driven aggregation if book.toc is present
+    const rawToc = book.toc ? flattenToc(book.toc) : [];
+    const resolvedToc = [];
+    if (rawToc.length > 0 && typeof book.resolveHref === 'function') {
+      for (const item of rawToc) {
+        const tTitle = (item.label || item.title || '').trim();
+        if (!tTitle || !item.href) continue;
+        try {
+          const target = await book.resolveHref(item.href);
+          const sIdx = target?.index ?? null;
+          if (typeof sIdx === 'number' && sIdx >= 0) {
+            resolvedToc.push({
+              title: tTitle,
+              sectionIndex: sIdx,
+            });
+          }
+        } catch (_) {}
       }
     }
 
     let chapters = [];
-    if (valid.length === 1 && valid[0].raw_text.length > 3000) {
-      const subChapters = extractChaptersFromText(valid[0].raw_text, title);
-      if (subChapters.length > 1) {
-        chapters = subChapters;
+
+    // Filter boilerplate TOC entries (Notice, Cover, Page \d+, etc.)
+    const meaningfulToc = resolvedToc
+      .filter((entry) => !BOILERPLATE_TITLE_REGEX.test(entry.title))
+      .sort((a, b) => a.sectionIndex - b.sectionIndex);
+
+    // Deduplicate same-section TOC items
+    const uniqueToc = [];
+    for (const entry of meaningfulToc) {
+      if (uniqueToc.length === 0 || uniqueToc[uniqueToc.length - 1].sectionIndex !== entry.sectionIndex) {
+        uniqueToc.push(entry);
+      }
+    }
+
+    if (uniqueToc.length >= 2) {
+      // Group spine sections between consecutive TOC entries
+      for (let k = 0; k < uniqueToc.length; k++) {
+        const cur = uniqueToc[k];
+        const next = uniqueToc[k + 1];
+        const startIdx = cur.sectionIndex;
+        const endIdx = next ? next.sectionIndex : collectedSections.length;
+
+        const chunkText = collectedSections
+          .filter((s) => s.index >= startIdx && s.index < endIdx)
+          .map((s) => s.raw_text)
+          .filter((t) => t && t.length > 0)
+          .join('\n\n')
+          .trim();
+
+        if (chunkText.length > 0) {
+          const chNum = chapters.length + 1;
+          const isPrefixed = /^(?:chapter|prologue|epilogue|book|section|part|act)\b/i.test(cur.title);
+          chapters.push({
+            chapter_number: chNum,
+            title: isPrefixed ? cur.title : `Chapter ${chNum}: ${cur.title}`,
+            raw_text: chunkText,
+          });
+        }
+      }
+    }
+
+    // Fallback: Check if spine is fragmented / page-split (e.g. titles are Page 0, Page 1, split_X, Notice,
+    // or average section length < 500 words / 2500 chars)
+    if (chapters.length < 2 && collectedSections.length > 0) {
+      const nonBoilerplateSections = collectedSections.filter(
+        (s) => !BOILERPLATE_TITLE_REGEX.test(s.heading) && s.raw_text.length > 0
+      );
+      const totalChars = nonBoilerplateSections.reduce((acc, s) => acc + s.raw_text.length, 0);
+      const avgChars = nonBoilerplateSections.length > 0 ? totalChars / nonBoilerplateSections.length : 0;
+      const isPageSplit =
+        collectedSections.length > 1 &&
+        (avgChars < 2500 ||
+          collectedSections.filter((s) => /^(?:page\s+\d+|split_\d+|notice)$/i.test(s.heading)).length >=
+            Math.ceil(collectedSections.length / 3));
+
+      if (isPageSplit || uniqueToc.length < 2) {
+        const consolidatedText = nonBoilerplateSections.map((s) => s.raw_text).join('\n\n').trim();
+        if (consolidatedText.length > 0) {
+          const extracted = extractChaptersFromText(consolidatedText, title);
+          if (extracted.length > 1) {
+            chapters = extracted;
+          }
+        }
+      }
+    }
+
+    // Final fallback: Use individual non-boilerplate sections if still not grouped
+    if (chapters.length < 2 && collectedSections.length > 0) {
+      const valid = collectedSections.filter(
+        (s) => s.raw_text.length >= 20 && !BOILERPLATE_TITLE_REGEX.test(s.heading)
+      );
+      if (valid.length > 1) {
+        chapters = valid.map((s, idx) => {
+          const chNum = idx + 1;
+          const isPrefixed = /^(?:chapter|prologue|epilogue|book|section|part|act)\b/i.test(s.heading);
+          return {
+            chapter_number: chNum,
+            title: s.heading
+              ? isPrefixed
+                ? s.heading
+                : `Chapter ${chNum}: ${s.heading}`
+              : `Chapter ${chNum}`,
+            raw_text: s.raw_text,
+          };
+        });
+      } else if (valid.length === 1 && valid[0].raw_text.length > 3000) {
+        const sub = extractChaptersFromText(valid[0].raw_text, title);
+        if (sub.length > 1) chapters = sub;
       }
     }
 
     if (chapters.length === 0) {
-      chapters = valid.map((s, idx) => {
-        const chNum = idx + 1;
-        const isPrefixed = /^(?:chapter|prologue|epilogue|book|section|part|act)\b/i.test(s.heading);
-        return {
-          chapter_number: chNum,
-          title: s.heading
-            ? isPrefixed
-              ? s.heading
-              : `Chapter ${chNum}: ${s.heading}`
-            : `Chapter ${chNum}`,
-          raw_text: s.raw_text,
-        };
-      });
+      const fullFallbackText = collectedSections.map((s) => s.raw_text).join('\n\n').trim();
+      chapters = [
+        {
+          chapter_number: 1,
+          title: `Chapter 1: ${title || 'Introduction'}`,
+          raw_text: fullFallbackText,
+        },
+      ];
     }
 
     return {

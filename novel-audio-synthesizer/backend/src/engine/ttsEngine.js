@@ -99,38 +99,26 @@ function resolveKokoroVoice(voiceId) {
 }
 
 const TRUSTED_CLIENT_TOKEN = '6A5AA1D4EAFF4E9FB37E23D68491D6F4';
-const CHROMIUM_FULL_VERSION = '143.0.3650.75';
+const CHROMIUM_FULL_VERSION = '143.0.3650.96';
 const CHROMIUM_MAJOR_VERSION = '143';
-const SEC_MS_GEC_VERSION = `2-${CHROMIUM_FULL_VERSION}`;
+const SEC_MS_GEC_VERSION = `1-${CHROMIUM_FULL_VERSION}`;
 
-let cachedSecMsGecToken = null;
-let tokenExpiryTime = 0;
+function getSecMsGecToken() {
+  try {
+    const ticks = Math.floor(Date.now() / 1000) + 11644473600;
+    const rounded = ticks - (ticks % 300);
+    const windowsTicks = rounded * 10000000;
+    const data = `${windowsTicks}${TRUSTED_CLIENT_TOKEN}`;
+    return crypto.createHash('sha256').update(data).digest('hex').toUpperCase();
+  } catch (_) {
+    return null;
+  }
+}
 
 function getPythonBin() {
   const pythonVenv = path.resolve(config.paths.modelsDir, '../.venv/bin/python');
   if (fs.existsSync(pythonVenv)) return pythonVenv;
   return process.env.PYTHON_BIN || 'python3';
-}
-
-function getSecMsGecToken() {
-  const now = Date.now();
-  if (cachedSecMsGecToken && now < tokenExpiryTime) {
-    return cachedSecMsGecToken;
-  }
-  try {
-    const token = child_process
-      .execFileSync(getPythonBin(), ['-c', 'from edge_tts.drm import DRM; print(DRM.generate_sec_ms_gec())'], {
-        encoding: 'utf8',
-        timeout: 4000,
-      })
-      .trim();
-    if (token && token.includes('-')) {
-      cachedSecMsGecToken = token;
-      tokenExpiryTime = now + 4 * 60 * 1000; // Cache for 4 minutes
-      return cachedSecMsGecToken;
-    }
-  } catch (_) {}
-  return null;
 }
 
 class TTSEngine {
@@ -144,10 +132,26 @@ class TTSEngine {
     this.paradeeWorkerScript = path.resolve(__dirname, '../scripts/paradeeWorker.py');
   }
 
-  async checkModelAvailable() {
+  async checkModelAvailable(options = {}) {
     const modelExists = fs.existsSync(this.modelPath);
     const voicesExists = fs.existsSync(this.voicesPath);
     const paradeeExists = fs.existsSync(this.paradeeModelPath) && fs.existsSync(this.paradeeConfigPath);
+    let cloudReady = true;
+    if (options.probe) {
+      try {
+        const token = getSecMsGecToken();
+        cloudReady = Boolean(token);
+      } catch (_) {
+        cloudReady = false;
+      }
+    }
+    const machineReady =
+      process.platform === 'darwin' ||
+      Boolean(
+        child_process.spawnSync('which', ['espeak-ng']).status === 0 ||
+        child_process.spawnSync('which', ['espeak']).status === 0
+      );
+
     return {
       primary_engine: 'msedge-tts (Cloud Neural)',
       fallback_engine: 'kokoro-tts (Local ONNX)',
@@ -155,7 +159,7 @@ class TTSEngine {
       mixed_engine: 'paradee-mixed (Paradee-8M Primary + Machine-TTS Extra Cast)',
       machine_engine: 'machine-tts (Local OS Speech)',
       engines: ['msedge-tts', 'kokoro-tts', 'paradee-tts', 'paradee-mixed', 'machine-tts'],
-      cloud_ready: true,
+      cloud_ready: cloudReady,
       model_exists: modelExists,
       voices_exists: voicesExists,
       model_path: this.modelPath,
@@ -163,6 +167,7 @@ class TTSEngine {
       paradee_ready: paradeeExists,
       paradee_model_path: this.paradeeModelPath,
       paradee_voices: ['bm_fable', 'bf_isabella', 'am_puck', 'af_heart'],
+      machine_ready: machineReady,
       initialized: true,
     };
   }
@@ -185,15 +190,12 @@ class TTSEngine {
     }
 
     const connectionId = crypto.randomUUID().replace(/-/g, '');
-    const muid = crypto.randomBytes(16).toString('hex').toUpperCase();
-
     const url =
-      `wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?` +
-      `TrustedClientToken=${TRUSTED_CLIENT_TOKEN}&ConnectionId=${connectionId}` +
-      `&Sec-MS-GEC=${token}&Sec-MS-GEC-Version=${SEC_MS_GEC_VERSION}`;
+      `wss://api.msedgeservices.com/tts/cognitiveservices/websocket/v1?` +
+      `Ocp-Apim-Subscription-Key=${TRUSTED_CLIENT_TOKEN}&Sec-MS-GEC=${token}` +
+      `&Sec-MS-GEC-Version=${SEC_MS_GEC_VERSION}&ConnectionId=${connectionId}`;
 
     const headers = {
-      Cookie: `muid=${muid};`,
       Origin: 'chrome-extension://jdiccldimpdaibmpdkjnbmckianbfold',
       'User-Agent': `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${CHROMIUM_MAJOR_VERSION}.0.0.0 Safari/537.36 Edg/${CHROMIUM_MAJOR_VERSION}.0.0.0`,
       Pragma: 'no-cache',
@@ -392,12 +394,54 @@ class TTSEngine {
     }
   }
 
+  async synthesizeWithEdgeNode(text, voiceId, options = {}) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const { MsEdgeTTS, OUTPUT_FORMAT } = require('msedge-tts');
+        const tts = new MsEdgeTTS();
+        const pitchStr = options.prosody?.pitch || '+0Hz';
+        const rateStr = options.prosody?.rate || '+0%';
+        await tts.setMetadata(voiceId || 'en-GB-RyanNeural', OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
+        const streamResult = tts.toStream(text, {
+          pitch: pitchStr,
+          rate: rateStr,
+        });
+        const audioStream = streamResult?.audioStream || streamResult;
+        if (!audioStream || typeof audioStream.on !== 'function') {
+          return reject(new Error('MsEdgeTTS toStream did not return a readable audioStream'));
+        }
+        const chunks = [];
+        audioStream.on('data', (chunk) => chunks.push(chunk));
+        audioStream.on('end', () => {
+          const buffer = Buffer.concat(chunks);
+          if (buffer.length === 0) {
+            return reject(new Error('MsEdgeTTS returned empty audio stream'));
+          }
+          const durationMs = Math.round((buffer.length / this.bytesPerSec) * 1000);
+          resolve({
+            audio_buffer: buffer,
+            duration_ms: durationMs,
+            format: 'mp3',
+            engine: 'msedge-tts',
+          });
+        });
+        audioStream.on('error', (err) => reject(err));
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
   async synthesizeWithEdge(text, voiceId, options = {}) {
     try {
       return await this.synthesizeWithEdgeWs(text, voiceId, options);
     } catch (wsErr) {
-      console.warn(`[TTSEngine] Edge WebSocket failed (${wsErr.message}). Trying Edge CLI fallback.`);
-      return await this.synthesizeWithEdgeCli(text, voiceId, options);
+      try {
+        return await this.synthesizeWithEdgeNode(text, voiceId, options);
+      } catch (nodeErr) {
+        console.warn(`[TTSEngine] Edge WebSocket/Node failed (${wsErr.message} / ${nodeErr.message}). Trying Edge CLI fallback.`);
+        return await this.synthesizeWithEdgeCli(text, voiceId, options);
+      }
     }
   }
 

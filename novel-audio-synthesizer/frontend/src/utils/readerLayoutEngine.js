@@ -168,6 +168,7 @@ export function measureAndPaginateSegments(segments = [], options = {}) {
     // so prose never bleeds outside the book spread container or overlaps the footer
     if (segHeight > usablePageHeight && cleanText && cleanText.length > 300) {
       const sentences = cleanText.match(/[^.!?]+[.!?]+["”']?\s*|[^.!?]+$/g) || [cleanText];
+      const fragmentTexts = [];
       let subText = '';
       let subUsedHeight = 0;
 
@@ -179,17 +180,13 @@ export function measureAndPaginateSegments(segments = [], options = {}) {
 
         if (currentPage.length > 0 && currentUsedHeight + testHeight > usablePageHeight) {
           if (subText.trim()) {
-            currentPage.push({ ...seg, text: subText.trim() });
+            fragmentTexts.push(subText.trim());
           }
-          pages.push(currentPage);
-          currentPage = [];
           currentUsedHeight = 0;
           subText = sentence;
           subUsedHeight = estimateSegmentHeight({ ...seg, text: sentence }, { containerWidth, fontSize, lineHeight });
         } else if (testHeight > usablePageHeight && subText.trim()) {
-          currentPage.push({ ...seg, text: subText.trim() });
-          pages.push(currentPage);
-          currentPage = [];
+          fragmentTexts.push(subText.trim());
           currentUsedHeight = 0;
           subText = sentence;
           subUsedHeight = estimateSegmentHeight({ ...seg, text: sentence }, { containerWidth, fontSize, lineHeight });
@@ -200,11 +197,53 @@ export function measureAndPaginateSegments(segments = [], options = {}) {
       }
 
       if (subText.trim()) {
-        currentPage.push({ ...seg, text: subText.trim() });
-        currentUsedHeight += subUsedHeight;
+        fragmentTexts.push(subText.trim());
+      }
+
+      const wordCounts = fragmentTexts.map((txt) => {
+        const words = txt.trim().split(/\s+/).filter(Boolean);
+        return Math.max(1, words.length);
+      });
+      const totalWords = Math.max(1, wordCounts.reduce((a, b) => a + b, 0));
+
+      let accumulatedWords = 0;
+      const fragments = fragmentTexts.map((txt, idx) => {
+        const wCount = wordCounts[idx];
+        const startRatio = accumulatedWords / totalWords;
+        accumulatedWords += wCount;
+        const endRatio = idx === fragmentTexts.length - 1 ? 1.0 : accumulatedWords / totalWords;
+
+        return {
+          ...seg,
+          text: txt,
+          _fragmentIndex: idx,
+          _fragmentCount: fragmentTexts.length,
+          _wordStartRatio: startRatio,
+          _wordEndRatio: endRatio,
+        };
+      });
+
+      for (const frag of fragments) {
+        const fragHeight = estimateSegmentHeight(frag, { containerWidth, fontSize, lineHeight });
+        if (currentPage.length > 0 && currentUsedHeight + fragHeight > usablePageHeight) {
+          pages.push(currentPage);
+          currentPage = [frag];
+          currentUsedHeight = fragHeight;
+        } else {
+          currentPage.push(frag);
+          currentUsedHeight += fragHeight;
+        }
       }
       continue;
     }
+
+    const normalSeg = {
+      ...seg,
+      _fragmentIndex: 0,
+      _fragmentCount: 1,
+      _wordStartRatio: 0,
+      _wordEndRatio: 1,
+    };
 
     // Check if adding this segment would exceed the page's vertical budget or segment cap
     const wouldOverflow =
@@ -213,10 +252,10 @@ export function measureAndPaginateSegments(segments = [], options = {}) {
 
     if (wouldOverflow) {
       pages.push(currentPage);
-      currentPage = [seg];
+      currentPage = [normalSeg];
       currentUsedHeight = segHeight;
     } else {
-      currentPage.push(seg);
+      currentPage.push(normalSeg);
       currentUsedHeight += segHeight;
     }
   }
@@ -277,7 +316,18 @@ export function createBookSpreads(pages = []) {
  */
 export function process4PassSegment(segment, activeSegmentId, segmentProgress = 0) {
   const segId = segment.segment_id !== undefined ? segment.segment_id : segment.order;
-  const isActive = segId === activeSegmentId;
+  const fragCount = segment._fragmentCount || 1;
+  const fragIdx = segment._fragmentIndex || 0;
+  const startRatio = segment._wordStartRatio !== undefined ? segment._wordStartRatio : 0;
+  const endRatio = segment._wordEndRatio !== undefined ? segment._wordEndRatio : 1;
+
+  let isActive = segId === activeSegmentId;
+  if (isActive && fragCount > 1 && typeof segmentProgress === 'number') {
+    isActive =
+      segmentProgress >= startRatio &&
+      (segmentProgress < endRatio || fragIdx === fragCount - 1);
+  }
+
   const { imgUrl, cleanText } = parseSegmentImage(segment);
   const isDialogue = segment.type === 'dialogue';
 
@@ -304,9 +354,16 @@ export function process4PassSegment(segment, activeSegmentId, segmentProgress = 
         if (!/^\s+$/.test(t)) nonWhitespace.push(i);
       });
       const totalWords = Math.max(1, nonWhitespace.length);
+
+      // Local progress within this fragment
+      const localProgress =
+        fragCount > 1
+          ? Math.max(0, Math.min(1, (segmentProgress - startRatio) / (endRatio - startRatio || 1)))
+          : segmentProgress;
+
       const targetIdx = Math.min(
         totalWords - 1,
-        Math.max(0, Math.floor(segmentProgress * totalWords))
+        Math.max(0, Math.floor(localProgress * totalWords))
       );
       activeTokenIndex = nonWhitespace[targetIdx] ?? -1;
     }

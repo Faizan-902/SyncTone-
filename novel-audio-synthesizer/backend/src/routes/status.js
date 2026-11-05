@@ -7,9 +7,10 @@ const { config } = require('../config');
 const router = Router();
 
 // GET /api/status/models
-router.get('/status/models', async (_req, res) => {
+router.get('/status/models', async (req, res) => {
+  const probe = req.query.probe === 'true' || req.query.probe === '1';
   const [ttsStatus, llmAvailable, parsersStatus] = await Promise.all([
-    ttsEngine.checkModelAvailable(),
+    ttsEngine.checkModelAvailable({ probe }),
     attributionEngine.checkAvailability(),
     getParsersStatus(),
   ]);

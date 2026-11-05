@@ -2,6 +2,16 @@ const DEFAULT_REMOVE_PATTERNS = [
   /The text on this page is estimated to be only \d+(\.\d+)?% accurate/i,
   /This book was produced in EPUB format by the Internet Archive/i,
   /The book pages were scanned and converted to EPUB format automatically/i,
+  /Notice:\s*The book may not offer the correct reading sequence/i,
+  /The book may not offer the correct reading sequence because of missing or misordered pages/i,
+  /The hidden page numbering which may be available to your ereader/i,
+  /The Internet Archive is working to improve the scanning process/i,
+  /The Internet Archive was founded in 1996/i,
+  /This book is available for free download in a number of formats/i,
+  /Access-restricted-item\s+true/i,
+  /Addeddate\s+\d{4}-\d{2}-\d{2}/i,
+  /Boxid\s+IA\d+/i,
+  /Scanner\s+Internet Archive/i,
 ];
 
 const BLOCK_TAG_DETECT_REGEX = /<(?:p|div|br|h[1-6]|article|section|blockquote|li|tr|table)\b/i;

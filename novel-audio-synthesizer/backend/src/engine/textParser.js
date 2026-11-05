@@ -93,8 +93,18 @@ function parseChapter(rawText, title = 'Untitled Chapter', chapterId = 'ch-1') {
   let secondLastSpeaker = '';
 
   for (const paragraph of paragraphs) {
-    // Strip residual Internet Archive / hOCR page headers if they appear alone on a line
-    if (/^(?:Page\s+\d+|Notice:\s*The book may not offer.*|This book is available for free download.*)$/i.test(paragraph)) {
+    // Strip residual Internet Archive / scanner boilerplate / hOCR headers
+    if (
+      /^(?:Page\s+\d+|Notice:\s*The book may not offer.*|This book is available for free download.*)$/i.test(paragraph) ||
+      /The text on this page is estimated to be only \d+/i.test(paragraph) ||
+      /This book was produced in EPUB format by the Internet Archive/i.test(paragraph) ||
+      /The book pages were scanned and converted to EPUB format/i.test(paragraph) ||
+      /The book may not offer the correct reading sequence/i.test(paragraph) ||
+      /The Internet Archive (?:is working to improve|was founded in 1996)/i.test(paragraph) ||
+      /Access-restricted-item\s+true/i.test(paragraph) ||
+      /Boxid\s+IA\d+/i.test(paragraph) ||
+      /Scanner\s+Internet Archive/i.test(paragraph)
+    ) {
       continue;
     }
 

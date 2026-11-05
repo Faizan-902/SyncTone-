@@ -212,21 +212,32 @@ export default function OpenGLPageReader({
   const leftPageNum = leftPageIdx + 1;
   const rightPageNum = rightPageIdx + 1;
 
-  // Auto-flip spread to track active spoken segment
+  // Auto-flip spread to track active spoken segment & fragment
   useEffect(() => {
     if (activeSegmentId === -1 || pages.length === 0) {
       lastAutoFlippedSegRef.current = -1;
       return;
     }
-    if (activeSegmentId === lastAutoFlippedSegRef.current) return;
-    lastAutoFlippedSegRef.current = activeSegmentId;
 
     const targetPageIdx = pages.findIndex((page) =>
-      page.some((s) => (s.segment_id !== undefined ? s.segment_id : s.order) === activeSegmentId)
+      page.some((s) => {
+        const sId = s.segment_id !== undefined ? s.segment_id : s.order;
+        if (sId !== activeSegmentId) return false;
+        if (s._fragmentCount > 1 && typeof segmentProgress === 'number') {
+          return (
+            segmentProgress >= (s._wordStartRatio || 0) &&
+            (segmentProgress < (s._wordEndRatio || 1) || s._fragmentIndex === s._fragmentCount - 1)
+          );
+        }
+        return true;
+      })
     );
 
     if (targetPageIdx !== -1) {
       const targetSpreadIdx = Math.floor(targetPageIdx / 2);
+      const flipKey = `${activeSegmentId}_spread_${targetSpreadIdx}`;
+      if (flipKey === lastAutoFlippedSegRef.current) return;
+      lastAutoFlippedSegRef.current = flipKey;
 
       // If active segment is on Page 2 of Spread 0 while cover is showing, automatically switch to prose
       if (targetSpreadIdx === 0 && targetPageIdx === 1 && showCoverSpread) {
@@ -248,7 +259,7 @@ export default function OpenGLPageReader({
         return () => clearTimeout(timer);
       }
     }
-  }, [activeSegmentId, pages, currentSpreadIndex, showCoverSpread]);
+  }, [activeSegmentId, segmentProgress, pages, currentSpreadIndex, showCoverSpread]);
 
   // Turn to Next Spread
   const handleNextPage = useCallback(() => {
@@ -326,6 +337,7 @@ export default function OpenGLPageReader({
   // Render WTR-Lab TTS Yellow Highlight with intra-segment word tracking and inline EPUB illustrations
   const renderSegmentProse = (seg, isActive) => {
     const segId = seg.segment_id !== undefined ? seg.segment_id : seg.order;
+    const fragKey = `${segId}_frag_${seg._fragmentIndex || 0}`;
     const { imgUrl, cleanText } = parseSegmentImage(seg);
     const isDialogue = seg.type === 'dialogue';
     const rawText = isDialogue
@@ -336,7 +348,7 @@ export default function OpenGLPageReader({
     if (imgUrl && !rawText) {
       return (
         <div
-          key={segId}
+          key={fragKey}
           data-active-segment={isActive ? 'true' : undefined}
           onClick={() => onSegmentClick && onSegmentClick(segId)}
           className="my-auto py-2 flex items-center justify-center cursor-pointer"
@@ -369,7 +381,7 @@ export default function OpenGLPageReader({
     if (!isActive) {
       return (
         <div
-          key={segId}
+          key={fragKey}
           onClick={() => onSegmentClick && onSegmentClick(segId)}
           role="button"
           tabIndex={0}
@@ -414,10 +426,18 @@ export default function OpenGLPageReader({
           if (!/^\s+$/.test(t)) nonWhitespaceIndices.push(i);
         });
 
+        const fragCount = seg._fragmentCount || 1;
+        const startRatio = seg._wordStartRatio !== undefined ? seg._wordStartRatio : 0;
+        const endRatio = seg._wordEndRatio !== undefined ? seg._wordEndRatio : 1;
+        const localProgress =
+          fragCount > 1
+            ? Math.max(0, Math.min(1, (segmentProgress - startRatio) / (endRatio - startRatio || 1)))
+            : segmentProgress;
+
         const totalWords = Math.max(1, nonWhitespaceIndices.length);
         const targetWordIdx = Math.min(
           totalWords - 1,
-          Math.max(0, Math.floor(segmentProgress * totalWords))
+          Math.max(0, Math.floor(localProgress * totalWords))
         );
         const activeTokenIdx = nonWhitespaceIndices[targetWordIdx] ?? -1;
 
@@ -472,7 +492,7 @@ export default function OpenGLPageReader({
 
     return (
       <div
-        key={segId}
+        key={fragKey}
         data-active-segment="true"
         onClick={() => onSegmentClick && onSegmentClick(segId)}
         role="button"
@@ -519,6 +539,25 @@ export default function OpenGLPageReader({
   // If on Spread 0 with prose (!showCoverSpread), Prev is ENABLED to flip back to Cover!
   const isPrevDisabled = currentSpreadIndex === 0 && (showCoverSpread || !currentNovel?.cover_object);
   const isNextDisabled = currentSpreadIndex >= totalSpreads - 1 && !showCoverSpread;
+
+  const isSegmentFragmentActive = useCallback(
+    (seg) => {
+      const segId = seg.segment_id !== undefined ? seg.segment_id : seg.order;
+      if (segId !== activeSegmentId) return false;
+      const fragCount = seg._fragmentCount || 1;
+      if (fragCount > 1 && typeof segmentProgress === 'number') {
+        const startRatio = seg._wordStartRatio !== undefined ? seg._wordStartRatio : 0;
+        const endRatio = seg._wordEndRatio !== undefined ? seg._wordEndRatio : 1;
+        const fragIdx = seg._fragmentIndex || 0;
+        return (
+          segmentProgress >= startRatio &&
+          (segmentProgress < endRatio || fragIdx === fragCount - 1)
+        );
+      }
+      return true;
+    },
+    [activeSegmentId, segmentProgress]
+  );
 
   return (
     <div
@@ -634,8 +673,7 @@ export default function OpenGLPageReader({
                 {/* Left Page Prose Segments */}
                 {leftPageSegments.length > 0 ? (
                   leftPageSegments.map((seg) => {
-                    const segId = seg.segment_id !== undefined ? seg.segment_id : seg.order;
-                    const isActive = segId === activeSegmentId;
+                    const isActive = isSegmentFragmentActive(seg);
                     return renderSegmentProse(seg, isActive);
                   })
                 ) : (
@@ -723,8 +761,7 @@ export default function OpenGLPageReader({
                   /* Right Page Prose Segments */
                   rightPageSegments.length > 0 ? (
                     rightPageSegments.map((seg) => {
-                      const segId = seg.segment_id !== undefined ? seg.segment_id : seg.order;
-                      const isActive = segId === activeSegmentId;
+                      const isActive = isSegmentFragmentActive(seg);
                       return renderSegmentProse(seg, isActive);
                     })
                   ) : (
@@ -819,9 +856,18 @@ export default function OpenGLPageReader({
           <input
             type="range"
             min={0}
-            max={totalSpreads - 1}
+            max={Math.max(0, totalSpreads - 1)}
             value={currentSpreadIndex}
-            onChange={(e) => setCurrentSpreadIndex(parseInt(e.target.value, 10))}
+            onChange={(e) => {
+              const val = parseInt(e.target.value, 10);
+              if (val !== currentSpreadIndex) {
+                setLastJumpPage(currentSpreadIndex * 2 + 1);
+                setCurrentSpreadIndex(val);
+                if (val > 0) {
+                  setShowCoverSpread(false);
+                }
+              }
+            }}
             className="flex-1 h-1.5 accent-[var(--accent)] cursor-pointer"
             aria-label="Book spread slider"
           />

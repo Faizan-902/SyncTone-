@@ -42,6 +42,7 @@ export default function AudioPlayer({
   onPause,
   onEnded,
   onLoadedMetadata,
+  onError,
   currentNovel,
   currentChapter,
   onSeekSegment,
@@ -289,6 +290,7 @@ export default function AudioPlayer({
         onPause={onPause}
         onEnded={onEnded}
         onLoadedMetadata={onLoadedMetadata}
+        onError={onError}
       />
 
       <div className="max-w-5xl mx-auto flex flex-col gap-1.5">

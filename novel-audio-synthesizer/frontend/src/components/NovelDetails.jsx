@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { api, ApiError } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 import { preloadUploadChapterModal, preloadReaderView } from '../App';
@@ -15,6 +15,7 @@ import {
   IconBook,
   IconSoundwave,
   IconTrash,
+  IconUpload,
 } from './icons';
 
 function formatDuration(ms) {
@@ -38,6 +39,34 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
       return false;
     }
   });
+
+  const coverUploadInputRef = useRef(null);
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
+
+  const handleCoverFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !novelId) return;
+    setIsUploadingCover(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const assetRes = await api.novels.uploadAsset(formData);
+      if (assetRes?.url) {
+        await api.novels.patch(novelId, { cover_object: assetRes.url });
+        setData((prev) =>
+          prev && prev.novel
+            ? { ...prev, novel: { ...prev.novel, cover_object: assetRes.url } }
+            : prev
+        );
+      }
+    } catch (err) {
+      console.error('Failed to update cover:', err);
+      alert('Failed to update cover: ' + (err.message || 'Unknown error'));
+    } finally {
+      setIsUploadingCover(false);
+      if (coverUploadInputRef.current) coverUploadInputRef.current.value = '';
+    }
+  };
 
   useEffect(() => {
     try {
@@ -193,6 +222,28 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
                 <span>{isVerified ? 'VERIFIED ORIGINAL' : 'COMMUNITY'}</span>
               </span>
             </div>
+
+            {/* Subtle Cover Artwork Change Overlay */}
+            <input
+              ref={coverUploadInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              className="hidden"
+              onChange={handleCoverFileChange}
+            />
+            {(isWriterOrAdmin || !novel.cover_object) && (
+              <button
+                type="button"
+                onClick={() => coverUploadInputRef.current?.click()}
+                disabled={isUploadingCover}
+                className="absolute bottom-2.5 right-2.5 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-black/80 hover:bg-black/90 text-white backdrop-blur-xs border border-white/20 shadow-md flex items-center gap-1 cursor-pointer"
+                title="Change cover artwork"
+                aria-label="Change novel cover artwork"
+              >
+                <IconUpload className="w-3 h-3" />
+                <span>{isUploadingCover ? 'Saving...' : 'Change Cover'}</span>
+              </button>
+            )}
           </div>
 
           {/* Novel Info (Right) */}
