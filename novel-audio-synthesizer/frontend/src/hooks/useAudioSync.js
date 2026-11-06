@@ -746,9 +746,11 @@ export function useAudioSync(timeline = [], onSegmentChangeOrOptions = null, may
     }
   }, []);
 
-  const togglePlaybackMode = useCallback(() => {
+  const togglePlaybackMode = useCallback((targetMode) => {
+    const validMode = targetMode === 'tts' || targetMode === 'studio' ? targetMode : null;
     setPlaybackMode((prev) => {
-      const next = prev === 'tts' ? 'studio' : 'tts';
+      const next = validMode || (prev === 'tts' ? 'studio' : 'tts');
+      if (next === prev) return prev;
       if (next === 'tts') {
         if (audioRef.current) {
           audioRef.current.pause();

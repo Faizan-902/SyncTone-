@@ -469,7 +469,7 @@ export default function AudioPlayer({
             {onTogglePlaybackMode && (
               <button
                 type="button"
-                onClick={onTogglePlaybackMode}
+                onClick={() => onTogglePlaybackMode?.()}
                 className={`px-2 sm:px-2.5 py-1 rounded-lg border text-xs font-mono font-bold transition shadow-xs cursor-pointer flex items-center gap-1.5 ${
                   playbackMode === 'tts'
                     ? 'bg-[var(--warning)]/20 text-[var(--warning)] border-[var(--warning)]/40 hover:bg-[var(--warning)]/30'

@@ -160,6 +160,9 @@ export default function OpenGLPageReader({
   onSegmentClick,
   currentNovel,
   currentChapter,
+  nextChapter = null,
+  prevChapter = null,
+  onNextChapter,
   onBack,
   onSwitchToNormal,
   fontFamily = 'serif',
@@ -173,6 +176,15 @@ export default function OpenGLPageReader({
   const [flipDirection, setFlipDirection] = useState('next'); // 'next' | 'prev'
   const [lastJumpPage, setLastJumpPage] = useState(1);
   const [showCoverSpread, setShowCoverSpread] = useState(false);
+
+  const chapterTransitioningRef = useRef(false);
+
+  // Reset spread when chapter changes
+  useEffect(() => {
+    chapterTransitioningRef.current = false;
+    setCurrentSpreadIndex(0);
+    setShowCoverSpread(false);
+  }, [currentChapter?.id, currentChapter?.chapter_number]);
 
   const bookContainerRef = useRef(null);
   const autoFlipLockRef = useRef(false);
@@ -270,6 +282,19 @@ export default function OpenGLPageReader({
       setTimeout(() => setIsFlipping(false), 280);
       return;
     }
+    if (currentSpreadIndex >= totalSpreads - 1) {
+      if (nextChapter && onNextChapter && !chapterTransitioningRef.current) {
+        chapterTransitioningRef.current = true;
+        setFlipDirection('next');
+        setIsFlipping(true);
+        setTimeout(() => setIsFlipping(false), 280);
+        setTimeout(() => {
+          chapterTransitioningRef.current = false;
+        }, 1200);
+        onNextChapter();
+      }
+      return;
+    }
     setCurrentSpreadIndex((prev) => {
       if (prev >= totalSpreads - 1) return prev;
       setLastJumpPage(prev * 2 + 1);
@@ -278,7 +303,7 @@ export default function OpenGLPageReader({
       setTimeout(() => setIsFlipping(false), 280);
       return prev + 1;
     });
-  }, [totalSpreads, currentSpreadIndex, showCoverSpread]);
+  }, [totalSpreads, currentSpreadIndex, showCoverSpread, nextChapter, onNextChapter]);
 
   // Turn to Previous Spread (Fixes previous page button bug on Spread 0 and cover transitions)
   const handlePrevPage = useCallback(() => {
@@ -538,7 +563,15 @@ export default function OpenGLPageReader({
   // Prev is only disabled if on Spread 0 AND (cover is already showing OR novel has no cover)
   // If on Spread 0 with prose (!showCoverSpread), Prev is ENABLED to flip back to Cover!
   const isPrevDisabled = currentSpreadIndex === 0 && (showCoverSpread || !currentNovel?.cover_object);
-  const isNextDisabled = currentSpreadIndex >= totalSpreads - 1 && !showCoverSpread;
+  const isOnFinalSpread = currentSpreadIndex >= totalSpreads - 1 && !showCoverSpread;
+  const isNextDisabled = isOnFinalSpread ? !nextChapter : false;
+  const nextSpreadTitle = isOnFinalSpread && nextChapter
+    ? (nextChapter.title
+        ? `Next Chapter: ${nextChapter.title}`
+        : (nextChapter.chapter_number
+            ? `Next Chapter: Chapter ${nextChapter.chapter_number}`
+            : 'Next Chapter'))
+    : 'Next Page (Right Arrow)';
 
   const isSegmentFragmentActive = useCallback(
     (seg) => {
@@ -588,6 +621,7 @@ export default function OpenGLPageReader({
         onNext={handleNextPage}
         canPrev={!isPrevDisabled}
         canNext={!isNextDisabled}
+        nextTitle={nextSpreadTitle}
       />
 
       {/* 3D Apple Books Two-Page Spread Stage */}
@@ -814,8 +848,8 @@ export default function OpenGLPageReader({
             className={`absolute top-0 right-0 w-16 h-16 z-30 group flex items-start justify-end p-2 ${
               isNextDisabled ? 'opacity-0 pointer-events-none' : 'cursor-pointer'
             }`}
-            title="Turn to next spread"
-            aria-label="Turn page forward"
+            title={isOnFinalSpread && nextChapter ? nextSpreadTitle : "Turn to next spread"}
+            aria-label={isOnFinalSpread && nextChapter ? nextSpreadTitle : "Turn page forward"}
           >
             <div className="w-6 h-6 border-t-2 border-r-2 border-[var(--brand-walnut,#6B4A2E)]/40 group-hover:border-[var(--brand-bronze,#A88462)] transition rounded-tr-lg" />
           </div>
@@ -841,9 +875,9 @@ export default function OpenGLPageReader({
             onClick={handleNextPage}
             disabled={isNextDisabled}
             className="px-2.5 py-1.5 rounded-xl theme-card border hover:border-[var(--accent)] text-xs font-semibold theme-sub hover:theme-main transition flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:pointer-events-none shadow-xs"
-            title="Next Page (Right Arrow)"
+            title={nextSpreadTitle}
           >
-            <span>Next Page</span>
+            <span>{isOnFinalSpread && nextChapter ? 'Next Chapter' : 'Next Page'}</span>
             <IconChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>

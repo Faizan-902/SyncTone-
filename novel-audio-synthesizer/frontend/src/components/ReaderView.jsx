@@ -448,7 +448,7 @@ export default function ReaderView({
               </span>
               {currentChapter && (
                 chapters && chapters.length > 1 ? (
-                  <div className="hidden sm:inline-flex items-center gap-1">
+                  <div className="inline-flex items-center gap-1">
                     <button
                       type="button"
                       disabled={!prevChapter}
@@ -465,7 +465,7 @@ export default function ReaderView({
                         <select
                           value={currentChapter.id}
                           onChange={(e) => onSelectChapter?.(e.target.value)}
-                          className="bg-transparent text-[var(--brand-sage,#87A96B)] font-mono font-bold text-xs cursor-pointer focus:outline-none appearance-none pr-3 truncate max-w-[180px]"
+                          className="bg-transparent text-[var(--brand-sage,#87A96B)] font-mono font-bold text-xs cursor-pointer focus:outline-none appearance-none pr-3 truncate max-w-[90px] sm:max-w-[180px]"
                           aria-label="Select Chapter"
                         >
                           {chapters.map((ch) => (
@@ -493,7 +493,7 @@ export default function ReaderView({
                     </button>
                   </div>
                 ) : (
-                  <span className="text-xs text-[var(--brand-sage,#87A96B)] font-mono font-bold truncate hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[var(--brand-sage,#87A96B)]/15 border border-[var(--brand-sage,#87A96B)]/30">
+                  <span className="text-xs text-[var(--brand-sage,#87A96B)] font-mono font-bold truncate inline-flex items-center gap-1.5 max-w-[90px] sm:max-w-[180px] px-2.5 py-0.5 rounded-full bg-[var(--brand-sage,#87A96B)]/15 border border-[var(--brand-sage,#87A96B)]/30">
                     <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-sage,#87A96B)] animate-pulse" />
                     {currentChapter.title}
                   </span>
@@ -677,6 +677,17 @@ export default function ReaderView({
             onSegmentClick={onSegmentClick}
             currentNovel={currentNovel}
             currentChapter={currentChapter}
+            nextChapter={nextChapter}
+            prevChapter={prevChapter}
+            onNextChapter={() => {
+              if (nextChapter) {
+                if (onNextChapter) {
+                  onNextChapter();
+                } else if (onSelectChapter) {
+                  onSelectChapter(nextChapter.id);
+                }
+              }
+            }}
             onBack={onBack}
             onSwitchToNormal={() => setReaderMode('normal')}
             fontFamily={fontFamily}

@@ -269,7 +269,7 @@ function AppContent() {
       const studioReady = Boolean(details.has_studio_audio);
       setHasStudioAudio(studioReady);
       if (!studioReady && audioSync.playbackMode === 'studio') {
-        audioSync.togglePlaybackMode('live');
+        audioSync.togglePlaybackMode('tts');
       }
 
       if (!novel && details.novel_id) {
@@ -676,11 +676,14 @@ function AppContent() {
                   currentChapter={currentChapter}
                   playbackMode={audioSync.playbackMode}
                   onTogglePlaybackMode={(mode) => {
-                    const targetMode = mode || (audioSync.playbackMode === 'live' ? 'studio' : 'live');
+                    const explicitMode = mode === 'tts' || mode === 'studio' ? mode : null;
+                    const targetMode = explicitMode || (audioSync.playbackMode === 'tts' ? 'studio' : 'tts');
                     if (targetMode === 'studio' && !hasStudioAudio) {
-                      handleSynthesizeCurrentChapter().then(() => {
-                        audioSync.togglePlaybackMode('studio');
-                      });
+                      handleSynthesizeCurrentChapter()
+                        .then(() => {
+                          audioSync.togglePlaybackMode('studio');
+                        })
+                        .catch(() => {});
                       return;
                     }
                     audioSync.togglePlaybackMode(targetMode);
