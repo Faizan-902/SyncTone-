@@ -63,6 +63,7 @@
   --bg-hover: #232327;
   --bg-elevated: #1B1B1E;
   --bg-bar: #141416;
+  --dock-safe-bottom: 72px;
 
   /* Typography / WCAG 2.2 AA Contrast Verified Coordinates */
   --text-main: #F2F2F3;
@@ -197,6 +198,7 @@ html.light {
   --bg-hover: #E4E4E6;
   --bg-elevated: #FFFFFF;
   --bg-bar: #F7F7F8;
+  --dock-safe-bottom: 72px;
 
   /* Typography / Text Ratios (High-Contrast Neutral) */
   --text-main: #0B0B0D;
@@ -479,10 +481,19 @@ html.light .architectural-portal {
 }
 
 .glass-dock {
-  background: var(--glass-dock);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--bg-bar);
   border-color: var(--border-subtle);
+}
+
+.audio-player-dock {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--dock-safe-bottom, 72px);
+  background: var(--bg-bar);
+  border-top: 1px solid var(--border-subtle);
+  z-index: 50;
 }
 
 /* ========================================================================= */

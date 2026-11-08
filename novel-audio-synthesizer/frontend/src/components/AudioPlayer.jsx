@@ -278,7 +278,7 @@ export default function AudioPlayer({
 
   return (
     <footer
-      className="fixed bottom-0 left-0 md:left-[72px] right-0 z-40 glass-dock border-t px-4 py-2.5 sm:py-3 shadow-2xl transition-colors duration-200"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--bg-bar)] border-t border-[var(--border-subtle)] h-[72px] px-3 sm:px-6 flex items-center select-none"
       aria-label="Floating Audio Dock"
     >
       {/* Hidden audio element for audio sync engine */}
@@ -293,257 +293,272 @@ export default function AudioPlayer({
         onError={onError}
       />
 
-      <div className="max-w-5xl mx-auto flex flex-col gap-1.5">
-        {/* Scrubber Track with 44px Touch Target & Accessible Slider */}
-        <div className="w-full flex items-center gap-3">
-          <span className="text-[11px] font-mono theme-muted w-10 text-right select-none font-bold">
-            {formatTime(currentTimeMs)}
-          </span>
-
-          <div
-            ref={scrubberTrackRef}
-            onClick={handleScrubberClick}
-            onMouseMove={handleScrubberMouseMove}
-            onMouseLeave={handleScrubberMouseLeave}
-            onKeyDown={handleKeyDown}
-            tabIndex={0}
-            role="slider"
-            aria-label="Audio scrubber"
-            aria-valuemin={0}
-            aria-valuemax={Math.floor(totalDurationMs / 1000)}
-            aria-valuenow={Math.floor(currentTimeMs / 1000)}
-            className="flex-1 py-3 cursor-pointer relative flex items-center group focus:outline-none"
-          >
-            {/* Scrubber timecode hover preview badge */}
-            {hoverTimeMs !== null && (
-              <div
-                className="absolute -top-7 pointer-events-none transform -translate-x-1/2 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-[var(--bg-surface)] text-[var(--text-main)] border theme-border shadow-md z-30 transition-transform duration-75"
-                style={{
-                  left: `${hoverFraction * 100}%`,
-                }}
-              >
-                {formatHoverTime(hoverTimeMs)}
-              </div>
+      {/* Main 3-zone container */}
+      <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-3 sm:gap-6">
+        {/* Left: Track Information */}
+        <div className="flex items-center gap-3 min-w-0 max-w-[180px] sm:max-w-[240px] md:max-w-xs shrink-0">
+          {/* 48x48 Sharp Book Jacket Artwork */}
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-[1px] flex items-center justify-center font-mono text-[10px] text-[var(--text-sub)] shrink-0 overflow-hidden">
+            {currentNovel?.cover_object ? (
+              <img src={currentNovel.cover_object} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <span className="font-mono font-bold tracking-wider text-[var(--text-muted)]">
+                VOL.{String(currentChapter?.chapter_number || 1).padStart(2, '0')}
+              </span>
             )}
-
-            {/* Background Track */}
-            <div className="w-full h-1.5 bg-[var(--bg-surface)] border theme-border rounded-full relative overflow-hidden group-hover:h-2.5 transition-all">
-              {/* Progress Bar updated with transform: scaleX (Zero Layout Shift) */}
-              <div
-                className="h-full w-full bg-gradient-to-r from-[var(--brand-walnut,#5A3E2B)] to-[var(--brand-amber,#D5851F)] rounded-full will-change-transform"
-                style={scrubScaleStyle}
-              />
-            </div>
-            {/* Scrubber Thumb Indicator on hover */}
-            <div
-              className="absolute w-3.5 h-3.5 rounded-full bg-[var(--brand-amber,#D5851F)] ring-2 ring-[var(--brand-walnut,#5A3E2B)] shadow-[0_0_10px_rgba(213,133,31,0.6)] pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-120 transform -translate-x-1/2 group-hover:scale-125 border border-white/50"
-              style={{
-                left: `${progressFraction * 100}%`,
-              }}
-            />
           </div>
 
-          <span className="text-[11px] font-mono theme-muted w-10 select-none font-bold">
-            {formatTime(totalDurationMs)}
-          </span>
+          <div className="min-w-0 flex flex-col justify-center">
+            <h4 className="text-xs font-bold text-[var(--text-main)] truncate leading-tight font-sans">
+              {currentChapter?.title || 'Chapter Audio Track'}
+            </h4>
+            <p className="text-[10px] text-[var(--text-sub)] font-mono truncate mt-0.5 hidden sm:block">
+              {currentNovel?.title || 'SyncTone'}
+              {currentNovel?.author_username ? ` • By ${currentNovel.author_username}` : ''}
+            </p>
+            <div className="text-[10px] font-mono text-[var(--text-muted)] tabular-nums mt-0.5">
+              {formatTime(currentTimeMs)} / {formatTime(totalDurationMs)}
+            </div>
+          </div>
         </div>
 
-        {/* Player Controls & Track Metadata Row */}
-        <div className="flex items-center justify-between gap-2 sm:gap-3 flex-nowrap min-w-0">
-          {/* Left: Track Information */}
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0 max-w-[130px] sm:max-w-[200px] md:max-w-xs flex-shrink">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl theme-card border flex items-center justify-center text-[var(--accent-text)] shadow-xs flex-shrink-0">
-              <div
-                className={`flex items-end gap-0.5 h-4 w-4 justify-center ${isPlaying ? '' : 'paused eq-paused'}`}
-                aria-label={isPlaying ? 'Audio playing visualizer' : 'Audio paused visualizer'}
-              >
-                <span className="w-1 bg-[var(--accent)] rounded-full eq-bar-1" />
-                <span className="w-1 bg-[var(--accent)] rounded-full eq-bar-2" />
-                <span className="w-1 bg-[var(--accent)] rounded-full eq-bar-3" />
-              </div>
-            </div>
-
-            <div className="min-w-0">
-              <h4 className="text-xs font-bold theme-heading truncate leading-tight">
-                {currentChapter?.title || 'Chapter Audio Track'}
-              </h4>
-              <p className="text-[10px] theme-muted font-mono truncate mt-0.5 hidden sm:block">
-                {currentNovel?.title || 'SyncTone Audio'}
-              </p>
-            </div>
-          </div>
-
-          {/* Center: Playback Transport Buttons (44px Accessible Hit Targets) */}
-          <div className="flex items-center gap-0.5 sm:gap-1.5 flex-shrink-0">
+        {/* Center: Playback Transport Buttons & Scrubber */}
+        <div className="flex-1 max-w-xl mx-auto flex flex-col justify-center gap-1 min-w-0">
+          {/* Transport Buttons Row */}
+          <div className="flex items-center justify-center gap-1.5 sm:gap-2">
             {/* Skip -10s */}
             <button
               onClick={() => handleSkip(-10)}
-              className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] active:scale-90 transition-transform duration-100 ease-out flex items-center justify-center cursor-pointer"
+              className="boxed-btn px-2 sm:px-2.5 py-1 text-[11px] font-mono text-[var(--text-main)] hover:bg-[var(--bg-hover)] cursor-pointer"
               title="Skip back 10 seconds (J)"
               aria-label="Skip back 10 seconds"
             >
-              <IconSkipBack className="w-4 h-4" />
+              <span className="hidden sm:inline">◀◀ 10s</span>
+              <span className="sm:hidden"><IconSkipBack className="w-3.5 h-3.5" /></span>
             </button>
 
             {/* Previous Turn */}
             <button
               onClick={() => onSeekSegment && onSeekSegment(-1)}
-              className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] active:scale-90 transition-transform duration-100 ease-out flex items-center justify-center cursor-pointer"
+              className="boxed-btn px-1.5 sm:px-2 py-1 text-[11px] font-mono text-[var(--text-main)] hover:bg-[var(--bg-hover)] cursor-pointer"
               title="Previous dialogue turn"
               aria-label="Previous turn"
             >
-              <IconPrev className="w-4 h-4" />
+              <IconPrev className="w-3.5 h-3.5" />
             </button>
 
-            {/* Play / Pause Toggle Button */}
+            {/* Play / Pause Toggle Button (Inverted Primary CTA) */}
             <button
               onClick={onToggle}
-              className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[var(--cta-primary-bg)] hover:bg-[var(--cta-primary-hover)] text-[var(--cta-primary-text)] border border-[var(--brand-amber,#D5851F)]/40 font-bold flex items-center justify-center shadow-lg transition-transform duration-100 ease-out hover:scale-105 active:scale-90 focus:outline-none cursor-pointer"
+              className="boxed-btn-primary px-3 sm:px-4 py-1 text-[11px] font-mono cursor-pointer flex items-center gap-1.5"
               aria-label={isPlaying ? 'Pause audio' : 'Play audio'}
             >
-              <span className="transition-all duration-120 transform scale-100 opacity-100 flex items-center justify-center">
-                {isPlaying ? (
-                  <IconPause className="w-5 h-5 fill-current" />
-                ) : (
-                  <IconPlay className="w-5 h-5 fill-current ml-0.5" />
-                )}
-              </span>
+              {isPlaying ? (
+                <>
+                  <IconPause className="w-3.5 h-3.5 fill-current" />
+                  <span className="hidden sm:inline">PAUSE</span>
+                </>
+              ) : (
+                <>
+                  <IconPlay className="w-3.5 h-3.5 fill-current ml-0.5" />
+                  <span className="hidden sm:inline">PLAY</span>
+                </>
+              )}
             </button>
 
             {/* Next Turn */}
             <button
               onClick={() => onSeekSegment && onSeekSegment(1)}
-              className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] active:scale-90 transition-transform duration-100 ease-out flex items-center justify-center cursor-pointer"
+              className="boxed-btn px-1.5 sm:px-2 py-1 text-[11px] font-mono text-[var(--text-main)] hover:bg-[var(--bg-hover)] cursor-pointer"
               title="Next dialogue turn"
               aria-label="Next turn"
             >
-              <IconNext className="w-4 h-4" />
+              <IconNext className="w-3.5 h-3.5" />
             </button>
 
             {/* Skip +10s */}
             <button
               onClick={() => handleSkip(10)}
-              className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] active:scale-90 transition-transform duration-100 ease-out flex items-center justify-center cursor-pointer"
+              className="boxed-btn px-2 sm:px-2.5 py-1 text-[11px] font-mono text-[var(--text-main)] hover:bg-[var(--bg-hover)] cursor-pointer"
               title="Skip forward 10 seconds (L)"
               aria-label="Skip forward 10 seconds"
             >
-              <IconSkipForward className="w-4 h-4" />
+              <span className="hidden sm:inline">10s ▶▶</span>
+              <span className="sm:hidden"><IconSkipForward className="w-3.5 h-3.5" /></span>
             </button>
           </div>
 
-          {/* Right: Audio Speed, Playback Engine Mode & Volume Controls */}
-          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-            {/* Multi-Engine Selector Pill / Dropdown */}
-            {onChangeTtsEngine && (
-              <div className="relative flex items-center">
-                <select
-                  value={ttsEngine}
-                  onChange={(e) => onChangeTtsEngine(e.target.value)}
-                  className="px-2 py-1 rounded-lg border theme-card hover:border-[var(--border-focus)] text-[11px] font-mono font-bold transition shadow-xs cursor-pointer focus:outline-none appearance-none pr-5 bg-no-repeat bg-[right_0.35rem_center]"
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
-                  }}
-                  title={`TTS Engine: ${
-                    ttsEngine === 'msedge-tts'
-                      ? 'Microsoft Edge Cloud Neural TTS'
-                      : ttsEngine === 'kokoro-tts'
-                      ? 'Kokoro-TTS Local ONNX Fallback'
-                      : ttsEngine === 'paradee-tts'
-                      ? 'Paradee-8M-v1.2 Micro Neural ONNX'
-                      : ttsEngine === 'paradee-mixed'
-                      ? 'Paradee-8M (Primary 4) + Machine TTS (5th+ Cast)'
-                      : 'Machine Local OS Speech Synthesis'
-                  }`}
-                  aria-label="Select TTS Engine"
-                >
-                  <option value="msedge-tts">Microsoft TTS</option>
-                  <option value="kokoro-tts">Kokoro-TTS</option>
-                  <option value="paradee-tts">Paradee-8M</option>
-                  <option value="paradee-mixed">Paradee + Machine (Mixed)</option>
-                  <option value="machine-tts">Machine TTS</option>
-                </select>
-              </div>
-            )}
+          {/* Scrubber Track Row */}
+          <div className="w-full flex items-center gap-2">
+            <span className="text-[10px] font-mono text-[var(--text-muted)] w-8 sm:w-10 text-right select-none tabular-nums font-medium">
+              {formatTime(currentTimeMs)}
+            </span>
 
-            {/* Playback Engine Mode Toggle */}
-            {onTogglePlaybackMode && (
-              <button
-                type="button"
-                onClick={() => onTogglePlaybackMode?.()}
-                className={`px-2 sm:px-2.5 py-1 rounded-lg border text-xs font-mono font-bold transition shadow-xs cursor-pointer flex items-center gap-1.5 ${
-                  playbackMode === 'tts'
-                    ? 'bg-[var(--warning)]/20 text-[var(--warning)] border-[var(--warning)]/40 hover:bg-[var(--warning)]/30'
-                    : 'theme-card hover:border-[var(--border-focus)] theme-sub'
-                }`}
-                title={
-                  playbackMode === 'tts'
-                    ? 'Voice TTS: Playing live character TTS segment-by-segment. Click to switch to Studio Track.'
-                    : 'Studio Track: Playing pre-rendered stitched full-chapter audio. Click to switch to Voice TTS.'
-                }
-                aria-label={`Playback engine: ${playbackMode === 'tts' ? 'Voice TTS' : 'Studio Track'}`}
-              >
-                <span
-                  className={`w-2 h-2 rounded-full ${
-                    playbackMode === 'tts' ? 'bg-[var(--warning)] animate-pulse' : 'bg-[var(--text-muted)]'
-                  }`}
-                />
-                <span className="hidden md:inline">
-                  {playbackMode === 'tts' ? 'Voice TTS' : 'Studio'}
-                </span>
-                <span className="md:hidden font-mono">
-                  {playbackMode === 'tts' ? 'TTS' : 'Studio'}
-                </span>
-              </button>
-            )}
-
-            {/* Speed Pill Selector */}
-            <button
-              onClick={handleSpeedChange}
-              className="px-2 sm:px-2.5 py-1 rounded-lg theme-card border hover:border-[var(--border-focus)] text-xs font-mono font-bold transition shadow-xs cursor-pointer"
-              title="Cycle playback speed"
-              aria-label={`Playback speed: ${speed}x`}
-            >
-              <span>{speed}x</span>
-            </button>
-
-            {/* Volume Control */}
             <div
-              className="relative flex items-center"
-              onMouseEnter={() => setShowVolumeSlider(true)}
-              onMouseLeave={() => setShowVolumeSlider(false)}
+              ref={scrubberTrackRef}
+              onClick={handleScrubberClick}
+              onMouseMove={handleScrubberMouseMove}
+              onMouseLeave={handleScrubberMouseLeave}
+              onKeyDown={handleKeyDown}
+              tabIndex={0}
+              role="slider"
+              aria-label="Audio scrubber"
+              aria-valuemin={0}
+              aria-valuemax={Math.floor(totalDurationMs / 1000)}
+              aria-valuenow={Math.floor(currentTimeMs / 1000)}
+              className="flex-1 py-1 cursor-pointer relative flex items-center group focus:outline-none"
             >
-              <button
-                onClick={handleVolumeToggle}
-                className="p-2 rounded-lg theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition cursor-pointer"
-                title={isMuted ? 'Unmute' : 'Mute'}
-                aria-label={isMuted ? 'Unmute audio' : 'Mute audio'}
-              >
-                {isMuted || volume === 0 ? (
-                  <IconVolumeMute className="w-4 h-4 text-[var(--danger)]" />
-                ) : (
-                  <IconVolume className="w-4 h-4 text-[var(--brand-sage,#87A96B)]" />
-                )}
-              </button>
-
-              {/* Volume Slider Popover */}
-              {showVolumeSlider && (
-                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 p-2.5 rounded-xl theme-card border shadow-xl flex flex-col items-center gap-1 z-50 modal-panel-enter origin-bottom">
-                  <span className="text-[10px] font-mono font-bold text-[var(--brand-sage,#87A96B)]">
-                    {isMuted ? '0%' : `${Math.round(volume * 100)}%`}
-                  </span>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.05"
-                    value={isMuted ? 0 : volume}
-                    onChange={handleVolumeChange}
-                    className="w-20 h-1.5 accent-[var(--brand-sage,#87A96B)] cursor-pointer"
-                    aria-label="Volume level"
-                  />
+              {/* Scrubber timecode hover preview badge */}
+              {hoverTimeMs !== null && (
+                <div
+                  className="absolute -top-7 pointer-events-none transform -translate-x-1/2 px-1.5 py-0.5 rounded-[1px] text-[10px] font-mono font-bold bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-strong)] shadow-md z-30 transition-transform duration-75"
+                  style={{ left: `${hoverFraction * 100}%` }}
+                >
+                  {formatHoverTime(hoverTimeMs)}
                 </div>
               )}
+
+              {/* Background Track */}
+              <div className="w-full h-1 bg-[var(--border-subtle)] relative overflow-hidden group-hover:h-1.5 transition-all">
+                {/* Progress Bar with Zero Layout Shift */}
+                <div
+                  className="h-full w-full bg-[var(--text-main)] will-change-transform"
+                  style={scrubScaleStyle}
+                />
+              </div>
+
+              {/* Scrubber Thumb Indicator on hover */}
+              <div
+                className="absolute w-2.5 h-2.5 rounded-[1px] bg-[var(--accent)] border border-[var(--border-strong)] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-100 transform -translate-x-1/2"
+                style={{ left: `${progressFraction * 100}%` }}
+              />
             </div>
+
+            <span className="text-[10px] font-mono text-[var(--text-muted)] w-8 sm:w-10 select-none tabular-nums font-medium">
+              {formatTime(totalDurationMs)}
+            </span>
+          </div>
+        </div>
+
+        {/* Right: Signal Dot, Engine Mode, TTS Dropdown, Speed & Volume Controls */}
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+          {/* Signal Dot: Active strictly when isPlaying or TTS live synthesis */}
+          {(isPlaying || playbackMode === 'tts') && (
+            <span
+              className="signal-dot"
+              title="Active Audio Playback"
+              aria-label={isPlaying ? 'Audio playing visualizer' : 'Audio paused visualizer'}
+            />
+          )}
+
+          {/* Follow Along / Live Sync Label */}
+          <span className="hidden xl:inline-flex items-center gap-1.5 text-[11px] font-mono font-bold text-[var(--text-main)] tracking-wider">
+            FOLLOW ALONG
+          </span>
+
+          {/* Multi-Engine Selector Dropdown */}
+          {onChangeTtsEngine && (
+            <div className="relative hidden lg:flex items-center">
+              <select
+                value={ttsEngine}
+                onChange={(e) => onChangeTtsEngine(e.target.value)}
+                className="boxed-btn px-2 py-1 text-[11px] font-mono bg-[var(--bg-card)] text-[var(--text-main)] border border-[var(--border-strong)] cursor-pointer focus:outline-none"
+                title={`TTS Engine: ${
+                  ttsEngine === 'msedge-tts'
+                    ? 'Microsoft Edge Cloud Neural TTS'
+                    : ttsEngine === 'kokoro-tts'
+                    ? 'Kokoro-TTS Local ONNX Fallback'
+                    : ttsEngine === 'paradee-tts'
+                    ? 'Paradee-8M-v1.2 Micro Neural ONNX'
+                    : ttsEngine === 'paradee-mixed'
+                    ? 'Paradee-8M (Primary 4) + Machine TTS (5th+ Cast)'
+                    : 'Machine Local OS Speech Synthesis'
+                }`}
+                aria-label="Select TTS Engine"
+              >
+                <option value="msedge-tts">Microsoft TTS</option>
+                <option value="kokoro-tts">Kokoro-TTS</option>
+                <option value="paradee-tts">Paradee-8M</option>
+                <option value="paradee-mixed">Paradee + Machine (Mixed)</option>
+                <option value="machine-tts">Machine TTS</option>
+              </select>
+            </div>
+          )}
+
+          {/* Playback Engine Mode Toggle */}
+          {onTogglePlaybackMode && (
+            <button
+              type="button"
+              onClick={() => onTogglePlaybackMode?.()}
+              className="boxed-btn px-2 sm:px-2.5 py-1 text-[11px] font-mono cursor-pointer flex items-center gap-1.5"
+              title={
+                playbackMode === 'tts'
+                  ? 'Voice TTS: Playing live character TTS segment-by-segment. Click to switch to Studio Track.'
+                  : 'Studio Track: Playing pre-rendered stitched full-chapter audio. Click to switch to Voice TTS.'
+              }
+              aria-label={`Playback engine: ${playbackMode === 'tts' ? 'Voice TTS' : 'Studio Track'}`}
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  playbackMode === 'tts' ? 'bg-[var(--signal)]' : 'bg-[var(--text-muted)]'
+                }`}
+              />
+              <span className="hidden sm:inline">
+                {playbackMode === 'tts' ? 'VOICE TTS' : 'STUDIO'}
+              </span>
+              <span className="sm:hidden">
+                {playbackMode === 'tts' ? 'TTS' : 'STU'}
+              </span>
+            </button>
+          )}
+
+          {/* Playback Speed Button */}
+          <button
+            onClick={handleSpeedChange}
+            className="boxed-btn px-2 py-1 text-[11px] font-mono text-[var(--text-main)] hover:bg-[var(--bg-hover)] cursor-pointer"
+            title="Cycle playback speed"
+            aria-label={`Playback speed: ${speed}x`}
+          >
+            <span>{speed}×</span>
+          </button>
+
+          {/* Volume Control */}
+          <div
+            className="relative flex items-center"
+            onMouseEnter={() => setShowVolumeSlider(true)}
+            onMouseLeave={() => setShowVolumeSlider(false)}
+          >
+            <button
+              onClick={handleVolumeToggle}
+              className="boxed-btn p-1.5 text-[var(--text-main)] hover:bg-[var(--bg-hover)] cursor-pointer"
+              title={isMuted ? 'Unmute' : 'Mute'}
+              aria-label={isMuted ? 'Unmute audio' : 'Mute audio'}
+            >
+              {isMuted || volume === 0 ? (
+                <IconVolumeMute className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+              ) : (
+                <IconVolume className="w-3.5 h-3.5 text-[var(--text-main)]" />
+              )}
+            </button>
+
+            {/* Volume Slider Popover */}
+            {showVolumeSlider && (
+              <div className="absolute bottom-full mb-2 right-0 p-2.5 rounded-[1px] bg-[var(--bg-card)] border border-[var(--border-strong)] shadow-xl flex flex-col items-center gap-1 z-50">
+                <span className="text-[10px] font-mono font-bold text-[var(--text-main)]">
+                  {isMuted ? '0%' : `${Math.round(volume * 100)}%`}
+                </span>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={isMuted ? 0 : volume}
+                  onChange={handleVolumeChange}
+                  className="w-20 h-1.5 accent-[var(--accent)] cursor-pointer"
+                  aria-label="Volume level"
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -64,7 +64,7 @@ export default function SpineShadowCanvas({
       if (isFlipping) {
         const curlX = flipDirection === 'next' ? w * 0.75 : w * 0.25;
         const curlGradient = ctx.createRadialGradient(curlX, h / 2, 20, curlX, h / 2, 240);
-        curlGradient.addColorStop(0, isDark ? 'rgba(168, 132, 98, 0.22)' : 'rgba(107, 74, 46, 0.16)');
+        curlGradient.addColorStop(0, isDark ? 'rgba(0, 0, 0, 0.28)' : 'rgba(0, 0, 0, 0.14)');
         curlGradient.addColorStop(0.5, isDark ? 'rgba(0, 0, 0, 0.22)' : 'rgba(0, 0, 0, 0.10)');
         curlGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
         ctx.fillStyle = curlGradient;

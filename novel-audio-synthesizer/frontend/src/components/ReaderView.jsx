@@ -289,7 +289,7 @@ export default function ReaderView({
         <>
           {imageElement}
           {displayText && (
-            <p className={`relative z-10 leading-[1.85] text-justify hyphens-auto p-2.5 rounded-xl bg-[rgba(213,133,31,0.25)] border-l-4 border-[var(--brand-amber,#D5851F)] shadow-xs transition-colors duration-100 ${
+            <p className={`relative z-10 leading-[1.85] text-justify hyphens-auto p-2.5 rounded-[1px] bg-[var(--accent-surface)] border-l-2 border-[var(--text-main)] transition-colors duration-100 ${
               isDialogue ? 'italic font-serif text-[var(--text-main)] font-medium' : 'text-[var(--text-main)]'
             }`}>
               {tokens.map((token, idx) => {
@@ -297,7 +297,7 @@ export default function ReaderView({
                   return (
                     <span
                       key={idx}
-                      className="bg-[rgba(213,133,31,0.40)] text-[var(--text-main)] font-bold px-1 py-0.5 rounded shadow-xs ring-1 ring-[var(--brand-amber,#D5851F)]/80 inline-block transition-transform duration-75"
+                      className="bg-[var(--accent)] text-[var(--on-accent)] font-bold px-1 py-0.5 rounded-[1px] inline-block transition-transform duration-75"
                     >
                       {token}
                     </span>
@@ -316,8 +316,8 @@ export default function ReaderView({
       <>
         {imageElement}
         {displayText && (
-          <p className={`relative z-10 leading-[1.85] text-justify hyphens-auto p-2 rounded-lg bg-[rgba(213,133,31,0.25)] border-b-2 border-[var(--brand-amber,#D5851F)] ${
-            isDialogue ? 'italic theme-main font-serif font-medium' : 'theme-main font-normal'
+          <p className={`relative z-10 leading-[1.85] text-justify hyphens-auto p-2 rounded-[1px] bg-[var(--accent-surface)] border-l-2 border-[var(--text-main)] ${
+            isDialogue ? 'italic text-[var(--text-main)] font-serif font-medium' : 'text-[var(--text-main)] font-normal'
           }`}>
             {displayText}
           </p>
@@ -330,13 +330,13 @@ export default function ReaderView({
     <div className={`pb-36 transition-opacity duration-300 ${isFocusMode ? 'focus-mode-active' : ''}`}>
       {/* Floating Focus Mode Banner */}
       {isFocusMode && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-black/85 backdrop-blur-md text-white text-xs px-4 py-2 rounded-full border border-white/20 shadow-2xl flex items-center gap-3 animate-fade-in">
-          <span className="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse" />
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[var(--bg-surface)] text-[var(--text-main)] text-xs px-4 py-2 rounded-[1px] border border-[var(--border-strong)] shadow-2xl flex items-center gap-3 animate-fade-in font-mono">
+          <span className="signal-dot" />
           <span>Focus Mode Active • Press Esc to exit</span>
           <button
             type="button"
             onClick={() => setIsFocusMode(false)}
-            className="px-2 py-0.5 rounded-md bg-white/20 hover:bg-white/30 text-[10px] font-mono font-bold cursor-pointer transition"
+            className="boxed-btn px-2 py-0.5 text-[10px] font-mono cursor-pointer transition"
           >
             Exit
           </button>
@@ -346,25 +346,25 @@ export default function ReaderView({
       {/* Choose Reading Experience Modal (Moon+ OpenGL 3D vs Normal WTR-Lab) */}
       {showExperiencePopup && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm modal-scrim-enter"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 modal-scrim-enter"
           role="dialog"
           aria-modal="true"
         >
-          <div className="w-full max-w-md theme-surface rounded-3xl shadow-2xl border border-[var(--border-strong)] p-6 modal-panel-enter space-y-5">
+          <div className="w-full max-w-md bg-[var(--bg-surface)] rounded-[1px] shadow-2xl border border-[var(--border-strong)] p-6 modal-panel-enter space-y-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-[var(--accent-surface)] text-[var(--accent-text)] flex items-center justify-center font-bold">
+                <div className="w-8 h-8 rounded-[1px] bg-[var(--accent-surface)] text-[var(--text-main)] flex items-center justify-center font-bold border border-[var(--border-subtle)]">
                   <IconBookOpen className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold theme-heading">Choose Reading Experience</h3>
-                  <p className="text-[11px] theme-muted">Select how you want to read this chapter</p>
+                  <h3 className="text-sm font-bold text-[var(--text-main)] font-sans uppercase tracking-tight">Choose Reading Experience</h3>
+                  <p className="text-[11px] font-mono text-[var(--text-muted)]">Select how you want to read this chapter</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => handleChooseMode('normal')}
-                className="p-1.5 rounded-xl theme-muted hover:text-[var(--text-main)] transition cursor-pointer"
+                className="boxed-btn p-1.5 text-[var(--text-muted)] hover:text-[var(--text-main)] transition cursor-pointer"
                 aria-label="Dismiss experience popup"
               >
                 <IconX className="w-4 h-4" />
@@ -376,21 +376,21 @@ export default function ReaderView({
               <button
                 type="button"
                 onClick={() => handleChooseMode('normal')}
-                className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-3 group ${
+                className={`p-4 rounded-[1px] border text-left transition-all cursor-pointer flex flex-col justify-between gap-3 group ${
                   readerMode === 'normal'
                     ? 'border-[var(--accent)] bg-[var(--accent-surface)]'
-                    : 'theme-card hover:border-[var(--accent)] hover:scale-102'
+                    : 'bg-[var(--bg-card)] border-[var(--border-subtle)] hover:border-[var(--border-strong)]'
                 }`}
               >
-                <div className="w-9 h-9 rounded-xl bg-[var(--accent)]/15 text-[var(--accent-text)] flex items-center justify-center">
-                  <IconBookOpen className="w-5 h-5" />
+                <div className="w-8 h-8 rounded-[1px] bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-subtle)] flex items-center justify-center">
+                  <IconBookOpen className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold theme-heading group-hover:text-[var(--accent-text)] transition">
+                  <h4 className="text-xs font-bold text-[var(--text-main)] font-sans uppercase">
                     Normal Mode
                   </h4>
-                  <p className="text-[10px] theme-muted mt-1 leading-relaxed">
-                    Continuous vertical scroll with synchronized Warm Bronze voice highlight.
+                  <p className="text-[10px] font-mono text-[var(--text-muted)] mt-1 leading-relaxed">
+                    Continuous vertical scroll with synchronized high-contrast voice highlight.
                   </p>
                 </div>
               </button>
@@ -399,51 +399,51 @@ export default function ReaderView({
               <button
                 type="button"
                 onClick={() => handleChooseMode('opengl')}
-                className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-3 group ${
+                className={`p-4 rounded-[1px] border text-left transition-all cursor-pointer flex flex-col justify-between gap-3 group ${
                   readerMode === 'opengl'
                     ? 'border-[var(--accent)] bg-[var(--accent-surface)]'
-                    : 'theme-card hover:border-[var(--accent)] hover:scale-102'
+                    : 'bg-[var(--bg-card)] border-[var(--border-subtle)] hover:border-[var(--border-strong)]'
                 }`}
               >
-                <div className="w-9 h-9 rounded-xl bg-[var(--accent)]/15 text-[var(--accent-text)] flex items-center justify-center">
-                  <IconBook className="w-5 h-5" />
+                <div className="w-8 h-8 rounded-[1px] bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-subtle)] flex items-center justify-center">
+                  <IconBook className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold theme-heading group-hover:text-[var(--accent-text)] transition">
-                    Apple Books / Moon+ OpenGL 3D Spread
+                  <h4 className="text-xs font-bold text-[var(--text-main)] font-sans uppercase">
+                    Moon+ OpenGL 3D Spread
                   </h4>
-                  <p className="text-[10px] theme-muted mt-1 leading-relaxed">
-                    Two-page side-by-side spread with 3D page-curl, deluxe cover artwork showcase and synchronized WTR-Lab voice highlight.
+                  <p className="text-[10px] font-mono text-[var(--text-muted)] mt-1 leading-relaxed">
+                    Two-page side-by-side spread with 3D page-curl and synchronized voice highlight.
                   </p>
                 </div>
               </button>
             </div>
 
-            <p className="text-[10px] theme-muted text-center font-mono">
-              You can switch between Normal &amp; OpenGL anytime in the reader header.
+            <p className="text-[10px] text-[var(--text-muted)] text-center font-mono">
+              Switch between Normal &amp; OpenGL anytime in the reader toolbar.
             </p>
           </div>
         </div>
       )}
 
       {/* Sticky Reader Sub-Header Controls */}
-      <header className="sticky top-0 z-20 -mx-4 sm:-mx-8 px-4 sm:px-8 py-2.5 glass-header border-b border-[var(--border-subtle)] flex flex-wrap items-center justify-between gap-3 shadow-xs">
+      <header className="sticky top-0 z-20 -mx-4 sm:-mx-8 px-4 sm:px-8 py-2 bg-[var(--bg-bar)] border-b border-[var(--border-subtle)] flex flex-wrap items-center justify-between gap-3">
         {/* Left: Back Link & Chapter Title */}
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-2.5 min-w-0">
           {onBack && (
             <button
               onClick={onBack}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl theme-card border border-[var(--border-subtle)] hover:border-[var(--accent)] hover:text-[var(--accent-text)] text-xs font-semibold theme-sub transition-all active:scale-95 shadow-xs cursor-pointer min-h-[36px]"
+              className="boxed-btn px-2.5 py-1 text-xs font-mono text-[var(--text-main)] hover:bg-[var(--bg-hover)] cursor-pointer flex items-center gap-1.5"
               aria-label="Back to novel details"
             >
-              <IconArrowLeft className="w-3.5 h-3.5" />
+              <IconArrowLeft className="w-3 h-3" />
               <span>Back</span>
             </button>
           )}
           {currentNovel && (
             <div className="flex items-center gap-2 min-w-0">
-              <span className="theme-muted opacity-30 select-none">/</span>
-              <span className="text-xs font-bold theme-heading truncate max-w-[140px] sm:max-w-[200px]">
+              <span className="text-[var(--text-muted)] select-none font-mono">/</span>
+              <span className="text-xs font-bold text-[var(--text-main)] truncate max-w-[140px] sm:max-w-[200px] font-sans">
                 {currentNovel.title}
               </span>
               {currentChapter && (
@@ -453,39 +453,36 @@ export default function ReaderView({
                       type="button"
                       disabled={!prevChapter}
                       onClick={() => prevChapter && onSelectChapter?.(prevChapter.id)}
-                      className="px-1.5 py-0.5 rounded-full text-xs text-[var(--brand-sage,#87A96B)] bg-[var(--brand-sage,#87A96B)]/15 border border-[var(--brand-sage,#87A96B)]/30 hover:bg-[var(--brand-sage,#87A96B)]/25 disabled:opacity-30 disabled:pointer-events-none cursor-pointer transition font-bold"
+                      className="boxed-btn px-1.5 py-0.5 text-xs font-mono font-bold text-[var(--text-main)] disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
                       title="Previous Chapter"
                       aria-label="Previous Chapter"
                     >
                       ‹
                     </button>
                     <div className="relative inline-flex items-center">
-                      <span className="text-xs text-[var(--brand-sage,#87A96B)] font-mono font-bold truncate inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[var(--brand-sage,#87A96B)]/15 border border-[var(--brand-sage,#87A96B)]/30">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-sage,#87A96B)] animate-pulse shrink-0" />
-                        <select
-                          value={currentChapter.id}
-                          onChange={(e) => onSelectChapter?.(e.target.value)}
-                          className="bg-transparent text-[var(--brand-sage,#87A96B)] font-mono font-bold text-xs cursor-pointer focus:outline-none appearance-none pr-3 truncate max-w-[90px] sm:max-w-[180px]"
-                          aria-label="Select Chapter"
-                        >
-                          {chapters.map((ch) => (
-                            <option
-                              key={ch.id}
-                              value={ch.id}
-                              className="bg-[var(--bg-surface)] text-[var(--text-main)]"
-                            >
-                              {ch.title || `Chapter ${ch.chapter_number}`}
-                            </option>
-                          ))}
-                        </select>
-                        <span className="pointer-events-none text-[10px] opacity-70 -ml-2.5">▾</span>
-                      </span>
+                      <select
+                        value={currentChapter.id}
+                        onChange={(e) => onSelectChapter?.(e.target.value)}
+                        className="boxed-btn px-2 py-0.5 text-xs font-mono font-semibold bg-[var(--bg-card)] text-[var(--text-main)] cursor-pointer focus:outline-none appearance-none pr-4 truncate max-w-[90px] sm:max-w-[180px]"
+                        aria-label="Select Chapter"
+                      >
+                        {chapters.map((ch) => (
+                          <option
+                            key={ch.id}
+                            value={ch.id}
+                            className="bg-[var(--bg-surface)] text-[var(--text-main)]"
+                          >
+                            {ch.title || `Chapter ${ch.chapter_number}`}
+                          </option>
+                        ))}
+                      </select>
+                      <span className="pointer-events-none text-[9px] text-[var(--text-muted)] -ml-3">▾</span>
                     </div>
                     <button
                       type="button"
                       disabled={!nextChapter}
                       onClick={() => nextChapter && onSelectChapter?.(nextChapter.id)}
-                      className="px-1.5 py-0.5 rounded-full text-xs text-[var(--brand-sage,#87A96B)] bg-[var(--brand-sage,#87A96B)]/15 border border-[var(--brand-sage,#87A96B)]/30 hover:bg-[var(--brand-sage,#87A96B)]/25 disabled:opacity-30 disabled:pointer-events-none cursor-pointer transition font-bold"
+                      className="boxed-btn px-1.5 py-0.5 text-xs font-mono font-bold text-[var(--text-main)] disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
                       title="Next Chapter"
                       aria-label="Next Chapter"
                     >
@@ -493,8 +490,7 @@ export default function ReaderView({
                     </button>
                   </div>
                 ) : (
-                  <span className="text-xs text-[var(--brand-sage,#87A96B)] font-mono font-bold truncate inline-flex items-center gap-1.5 max-w-[90px] sm:max-w-[180px] px-2.5 py-0.5 rounded-full bg-[var(--brand-sage,#87A96B)]/15 border border-[var(--brand-sage,#87A96B)]/30">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-sage,#87A96B)] animate-pulse" />
+                  <span className="boxed-btn px-2 py-0.5 text-xs font-mono font-bold text-[var(--text-main)] truncate max-w-[110px] sm:max-w-[200px]">
                     {currentChapter.title}
                   </span>
                 )
@@ -504,54 +500,54 @@ export default function ReaderView({
         </div>
 
         {/* Right: Mode Switcher (Normal | OpenGL) + Font Controls + Focus Mode */}
-        <div className="flex items-center gap-2 sm:gap-3 text-xs">
+        <div className="flex items-center gap-2 sm:gap-2.5 text-xs">
           {/* Moon+ Reader Mode Switcher: Normal vs OpenGL 3D */}
           <div
-            className="flex p-0.5 rounded-lg theme-surface border border-[var(--border-subtle)]"
+            className="inline-flex border border-[var(--border-strong)] rounded-[1px] p-0.5 bg-[var(--bg-card)]"
             role="group"
             aria-label="Reading mode selection"
           >
             <button
               type="button"
               onClick={() => setReaderMode('normal')}
-              className={`px-2.5 py-1 rounded-md text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+              className={`px-2 py-0.5 text-[11px] font-mono font-medium transition cursor-pointer flex items-center gap-1.5 rounded-[1px] ${
                 readerMode === 'normal'
-                  ? 'bg-[var(--cta-primary-bg)] text-[var(--cta-primary-text)] shadow-xs'
-                  : 'theme-muted hover:text-[var(--text-main)]'
+                  ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold'
+                  : 'text-[var(--text-sub)] hover:text-[var(--text-main)]'
               }`}
               title="Normal continuous vertical scroll mode (WTR-Lab)"
             >
-              <IconBookOpen className="w-3.5 h-3.5" />
+              <IconBookOpen className="w-3 h-3" />
               <span>Normal</span>
             </button>
             <button
               type="button"
               onClick={() => setReaderMode('opengl')}
-              className={`px-2.5 py-1 rounded-md text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+              className={`px-2 py-0.5 text-[11px] font-mono font-medium transition cursor-pointer flex items-center gap-1.5 rounded-[1px] ${
                 readerMode === 'opengl'
-                  ? 'bg-[var(--cta-primary-bg)] text-[var(--cta-primary-text)] shadow-xs'
-                  : 'theme-muted hover:text-[var(--text-main)]'
+                  ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold'
+                  : 'text-[var(--text-sub)] hover:text-[var(--text-main)]'
               }`}
               title="Apple Books & Moon+ Reader Pro 3D OpenGL page-turn two-page spread mode"
             >
-              <IconBook className="w-3.5 h-3.5" />
+              <IconBook className="w-3 h-3" />
               <span>OpenGL 3D</span>
             </button>
           </div>
 
           {/* Font Family Switcher */}
           <div
-            className="flex p-0.5 rounded-lg theme-surface border border-[var(--border-subtle)]"
+            className="inline-flex border border-[var(--border-strong)] rounded-[1px] p-0.5 bg-[var(--bg-card)]"
             role="group"
             aria-label="Font family selection"
           >
             <button
               type="button"
               onClick={() => setFontFamily('serif')}
-              className={`px-2.5 py-1 rounded-md text-xs font-serif font-semibold transition cursor-pointer ${
+              className={`px-2 py-0.5 text-[11px] font-serif font-medium transition cursor-pointer rounded-[1px] ${
                 fontFamily === 'serif'
-                  ? 'bg-[var(--cta-primary-bg)] text-[var(--cta-primary-text)] shadow-xs'
-                  : 'theme-muted hover:text-[var(--text-main)]'
+                  ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold'
+                  : 'text-[var(--text-sub)] hover:text-[var(--text-main)]'
               }`}
             >
               Serif
@@ -559,10 +555,10 @@ export default function ReaderView({
             <button
               type="button"
               onClick={() => setFontFamily('sans')}
-              className={`px-2.5 py-1 rounded-md text-xs font-sans font-semibold transition cursor-pointer ${
+              className={`px-2 py-0.5 text-[11px] font-sans font-medium transition cursor-pointer rounded-[1px] ${
                 fontFamily === 'sans'
-                  ? 'bg-[var(--cta-primary-bg)] text-[var(--cta-primary-text)] shadow-xs'
-                  : 'theme-muted hover:text-[var(--text-main)]'
+                  ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold'
+                  : 'text-[var(--text-sub)] hover:text-[var(--text-main)]'
               }`}
             >
               Sans
@@ -571,25 +567,25 @@ export default function ReaderView({
 
           {/* Font Size Adjuster */}
           <div
-            className="flex items-center gap-1 rounded-lg theme-surface border border-[var(--border-subtle)] px-2 py-1"
+            className="inline-flex items-center border border-[var(--border-strong)] rounded-[1px] px-1 py-0.5 bg-[var(--bg-card)]"
             role="group"
             aria-label="Font size adjustment"
           >
             <button
               type="button"
               onClick={decreaseFontSize}
-              className="px-1.5 font-bold theme-muted hover:text-[var(--text-main)] transition cursor-pointer"
+              className="px-1.5 font-bold font-mono text-[var(--text-sub)] hover:text-[var(--text-main)] transition cursor-pointer"
               aria-label="Decrease font size"
             >
               A-
             </button>
-            <span className="text-[11px] font-mono theme-muted px-1 min-w-[2.25rem] text-center font-bold">
+            <span className="text-[10px] font-mono text-[var(--text-main)] px-1 min-w-[2rem] text-center font-bold">
               {fontSize}px
             </span>
             <button
               type="button"
               onClick={increaseFontSize}
-              className="px-1.5 font-bold theme-muted hover:text-[var(--text-main)] transition cursor-pointer"
+              className="px-1.5 font-bold font-mono text-[var(--text-sub)] hover:text-[var(--text-main)] transition cursor-pointer"
               aria-label="Increase font size"
             >
               A+
@@ -607,10 +603,10 @@ export default function ReaderView({
                 ? 'TTS Clean: ON (Filtering OCR noise, spam & junk divider symbols)'
                 : 'TTS Clean: OFF (Click to filter scanned OCR noise, dividers & duplicate paragraphs)'
             }
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer flex items-center gap-1.5 ${
+            className={`boxed-btn px-2 py-1 text-[11px] font-mono cursor-pointer flex items-center gap-1.5 ${
               isSanitizerActive
-                ? 'bg-[var(--cta-primary-bg)] text-[var(--cta-primary-text)] border-[var(--cta-primary-bg)] shadow-md font-bold'
-                : 'theme-surface border-[var(--border-subtle)] theme-muted hover:text-[var(--text-main)]'
+                ? 'bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)] font-bold'
+                : 'text-[var(--text-sub)] hover:text-[var(--text-main)]'
             }`}
           >
             <span>TTS Clean</span>
@@ -620,10 +616,10 @@ export default function ReaderView({
           <button
             type="button"
             onClick={() => setIsFocusMode((prev) => !prev)}
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer hidden md:inline-flex ${
+            className={`boxed-btn px-2 py-1 text-[11px] font-mono cursor-pointer hidden md:inline-flex ${
               isFocusMode
-                ? 'bg-[var(--cta-primary-bg)] text-[var(--cta-primary-text)] border-[var(--cta-primary-bg)] shadow-md font-bold'
-                : 'theme-surface border-[var(--border-subtle)] theme-muted hover:text-[var(--text-main)]'
+                ? 'bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)] font-bold'
+                : 'text-[var(--text-sub)] hover:text-[var(--text-main)]'
             }`}
             title="Focus mode (distraction-free spotlight reading)"
           >
@@ -634,7 +630,7 @@ export default function ReaderView({
           <button
             type="button"
             onClick={toggleFullscreen}
-            className="w-8 h-8 rounded-lg theme-surface border border-[var(--border-subtle)] theme-muted hover:text-[var(--text-main)] transition cursor-pointer flex items-center justify-center"
+            className="boxed-btn p-1 text-[var(--text-sub)] hover:text-[var(--text-main)] transition cursor-pointer flex items-center justify-center"
             aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
             title={isFullscreen ? 'Exit fullscreen (Esc)' : 'Fullscreen'}
           >
@@ -644,7 +640,7 @@ export default function ReaderView({
               </svg>
             ) : (
               <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2v3"/>
               </svg>
             )}
           </button>
@@ -657,7 +653,7 @@ export default function ReaderView({
           <button
             type="button"
             onClick={handleReturnToNow}
-            className="px-4 py-2 rounded-full bg-[var(--accent)] text-[var(--on-accent)] text-xs font-bold shadow-xl flex items-center gap-2 hover:scale-102 active:scale-[0.98] transition cursor-pointer border border-white/20"
+            className="boxed-btn-primary px-3 py-1.5 text-xs font-mono shadow-xl flex items-center gap-2 hover:opacity-90 active:scale-[0.98] transition cursor-pointer"
             aria-label="Return to active audio position"
           >
             <IconSoundwave className="w-3.5 h-3.5 text-current" />
@@ -699,11 +695,27 @@ export default function ReaderView({
       ) : (
         /* Render Mode 2: Normal Continuous Vertical Scroll (WTR-Lab Mode) */
         <article
-          className={`max-w-3xl mx-auto px-4 sm:px-8 py-10 space-y-5 ${
+          className={`max-w-3xl mx-auto px-4 sm:px-8 py-8 sm:py-12 space-y-4 ${
             fontFamily === 'serif' ? 'font-serif' : 'font-sans'
           }`}
           style={{ fontSize: `${fontSize}px` }}
         >
+          {/* Literary Chapter Stage Header */}
+          <header className="border-b border-[var(--border-subtle)] pb-6 mb-8 select-none">
+            <div className="text-[11px] font-mono text-[var(--text-muted)] tracking-wider uppercase mb-2">
+              {currentNovel?.title ? `// ${currentNovel.title.toUpperCase()}` : '// SYNC NOVEL'}
+              {currentNovel?.author_username ? ` // BY ${currentNovel.author_username.toUpperCase()}` : ''}
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[var(--text-main)] font-sans">
+              {currentChapter?.title || 'Chapter I'}
+            </h1>
+            <div className="text-[11px] font-mono text-[var(--text-sub)] mt-2 flex items-center gap-2">
+              <span>FORMAT: MULTI-VOICE DRAMA</span>
+              <span>•</span>
+              <span>NARRATED BY {currentNovel?.narrator || 'DR. JOHN WATSON'}</span>
+            </div>
+          </header>
+
           {effectiveSegments.map((seg) => {
             const segId = seg.segment_id !== undefined ? seg.segment_id : seg.order;
             const isActive = segId === activeSegmentId;
@@ -731,75 +743,43 @@ export default function ReaderView({
                   isDialogue ? `${seg.speaker_name || 'Character'}: ` : 'Narrator: '
                 }${seg.text}`}
                 className={`
-                  group relative p-5 sm:p-6 rounded-2xl border transition-all duration-150 cursor-pointer outline-none select-text
+                  group relative p-4 sm:p-5 rounded-[1px] transition-all duration-120 cursor-pointer outline-none select-text
                   ${
                     isActive
-                      ? 'theme-surface border-[var(--brand-amber,#D5851F)]/80 shadow-md ring-1 ring-[var(--brand-amber,#D5851F)]/40 bg-[rgba(213,133,31,0.12)]'
-                      : 'theme-card border-[var(--border-subtle)] hover:border-[var(--border-hover)] hover:bg-[var(--bg-hover)] shadow-xs'
+                      ? 'bg-[var(--accent-surface)] border-l-2 border-[var(--text-main)] border-y border-r border-[var(--border-subtle)]'
+                      : 'bg-[var(--bg-card)] border border-[var(--border-subtle)] hover:border-[var(--border-strong)]'
                   }
                 `}
               >
-                {/* Pre-rendered Active Speaker Aura */}
-                <div
-                  className={`absolute inset-0 rounded-2xl pointer-events-none transition-opacity duration-200 ${
-                    isActive
-                      ? 'opacity-100 bg-[rgba(213,133,31,0.10)] ring-1 ring-[var(--brand-amber,#D5851F)]'
-                      : 'opacity-0'
-                  }`}
-                  aria-hidden="true"
-                />
-
                 {/* Dynamic Speaker Header Row */}
-                <div className="relative z-10 flex items-center justify-between mb-2.5 text-xs font-mono theme-muted">
+                <div className="relative z-10 flex items-center justify-between mb-2 text-xs font-mono">
                   {isDialogue ? (
-                    <span className="font-bold text-[var(--accent-text)] font-sans flex items-center gap-1.5">
-                      <IconMic className="w-3.5 h-3.5 text-[var(--accent-text)]" />
+                    <span className="font-bold text-[var(--text-main)] font-mono text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-main)]" />
                       <span>{seg.speaker_name || 'Character'}</span>
                     </span>
                   ) : (
-                    <span className="font-bold theme-heading font-sans flex items-center gap-1.5">
-                      <IconBook className="w-3.5 h-3.5 opacity-60" />
+                    <span className="font-medium text-[var(--text-sub)] font-mono text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)] opacity-60" />
                       <span>{seg.speaker_name || 'Narrator'}</span>
                     </span>
                   )}
 
                   {/* Equalizer Playing Indicator */}
                   {isActive ? (
-                    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-[var(--accent-text)] bg-[var(--accent-surface)] px-2.5 py-0.5 rounded-full border border-[var(--border-focus)]/40 shadow-xs">
-                      <span className="flex items-end gap-0.5 h-3 w-3" aria-hidden="true">
-                        <span
-                          className="w-0.5 bg-[var(--accent)] rounded-full equalizer-bar h-3"
-                          style={{
-                            animationDelay: '0ms',
-                            animationPlayState: isEqActive ? 'running' : 'paused',
-                          }}
-                        />
-                        <span
-                          className="w-0.5 bg-[var(--accent)] rounded-full equalizer-bar h-3"
-                          style={{
-                            animationDelay: '200ms',
-                            animationPlayState: isEqActive ? 'running' : 'paused',
-                          }}
-                        />
-                        <span
-                          className="w-0.5 bg-[var(--accent)] rounded-full equalizer-bar h-3"
-                          style={{
-                            animationDelay: '400ms',
-                            animationPlayState: isEqActive ? 'running' : 'paused',
-                          }}
-                        />
-                      </span>
+                    <span className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold text-[var(--text-main)] bg-[var(--bg-card)] px-2 py-0.5 rounded-[1px] border border-[var(--border-strong)]">
+                      <span className="signal-dot" />
                       <span>{isPlaying ? 'Playing' : 'Paused'}</span>
                     </span>
                   ) : (
-                    <span className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-mono theme-muted flex items-center gap-1">
-                      <IconPlay className="w-3 h-3 text-[var(--accent-text)]" />
+                    <span className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-mono text-[var(--text-muted)] flex items-center gap-1">
+                      <IconPlay className="w-3 h-3 text-[var(--text-main)]" />
                       <span>Listen from here</span>
                     </span>
                   )}
                 </div>
 
-                {/* Prose Text with WTR-Lab Yellow Highlight */}
+                {/* Prose Text with High-Contrast Highlight */}
                 {renderSegmentText(seg, isActive)}
               </div>
             );
@@ -807,12 +787,12 @@ export default function ReaderView({
 
           {/* Chapter Navigation Footer at End of Prose */}
           {(prevChapter || nextChapter || onNextChapter) && (
-            <div className="pt-10 pb-6 border-t theme-border flex items-center justify-between text-xs font-mono">
+            <div className="pt-10 pb-6 border-t border-[var(--border-subtle)] flex items-center justify-between text-xs font-mono">
               {prevChapter ? (
                 <button
                   type="button"
                   onClick={() => onSelectChapter?.(prevChapter.id)}
-                  className="px-3 py-1.5 rounded-xl theme-card border hover:border-[var(--accent)] theme-sub hover:theme-main transition cursor-pointer flex items-center gap-1.5"
+                  className="boxed-btn px-3 py-1.5 text-xs font-mono text-[var(--text-main)] hover:bg-[var(--bg-hover)] cursor-pointer flex items-center gap-1.5"
                 >
                   <span>‹ {prevChapter.title || `Chapter ${prevChapter.chapter_number}`}</span>
                 </button>
@@ -823,7 +803,7 @@ export default function ReaderView({
                 <button
                   type="button"
                   onClick={() => (onSelectChapter ? onSelectChapter(nextChapter.id) : onNextChapter?.())}
-                  className="px-3.5 py-1.5 rounded-xl bg-[var(--cta-primary-bg)] text-[var(--cta-primary-text)] font-semibold transition cursor-pointer flex items-center gap-1.5 shadow-xs"
+                  className="boxed-btn-primary px-3.5 py-1.5 text-xs font-mono cursor-pointer flex items-center gap-1.5"
                 >
                   <span>Next: {nextChapter.title || `Chapter ${nextChapter.chapter_number}`} ›</span>
                 </button>
@@ -831,7 +811,7 @@ export default function ReaderView({
                 <button
                   type="button"
                   onClick={onNextChapter}
-                  className="px-3.5 py-1.5 rounded-xl bg-[var(--cta-primary-bg)] text-[var(--cta-primary-text)] font-semibold transition cursor-pointer flex items-center gap-1.5 shadow-xs"
+                  className="boxed-btn-primary px-3.5 py-1.5 text-xs font-mono cursor-pointer flex items-center gap-1.5"
                 >
                   <span>Next Chapter ›</span>
                 </button>
