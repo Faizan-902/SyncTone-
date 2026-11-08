@@ -45,17 +45,17 @@
       </div>
 
       <nav class="tabs-bar">
-        <button class="tab-btn active" data-tab="studio-cast">CAST ROSTER</button>
-        <button class="tab-btn" data-tab="studio-voices">NEURAL VOICES</button>
-        <button class="tab-btn" data-tab="studio-settings">TIMBRE SETTINGS</button>
-        <button class="tab-btn" data-tab="studio-pipeline">SYNTHESIS PIPELINE</button>
+        <button class="tab-btn active" data-tab="cast">CAST</button>
+        <button class="tab-btn" data-tab="voices">VOICES</button>
+        <button class="tab-btn" data-tab="settings">SETTINGS</button>
+        <button class="tab-btn" data-tab="generate">GENERATE</button>
       </nav>
 
       <div class="studio-body">
         
-        <!-- Synthesis Progress Indicator Banner -->
+        <!-- Persistent Synthesis Progress Indicator Banner -->
         <section class="synthesis-banner-box">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
             <span class="mono-xs" style="color: var(--text-main); font-weight: 600;">
               SYNTHESIZING CHAPTER 02: THE RED-HEADED LEAGUE
             </span>
@@ -68,7 +68,7 @@
             <div class="synthesis-progress-fill"></div>
           </div>
 
-          <div style="display: flex; justify-content: space-between; align-items: center;" class="mono-xs">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;" class="mono-xs">
             <span style="color: var(--text-muted);">
               PROGRESS: 74% COMPLETE // 1,420 OF 1,920 BLOCKS
             </span>
@@ -78,8 +78,8 @@
           </div>
         </section>
 
-        <!-- Character Cast Roster Grid -->
-        <section>
+        <!-- Tab 1: Cast Panel -->
+        <section id="tab-panel-cast" class="tab-content-panel active">
           <div class="section-header-row" style="margin-bottom: 16px;">
             <span class="mono-xs" style="color: var(--text-muted);">// CHARACTER VOICE ASSIGNMENTS</span>
             <button class="btn btn-sm"><span class="dot"></span> + ADD CHARACTER</button>
@@ -155,29 +155,122 @@
           </div>
         </section>
 
-        <!-- Timbre Parameters -->
-        <section style="background: var(--bg-surface); border: 1px solid var(--border-subtle); padding: 20px;">
-          <span class="mono-xs" style="color: var(--text-muted); display: block; margin-bottom: 16px;">
-            // SYNTHESIS TIMBRE PARAMETERS
-          </span>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
-            <div>
-              <label class="mono-xs" style="color: var(--text-sub); display: block; margin-bottom: 6px;">
-                EMOTIONAL RANGE [78%]
-              </label>
-              <input type="range" min="0" max="100" value="78" style="width: 100%; accent-color: var(--text-main);">
+        <!-- Tab 2: Voices Panel -->
+        <section id="tab-panel-voices" class="tab-content-panel" style="display: none;">
+          <div class="section-header-row" style="margin-bottom: 16px;">
+            <span class="mono-xs" style="color: var(--text-muted);">// NEURAL VOICE LIBRARY (LOSSLESS 48KHZ)</span>
+            <span class="mono-xs" style="color: var(--text-sub);">5 ARCHIVED MODELS</span>
+          </div>
+
+          <div class="roster-grid">
+            <div class="character-card">
+              <div class="char-header-row">
+                <span class="char-name">Neural-Docu-UK-M</span>
+                <span class="badge">DOCUMENTARIAN</span>
+              </div>
+              <div class="char-traits-list">
+                <span>TIMBRE: Warm British Tenor, balanced literary tone</span>
+                <span>FREQUENCY: 48kHz PCM // Latency: 42ms</span>
+                <button class="btn btn-sm" style="margin-top: 6px;"><span class="dot"></span> ▶ AUDITION VOICE</button>
+              </div>
             </div>
-            <div>
-              <label class="mono-xs" style="color: var(--text-sub); display: block; margin-bottom: 6px;">
-                BREATH PHONEME RATE [42%]
-              </label>
-              <input type="range" min="0" max="100" value="42" style="width: 100%; accent-color: var(--text-main);">
+            <div class="character-card">
+              <div class="char-header-row">
+                <span class="char-name">Neural-Analytical-V2</span>
+                <span class="badge badge-active">RP ANALYTICAL</span>
+              </div>
+              <div class="char-traits-list">
+                <span>TIMBRE: Sharp Victorian RP, crisp consonants</span>
+                <span>FREQUENCY: 48kHz PCM // Latency: 38ms</span>
+                <button class="btn btn-sm" style="margin-top: 6px;"><span class="dot"></span> ▶ AUDITION VOICE</button>
+              </div>
             </div>
-            <div>
-              <label class="mono-xs" style="color: var(--text-sub); display: block; margin-bottom: 6px;">
-                ACOUSTIC REVERB [15%]
-              </label>
-              <input type="range" min="0" max="100" value="15" style="width: 100%; accent-color: var(--text-main);">
+            <div class="character-card">
+              <div class="char-header-row">
+                <span class="char-name">Neural-Warm-Male-UK</span>
+                <span class="badge badge-active">WARM MALE</span>
+              </div>
+              <div class="char-traits-list">
+                <span>TIMBRE: Resonant, intimate companionable baritone</span>
+                <span>FREQUENCY: 48kHz PCM // Latency: 40ms</span>
+                <button class="btn btn-sm" style="margin-top: 6px;"><span class="dot"></span> ▶ AUDITION VOICE</button>
+              </div>
+            </div>
+            <div class="character-card">
+              <div class="char-header-row">
+                <span class="char-name">Neural-Cockney-Male</span>
+                <span class="badge">COCKNEY MALE</span>
+              </div>
+              <div class="char-traits-list">
+                <span>TIMBRE: Raspy authentic 19th-c urban dialect</span>
+                <span>FREQUENCY: 48kHz PCM // Latency: 45ms</span>
+                <button class="btn btn-sm" style="margin-top: 6px;"><span class="dot"></span> ▶ AUDITION VOICE</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab 3: Settings Panel -->
+        <section id="tab-panel-settings" class="tab-content-panel" style="display: none;">
+          <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); padding: 20px; display: flex; flex-direction: column; gap: 20px;">
+            <span class="mono-xs" style="color: var(--text-muted); display: block;">
+              // SYNTHESIS TIMBRE PARAMETERS
+            </span>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;">
+              <div>
+                <label class="mono-xs" style="color: var(--text-sub); display: block; margin-bottom: 8px;">
+                  EMOTIONAL RANGE [78%]
+                </label>
+                <input type="range" min="0" max="100" value="78" style="width: 100%; accent-color: var(--text-main);">
+              </div>
+              <div>
+                <label class="mono-xs" style="color: var(--text-sub); display: block; margin-bottom: 8px;">
+                  BREATH PHONEME RATE [42%]
+                </label>
+                <input type="range" min="0" max="100" value="42" style="width: 100%; accent-color: var(--text-main);">
+              </div>
+              <div>
+                <label class="mono-xs" style="color: var(--text-sub); display: block; margin-bottom: 8px;">
+                  ACOUSTIC REVERB [15%]
+                </label>
+                <input type="range" min="0" max="100" value="15" style="width: 100%; accent-color: var(--text-main);">
+              </div>
+              <div>
+                <label class="mono-xs" style="color: var(--text-sub); display: block; margin-bottom: 8px;">
+                  PACING MULTIPLIER [1.00×]
+                </label>
+                <input type="range" min="80" max="140" value="100" style="width: 100%; accent-color: var(--text-main);">
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab 4: Generate Panel -->
+        <section id="tab-panel-generate" class="tab-content-panel" style="display: none;">
+          <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); padding: 20px; display: flex; flex-direction: column; gap: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+              <span class="mono-xs" style="color: var(--text-muted);">// SYNTHESIS PIPELINE CONTROL</span>
+              <button class="btn btn-sm btn-primary"><span class="dot"></span> START FULL CHAPTER BATCH</button>
+            </div>
+            <div class="chapters-directory-list">
+              <div class="chapter-row-item">
+                <span class="chapter-idx">BLK. 1420</span>
+                <span class="chapter-title">"It is quite a three-pipe problem, and I beg that you won’t speak..."</span>
+                <span class="chapter-duration">00:04.20</span>
+                <span class="badge badge-active"><span class="signal-dot"></span> PCM READY</span>
+              </div>
+              <div class="chapter-row-item">
+                <span class="chapter-idx">BLK. 1421</span>
+                <span class="chapter-title">"He curled himself up in his chair, with his thin knees drawn up..."</span>
+                <span class="chapter-duration">00:05.12</span>
+                <span class="badge badge-active"><span class="signal-dot"></span> PCM READY</span>
+              </div>
+              <div class="chapter-row-item">
+                <span class="chapter-idx">BLK. 1422</span>
+                <span class="chapter-title">"I had plenty of time to consider the curious state of affairs..."</span>
+                <span class="chapter-duration">00:03.88</span>
+                <span class="badge"><span class="signal-dot"></span> QUEUED</span>
+              </div>
             </div>
           </div>
         </section>
@@ -188,6 +281,10 @@
 
   <!-- Docked Bottom Audio Bar -->
   <footer class="audio-player-dock">
+    <div class="mobile-top-scrubber">
+      <div class="scrubber-played-fill"></div>
+    </div>
+    
     <div class="audio-track-info">
       <div class="audio-track-art">
         <span>VOL.01</span>
@@ -202,7 +299,7 @@
     <div class="audio-central-cluster">
       <div class="audio-control-buttons">
         <button class="btn btn-sm">◀◀ 10s</button>
-        <button id="btn-play-pause" class="btn btn-sm btn-primary">⏸ PAUSE</button>
+        <button class="btn btn-sm btn-primary btn-play-pause">▶ PLAY</button>
         <button class="btn btn-sm">10s ▶▶</button>
       </div>
 
@@ -218,9 +315,10 @@
     </div>
 
     <div class="audio-right-cluster">
+      <button class="btn btn-sm btn-primary mobile-play-btn btn-play-pause">▶ PLAY</button>
       <span class="signal-dot"></span>
-      <span class="mono-xs" style="color: var(--text-main); font-weight: 600;">LIVE SYNC</span>
-      <button class="btn btn-sm mono-xs">1.0×</button>
+      <span class="mono-xs desktop-only-ctrl" style="color: var(--text-main); font-weight: 600;">LIVE SYNC</span>
+      <button class="btn btn-sm mono-xs desktop-only-ctrl">1.0×</button>
       <a href="reader.html" class="btn btn-sm mono-xs" title="Expand Reader">📖</a>
     </div>
   </footer>

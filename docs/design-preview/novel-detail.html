@@ -36,7 +36,7 @@
   <main class="detail-stage">
     
     <!-- Back & Breadcrumb -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div class="detail-breadcrumb-bar">
       <a href="home.html" class="mono-xs" style="color: var(--text-sub);">
         ← BACK TO ARCHIVE CATALOG
       </a>
@@ -69,7 +69,7 @@
 
       <div class="detail-actions-cluster">
         <a href="reader.html" class="btn btn-lg btn-primary">
-          <span class="dot"></span> LISTEN TO NOVEL
+          <span class="dot"></span> LISTEN
         </a>
         <a href="reader.html" class="btn btn-lg">
           <span class="dot"></span> OPEN READER
@@ -83,15 +83,15 @@
     <!-- Boxed Mono Tab Bar -->
     <nav class="tabs-bar" style="margin-bottom: 24px;">
       <button class="tab-btn active" data-tab="overview">OVERVIEW</button>
-      <button class="tab-btn" data-tab="cast">CAST ROSTER (5)</button>
-      <button class="tab-btn" data-tab="chapters">CHAPTERS (24)</button>
-      <button class="tab-btn" data-tab="details">TECHNICAL DETAILS</button>
-      <button class="tab-btn" data-tab="score">ATMOSPHERIC SCORE</button>
+      <button class="tab-btn" data-tab="cast">CAST</button>
+      <button class="tab-btn" data-tab="chapters">CHAPTERS</button>
+      <button class="tab-btn" data-tab="details">DETAILS</button>
+      <button class="tab-btn" data-tab="score">SCORE</button>
     </nav>
 
     <!-- Tab 1: Overview Panel -->
-    <section id="tab-panel-overview" class="tab-content-panel">
-      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 32px;">
+    <section id="tab-panel-overview" class="tab-content-panel active">
+      <div class="detail-overview-grid">
         <div>
           <h3 class="mono-sm" style="margin-bottom: 12px; color: var(--text-muted);">// SYNOPSIS</h3>
           <p style="font-size: 15px; line-height: 1.7; color: var(--text-main); margin-bottom: 24px;">
@@ -101,77 +101,29 @@
             In this SyncTone production, Dr. John Watson’s intimate narrative voice frames every inquiry, while Holmes’ sharp analytical cadence pierces through Victorian London’s foggy thoroughfares. Synthesized using multi-channel neural models with bespoke 19th-century phoneme dictionaries.
           </p>
         </div>
-        <aside style="background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+        <aside class="detail-matrix-box">
           <span class="mono-xs" style="color: var(--text-muted);">// SYNTHESIS MATRIX</span>
-          <div style="display: flex; justify-content: space-between;" class="mono-xs">
-            <span style="color: var(--text-sub);">NEURAL MODEL</span>
-            <span style="color: var(--text-main);">SYNCTONE V3.2</span>
+          <div class="detail-matrix-row">
+            <span>NEURAL MODEL</span>
+            <span>SYNCTONE V3.2</span>
           </div>
-          <div style="display: flex; justify-content: space-between;" class="mono-xs">
-            <span style="color: var(--text-sub);">DIALOGUE SEGMENTS</span>
-            <span style="color: var(--text-main);">1,920 BLOCKS</span>
+          <div class="detail-matrix-row">
+            <span>DIALOGUE SEGMENTS</span>
+            <span>1,920 BLOCKS</span>
           </div>
-          <div style="display: flex; justify-content: space-between;" class="mono-xs">
-            <span style="color: var(--text-sub);">SAMPLE ACCURACY</span>
-            <span style="color: var(--text-main);">48KHZ / 24-BIT</span>
+          <div class="detail-matrix-row">
+            <span>SAMPLE ACCURACY</span>
+            <span>48KHZ / 24-BIT</span>
           </div>
-          <div style="display: flex; justify-content: space-between;" class="mono-xs">
-            <span style="color: var(--text-sub);">SYNC DRIFT</span>
-            <span style="color: var(--text-main);">&lt; 12MS JITTER</span>
+          <div class="detail-matrix-row">
+            <span>SYNC DRIFT</span>
+            <span>&lt; 12MS JITTER</span>
           </div>
         </aside>
       </div>
     </section>
 
-    <!-- Tab 2: Chapters Panel -->
-    <section id="tab-panel-chapters" class="tab-content-panel" style="display: none;">
-      <div class="chapters-directory-list">
-        <div class="chapter-row-item">
-          <span class="chapter-idx">CH. 01</span>
-          <span class="chapter-title">A Scandal in Bohemia</span>
-          <span class="chapter-duration">38:14</span>
-          <span class="badge badge-active"><span class="signal-dot"></span> SYNTHESIZED</span>
-          <button class="btn btn-sm btn-primary"><span class="dot"></span> PLAY</button>
-        </div>
-        <div class="chapter-row-item">
-          <span class="chapter-idx">CH. 02</span>
-          <span class="chapter-title">The Red-Headed League</span>
-          <span class="chapter-duration">42:05</span>
-          <span class="badge badge-active"><span class="signal-dot"></span> SYNTHESIZED</span>
-          <button class="btn btn-sm"><span class="dot"></span> PLAY</button>
-        </div>
-        <div class="chapter-row-item">
-          <span class="chapter-idx">CH. 03</span>
-          <span class="chapter-title">A Case of Identity</span>
-          <span class="chapter-duration">31:50</span>
-          <span class="badge badge-active"><span class="signal-dot"></span> SYNTHESIZED</span>
-          <button class="btn btn-sm"><span class="dot"></span> PLAY</button>
-        </div>
-        <div class="chapter-row-item">
-          <span class="chapter-idx">CH. 04</span>
-          <span class="chapter-title">The Boscombe Valley Mystery</span>
-          <span class="chapter-duration">45:20</span>
-          <span class="badge badge-active"><span class="signal-dot"></span> SYNTHESIZED</span>
-          <button class="btn btn-sm"><span class="dot"></span> PLAY</button>
-        </div>
-        <div class="chapter-row-item">
-          <span class="chapter-idx">CH. 05</span>
-          <span class="chapter-title">The Five Orange Pips</span>
-          <span class="chapter-duration">33:40</span>
-          <span class="badge badge-active"><span class="signal-dot"></span> SYNTHESIZED</span>
-          <button class="btn btn-sm"><span class="dot"></span> PLAY</button>
-        </div>
-        <div class="chapter-row-item">
-          <span class="chapter-idx">CH. 06</span>
-          <span class="chapter-title">The Man with the Twisted Lip</span>
-          <span class="chapter-duration">39:15</span>
-          <span class="badge badge-active"><span class="signal-dot"></span> SYNTHESIZED</span>
-          <button class="btn btn-sm"><span class="dot"></span> PLAY</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Tab 3: Cast Panel -->
+    <!-- Tab 2: Cast Panel -->
     <section id="tab-panel-cast" class="tab-content-panel" style="display: none;">
       <div class="roster-grid">
         <div class="character-card">
@@ -221,10 +173,123 @@
       </div>
     </section>
 
+    <!-- Tab 3: Chapters Panel -->
+    <section id="tab-panel-chapters" class="tab-content-panel" style="display: none;">
+      <div class="chapters-directory-list">
+        <div class="chapter-row-item">
+          <span class="chapter-idx">CH. 01</span>
+          <span class="chapter-title">A Scandal in Bohemia</span>
+          <span class="chapter-duration">38:14</span>
+          <span class="badge badge-active"><span class="signal-dot"></span> SYNTHESIZED</span>
+          <button class="btn btn-sm btn-primary"><span class="dot"></span> PLAY</button>
+        </div>
+        <div class="chapter-row-item">
+          <span class="chapter-idx">CH. 02</span>
+          <span class="chapter-title">The Red-Headed League</span>
+          <span class="chapter-duration">42:05</span>
+          <span class="badge badge-active"><span class="signal-dot"></span> SYNTHESIZED</span>
+          <button class="btn btn-sm"><span class="dot"></span> PLAY</button>
+        </div>
+        <div class="chapter-row-item">
+          <span class="chapter-idx">CH. 03</span>
+          <span class="chapter-title">A Case of Identity</span>
+          <span class="chapter-duration">31:50</span>
+          <span class="badge badge-active"><span class="signal-dot"></span> SYNTHESIZED</span>
+          <button class="btn btn-sm"><span class="dot"></span> PLAY</button>
+        </div>
+        <div class="chapter-row-item">
+          <span class="chapter-idx">CH. 04</span>
+          <span class="chapter-title">The Boscombe Valley Mystery</span>
+          <span class="chapter-duration">45:20</span>
+          <span class="badge badge-active"><span class="signal-dot"></span> SYNTHESIZED</span>
+          <button class="btn btn-sm"><span class="dot"></span> PLAY</button>
+        </div>
+        <div class="chapter-row-item">
+          <span class="chapter-idx">CH. 05</span>
+          <span class="chapter-title">The Five Orange Pips</span>
+          <span class="chapter-duration">33:40</span>
+          <span class="badge badge-active"><span class="signal-dot"></span> SYNTHESIZED</span>
+          <button class="btn btn-sm"><span class="dot"></span> PLAY</button>
+        </div>
+        <div class="chapter-row-item">
+          <span class="chapter-idx">CH. 06</span>
+          <span class="chapter-title">The Man with the Twisted Lip</span>
+          <span class="chapter-duration">39:15</span>
+          <span class="badge badge-active"><span class="signal-dot"></span> SYNTHESIZED</span>
+          <button class="btn btn-sm"><span class="dot"></span> PLAY</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 4: Technical Details Panel -->
+    <section id="tab-panel-details" class="tab-content-panel" style="display: none;">
+      <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 24px; display: flex; flex-direction: column; gap: 20px;">
+        <h3 class="mono-sm" style="color: var(--text-main);">// ACOUSTIC & SYNTHESIS ARCHITECTURE</h3>
+        <p style="font-size: 14px; line-height: 1.6; color: var(--text-sub);">
+          SyncTone produces high-resolution neural speech synthesized against time-aligned character phoneme tags. Playback utilizes dual-channel 48kHz PCM streams mapped to binaural HRTF acoustic convolution kernels.
+        </p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+          <div style="border: 1px solid var(--border-subtle); padding: 14px;">
+            <span class="mono-xs" style="color: var(--text-muted); display: block; margin-bottom: 4px;">SYNTHESIS PIPELINE</span>
+            <span class="mono-xs" style="color: var(--text-main); font-weight: 600;">MULTI-SPEAKER NEURAL V3.2</span>
+          </div>
+          <div style="border: 1px solid var(--border-subtle); padding: 14px;">
+            <span class="mono-xs" style="color: var(--text-muted); display: block; margin-bottom: 4px;">ACOUSTIC RESOLUTION</span>
+            <span class="mono-xs" style="color: var(--text-main); font-weight: 600;">48.0 KHZ / 24-BIT PCM</span>
+          </div>
+          <div style="border: 1px solid var(--border-subtle); padding: 14px;">
+            <span class="mono-xs" style="color: var(--text-muted); display: block; margin-bottom: 4px;">BINAURAL SPATIALIZATION</span>
+            <span class="mono-xs" style="color: var(--text-main); font-weight: 600;">KEMAR DUAL HRTF MATRIX</span>
+          </div>
+          <div style="border: 1px solid var(--border-subtle); padding: 14px;">
+            <span class="mono-xs" style="color: var(--text-muted); display: block; margin-bottom: 4px;">SYNC ACCURACY</span>
+            <span class="mono-xs" style="color: var(--text-main); font-weight: 600;">&lt; 12MS FRAME JITTER</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 5: Atmospheric Score Panel -->
+    <section id="tab-panel-score" class="tab-content-panel" style="display: none;">
+      <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 24px; display: flex; flex-direction: column; gap: 20px;">
+        <h3 class="mono-sm" style="color: var(--text-main);">// GENERATIVE ATMOSPHERIC SOUNDSCAPES</h3>
+        <p style="font-size: 14px; line-height: 1.6; color: var(--text-sub);">
+          Each novel is accompanied by dynamic background ambience mapped to scene context, time of day, and emotional tension.
+        </p>
+        <div class="chapters-directory-list">
+          <div class="chapter-row-item">
+            <span class="chapter-idx">TRACK 01</span>
+            <span class="chapter-title">Fog Over the Thames — D-Minor Drone &amp; Hansom Cabs</span>
+            <span class="chapter-duration">08:14</span>
+            <span class="badge badge-active"><span class="signal-dot"></span> AMBIENCE</span>
+            <button class="btn btn-sm"><span class="dot"></span> AUDITION</button>
+          </div>
+          <div class="chapter-row-item">
+            <span class="chapter-idx">TRACK 02</span>
+            <span class="chapter-title">221B Hearth Fire — Crackle &amp; Westminster Chimes</span>
+            <span class="chapter-duration">12:30</span>
+            <span class="badge badge-active"><span class="signal-dot"></span> AMBIENCE</span>
+            <button class="btn btn-sm"><span class="dot"></span> AUDITION</button>
+          </div>
+          <div class="chapter-row-item">
+            <span class="chapter-idx">TRACK 03</span>
+            <span class="chapter-title">Cobblestone Pursuit — Presto Percussion &amp; Rain</span>
+            <span class="chapter-duration">06:45</span>
+            <span class="badge badge-active"><span class="signal-dot"></span> AMBIENCE</span>
+            <button class="btn btn-sm"><span class="dot"></span> AUDITION</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
   </main>
 
   <!-- Docked Bottom Audio Bar -->
   <footer class="audio-player-dock">
+    <div class="mobile-top-scrubber">
+      <div class="scrubber-played-fill"></div>
+    </div>
+    
     <div class="audio-track-info">
       <div class="audio-track-art">
         <span>VOL.01</span>
@@ -239,7 +304,7 @@
     <div class="audio-central-cluster">
       <div class="audio-control-buttons">
         <button class="btn btn-sm">◀◀ 10s</button>
-        <button id="btn-play-pause" class="btn btn-sm btn-primary">⏸ PAUSE</button>
+        <button class="btn btn-sm btn-primary btn-play-pause">▶ PLAY</button>
         <button class="btn btn-sm">10s ▶▶</button>
       </div>
 
@@ -255,9 +320,10 @@
     </div>
 
     <div class="audio-right-cluster">
+      <button class="btn btn-sm btn-primary mobile-play-btn btn-play-pause">▶ PLAY</button>
       <span class="signal-dot"></span>
-      <span class="mono-xs" style="color: var(--text-main); font-weight: 600;">LIVE SYNC</span>
-      <button class="btn btn-sm mono-xs">1.0×</button>
+      <span class="mono-xs desktop-only-ctrl" style="color: var(--text-main); font-weight: 600;">LIVE SYNC</span>
+      <button class="btn btn-sm mono-xs desktop-only-ctrl">1.0×</button>
       <a href="reader.html" class="btn btn-sm mono-xs" title="Expand Reader">📖</a>
     </div>
   </footer>

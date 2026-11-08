@@ -38,19 +38,16 @@
     <!-- Monospace Floating Toolbar -->
     <div class="reader-floating-toolbar">
       <div class="reader-toolbar-group">
-        <span class="mono-xs" style="color: var(--text-muted);">// READER CONTROL</span>
-        <button id="btn-font-minus" class="btn btn-sm">A−</button>
-        <button id="btn-font-plus" class="btn btn-sm">A+</button>
+        <span class="mono-xs desktop-only-tag" style="color: var(--text-muted);">// READER CONTROL</span>
+        <button id="btn-font-minus" class="btn btn-sm" title="Decrease Font">A−</button>
+        <button id="btn-font-plus" class="btn btn-sm" title="Increase Font">A+</button>
         <button id="btn-toggle-font" class="btn btn-sm">NEWSREADER SERIF</button>
       </div>
 
       <div class="reader-toolbar-group">
-        <span class="mono-xs" style="color: var(--text-sub);">PAGE 14 OF 342 // 4.1%</span>
-        <span class="badge badge-active"><span class="signal-dot"></span> AUDIO SYNC ACTIVE</span>
-      </div>
-
-      <div class="reader-toolbar-group">
-        <a href="novel-detail.html" class="btn btn-sm">CLOSE READER [×]</a>
+        <span class="mono-xs" style="color: var(--text-sub);">14 / 342 (4.1%)</span>
+        <span class="badge badge-active"><span class="signal-dot"></span> <span class="desktop-only-tag">AUDIO </span>SYNC</span>
+        <a href="novel-detail.html" class="btn btn-sm" title="Close Reader">CLOSE [×]</a>
       </div>
     </div>
 
@@ -101,6 +98,10 @@
 
   <!-- Docked Bottom Audio Bar -->
   <footer class="audio-player-dock">
+    <div class="mobile-top-scrubber">
+      <div class="scrubber-played-fill"></div>
+    </div>
+    
     <div class="audio-track-info">
       <div class="audio-track-art">
         <span>VOL.01</span>
@@ -115,7 +116,7 @@
     <div class="audio-central-cluster">
       <div class="audio-control-buttons">
         <button class="btn btn-sm">◀◀ 10s</button>
-        <button id="btn-play-pause" class="btn btn-sm btn-primary">⏸ PAUSE</button>
+        <button class="btn btn-sm btn-primary btn-play-pause">▶ PLAY</button>
         <button class="btn btn-sm">10s ▶▶</button>
       </div>
 
@@ -131,10 +132,11 @@
     </div>
 
     <div class="audio-right-cluster">
+      <button class="btn btn-sm btn-primary mobile-play-btn btn-play-pause">▶ PLAY</button>
       <span class="signal-dot"></span>
-      <span class="mono-xs" style="color: var(--text-main); font-weight: 600;">LIVE SYNC</span>
-      <button class="btn btn-sm mono-xs">1.0×</button>
-      <button class="btn btn-sm mono-xs" title="Atmospheric Ambience">● AMBIENCE</button>
+      <span class="mono-xs desktop-only-ctrl" style="color: var(--text-main); font-weight: 600;">LIVE SYNC</span>
+      <button class="btn btn-sm mono-xs desktop-only-ctrl">1.0×</button>
+      <button class="btn btn-sm mono-xs desktop-only-ctrl" title="Atmospheric Ambience">● AMBIENCE</button>
     </div>
   </footer>
 
