@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SyncTone — Voice Synthesis Studio (Noir Monochrome)</title>
+  <link rel="stylesheet" href="css/noir-mono.css">
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header class="top-header">
+    <div class="brand-logo">
+      <span class="brand-symbol"></span>
+      <span>SYNCTONE</span>
+    </div>
+
+    <nav class="nav-links">
+      <a href="home.html" class="nav-link">+ LIBRARY</a>
+      <a href="novel-detail.html" class="nav-link">+ ARCHIVE</a>
+      <a href="voice-studio.html" class="nav-link active">+ VOICES</a>
+      <a href="reader.html" class="nav-link">+ READER</a>
+    </nav>
+
+    <div class="header-actions">
+      <button class="btn btn-sm theme-toggle-btn">
+        <span class="dot"></span> THEME: DARK
+      </button>
+      <button class="btn btn-sm btn-primary">
+        <span class="dot"></span> SIGN IN
+      </button>
+    </div>
+  </header>
+
+  <!-- Screen 5: Voice Studio Sheet Container -->
+  <main class="studio-sheet-wrapper">
+    <div class="studio-card-container">
+      
+      <div class="studio-header">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span class="brand-symbol"></span>
+          <span class="mono" style="font-size: 13px; font-weight: 700;">VOICE SYNTHESIS STUDIO // ENGINE V3.2</span>
+        </div>
+        <a href="novel-detail.html" class="btn btn-sm">CLOSE [×]</a>
+      </div>
+
+      <nav class="tabs-bar">
+        <button class="tab-btn active" data-tab="studio-cast">CAST ROSTER</button>
+        <button class="tab-btn" data-tab="studio-voices">NEURAL VOICES</button>
+        <button class="tab-btn" data-tab="studio-settings">TIMBRE SETTINGS</button>
+        <button class="tab-btn" data-tab="studio-pipeline">SYNTHESIS PIPELINE</button>
+      </nav>
+
+      <div class="studio-body">
+        
+        <!-- Synthesis Progress Indicator Banner -->
+        <section class="synthesis-banner-box">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="mono-xs" style="color: var(--text-main); font-weight: 600;">
+              SYNTHESIZING CHAPTER 02: THE RED-HEADED LEAGUE
+            </span>
+            <span class="badge badge-active">
+              <span class="signal-dot"></span> GENERATING AUDIO BLOCKS
+            </span>
+          </div>
+
+          <div class="synthesis-progress-track">
+            <div class="synthesis-progress-fill"></div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center;" class="mono-xs">
+            <span style="color: var(--text-muted);">
+              PROGRESS: 74% COMPLETE // 1,420 OF 1,920 BLOCKS
+            </span>
+            <span style="color: var(--text-main);">
+              ESTIMATED REMAINING: 01M 14S // 48KHZ PCM
+            </span>
+          </div>
+        </section>
+
+        <!-- Character Cast Roster Grid -->
+        <section>
+          <div class="section-header-row" style="margin-bottom: 16px;">
+            <span class="mono-xs" style="color: var(--text-muted);">// CHARACTER VOICE ASSIGNMENTS</span>
+            <button class="btn btn-sm"><span class="dot"></span> + ADD CHARACTER</button>
+          </div>
+
+          <div class="roster-grid">
+            
+            <div class="character-card">
+              <div class="char-header-row">
+                <span class="char-name">Narrator / Chronicler</span>
+                <span class="badge">NARRATOR</span>
+              </div>
+              <div class="char-traits-list">
+                <span>MODEL: Neural-Docu-UK-M</span>
+                <span>PITCH OFFSET: +0.00 ST</span>
+                <span>CADENCE PACE: 1.00×</span>
+                <span>STATUS: <span style="color: var(--text-main);">● ASSIGNED &amp; LOCKED</span></span>
+              </div>
+            </div>
+
+            <div class="character-card">
+              <div class="char-header-row">
+                <span class="char-name">Sherlock Holmes</span>
+                <span class="badge badge-active">SPEAKER A</span>
+              </div>
+              <div class="char-traits-list">
+                <span>MODEL: Neural-Analytical-Male-V2</span>
+                <span>PITCH OFFSET: -0.05 ST</span>
+                <span>CADENCE PACE: 1.05×</span>
+                <span>STATUS: <span style="color: var(--text-main);">● ASSIGNED &amp; LOCKED</span></span>
+              </div>
+            </div>
+
+            <div class="character-card">
+              <div class="char-header-row">
+                <span class="char-name">Dr. John Watson</span>
+                <span class="badge badge-active">SPEAKER B</span>
+              </div>
+              <div class="char-traits-list">
+                <span>MODEL: Neural-Warm-Male-UK</span>
+                <span>PITCH OFFSET: +0.02 ST</span>
+                <span>CADENCE PACE: 0.98×</span>
+                <span>STATUS: <span style="color: var(--text-main);">● ASSIGNED &amp; LOCKED</span></span>
+              </div>
+            </div>
+
+            <div class="character-card">
+              <div class="char-header-row">
+                <span class="char-name">Inspector Lestrade</span>
+                <span class="badge">SPEAKER C</span>
+              </div>
+              <div class="char-traits-list">
+                <span>MODEL: Neural-Cockney-Male</span>
+                <span>PITCH OFFSET: +0.10 ST</span>
+                <span>CADENCE PACE: 1.10×</span>
+                <span>STATUS: <span style="color: var(--text-main);">● ASSIGNED &amp; LOCKED</span></span>
+              </div>
+            </div>
+
+            <div class="character-card">
+              <div class="char-header-row">
+                <span class="char-name">Mrs. Hudson</span>
+                <span class="badge">SPEAKER D</span>
+              </div>
+              <div class="char-traits-list">
+                <span>MODEL: Neural-Matron-Female</span>
+                <span>PITCH OFFSET: +0.15 ST</span>
+                <span>CADENCE PACE: 0.95×</span>
+                <span>STATUS: <span style="color: var(--text-main);">● ASSIGNED &amp; LOCKED</span></span>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- Timbre Parameters -->
+        <section style="background: var(--bg-surface); border: 1px solid var(--border-subtle); padding: 20px;">
+          <span class="mono-xs" style="color: var(--text-muted); display: block; margin-bottom: 16px;">
+            // SYNTHESIS TIMBRE PARAMETERS
+          </span>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+            <div>
+              <label class="mono-xs" style="color: var(--text-sub); display: block; margin-bottom: 6px;">
+                EMOTIONAL RANGE [78%]
+              </label>
+              <input type="range" min="0" max="100" value="78" style="width: 100%; accent-color: var(--text-main);">
+            </div>
+            <div>
+              <label class="mono-xs" style="color: var(--text-sub); display: block; margin-bottom: 6px;">
+                BREATH PHONEME RATE [42%]
+              </label>
+              <input type="range" min="0" max="100" value="42" style="width: 100%; accent-color: var(--text-main);">
+            </div>
+            <div>
+              <label class="mono-xs" style="color: var(--text-sub); display: block; margin-bottom: 6px;">
+                ACOUSTIC REVERB [15%]
+              </label>
+              <input type="range" min="0" max="100" value="15" style="width: 100%; accent-color: var(--text-main);">
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Docked Bottom Audio Bar -->
+  <footer class="audio-player-dock">
+    <div class="audio-track-info">
+      <div class="audio-track-art">
+        <span>VOL.01</span>
+      </div>
+      <div class="audio-track-text">
+        <div class="audio-track-title">A Scandal in Bohemia — Ch. 01</div>
+        <div class="audio-track-sub">Arthur Conan Doyle • Dr. Watson (Speaker B)</div>
+        <div class="audio-track-timecode">04:12.84 / 38:14.00</div>
+      </div>
+    </div>
+
+    <div class="audio-central-cluster">
+      <div class="audio-control-buttons">
+        <button class="btn btn-sm">◀◀ 10s</button>
+        <button id="btn-play-pause" class="btn btn-sm btn-primary">⏸ PAUSE</button>
+        <button class="btn btn-sm">10s ▶▶</button>
+      </div>
+
+      <div class="audio-scrubber-row">
+        <span class="mono-xs scrubber-current-time" style="color: var(--text-muted); min-width: 38px;">04:12</span>
+        <div class="scrubber-track-bar">
+          <div class="scrubber-buffered-fill"></div>
+          <div class="scrubber-played-fill"></div>
+          <div class="scrubber-thumb"></div>
+        </div>
+        <span class="mono-xs" style="color: var(--text-muted); min-width: 38px;">38:14</span>
+      </div>
+    </div>
+
+    <div class="audio-right-cluster">
+      <span class="signal-dot"></span>
+      <span class="mono-xs" style="color: var(--text-main); font-weight: 600;">LIVE SYNC</span>
+      <button class="btn btn-sm mono-xs">1.0×</button>
+      <a href="reader.html" class="btn btn-sm mono-xs" title="Expand Reader">📖</a>
+    </div>
+  </footer>
+
+  <script src="js/noir-mono.js"></script>
+</body>
+</html>
