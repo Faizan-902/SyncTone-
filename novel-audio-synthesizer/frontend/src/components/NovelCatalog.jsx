@@ -198,18 +198,18 @@ export default function NovelCatalog({
       {/* ================================================================= */}
       {/* 1. MASTER STICKY GLASS HEADER (Single Unified Header)             */}
       {/* ================================================================= */}
-      <header className="sticky top-0 z-30 -mx-4 sm:-mx-8 px-4 sm:px-8 lg:px-8 py-3.5 glass-header border-b flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 min-h-[64px]">
+      <header className="sticky top-0 z-30 -mx-4 sm:-mx-8 px-4 sm:px-8 lg:px-8 py-3 bg-[var(--bg-bar)] border-b border-[var(--border-subtle)] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 min-h-[56px]">
         {/* Left: Heading & Instant Search */}
         <div className="flex items-center gap-4 flex-1 max-w-2xl">
           <div className="flex-shrink-0">
-            <h1 className="text-lg font-bold tracking-tight theme-heading font-display">
+            <h1 className="text-base font-mono font-bold tracking-wider uppercase text-[var(--text-main)]">
               Novel Library
             </h1>
           </div>
 
           <div className="relative w-full">
-            <span className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none theme-muted">
-              <IconSearch className="w-4 h-4" />
+            <span className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none text-[var(--text-muted)]">
+              <IconSearch className="w-3.5 h-3.5" />
             </span>
             <input
               ref={searchInputRef}
@@ -217,18 +217,18 @@ export default function NovelCatalog({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by title, author, or narrator... (/ to focus)"
-              className="w-full pl-10 pr-10 py-2 text-xs theme-card border rounded-xl placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--border-focus)] transition shadow-inner"
+              className="w-full pl-9 pr-9 py-1.5 text-xs font-mono bg-[var(--bg-card)] border border-[var(--border-strong)] rounded-[1px] text-[var(--text-main)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--text-main)] transition"
               aria-label="Search novels"
             />
-            <span className="hidden sm:flex absolute inset-y-0 right-3 items-center pointer-events-none text-[10px] font-mono theme-muted border theme-border rounded px-1.5 py-0.5 my-auto">
+            <span className="hidden sm:flex absolute inset-y-0 right-2.5 items-center pointer-events-none text-[10px] font-mono text-[var(--text-muted)] border border-[var(--border-subtle)] rounded-[1px] px-1 py-0.5 my-auto">
               /
             </span>
           </div>
         </div>
 
         {/* Right: Channel Filter Tabs & Quick Action Buttons */}
-        <div className="flex items-center gap-2.5 overflow-x-auto pb-1 md:pb-0 flex-shrink-0">
-          <div className="inline-flex p-1 rounded-xl theme-card border" role="tablist" aria-label="Channel selection">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 flex-shrink-0">
+          <div className="inline-flex p-0.5 rounded-[1px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] gap-1" role="tablist" aria-label="Channel selection">
             <button
               ref={(el) => (tabRefs.current[0] = el)}
               role="tab"
@@ -236,10 +236,10 @@ export default function NovelCatalog({
               tabIndex={channel === 'verified' ? 0 : -1}
               onClick={() => setChannel('verified')}
               onKeyDown={(e) => handleTabKeyDown(e, 0)}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+              className={`px-2.5 py-1 text-[11px] font-mono uppercase tracking-wider rounded-[1px] transition-all cursor-pointer ${
                 channel === 'verified'
-                  ? 'bg-[var(--brand-sage,#87A96B)] text-[#1A120E] font-bold shadow-sm'
-                  : 'theme-muted hover:text-[var(--text-main)]'
+                  ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold'
+                  : 'text-[var(--text-sub)] hover:text-[var(--text-main)]'
               }`}
             >
               Verified Originals
@@ -251,10 +251,10 @@ export default function NovelCatalog({
               tabIndex={channel === 'community' ? 0 : -1}
               onClick={() => setChannel('community')}
               onKeyDown={(e) => handleTabKeyDown(e, 1)}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+              className={`px-2.5 py-1 text-[11px] font-mono uppercase tracking-wider rounded-[1px] transition-all cursor-pointer ${
                 channel === 'community'
-                  ? 'bg-[var(--brand-amber,#D5851F)] text-[#1A120E] font-bold shadow-sm'
-                  : 'theme-muted hover:text-[var(--text-main)]'
+                  ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold'
+                  : 'text-[var(--text-sub)] hover:text-[var(--text-main)]'
               }`}
             >
               Community Novels
@@ -266,10 +266,10 @@ export default function NovelCatalog({
               tabIndex={channel === 'all' ? 0 : -1}
               onClick={() => setChannel('all')}
               onKeyDown={(e) => handleTabKeyDown(e, 2)}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+              className={`px-2.5 py-1 text-[11px] font-mono uppercase tracking-wider rounded-[1px] transition-all cursor-pointer ${
                 channel === 'all'
-                  ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold shadow-sm'
-                  : 'theme-muted hover:text-[var(--text-main)]'
+                  ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold'
+                  : 'text-[var(--text-sub)] hover:text-[var(--text-main)]'
               }`}
             >
               All Novels
@@ -280,7 +280,7 @@ export default function NovelCatalog({
           {isWriterOrAdmin && onOpenAddNovel && (
             <button
               onClick={onOpenAddNovel}
-              className="px-3 py-1.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] text-xs font-semibold rounded-xl shadow-sm transition flex items-center gap-1.5 flex-shrink-0"
+              className="boxed-btn px-3 py-1 bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] text-[var(--text-main)] text-[11px] font-mono uppercase font-semibold rounded-[1px] border border-[var(--border-strong)] hover:border-[var(--text-main)] transition flex items-center gap-1.5 flex-shrink-0 cursor-pointer"
             >
               <IconPlus className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Add Novel</span>
@@ -295,9 +295,9 @@ export default function NovelCatalog({
                   onOpenAuth('login');
                 }
               }}
-              className="px-3 py-1.5 theme-card border hover:border-[var(--border-focus)] rounded-xl text-xs font-semibold transition flex items-center gap-1.5 flex-shrink-0"
+              className="boxed-btn-primary px-3 py-1 rounded-[1px] text-[11px] font-mono uppercase font-bold transition flex items-center gap-1.5 flex-shrink-0 cursor-pointer"
             >
-              <IconUser className="w-3.5 h-3.5 text-[var(--accent-text)]" />
+              <IconUser className="w-3.5 h-3.5" />
               <span>{isAuthenticated ? user.username : 'Sign In'}</span>
             </button>
           )}
