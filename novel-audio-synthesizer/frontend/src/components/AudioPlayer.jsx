@@ -500,7 +500,7 @@ export default function AudioPlayer({
             >
               <span
                 className={`w-1.5 h-1.5 rounded-full ${
-                  playbackMode === 'tts' ? 'bg-[var(--signal)]' : 'bg-[var(--text-muted)]'
+                  playbackMode === 'tts' && isPlaying ? 'bg-[var(--signal)]' : 'bg-[var(--text-muted)]'
                 }`}
               />
               <span className="hidden sm:inline">

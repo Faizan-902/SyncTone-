@@ -331,7 +331,7 @@ export default function ReaderView({
       {/* Floating Focus Mode Banner */}
       {isFocusMode && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[var(--bg-surface)] text-[var(--text-main)] text-xs px-4 py-2 rounded-[1px] border border-[var(--border-strong)] shadow-2xl flex items-center gap-3 animate-fade-in font-mono">
-          <span className="signal-dot" />
+          <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-main)]" />
           <span>Focus Mode Active • Press Esc to exit</span>
           <button
             type="button"
@@ -768,7 +768,11 @@ export default function ReaderView({
                   {/* Equalizer Playing Indicator */}
                   {isActive ? (
                     <span className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold text-[var(--text-main)] bg-[var(--bg-card)] px-2 py-0.5 rounded-[1px] border border-[var(--border-strong)]">
-                      <span className="signal-dot" />
+                      {isPlaying ? (
+                        <span className="signal-dot" />
+                      ) : (
+                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)]" />
+                      )}
                       <span>{isPlaying ? 'Playing' : 'Paused'}</span>
                     </span>
                   ) : (
