@@ -119,7 +119,7 @@
             </a>
           </div>
 
-          <div class="mono-xs" style="color: var(--text-muted); display: flex; justify-content: space-between;">
+          <div class="mono-xs" style="color: var(--text-muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
             <span>STATUS: NEURAL READY</span>
             <span>ZERO COMPRESSION</span>
           </div>
@@ -133,11 +133,11 @@
       <div class="section-header-row">
         <div class="section-heading-cluster">
           <span class="mono-xs" style="color: var(--text-muted);">// ARCHIVE CATALOG</span>
-          <h2 style="font-family: var(--font-sans); font-size: 22px; font-weight: 800; letter-spacing: -0.02em; text-transform: uppercase;">
+          <h2 style="font-family: var(--font-sans); font-size: 20px; font-weight: 800; letter-spacing: -0.02em; text-transform: uppercase;">
             LITERARY VOLUMES IN REPERTORY
           </h2>
         </div>
-        <div class="mono-xs" style="display: flex; gap: 8px;">
+        <div class="mono-xs" style="display: flex; gap: 8px; flex-wrap: wrap;">
           <span class="badge badge-active">[ ALL VOLUMES ]</span>
           <span class="badge">[ MYSTERY ]</span>
           <span class="badge">[ SCI-FI ]</span>
@@ -279,6 +279,10 @@
 
   <!-- Docked Bottom Audio Bar -->
   <footer class="audio-player-dock">
+    <div class="mobile-top-scrubber">
+      <div class="scrubber-played-fill"></div>
+    </div>
+    
     <div class="audio-track-info">
       <div class="audio-track-art">
         <span>VOL.01</span>
@@ -293,7 +297,7 @@
     <div class="audio-central-cluster">
       <div class="audio-control-buttons">
         <button class="btn btn-sm">◀◀ 10s</button>
-        <button id="btn-play-pause" class="btn btn-sm btn-primary">⏸ PAUSE</button>
+        <button class="btn btn-sm btn-primary btn-play-pause">▶ PLAY</button>
         <button class="btn btn-sm">10s ▶▶</button>
       </div>
 
@@ -309,9 +313,10 @@
     </div>
 
     <div class="audio-right-cluster">
+      <button class="btn btn-sm btn-primary mobile-play-btn btn-play-pause">▶ PLAY</button>
       <span class="signal-dot"></span>
-      <span class="mono-xs" style="color: var(--text-main); font-weight: 600;">LIVE SYNC</span>
-      <button class="btn btn-sm mono-xs">1.0×</button>
+      <span class="mono-xs desktop-only-ctrl" style="color: var(--text-main); font-weight: 600;">LIVE SYNC</span>
+      <button class="btn btn-sm mono-xs desktop-only-ctrl">1.0×</button>
       <a href="reader.html" class="btn btn-sm mono-xs" title="Expand Reader">📖</a>
     </div>
   </footer>

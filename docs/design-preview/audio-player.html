@@ -22,6 +22,12 @@
       flex-direction: column;
       gap: 16px;
     }
+    .demo-dock-frame {
+      border: 1px solid var(--border-strong);
+      background: var(--bg-bar);
+      padding: 16px 20px;
+      position: relative;
+    }
   </style>
 </head>
 <body>
@@ -53,7 +59,7 @@
 
   <!-- Audio Bar Showcase Page -->
   <main class="audio-spec-showcase">
-    <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid var(--border-subtle); padding-bottom: 16px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid var(--border-subtle); padding-bottom: 16px; flex-wrap: wrap; gap: 12px;">
       <div>
         <span class="mono-xs" style="color: var(--text-muted);">// COMPONENT PREVIEW // SCREEN 04</span>
         <h1 style="font-family: var(--font-sans); font-size: 28px; font-weight: 800; letter-spacing: -0.02em; text-transform: uppercase;">
@@ -69,7 +75,7 @@
         The audio player bar is pinned to the base of the viewport (<code style="font-family: var(--font-mono); color: var(--text-main);">position: fixed; bottom: 0;</code>) with an exact height of 72px (<code style="font-family: var(--font-mono); color: var(--text-main);">--dock-safe-bottom</code>). It utilizes an opaque surface (<code style="font-family: var(--font-mono); color: var(--text-main);">--bg-bar</code>) with a 1px hairline top boundary (<code style="font-family: var(--font-mono); color: var(--text-main);">--border-subtle</code>), completely eliminating legacy rounded pill docks and blur glassmorphism.
       </p>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 10px;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 10px;">
         <div style="border: 1px solid var(--border-subtle); padding: 12px;">
           <span class="mono-xs" style="color: var(--text-muted); display: block; margin-bottom: 4px;">COVER ARTWORK</span>
           <span class="mono-xs" style="color: var(--text-main); font-weight: 600;">48×48PX SHARP JACKET</span>
@@ -89,16 +95,48 @@
       </div>
     </div>
 
+    <!-- Live Demonstration Card -->
     <div class="spec-card">
-      <h3 class="mono-sm" style="color: var(--text-main);">2. INTERACTIVE CONTROLS VERIFICATION</h3>
+      <h3 class="mono-sm" style="color: var(--text-main);">2. COMPONENT DEPLOYMENT DEMO</h3>
       <p style="color: var(--text-sub); font-size: 14px; line-height: 1.6;">
-        Interact with the docked player bar at the bottom: click <strong>[⏸ PAUSE] / [▶ PLAY]</strong> to toggle active audio stream simulation, click anywhere along the horizontal scrubber track to seek timecodes in real time, or toggle themes to verify contrast compliance across Dark and Light modes.
+        Demonstrating the exact docked layout below: Boxed playback controls featuring inverted primary <strong>[▶ PLAY]</strong> CTA, 48×48 volume art, real-time millisecond timecode readout, and active audio buffer progress bar.
       </p>
+
+      <div class="demo-dock-frame">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="width: 48px; height: 48px; background: #111114; border: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 10px; color: #898992;">
+              VOL.01
+            </div>
+            <div>
+              <div style="font-family: var(--font-sans); font-size: 13px; font-weight: 600; color: var(--text-main);">A Scandal in Bohemia — Ch. 01</div>
+              <div style="font-family: var(--font-mono); font-size: 10px; color: var(--text-sub);">Arthur Conan Doyle • Dr. Watson (Speaker B)</div>
+              <div class="mono-xs audio-track-timecode" style="color: var(--text-muted);">04:12.84 / 38:14.00</div>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <button class="btn btn-sm">◀◀ 10s</button>
+            <button class="btn btn-sm btn-primary btn-play-pause">▶ PLAY</button>
+            <button class="btn btn-sm">10s ▶▶</button>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span class="signal-dot"></span>
+            <span class="mono-xs" style="color: var(--text-main); font-weight: 600;">LIVE SYNC</span>
+            <button class="btn btn-sm mono-xs">1.0×</button>
+          </div>
+        </div>
+      </div>
     </div>
   </main>
 
-  <!-- Docked Bottom Audio Bar -->
+  <!-- Docked Bottom Audio Bar (Pinned) -->
   <footer class="audio-player-dock">
+    <div class="mobile-top-scrubber">
+      <div class="scrubber-played-fill"></div>
+    </div>
+    
     <div class="audio-track-info">
       <div class="audio-track-art">
         <span>VOL.01</span>
@@ -113,7 +151,7 @@
     <div class="audio-central-cluster">
       <div class="audio-control-buttons">
         <button class="btn btn-sm">◀◀ 10s</button>
-        <button id="btn-play-pause" class="btn btn-sm btn-primary">⏸ PAUSE</button>
+        <button class="btn btn-sm btn-primary btn-play-pause">▶ PLAY</button>
         <button class="btn btn-sm">10s ▶▶</button>
       </div>
 
@@ -129,9 +167,10 @@
     </div>
 
     <div class="audio-right-cluster">
+      <button class="btn btn-sm btn-primary mobile-play-btn btn-play-pause">▶ PLAY</button>
       <span class="signal-dot"></span>
-      <span class="mono-xs" style="color: var(--text-main); font-weight: 600;">LIVE SYNC</span>
-      <button class="btn btn-sm mono-xs">1.0×</button>
+      <span class="mono-xs desktop-only-ctrl" style="color: var(--text-main); font-weight: 600;">LIVE SYNC</span>
+      <button class="btn btn-sm mono-xs desktop-only-ctrl">1.0×</button>
       <a href="reader.html" class="btn btn-sm mono-xs" title="Expand Reader">📖</a>
     </div>
   </footer>

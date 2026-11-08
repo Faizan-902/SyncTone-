@@ -11,7 +11,7 @@
     theme: localStorage.getItem('synctone_preview_theme') || 'dark',
     activeScreen: 'home',
     viewport: 'desktop',
-    isPlaying: true,
+    isPlaying: false, // Default paused to showcase inverted [▶ PLAY] CTA
     currentTime: 252.84, // 04:12.84
     duration: 2294.0,   // 38:14.00
     fontSize: 1.18,
@@ -19,7 +19,7 @@
     synthesisProgress: 74,
   };
 
-  // DOM Elements
+  // DOM Elements & Theme Handling
   function applyTheme(theme) {
     state.theme = theme;
     localStorage.setItem('synctone_preview_theme', theme);
@@ -39,10 +39,20 @@
           ? '<span class="dot"></span> THEME: DARK'
           : '<span class="dot"></span> THEME: LIGHT';
     });
+
     const harnessToggle = document.getElementById('harness-theme-toggle');
     if (harnessToggle) {
-      harnessToggle.innerHTML =
-        theme === 'dark' ? '● DARK MODE' : '○ LIGHT MODE';
+      if (theme === 'dark') {
+        harnessToggle.innerHTML = '● DARK MODE';
+        harnessToggle.style.background = '#27272A';
+        harnessToggle.style.color = '#FFFFFF';
+        harnessToggle.style.borderColor = '#3F3F46';
+      } else {
+        harnessToggle.innerHTML = '○ LIGHT MODE';
+        harnessToggle.style.background = '#E4E4E6';
+        harnessToggle.style.color = '#0B0B0D';
+        harnessToggle.style.borderColor = '#D0D0D4';
+      }
     }
   }
 
@@ -106,35 +116,49 @@
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
   }
 
+  function formatShortTime(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  }
+
   function updateScrubber() {
     const playedPercent = (state.currentTime / state.duration) * 100;
-    const playedFill = document.querySelector('.scrubber-played-fill');
-    const thumb = document.querySelector('.scrubber-thumb');
-    const timecodeDisplay = document.querySelector('.audio-track-timecode');
-    const scrubberTime = document.querySelector('.scrubber-current-time');
+    document.querySelectorAll('.scrubber-played-fill').forEach((el) => {
+      el.style.width = `${playedPercent}%`;
+    });
+    document.querySelectorAll('.scrubber-thumb').forEach((el) => {
+      el.style.left = `${playedPercent}%`;
+    });
+    document.querySelectorAll('.audio-track-timecode').forEach((el) => {
+      el.textContent = `${formatTime(state.currentTime)} / ${formatTime(state.duration)}`;
+    });
+    document.querySelectorAll('.scrubber-current-time').forEach((el) => {
+      el.textContent = formatShortTime(state.currentTime);
+    });
+  }
 
-    if (playedFill) playedFill.style.width = `${playedPercent}%`;
-    if (thumb) thumb.style.left = `${playedPercent}%`;
-    if (timecodeDisplay) {
-      timecodeDisplay.textContent = `${formatTime(state.currentTime)} / ${formatTime(state.duration)}`;
-    }
-    if (scrubberTime) {
-      const m = Math.floor(state.currentTime / 60);
-      const s = Math.floor(state.currentTime % 60);
-      scrubberTime.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-    }
+  function updatePlayPauseUI() {
+    const label = state.isPlaying ? '⏸ PAUSE' : '▶ PLAY';
+    document.querySelectorAll('.btn-play-pause, #btn-play-pause').forEach((btn) => {
+      btn.innerHTML = label;
+    });
+    document.querySelectorAll('.audio-player-dock .signal-dot').forEach((dot) => {
+      dot.style.opacity = state.isPlaying ? '1' : '0.6';
+    });
   }
 
   function togglePlayPause() {
     state.isPlaying = !state.isPlaying;
-    const playBtn = document.getElementById('btn-play-pause');
-    const signalDot = document.querySelector('.audio-right-cluster .signal-dot');
-    if (playBtn) {
-      playBtn.innerHTML = state.isPlaying ? '⏸ PAUSE' : '▶ PLAY';
-    }
-    if (signalDot) {
-      signalDot.style.opacity = state.isPlaying ? '1' : '0.2';
-    }
+    updatePlayPauseUI();
+  }
+
+  function seekFromEvent(e, element) {
+    const rect = element.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const percent = Math.max(0, Math.min(1, clickX / rect.width));
+    state.currentTime = percent * state.duration;
+    updateScrubber();
   }
 
   // Reader Controls
@@ -209,23 +233,19 @@
       btnMobile.addEventListener('click', () => setViewport('mobile'));
     }
 
-    // Audio Scrubber Click
-    const scrubberBar = document.querySelector('.scrubber-track-bar');
-    if (scrubberBar) {
-      scrubberBar.addEventListener('click', (e) => {
-        const rect = scrubberBar.getBoundingClientRect();
-        const clickX = e.clientX - rect.left;
-        const percent = Math.max(0, Math.min(1, clickX / rect.width));
-        state.currentTime = percent * state.duration;
-        updateScrubber();
-      });
-    }
+    // Audio Scrubber Click (Desktop & Mobile)
+    document.querySelectorAll('.scrubber-track-bar, .mobile-top-scrubber').forEach((bar) => {
+      bar.addEventListener('click', (e) => seekFromEvent(e, bar));
+    });
 
-    // Play/Pause Button
-    const playBtn = document.getElementById('btn-play-pause');
-    if (playBtn) {
-      playBtn.addEventListener('click', togglePlayPause);
-    }
+    // Play/Pause Buttons
+    document.querySelectorAll('.btn-play-pause, #btn-play-pause').forEach((btn) => {
+      btn.addEventListener('click', togglePlayPause);
+    });
+
+    // Initial Play/Pause UI state
+    updatePlayPauseUI();
+    updateScrubber();
 
     // Reader Font Buttons
     const btnFontMinus = document.getElementById('btn-font-minus');
@@ -235,7 +255,7 @@
     const btnToggleFont = document.getElementById('btn-toggle-font');
     if (btnToggleFont) btnToggleFont.addEventListener('click', toggleFontFamily);
 
-    // Book Detail Tab Buttons
+    // Tab Switching Buttons (Novel Detail & Voice Studio)
     document.querySelectorAll('.tab-btn').forEach((tab) => {
       tab.addEventListener('click', (e) => {
         const parentBar = e.currentTarget.closest('.tabs-bar');
@@ -257,7 +277,7 @@
       });
     });
 
-    // Time ticker for audio simulation
+    // Time ticker for audio simulation (only advances when playing)
     setInterval(() => {
       if (state.isPlaying) {
         state.currentTime = (state.currentTime + 0.25) % state.duration;
