@@ -177,35 +177,30 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
     novel.narrator_voice_id ||
     'British Cast Narrator';
 
+  const totalDurationMs = chapters.reduce((acc, c) => acc + (c.total_duration_ms || 0), 0);
+
   return (
-    <div className="space-y-8 pb-20">
-      {/* Back Navigation */}
-      <div>
+    <div className="space-y-6 pb-20">
+      {/* Back Navigation & Breadcrumb */}
+      <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-3">
         <button
           onClick={onBack}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl theme-card border border-[var(--border-subtle)] hover:border-[var(--accent)] hover:text-[var(--accent-text)] text-xs font-semibold theme-sub transition-all active:scale-95 shadow-xs cursor-pointer group min-h-[38px]"
+          className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[var(--text-sub)] hover:text-[var(--text-main)] transition-colors cursor-pointer group"
           aria-label="Back to Library"
         >
-          <IconArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
-          <span>Back to Library</span>
+          <IconArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" />
+          <span>← Back to Library</span>
         </button>
+        <span className="hidden sm:inline text-[11px] font-mono text-[var(--text-muted)] tracking-wider">
+          CATALOG // {novel.title.toUpperCase()} // ID: {novel.id}
+        </span>
       </div>
 
-      {/* HERO POSTER & DETAILS BANNER */}
-      <section className="relative w-full rounded-3xl overflow-hidden p-6 sm:p-8 md:p-10 theme-surface border shadow-2xl">
-        {/* Ambient Glow from Cover */}
-        <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
-          <NovelCover
-            title={novel.title}
-            author={novel.author_username}
-            coverUrl={novel.cover_object}
-            className="w-full h-full object-cover blur-3xl scale-125"
-          />
-        </div>
-
-        <div className="relative z-10 max-w-6xl mx-auto flex flex-col md:flex-row gap-8 items-start">
-          {/* 3:4 Cover Poster (Left) with 3D Gilded Edge */}
-          <div className="w-52 sm:w-64 aspect-[3/4] rounded-2xl overflow-hidden border border-[#3A2418] border-r-[6px] border-r-[#5A3E2B] shadow-2xl flex-shrink-0 relative group transform hover:scale-102 transition-transform">
+      {/* NOIR MONOCHROME HERO STAGE HEADER */}
+      <section className="relative w-full rounded-[1px] overflow-hidden p-6 sm:p-8 md:p-10 bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-6">
+        <div className="flex flex-col md:flex-row gap-8 items-start">
+          {/* 3:4 Physical Cover Poster */}
+          <div className="w-48 sm:w-56 aspect-[3/4] rounded-[1px] overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-surface)] flex-shrink-0 relative group">
             <NovelCover
               title={novel.title}
               author={novel.author_username}
@@ -213,17 +208,11 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
               className="w-full h-full"
             />
             <div className="absolute top-2.5 left-2.5">
-              <span className={`px-3 py-1 rounded-full text-[10px] font-mono font-bold border shadow-sm backdrop-blur-xs flex items-center gap-1.5 ${
-                isVerified
-                  ? 'text-[var(--brand-sage,#87A96B)] border-[var(--brand-sage,#87A96B)]/40 bg-[var(--brand-sage,#87A96B)]/15'
-                  : 'text-[var(--brand-amber,#D5851F)] border-[var(--brand-amber,#D5851F)]/40 bg-[var(--brand-amber,#D5851F)]/15'
-              }`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${isVerified ? 'bg-[var(--brand-sage,#87A96B)]' : 'bg-[var(--brand-amber,#D5851F)]'}`} />
-                <span>{isVerified ? 'VERIFIED ORIGINAL' : 'COMMUNITY'}</span>
+              <span className="px-2 py-0.5 rounded-[1px] text-[10px] font-mono font-bold uppercase bg-[var(--bg-card)] border border-[var(--border-strong)] text-[var(--text-main)]">
+                {isVerified ? 'VERIFIED ORIGINAL' : 'COMMUNITY'}
               </span>
             </div>
 
-            {/* Subtle Cover Artwork Change Overlay */}
             <input
               ref={coverUploadInputRef}
               type="file"
@@ -236,7 +225,7 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
                 type="button"
                 onClick={() => coverUploadInputRef.current?.click()}
                 disabled={isUploadingCover}
-                className="absolute bottom-2.5 right-2.5 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-black/80 hover:bg-black/90 text-white backdrop-blur-xs border border-white/20 shadow-md flex items-center gap-1 cursor-pointer"
+                className="absolute bottom-2.5 right-2.5 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity px-2 py-1 rounded-[1px] text-[10px] font-mono uppercase bg-black/90 text-white border border-white/20 flex items-center gap-1 cursor-pointer"
                 title="Change cover artwork"
                 aria-label="Change novel cover artwork"
               >
@@ -246,68 +235,44 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
             )}
           </div>
 
-          {/* Novel Info (Right) */}
+          {/* Novel Info & Actions */}
           <div className="flex-1 space-y-4 min-w-0">
             <div>
-              {/* Tracked Category Overline: NATURE / FICTION / CINEMATIC AUDIO */}
-              <div className="tracking-[0.25em] text-[10px] uppercase font-mono font-bold text-[var(--brand-bronze,#A88462)] mb-2 flex items-center gap-2">
-                <span>NATURE</span>
+              <div className="tracking-[0.2em] text-[10px] uppercase font-mono text-[var(--text-muted)] mb-2 flex items-center gap-2">
+                <span>CATALOG</span>
                 <span className="opacity-40">/</span>
-                <span>FICTION</span>
+                <span>{novel.channel === 'community' ? 'COMMUNITY ARCHIVE' : 'VERIFIED REPERTORY'}</span>
                 <span className="opacity-40">/</span>
-                <span>CINEMATIC AUDIO</span>
+                <span>{novel.global_tone || 'DRAMATIC ENSEMBLE'}</span>
               </div>
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className="text-[11px] font-mono font-bold text-[var(--accent-text)] uppercase tracking-wider">
-                  {novel.global_tone || 'British Fantasy'}
-                </span>
-                <span className="theme-muted opacity-40">•</span>
-                <span className="text-xs theme-muted">
-                  By {novel.author_username || 'SyncTone Author'}
-                </span>
-              </div>
-              <h1 className="text-2xl sm:text-4xl font-bold theme-heading font-serif tracking-tight leading-tight">
+
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black font-sans uppercase tracking-tight text-[var(--text-main)] leading-[0.95]">
                 {novel.title}
               </h1>
-              <p className="text-xs sm:text-sm italic theme-sub mt-1 font-serif">
-                Stories that feel <span className="text-[var(--brand-amber,#D5851F)] font-normal italic">alive.</span>
-              </p>
+
+              <div className="flex items-center gap-2 mt-2 text-xs font-mono text-[var(--text-sub)] flex-wrap">
+                <span>AUTHOR: {(novel.author_username || 'UNKNOWN').toUpperCase()}</span>
+                <span>•</span>
+                <span>CHAPTERS: {chapters.length} TRACKS</span>
+                <span>•</span>
+                <span>VOICES: {characters.length} CAST</span>
+                <span>•</span>
+                <span>FORMAT: MULTI-VOICE</span>
+              </div>
             </div>
 
-            {/* Metadata Badges Row */}
-            <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
-              <span className="px-3 py-1 rounded-full theme-card text-[var(--brand-sage,#87A96B)] font-bold border border-[var(--brand-sage,#87A96B)]/40 bg-[var(--brand-sage,#87A96B)]/10 shadow-sm flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-sage,#87A96B)]" />
-                <span>98% Voice Match</span>
-              </span>
-              <span className="theme-muted">2026</span>
-              <span className="px-3 py-1 rounded-full theme-card border text-[11px] font-bold">
-                Ensemble Cast
-              </span>
-              <span className="theme-muted">
-                {chapters.length} {chapters.length === 1 ? 'Chapter' : 'Chapters'}
-              </span>
-              <span className="px-3 py-1 rounded-full theme-card text-[var(--accent-text)] font-bold border border-[var(--brand-amber,#D5851F)]/30 shadow-sm flex items-center gap-1.5">
-                <IconStar className="w-3 h-3 text-[var(--brand-amber,#D5851F)]" />
-                <span>Verified Edition</span>
-              </span>
-              <span className="theme-muted">Studio Audio</span>
-            </div>
-
-            {/* Primary Action Buttons: Circular Action CTA */}
-            <div className="flex flex-wrap items-center gap-3 pt-2">
+            {/* Action Buttons Cluster */}
+            <div className="flex flex-wrap items-center gap-2.5 pt-2">
               {chapters.length > 0 && (
                 <button
                   onClick={() => onSelectChapter(novel, chapters[0])}
                   onMouseEnter={preloadReaderView}
                   onFocus={preloadReaderView}
                   onPointerDown={preloadReaderView}
-                  className="px-5 sm:px-6 py-3 sm:py-3.5 bg-[var(--cta-primary-bg)] hover:bg-[var(--cta-primary-hover)] text-[var(--cta-primary-text)] font-bold rounded-full border border-[var(--border-subtle)] shadow-xl flex items-center gap-3 text-xs sm:text-sm tracking-wider uppercase transition transform hover:-translate-y-0.5 active:scale-95 focus:outline-none cursor-pointer group min-h-[44px]"
+                  className="boxed-btn-primary px-5 py-2.5 text-xs font-mono uppercase flex items-center gap-2 cursor-pointer active:scale-95 transition-transform"
                 >
-                  <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-[var(--cta-primary-text)]/40 flex items-center justify-center group-hover:scale-105 group-hover:border-[var(--brand-amber)] transition-transform">
-                    <IconPlay className="w-3.5 h-3.5 fill-current ml-0.5 text-[var(--brand-amber,#D5851F)]" />
-                  </span>
-                  <span className="tracking-[0.16em] font-mono text-xs font-bold">Start Listening (Ch. 1)</span>
+                  <IconPlay className="w-3.5 h-3.5 fill-current" />
+                  <span>Start Listening (Ch. 1)</span>
                 </button>
               )}
               {isWriterOrAdmin && onOpenUploadChapter && (
@@ -315,111 +280,70 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
                   onClick={() => onOpenUploadChapter(novel)}
                   onMouseEnter={preloadUploadChapterModal}
                   onFocus={preloadUploadChapterModal}
-                  className="px-4 py-3 theme-card hover:border-[var(--border-focus)] rounded-xl text-xs sm:text-sm font-semibold border min-h-[44px] transition flex items-center gap-1.5 cursor-pointer"
+                  className="boxed-btn px-4 py-2 text-xs font-mono uppercase text-[var(--text-main)] hover:border-[var(--text-main)] cursor-pointer active:scale-95 transition-colors flex items-center gap-1.5"
                 >
-                  <IconPlus className="w-4 h-4" />
+                  <IconPlus className="w-3.5 h-3.5" />
                   <span>Upload Chapter</span>
                 </button>
               )}
               <button
-                className={`px-4 py-3 theme-card hover:border-[var(--border-focus)] rounded-xl text-xs sm:text-sm font-semibold border min-h-[44px] transition cursor-pointer ${
-                  inLibrary ? 'text-[var(--success)] border-[var(--success)]' : ''
+                className={`boxed-btn px-4 py-2 text-xs font-mono uppercase cursor-pointer active:scale-95 transition-colors ${
+                  inLibrary ? 'text-[var(--text-main)] font-bold border-[var(--text-main)]' : 'text-[var(--text-sub)] hover:text-[var(--text-main)]'
                 }`}
                 onClick={handleToggleLibrary}
               >
-                {inLibrary ? '✓ In Library' : '+ Add to Library'}
+                {inLibrary ? '✓ IN LIBRARY' : '+ ADD TO LIBRARY'}
               </button>
               <button
                 type="button"
                 onClick={() => setShowDeleteModal(true)}
-                className="px-4 py-3 theme-card hover:bg-[var(--danger)]/10 hover:border-[var(--danger)]/40 text-[var(--danger)] rounded-xl text-xs sm:text-sm font-semibold border min-h-[44px] transition flex items-center gap-1.5 cursor-pointer ml-auto"
+                className="boxed-btn px-3 py-2 text-xs font-mono uppercase text-[var(--text-sub)] hover:text-[var(--text-main)] cursor-pointer active:scale-95 transition-colors ml-auto flex items-center gap-1.5"
                 title="Delete Novel (Local Dev)"
                 data-testid="delete-novel-btn"
               >
-                <IconTrash className="w-4 h-4 text-[var(--danger)]" />
+                <IconTrash className="w-3.5 h-3.5" />
                 <span>Delete Novel (Dev)</span>
               </button>
-            </div>
-
-            {/* Two-Column Metadata Alignment (2-of-3 cols Synopsis, 1-of-3 col Cast Box) */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 items-start border-t theme-border">
-              {/* Left 2 Cols: Full Synopsis */}
-              <div className="md:col-span-2 space-y-2">
-                <span className="text-xs font-bold theme-muted uppercase font-mono tracking-wider">
-                  Synopsis
-                </span>
-                <p className="text-xs sm:text-sm theme-sub font-serif leading-relaxed">
-                  {novel.synopsis || 'No synopsis provided for this novel.'}
-                </p>
-              </div>
-
-              {/* Right 1 Col: Character Voices & Audio Pipeline Box */}
-              <div className="p-4 rounded-2xl theme-card border space-y-3 text-xs">
-                <div>
-                  <span className="theme-muted font-bold block mb-1 font-mono text-[11px] uppercase tracking-wider">
-                    Narrator:
-                  </span>
-                  <p className="theme-heading font-semibold flex items-center gap-1.5">
-                    <IconMic className="w-3.5 h-3.5 text-[var(--accent-text)]" />
-                    <span>{narratorDisplay}</span>
-                  </p>
-                </div>
-
-                {characters.length > 0 && (
-                  <div className="border-t theme-border pt-2.5">
-                    <span className="theme-muted font-bold block mb-1.5 font-mono text-[11px] uppercase tracking-wider">
-                      Cast Voices ({characters.length}):
-                    </span>
-                    <p className="text-[11px] font-mono theme-sub leading-relaxed">
-                      {characters.map((c) => c.canonical_name).join(', ')}
-                    </p>
-                  </div>
-                )}
-              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* TABS: CHAPTER DIRECTORY & CHARACTER ROSTER */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between border-b theme-border pb-3">
-          {/* Segmented Control with Sliding Indicator (Transform Only) */}
-          <div className="relative p-1 rounded-xl theme-surface border flex items-center">
-            <div
-              className="absolute inset-y-1 rounded-lg bg-[var(--accent)] transition-transform duration-200 will-change-transform pointer-events-none shadow-sm"
-              style={{
-                width: 'calc(50% - 4px)',
-                transform: activeTab === 'chapters' ? 'translateX(4px)' : 'translateX(calc(100% + 4px))',
-              }}
-            />
-            <button
-              onClick={() => setActiveTab('chapters')}
-              className={`relative z-10 px-4 py-1.5 rounded-lg text-xs font-bold transition-colors duration-120 cursor-pointer ${
-                activeTab === 'chapters' ? 'text-[var(--on-accent)]' : 'theme-muted hover:text-[var(--text-main)]'
-              }`}
-            >
-              Chapter Directory ({chapters.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('characters')}
-              className={`relative z-10 px-4 py-1.5 rounded-lg text-xs font-bold transition-colors duration-120 cursor-pointer ${
-                activeTab === 'characters' ? 'text-[var(--on-accent)]' : 'theme-muted hover:text-[var(--text-main)]'
-              }`}
-            >
-              Character Cast ({characters.length})
-            </button>
-          </div>
-          <span className="text-xs theme-muted font-mono hidden sm:inline">
-            Synchronized Multi-Voice Audio
-          </span>
-        </div>
+      {/* BOXED MONO TAB BAR */}
+      <nav className="tabs-bar" role="tablist" aria-label="Novel Detail Tabs">
+        <button
+          role="tab"
+          aria-selected={activeTab === 'chapters'}
+          onClick={() => setActiveTab('chapters')}
+          className={`tab-btn cursor-pointer ${activeTab === 'chapters' ? 'active' : ''}`}
+        >
+          CHAPTER DIRECTORY ({chapters.length})
+        </button>
+        <button
+          role="tab"
+          aria-selected={activeTab === 'characters'}
+          onClick={() => setActiveTab('characters')}
+          className={`tab-btn cursor-pointer ${activeTab === 'characters' ? 'active' : ''}`}
+        >
+          CHARACTER CAST ({characters.length})
+        </button>
+        <button
+          role="tab"
+          aria-selected={activeTab === 'details'}
+          onClick={() => setActiveTab('details')}
+          className={`tab-btn cursor-pointer ${activeTab === 'details' ? 'active' : ''}`}
+        >
+          SYNOPSIS & DETAILS
+        </button>
+      </nav>
 
+      {/* TAB PANELS */}
+      <section className="space-y-4">
         {/* Tab 1: Chapter Directory Track List */}
         {activeTab === 'chapters' && (
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             {chapters.length === 0 ? (
-              <div className="p-8 text-center rounded-2xl theme-surface border theme-muted text-xs">
+              <div className="p-8 text-center rounded-[1px] bg-[var(--bg-card)] border border-[var(--border-subtle)] text-[var(--text-muted)] font-mono text-xs">
                 No chapters uploaded yet.
               </div>
             ) : (
@@ -438,34 +362,31 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
                       onSelectChapter(novel, ch);
                     }
                   }}
-                  className="group p-4 rounded-2xl theme-card border hover:border-[var(--border-focus)] transition-all flex items-center justify-between gap-4 cursor-pointer shadow-sm hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                  className="group p-4 rounded-[1px] bg-[var(--bg-card)] border border-[var(--border-subtle)] hover:border-[var(--border-strong)] transition-all flex items-center justify-between gap-4 cursor-pointer"
                 >
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    <div className="w-8 h-8 rounded-xl theme-surface border flex items-center justify-center font-mono font-bold text-xs theme-heading group-hover:bg-[var(--accent)] group-hover:text-[var(--on-accent)] transition-colors flex-shrink-0">
-                      {ch.chapter_number || idx + 1}
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className="w-8 h-8 rounded-[1px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex items-center justify-center font-mono font-bold text-xs text-[var(--text-main)] group-hover:bg-[var(--accent)] group-hover:text-[var(--on-accent)] transition-colors flex-shrink-0">
+                      {String(ch.chapter_number || idx + 1).padStart(2, '0')}
                     </div>
                     <div className="min-w-0">
-                      <h4 className="text-xs sm:text-sm font-bold theme-heading font-serif truncate group-hover:text-[var(--accent-text)] transition-colors">
+                      <h4 className="text-xs sm:text-sm font-bold font-sans uppercase tracking-tight text-[var(--text-main)] truncate">
                         {ch.title || `Chapter ${ch.chapter_number || idx + 1}`}
                       </h4>
-                      <div className="flex items-center gap-2 mt-0.5 text-[11px] theme-muted font-mono">
-                        <span>{ch.segment_count ? `${ch.segment_count} dialogue turns` : 'Multi-voice audio'}</span>
+                      <div className="flex items-center gap-2 mt-0.5 text-[11px] font-mono text-[var(--text-muted)]">
+                        <span>{ch.segment_count ? `${ch.segment_count} dialogue segments` : 'Multi-voice audio'}</span>
                         <span className="opacity-40">•</span>
-                        <span>Multi-voice</span>
+                        <span>Studio Cast</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3 flex-shrink-0">
-                    <span className="text-xs font-mono theme-muted flex items-center gap-1">
+                    <span className="text-xs font-mono text-[var(--text-muted)] flex items-center gap-1">
                       <IconClock className="w-3.5 h-3.5 opacity-60" />
                       <span>{formatDuration(ch.total_duration_ms || 0)}</span>
                     </span>
                     <button
-                      className="px-3 py-1.5 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] text-xs font-semibold transition flex items-center gap-1.5 shadow-sm cursor-pointer"
-                      onMouseEnter={preloadReaderView}
-                      onFocus={preloadReaderView}
-                      onPointerDown={preloadReaderView}
+                      className="boxed-btn-primary px-3 py-1.5 text-xs font-mono uppercase flex items-center gap-1.5 cursor-pointer"
                       onClick={(e) => {
                         e.stopPropagation();
                         onSelectChapter(novel, ch);
@@ -485,30 +406,66 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
         {activeTab === 'characters' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {characters.length === 0 ? (
-              <div className="col-span-full p-8 text-center rounded-2xl theme-surface border theme-muted text-xs">
+              <div className="col-span-full p-8 text-center rounded-[1px] bg-[var(--bg-card)] border border-[var(--border-subtle)] text-[var(--text-muted)] font-mono text-xs">
                 No character profiles generated.
               </div>
             ) : (
               characters.map((char) => (
-                <div key={char.id} className="p-4 rounded-2xl theme-card border space-y-2 shadow-xs">
+                <div key={char.id} className="p-4 rounded-[1px] bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-2">
                   <div className="flex items-center justify-between">
-                    <h5 className="font-bold text-xs theme-heading font-serif">{char.canonical_name}</h5>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded theme-surface border text-[var(--accent-text)] font-semibold">
+                    <h5 className="font-bold text-xs font-sans uppercase tracking-tight text-[var(--text-main)]">{char.canonical_name}</h5>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-[1px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[var(--text-sub)]">
                       {char.gender || 'Character'}
                     </span>
                   </div>
-                  <p className="text-[11px] theme-muted font-mono flex items-center justify-between">
-                    <span>Voice:</span>
-                    <span className="theme-heading font-semibold">{char.voice_id || 'en-GB-RyanNeural'}</span>
+                  <p className="text-[11px] text-[var(--text-muted)] font-mono flex items-center justify-between">
+                    <span>VOICE:</span>
+                    <span className="text-[var(--text-main)] font-semibold">{char.voice_id || 'en-GB-RyanNeural'}</span>
                   </p>
                   {char.sample_quote && (
-                    <p className="text-xs italic theme-sub font-serif line-clamp-2">
+                    <p className="text-xs italic text-[var(--text-sub)] font-serif line-clamp-2 pt-1 border-t border-[var(--border-subtle)]">
                       &ldquo;{char.sample_quote}&rdquo;
                     </p>
                   )}
                 </div>
               ))
             )}
+          </div>
+        )}
+
+        {/* Tab 3: Synopsis & Details */}
+        {activeTab === 'details' && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+            <div className="md:col-span-2 p-6 rounded-[1px] bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-3">
+              <span className="text-xs font-bold text-[var(--text-muted)] uppercase font-mono tracking-wider">
+                // SYNOPSIS
+              </span>
+              <p className="text-sm font-sans text-[var(--text-main)] leading-relaxed">
+                {novel.synopsis || 'No synopsis provided for this novel.'}
+              </p>
+            </div>
+
+            <div className="p-6 rounded-[1px] bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-3 text-xs font-mono">
+              <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider block border-b border-[var(--border-subtle)] pb-2">
+                // AT A GLANCE
+              </span>
+              <div className="flex justify-between py-1 border-b border-[var(--border-subtle)]">
+                <span className="text-[var(--text-muted)]">NARRATOR</span>
+                <span className="text-[var(--text-main)] font-semibold">{narratorDisplay}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-[var(--border-subtle)]">
+                <span className="text-[var(--text-muted)]">CAST SIZE</span>
+                <span className="text-[var(--text-main)] font-semibold">{characters.length} Voices</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-[var(--border-subtle)]">
+                <span className="text-[var(--text-muted)]">CHAPTERS</span>
+                <span className="text-[var(--text-main)] font-semibold">{chapters.length} Tracks</span>
+              </div>
+              <div className="flex justify-between py-1">
+                <span className="text-[var(--text-muted)]">STATUS</span>
+                <span className="text-[var(--text-main)] font-semibold">Ready for Playback</span>
+              </div>
+            </div>
           </div>
         )}
       </section>
@@ -521,26 +478,26 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
           data-testid="confirm-delete-novel-modal"
         >
           <div
-            className="w-full max-w-md theme-card border rounded-2xl shadow-2xl p-6 space-y-4"
+            className="w-full max-w-md bg-[var(--bg-card)] border border-[var(--border-strong)] rounded-[1px] shadow-2xl p-6 space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-[var(--danger)]/15 text-[var(--danger)] flex-shrink-0">
+              <div className="p-2 rounded-[1px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[var(--text-main)] flex-shrink-0">
                 <IconTrash className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold theme-heading">Delete Novel (Local Dev)</h3>
-                <p className="text-xs theme-muted">Permanently remove this novel</p>
+                <h3 className="text-base font-bold font-sans uppercase text-[var(--text-main)]">Delete Novel (Local Dev)</h3>
+                <p className="text-xs font-mono text-[var(--text-muted)]">Permanently remove this novel</p>
               </div>
             </div>
 
-            <p className="text-xs sm:text-sm theme-sub leading-relaxed">
-              Are you sure you want to delete <strong className="theme-heading">&ldquo;{novel.title}&rdquo;</strong>?
+            <p className="text-xs sm:text-sm font-sans text-[var(--text-sub)] leading-relaxed">
+              Are you sure you want to delete <strong className="text-[var(--text-main)]">&ldquo;{novel.title}&rdquo;</strong>?
               This will permanently remove the novel, all {chapters.length} chapters, character voice portfolio, and audio cache from your local database.
             </p>
 
             {deleteError && (
-              <div className="p-2.5 rounded-lg bg-[var(--danger)]/10 border border-[var(--danger)]/30 text-[var(--danger)] text-xs">
+              <div className="p-2.5 rounded-[1px] bg-[var(--bg-surface)] border border-[var(--border-strong)] text-[var(--text-main)] text-xs font-mono">
                 {deleteError}
               </div>
             )}
@@ -550,7 +507,7 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
                 type="button"
                 onClick={() => setShowDeleteModal(false)}
                 disabled={isDeleting}
-                className="px-4 py-2 theme-surface hover:bg-[var(--bg-hover)] border rounded-xl text-xs font-semibold theme-sub transition cursor-pointer"
+                className="boxed-btn px-4 py-2 text-xs font-mono uppercase text-[var(--text-sub)] hover:text-[var(--text-main)] cursor-pointer"
                 data-testid="cancel-delete-novel-btn"
               >
                 Cancel
@@ -559,12 +516,12 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
                 type="button"
                 onClick={handleDeleteNovel}
                 disabled={isDeleting}
-                className="px-4 py-2 bg-[var(--danger)] hover:opacity-90 text-white rounded-xl text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                className="boxed-btn-primary px-4 py-2 text-xs font-mono uppercase flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 data-testid="confirm-delete-novel-btn"
               >
                 {isDeleting ? (
                   <>
-                    <div className="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                    <div className="w-3.5 h-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" />
                     <span>Deleting...</span>
                   </>
                 ) : (

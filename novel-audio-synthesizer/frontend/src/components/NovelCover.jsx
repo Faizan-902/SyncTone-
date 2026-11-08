@@ -2,65 +2,65 @@ import React, { useState, useEffect } from 'react';
 
 const EDITIONS = [
   {
-    bg: 'bg-gradient-to-br from-[#241A0E] via-[#1A1208] to-[#0D0A05]',
-    border: 'border-[#DFBA53]/50 border-l-[#DFBA53]',
-    accentText: 'text-[#DFBA53]',
-    authorText: 'text-[#F5E2A8]',
-    titleClass: 'text-[#F5E2A8]',
-    glow: 'rgba(223,186,83,0.45)',
-    eyebrow: 'CHAMPAGNE GOLD',
-    edition: 'Imperial Gold Edition',
+    bg: 'bg-gradient-to-br from-[#1B1B1E] via-[#141416] to-[#0B0B0D]',
+    border: 'border-[#5E5E66]/40 border-l-[#F2F2F3]',
+    accentText: 'text-[#F2F2F3]',
+    authorText: 'text-[#A9A9AF]',
+    titleClass: 'text-[#F2F2F3]',
+    glow: 'rgba(0,0,0,0.6)',
+    eyebrow: 'NOCTURNE OBSIDIAN',
+    edition: 'Obsidian Foil Edition',
     emblem: <polygon points="12 2 15 8 22 9 17 14 18 21 12 18 6 21 7 14 2 9 9 8 12 2" />,
-    color: 'text-[#DFBA53]',
+    color: 'text-[#F2F2F3]',
   },
   {
-    bg: 'bg-gradient-to-br from-[#1E271D] via-[#2A3628] to-[#141C13]',
-    border: 'border-[#87A96B]/40 border-l-[#87A96B]/75',
-    accentText: 'text-[#87A96B]',
-    authorText: 'text-[#87A96B]',
-    titleClass: 'text-[#D5C4AE]',
-    glow: 'rgba(135,169,107,0.35)',
-    eyebrow: 'BOTANICAL & SAGE',
-    edition: 'Antiquarian Herbarium',
+    bg: 'bg-gradient-to-br from-[#232327] via-[#1B1B1E] to-[#141416]',
+    border: 'border-[#44444A]/40 border-l-[#A9A9AF]',
+    accentText: 'text-[#A9A9AF]',
+    authorText: 'text-[#898992]',
+    titleClass: 'text-[#F2F2F3]',
+    glow: 'rgba(0,0,0,0.5)',
+    eyebrow: 'CARBON SLATE',
+    edition: 'Monochrome Edition',
     emblem: <circle cx="12" cy="12" r="8" strokeWidth="1.2" />,
-    color: 'text-[#87A96B]',
+    color: 'text-[#A9A9AF]',
   },
   {
-    bg: 'bg-gradient-to-br from-[#4A3222] via-[#382417] to-[#22150D]',
-    border: 'border-[#A88462]/45 border-l-[#5A3E2B]',
-    accentText: 'text-[#D5C4AE]',
-    authorText: 'text-[#A88462]',
-    titleClass: 'text-[#D5C4AE]',
-    glow: 'rgba(90,62,43,0.45)',
-    eyebrow: 'WALNUT LEATHER',
+    bg: 'bg-gradient-to-br from-[#2A2A2E] via-[#1F1F23] to-[#141416]',
+    border: 'border-[#5E5E66]/40 border-l-[#898992]',
+    accentText: 'text-[#DCDCDF]',
+    authorText: 'text-[#A9A9AF]',
+    titleClass: 'text-[#F2F2F3]',
+    glow: 'rgba(0,0,0,0.5)',
+    eyebrow: 'GRAPHITE ASH',
     edition: 'Master Binding Edition',
     emblem: <path strokeLinecap="round" d="M12 6v13m-9-12C4 6 6 5 8 5s4 1 4 2m0 0c0-1 2-2 4-2s4 1 5 2v13c-1-1-3-2-5-2s-4 1-4 2" />,
-    color: 'text-[#DFBA53]',
+    color: 'text-[#DCDCDF]',
   },
   {
-    bg: 'bg-gradient-to-br from-[#FAF6EE] via-[#F4EFE6] to-[#EAE3D9]',
-    border: 'border-[#5A3E2B]/25 border-l-[#5A3E2B]/60',
-    accentText: 'text-[#5A3E2B]',
-    authorText: 'text-[#5A3E2B]',
-    titleClass: 'text-[#1A120E]',
-    glow: 'rgba(90,62,43,0.2)',
+    bg: 'bg-gradient-to-br from-[#FFFFFF] via-[#F7F7F8] to-[#EFEFF0]',
+    border: 'border-[#D0D0D4]/60 border-l-[#0B0B0D]',
+    accentText: 'text-[#0B0B0D]',
+    authorText: 'text-[#4F4F56]',
+    titleClass: 'text-[#0B0B0D]',
+    glow: 'rgba(0,0,0,0.15)',
     eyebrow: 'ALABASTER VELLUM',
     edition: 'Archival Vellum Edition',
     emblem: <path strokeLinecap="round" d="M12 7v10M8 12h8" />,
-    color: 'text-[#5A3E2B]',
+    color: 'text-[#0B0B0D]',
     isLight: true,
   },
   {
-    bg: 'bg-gradient-to-br from-[#1A120E] via-[#120E0B] to-[#0D0A08]',
-    border: 'border-[#DFBA53]/35 border-l-[#DFBA53]/70',
-    accentText: 'text-[#DFBA53]',
-    authorText: 'text-[#D5C4AE]',
-    titleClass: 'text-[#F5E2A8]',
-    glow: 'rgba(223,186,83,0.3)',
-    eyebrow: 'NOCTURNE OBSIDIAN',
-    edition: 'Obsidian Foil Edition',
+    bg: 'bg-gradient-to-br from-[#141416] via-[#0B0B0D] to-[#050506]',
+    border: 'border-[#5E5E66]/50 border-l-[#F2F2F3]',
+    accentText: 'text-[#F2F2F3]',
+    authorText: 'text-[#A9A9AF]',
+    titleClass: 'text-[#F2F2F3]',
+    glow: 'rgba(0,0,0,0.7)',
+    eyebrow: 'PURE MONOCHROME',
+    edition: 'First Edition Print',
     emblem: <path strokeLinecap="round" d="M12 4v16m-8-8l8-8 8 8" />,
-    color: 'text-[#DFBA53]',
+    color: 'text-[#F2F2F3]',
   },
 ];
 
@@ -125,17 +125,17 @@ export default function NovelCover({
       style={{ boxShadow: `inset 4px 0 12px rgba(0,0,0,${light ? '0.2' : '0.7'}),0 8px 24px ${style.glow}` }}
       aria-hidden="true"
     >
-      <div className={`absolute inset-2 sm:inset-2.5 border ${light ? 'border-[#5A3E2B]/20' : 'border-white/10'} rounded pointer-events-none`} />
-      <div className={`absolute top-2.5 right-2.5 text-[8px] font-mono ${light ? 'text-[#5A3E2B]/50' : 'text-[#A88462]/60'}`}>✦</div>
-      <div className={`absolute bottom-2.5 left-2.5 text-[8px] font-mono ${light ? 'text-[#5A3E2B]/50' : 'text-[#A88462]/60'}`}>✦</div>
+      <div className={`absolute inset-2 sm:inset-2.5 border ${light ? 'border-black/20' : 'border-white/10'} rounded-[1px] pointer-events-none`} />
+      <div className={`absolute top-2.5 right-2.5 text-[8px] font-mono ${light ? 'text-black/50' : 'text-white/60'}`}>✦</div>
+      <div className={`absolute bottom-2.5 left-2.5 text-[8px] font-mono ${light ? 'text-black/50' : 'text-white/60'}`}>✦</div>
 
       <div className="relative z-10 flex items-center justify-between">
         {!hideEyebrow ? (
-          <span className={`text-[8px] sm:text-[9px] font-mono font-bold tracking-widest uppercase ${light ? 'text-[#5A3E2B]/75' : 'text-[#D5C4AE]/75'}`}>
+          <span className={`text-[8px] sm:text-[9px] font-mono font-bold tracking-widest uppercase ${light ? 'text-black/75' : 'text-white/75'}`}>
             {style.eyebrow}
           </span>
         ) : <span />}
-        <span className={`text-[8px] sm:text-[9px] font-mono font-semibold ${light ? 'text-[#5A3E2B]' : 'text-[#A88462]'}`}>
+        <span className={`text-[8px] sm:text-[9px] font-mono font-semibold ${light ? 'text-black/60' : 'text-white/60'}`}>
           ✦ Edition
         </span>
       </div>
@@ -162,13 +162,13 @@ export default function NovelCover({
         </div>
       </div>
 
-      <div className={`relative z-10 pt-1.5 sm:pt-2 border-t ${light ? 'border-[#5A3E2B]/20 text-[#5A3E2B]/65' : 'border-white/10 text-[#D5C4AE]/50'} flex items-center justify-between text-[8px] sm:text-[9px] font-mono tracking-widest uppercase`}>
+      <div className={`relative z-10 pt-1.5 sm:pt-2 border-t ${light ? 'border-black/20 text-black/65' : 'border-white/10 text-white/50'} flex items-center justify-between text-[8px] sm:text-[9px] font-mono tracking-widest uppercase`}>
         <span>SyncTone</span>
         <span>Full Cast</span>
       </div>
 
-      <div className={`absolute inset-0 ${light ? 'bg-gradient-to-t from-[#5A3E2B]/10 via-transparent to-white/20' : 'bg-gradient-to-t from-black/50 via-transparent to-white/5'} pointer-events-none`} />
-      <div className={`absolute inset-y-0 left-0 w-2.5 ${light ? 'bg-gradient-to-r from-[#5A3E2B]/35 to-transparent' : 'bg-gradient-to-r from-black/80 to-transparent'} pointer-events-none`} />
+      <div className={`absolute inset-0 ${light ? 'bg-gradient-to-t from-black/10 via-transparent to-white/20' : 'bg-gradient-to-t from-black/50 via-transparent to-white/5'} pointer-events-none`} />
+      <div className={`absolute inset-y-0 left-0 w-2.5 ${light ? 'bg-gradient-to-r from-black/20 to-transparent' : 'bg-gradient-to-r from-black/80 to-transparent'} pointer-events-none`} />
     </div>
   );
 }

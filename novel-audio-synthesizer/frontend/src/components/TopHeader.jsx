@@ -16,8 +16,9 @@ export default function TopHeader({
   onToggleRoster,
   onOpenSettings,
   onOpenAuth,
+  onOpenAddNovel,
 }) {
-  const { role, isAuthenticated, logout } = useAuth();
+  const { user, role, isAuthenticated, isWriterOrAdmin, logout } = useAuth();
   const { theme, cycleTheme } = useTheme();
 
   return (
@@ -92,6 +93,15 @@ export default function TopHeader({
             >
               + READER
             </button>
+            {isWriterOrAdmin && onOpenAddNovel && (
+              <button
+                onClick={onOpenAddNovel}
+                className="transition-colors py-1 cursor-pointer uppercase text-[var(--text-sub)] hover:text-[var(--text-main)]"
+                title="Create New Novel"
+              >
+                + STUDIO
+              </button>
+            )}
           </nav>
         </div>
 

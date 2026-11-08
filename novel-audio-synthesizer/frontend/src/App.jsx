@@ -461,19 +461,18 @@ function AppContent() {
         />
 
         {/* Main Viewport Container */}
-        <div className="flex-1 md:pl-[72px] flex flex-col min-h-screen">
-          {view !== 'catalog' && (
-            <TopHeader
-              view={view}
-              currentNovel={currentNovel}
-              currentChapter={currentChapter}
-              onNavigate={handleNavigate}
-              showRoster={showRoster}
-              onToggleRoster={() => setShowRoster((prev) => !prev)}
-              onOpenSettings={() => setShowSettings(true)}
-              onOpenAuth={handleOpenAuth}
-            />
-          )}
+        <div className="flex-1 flex flex-col min-h-screen">
+          <TopHeader
+            view={view}
+            currentNovel={currentNovel}
+            currentChapter={currentChapter}
+            onNavigate={handleNavigate}
+            showRoster={showRoster}
+            onToggleRoster={() => setShowRoster((prev) => !prev)}
+            onOpenSettings={() => setShowSettings(true)}
+            onOpenAuth={handleOpenAuth}
+            onOpenAddNovel={() => setShowAddNovelModal(true)}
+          />
 
           {/* Content Body Area */}
           <main key={view} className="flex-1 w-full px-4 sm:px-8 py-6 motion-view-route">
