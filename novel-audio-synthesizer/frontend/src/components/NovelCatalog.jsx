@@ -33,6 +33,7 @@ export default function NovelCatalog({
 
   const [novels, setNovels] = useState([]);
   const [channel, setChannel] = useState('verified'); // 'verified' | 'community' | 'all'
+  const [selectedGenre, setSelectedGenre] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 200);
   const [isLoading, setIsLoading] = useState(true);
@@ -126,18 +127,35 @@ export default function NovelCatalog({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Filter novels by search query
+  // Extract dynamic genre tags from current novel collection
+  const availableGenres = useMemo(() => {
+    const set = new Set();
+    novels.forEach((n) => {
+      if (n.global_tone) {
+        set.add(n.global_tone.toUpperCase());
+      }
+    });
+    return ['ALL', ...Array.from(set).slice(0, 4)];
+  }, [novels]);
+
+  // Filter novels by search query and genre chip
   const filteredNovels = useMemo(() => {
-    if (!debouncedSearch.trim()) return novels;
+    let result = novels;
+    if (selectedGenre !== 'ALL') {
+      result = result.filter(
+        (n) => (n.global_tone || '').toUpperCase() === selectedGenre
+      );
+    }
+    if (!debouncedSearch.trim()) return result;
     const q = debouncedSearch.toLowerCase().trim();
-    return novels.filter((n) => {
+    return result.filter((n) => {
       const titleMatch = (n.title || '').toLowerCase().includes(q);
       const synopsisMatch = (n.synopsis || '').toLowerCase().includes(q);
       const authorMatch = (n.author_username || '').toLowerCase().includes(q);
       const narratorMatch = (n.narrator_name || '').toLowerCase().includes(q);
       return titleMatch || synopsisMatch || authorMatch || narratorMatch;
     });
-  }, [novels, debouncedSearch]);
+  }, [novels, debouncedSearch, selectedGenre]);
 
   // Netflix-style automatic billboard rotation state
   const [featuredIndex, setFeaturedIndex] = useState(0);
@@ -195,115 +213,6 @@ export default function NovelCatalog({
 
   return (
     <div className="space-y-10 pb-20">
-      {/* ================================================================= */}
-      {/* 1. MASTER STICKY GLASS HEADER (Single Unified Header)             */}
-      {/* ================================================================= */}
-      <header className="sticky top-0 z-30 -mx-4 sm:-mx-8 px-4 sm:px-8 lg:px-8 py-3 bg-[var(--bg-bar)] border-b border-[var(--border-subtle)] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 min-h-[56px]">
-        {/* Left: Heading & Instant Search */}
-        <div className="flex items-center gap-4 flex-1 max-w-2xl">
-          <div className="flex-shrink-0">
-            <h1 className="text-base font-mono font-bold tracking-wider uppercase text-[var(--text-main)]">
-              Novel Library
-            </h1>
-          </div>
-
-          <div className="relative w-full">
-            <span className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none text-[var(--text-muted)]">
-              <IconSearch className="w-3.5 h-3.5" />
-            </span>
-            <input
-              ref={searchInputRef}
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by title, author, or narrator... (/ to focus)"
-              className="w-full pl-9 pr-9 py-1.5 text-xs font-mono bg-[var(--bg-card)] border border-[var(--border-strong)] rounded-[1px] text-[var(--text-main)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--text-main)] transition"
-              aria-label="Search novels"
-            />
-            <span className="hidden sm:flex absolute inset-y-0 right-2.5 items-center pointer-events-none text-[10px] font-mono text-[var(--text-muted)] border border-[var(--border-subtle)] rounded-[1px] px-1 py-0.5 my-auto">
-              /
-            </span>
-          </div>
-        </div>
-
-        {/* Right: Channel Filter Tabs & Quick Action Buttons */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 flex-shrink-0">
-          <div className="inline-flex p-0.5 rounded-[1px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] gap-1" role="tablist" aria-label="Channel selection">
-            <button
-              ref={(el) => (tabRefs.current[0] = el)}
-              role="tab"
-              aria-selected={channel === 'verified'}
-              tabIndex={channel === 'verified' ? 0 : -1}
-              onClick={() => setChannel('verified')}
-              onKeyDown={(e) => handleTabKeyDown(e, 0)}
-              className={`px-2.5 py-1 text-[11px] font-mono uppercase tracking-wider rounded-[1px] transition-all cursor-pointer ${
-                channel === 'verified'
-                  ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold'
-                  : 'text-[var(--text-sub)] hover:text-[var(--text-main)]'
-              }`}
-            >
-              Verified Originals
-            </button>
-            <button
-              ref={(el) => (tabRefs.current[1] = el)}
-              role="tab"
-              aria-selected={channel === 'community'}
-              tabIndex={channel === 'community' ? 0 : -1}
-              onClick={() => setChannel('community')}
-              onKeyDown={(e) => handleTabKeyDown(e, 1)}
-              className={`px-2.5 py-1 text-[11px] font-mono uppercase tracking-wider rounded-[1px] transition-all cursor-pointer ${
-                channel === 'community'
-                  ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold'
-                  : 'text-[var(--text-sub)] hover:text-[var(--text-main)]'
-              }`}
-            >
-              Community Novels
-            </button>
-            <button
-              ref={(el) => (tabRefs.current[2] = el)}
-              role="tab"
-              aria-selected={channel === 'all'}
-              tabIndex={channel === 'all' ? 0 : -1}
-              onClick={() => setChannel('all')}
-              onKeyDown={(e) => handleTabKeyDown(e, 2)}
-              className={`px-2.5 py-1 text-[11px] font-mono uppercase tracking-wider rounded-[1px] transition-all cursor-pointer ${
-                channel === 'all'
-                  ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold'
-                  : 'text-[var(--text-sub)] hover:text-[var(--text-main)]'
-              }`}
-            >
-              All Novels
-            </button>
-          </div>
-
-          {/* Add Novel Button for Writers/Admins */}
-          {isWriterOrAdmin && onOpenAddNovel && (
-            <button
-              onClick={onOpenAddNovel}
-              className="boxed-btn px-3 py-1 bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] text-[var(--text-main)] text-[11px] font-mono uppercase font-semibold rounded-[1px] border border-[var(--border-strong)] hover:border-[var(--text-main)] transition flex items-center gap-1.5 flex-shrink-0 cursor-pointer"
-            >
-              <IconPlus className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Add Novel</span>
-            </button>
-          )}
-
-          {/* Auth Button */}
-          {onOpenAuth && (
-            <button
-              onClick={() => {
-                if (!isAuthenticated) {
-                  onOpenAuth('login');
-                }
-              }}
-              className="boxed-btn-primary px-3 py-1 rounded-[1px] text-[11px] font-mono uppercase font-bold transition flex items-center gap-1.5 flex-shrink-0 cursor-pointer"
-            >
-              <IconUser className="w-3.5 h-3.5" />
-              <span>{isAuthenticated ? user.username : 'Sign In'}</span>
-            </button>
-          )}
-        </div>
-      </header>
-
       {/* Error State with Retry Button */}
       {error && (
         <div className="p-8 rounded-2xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 text-center space-y-3">
@@ -357,7 +266,7 @@ export default function NovelCatalog({
           {/* ================================================================= */}
           {featuredNovel && !searchQuery.trim() && (
             <section
-              className="relative w-full rounded-[1px] overflow-hidden p-6 sm:p-10 lg:p-12 border border-[var(--border-subtle)] flex flex-col justify-between transition-all duration-300"
+              className="relative w-full -mx-4 sm:-mx-8 -mt-6 mb-10 px-4 sm:px-8 lg:px-12 pt-8 pb-14 border-b border-[var(--border-subtle)] flex flex-col justify-between transition-all duration-300"
               style={{
                 background: 'var(--stage-gradient)',
               }}
@@ -368,187 +277,189 @@ export default function NovelCatalog({
               onFocus={() => setIsBillboardPaused(true)}
               onBlur={() => setIsBillboardPaused(false)}
             >
-              {/* Eyebrow Real-Data Tag */}
-              <div className="mb-4 flex items-center gap-2 flex-wrap">
-                <span className="inline-flex items-center gap-2 px-2.5 py-1 text-[11px] font-mono tracking-wider uppercase border border-[var(--border-strong)] bg-[var(--bg-card)] text-[var(--text-main)] rounded-[1px]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                  <span>FEATURED TITLE // {featuredNovel.title.toUpperCase()}</span>
-                </span>
-                {isBillboardPaused && (
-                  <span className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-wider px-2 py-0.5 rounded-[1px] bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
-                    Paused
+              <div className="max-w-7xl mx-auto w-full flex flex-col justify-between">
+                {/* Eyebrow Real-Data Tag */}
+                <div className="mb-4 flex items-center gap-2 flex-wrap">
+                  <span className="inline-flex items-center gap-2 px-2.5 py-1 text-[11px] font-mono tracking-wider uppercase border border-[var(--border-strong)] bg-[var(--bg-card)] text-[var(--text-main)] rounded-[1px]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                    <span>FEATURED VOLUME // VOL. {String(featuredIndex + 1).padStart(2, '0')} — {featuredNovel.title.toUpperCase()}</span>
                   </span>
-                )}
-              </div>
+                  {isBillboardPaused && (
+                    <span className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-wider px-2 py-0.5 rounded-[1px] bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
+                      Paused
+                    </span>
+                  )}
+                </div>
 
-              {/* Display Headline: STORIES THAT / SPEAK */}
-              <div className="max-w-5xl mb-8">
-                <h1 className="font-sans font-black text-4xl sm:text-6xl md:text-7xl lg:text-8xl tracking-tighter uppercase leading-[0.9] text-[var(--text-main)]">
-                  <span className="headline-gradient block">STORIES THAT</span>
-                  <span className="headline-gradient headline-skew block opacity-40">SPEAK</span>
-                </h1>
-              </div>
+                {/* Display Headline: STORIES THAT / SPEAK (80-85% Width) */}
+                <div className="w-full mb-8 sm:mb-10">
+                  <h1 className="font-sans font-black text-5xl sm:text-7xl md:text-8xl lg:text-[7.2rem] xl:text-[8.2rem] tracking-tighter uppercase leading-[0.85] text-[var(--text-main)]">
+                    <span className="headline-gradient block">STORIES THAT</span>
+                    <span className="headline-gradient headline-skew block opacity-45">SPEAK</span>
+                  </h1>
+                </div>
 
-              {/* Hero Triad Grid: Left Credits, Center 3D Book, Right Sans Blurb */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 items-center w-full mb-8">
-                {/* Left Column: Mono Metadata Credits ("AT A GLANCE") */}
-                <div className="border-l border-[var(--border-strong)] pl-5 flex flex-col gap-3.5 font-mono">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-[10px] text-[var(--text-muted)] tracking-wider">FEATURED TITLE</span>
-                    <span
+                {/* Hero Triad Grid: Left Credits, Center 3D Book, Right Sans Blurb */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 items-center w-full mb-8">
+                  {/* Left Column: Mono Metadata Credits ("AT A GLANCE") */}
+                  <div className="border-l border-[var(--border-strong)] pl-5 flex flex-col gap-3.5 font-mono">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[10px] text-[var(--text-muted)] tracking-wider">FEATURED TITLE</span>
+                      <span
+                        onClick={() => onSelectNovel(featuredNovel.id)}
+                        className="text-xs font-bold text-[var(--text-main)] truncate cursor-pointer hover:underline"
+                        title={featuredNovel.title}
+                      >
+                        {featuredNovel.title.toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[10px] text-[var(--text-muted)] tracking-wider">AUTHOR</span>
+                      <span className="text-xs font-bold text-[var(--text-main)]">
+                        {(featuredNovel.author_username || 'SYNCTONE AUTHOR').toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[10px] text-[var(--text-muted)] tracking-wider">NARRATOR</span>
+                      <span className="text-xs font-bold text-[var(--text-main)]">
+                        {(featuredNovel.narrator_name || 'STUDIO ENSEMBLE').toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[10px] text-[var(--text-muted)] tracking-wider">SCOPE</span>
+                      <span className="text-xs font-bold text-[var(--text-main)]">
+                        {featuredNovel.chapter_count || 1} CHAPTERS
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[10px] text-[var(--text-muted)] tracking-wider">FORMAT</span>
+                      <span className="text-xs font-bold text-[var(--text-main)]">
+                        {(featuredNovel.global_tone || 'SYNCHRONIZED MULTI-VOICE').toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Center Column: 3D Tilted Novel Showcase */}
+                  <div className="flex justify-center items-center py-4 tilted-cover-stage">
+                    <div
                       onClick={() => onSelectNovel(featuredNovel.id)}
-                      className="text-xs font-bold text-[var(--text-main)] truncate cursor-pointer hover:underline"
+                      className="relative w-52 sm:w-60 lg:w-64 aspect-[2/3] tilted-cover cursor-pointer group rounded-[2px]"
+                      style={{
+                        boxShadow: '-22px 26px 45px rgba(0, 0, 0, 0.85), -6px 8px 15px rgba(0, 0, 0, 0.65)',
+                      }}
                       title={featuredNovel.title}
                     >
-                      {featuredNovel.title.toUpperCase()}
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-[10px] text-[var(--text-muted)] tracking-wider">AUTHOR</span>
-                    <span className="text-xs font-bold text-[var(--text-main)]">
-                      {(featuredNovel.author_username || 'AUTHOR').toUpperCase()}
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-[10px] text-[var(--text-muted)] tracking-wider">NARRATOR</span>
-                    <span className="text-xs font-bold text-[var(--text-main)]">
-                      {(featuredNovel.narrator_name || 'STUDIO ENSEMBLE').toUpperCase()}
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-[10px] text-[var(--text-muted)] tracking-wider">REPOSITORY</span>
-                    <span className="text-xs font-bold text-[var(--text-main)]">
-                      {featuredNovel.channel === 'community' ? 'COMMUNITY ARCHIVE' : 'VERIFIED REPERTORY'}
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-[10px] text-[var(--text-muted)] tracking-wider">TONE & STYLE</span>
-                    <span className="text-xs font-bold text-[var(--text-main)]">
-                      {(featuredNovel.global_tone || 'DRAMATIC ENSEMBLE').toUpperCase()}
-                    </span>
-                  </div>
-                </div>
+                      <div className="w-full h-full bg-[#111114] border border-white/20 rounded-[2px] overflow-hidden flex flex-col justify-between p-5 sm:p-6 text-[#F2F2F3] relative select-none">
+                        {/* Spine highlight */}
+                        <div className="absolute top-0 left-0 bottom-0 w-2.5 bg-gradient-to-r from-white/20 to-black/80 border-r border-black/80 pointer-events-none" />
 
-                {/* Center Column: 3D Tilted Novel Showcase */}
-                <div className="flex justify-center items-center py-4 tilted-cover-stage">
-                  <div
-                    onClick={() => onSelectNovel(featuredNovel.id)}
-                    className="relative w-48 sm:w-56 aspect-[2/3] tilted-cover cursor-pointer group rounded-[2px]"
-                    style={{
-                      boxShadow: '-22px 26px 45px rgba(0, 0, 0, 0.85), -6px 8px 15px rgba(0, 0, 0, 0.65)',
-                    }}
-                    title={featuredNovel.title}
-                  >
-                    <div className="w-full h-full bg-[#111114] border border-white/20 rounded-[2px] overflow-hidden flex flex-col justify-between p-5 text-[#F2F2F3] relative select-none">
-                      {/* Spine highlight */}
-                      <div className="absolute top-0 left-0 bottom-0 w-2.5 bg-gradient-to-r from-white/20 to-black/80 border-r border-black/80 pointer-events-none" />
-
-                      <div className="flex justify-between items-center text-[10px] font-mono tracking-wider pl-1">
-                        <span className="border border-white/30 px-1.5 py-0.5">VOL. 01</span>
-                        <span>SYNCTONE</span>
-                      </div>
-
-                      <div className="flex flex-col items-center text-center my-auto px-2">
-                        <div className="w-12 h-12 border border-white/30 flex items-center justify-center mb-3 relative">
-                          <div className="w-8 h-8 border border-white/20 transform rotate-45 absolute" />
-                          <span className="text-[10px] font-mono text-[#A9A9AF]">▲</span>
+                        <div className="flex justify-between items-center text-[10px] font-mono tracking-wider pl-1">
+                          <span className="border border-white/30 px-1.5 py-0.5">VOL. {String(featuredIndex + 1).padStart(2, '0')}</span>
+                          <span>SYNCTONE</span>
                         </div>
-                        <h2 className="font-sans font-extrabold text-base sm:text-lg uppercase leading-tight line-clamp-2">
-                          {featuredNovel.title}
-                        </h2>
-                        <span className="text-[10px] font-mono tracking-widest text-[#A9A9AF] mt-1.5">
-                          {featuredNovel.author_username || 'AUTHOR'}
-                        </span>
-                      </div>
 
-                      <div className="flex justify-between text-[9px] font-mono text-[#898992] border-t border-white/15 pt-2 pl-1">
-                        <span>SYNCTONE AUDIO</span>
-                        <span>STUDIO CAST</span>
+                        <div className="flex flex-col items-center text-center my-auto px-2">
+                          <div className="w-14 h-14 border border-white/30 flex items-center justify-center mb-3 relative">
+                            <div className="w-10 h-10 border border-white/20 transform rotate-45 absolute" />
+                            <span className="text-[10px] font-mono text-[#A9A9AF]">▲</span>
+                          </div>
+                          <h2 className="font-sans font-black text-base sm:text-lg uppercase leading-tight line-clamp-2">
+                            {featuredNovel.title}
+                          </h2>
+                          <span className="text-[10px] font-mono tracking-widest text-[#A9A9AF] mt-2 uppercase">
+                            {featuredNovel.author_username || 'AUTHOR'}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between text-[9px] font-mono text-[#898992] border-t border-white/15 pt-2 pl-1">
+                          <span>SYNCTONE AUDIO</span>
+                          <span>STUDIO CAST</span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Right Column: Editorial Sans Blurb & CTA Scrim Box */}
-                <div className="flex flex-col gap-4">
-                  <p className="font-sans text-sm sm:text-base leading-relaxed text-[var(--text-main)]">
-                    {featuredNovel.synopsis ||
-                      'SyncTone re-engineers classic literature into neural multi-speaker drama. Every sentence is dynamically assigned to character voices, scored with generative ambient soundscapes, and synchronized to the reading canvas in real time.'}
-                  </p>
+                  {/* Right Column: Editorial Sans Blurb & CTA Scrim Box */}
+                  <div className="flex flex-col gap-4">
+                    <p className="font-sans text-sm sm:text-base leading-relaxed text-[var(--text-main)]">
+                      {featuredNovel.synopsis ||
+                        'SyncTone re-engineers classic literature into neural multi-speaker drama. Every sentence is dynamically assigned to character voices, scored with generative ambient soundscapes, and synchronized to the reading canvas in real time.'}
+                    </p>
 
-                  {/* Scrim box for high WCAG AA contrast compliance */}
-                  <div className="bg-[var(--bg-card)] border border-[var(--border-strong)] p-5 flex flex-col gap-3.5 rounded-[1px] shadow-xl backdrop-blur-md">
-                    <div className="flex flex-col gap-2.5">
-                      <button
-                        onClick={(e) => handleStartListening(featuredNovel, e)}
-                        className="boxed-btn-primary py-2.5 px-4 text-xs font-mono uppercase flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-transform"
-                      >
-                        <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                        <span>Start Listening (Ch. 1)</span>
-                      </button>
-                      <button
-                        onClick={() => onSelectNovel(featuredNovel.id)}
-                        className="boxed-btn py-2 px-4 text-xs font-mono uppercase flex items-center justify-center gap-2 text-[var(--text-main)] hover:border-[var(--text-main)] cursor-pointer active:scale-95 transition-all bg-[var(--bg-surface)]"
-                      >
-                        <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                        <span>Novel Details</span>
-                      </button>
-                    </div>
-
-                    <div className="text-[10px] font-mono text-[var(--text-muted)] flex justify-between items-center pt-2 border-t border-[var(--border-subtle)]">
-                      <span>STATUS: READY</span>
-                      <span>STUDIO SYNTHESIS</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Minimal Numbered Counters & Arrows */}
-              {novels.length > 1 && (
-                <div className="flex items-center justify-between pt-4 border-t border-[var(--border-subtle)] font-mono text-xs">
-                  <div className="flex items-center gap-3">
-                    {novels.slice(0, 5).map((novelItem, idx) => {
-                      const isActive = idx === (featuredIndex % Math.min(novels.length, 5));
-                      const numStr = String(idx + 1).padStart(2, '0');
-                      return (
+                    {/* Scrim box for high WCAG AA contrast compliance */}
+                    <div className="bg-[var(--bg-card)] border border-[var(--border-strong)] p-5 flex flex-col gap-3.5 rounded-[1px] shadow-xl backdrop-blur-md">
+                      <div className="flex flex-col gap-2.5">
                         <button
-                          key={novelItem.id || idx}
-                          type="button"
-                          onClick={() => setFeaturedIndex(idx)}
-                          aria-label={`Jump to slide ${idx + 1}: ${novelItem.title}`}
-                          className={`flex items-center gap-2 cursor-pointer transition-colors ${
-                            isActive
-                              ? 'text-[var(--text-main)] font-bold'
-                              : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
-                          }`}
+                          onClick={(e) => handleStartListening(featuredNovel, e)}
+                          className="boxed-btn-primary py-3 px-5 text-xs font-mono uppercase flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-transform"
                         >
-                          <span>{numStr}</span>
-                          {isActive && <span className="w-8 h-[1px] bg-[var(--text-main)] inline-block" />}
+                          <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                          <span>LISTEN NOW</span>
                         </button>
-                      );
-                    })}
-                  </div>
+                        <button
+                          onClick={() => onSelectNovel(featuredNovel.id)}
+                          className="boxed-btn py-2.5 px-4 text-xs font-mono uppercase flex items-center justify-center gap-2 text-[var(--text-main)] hover:border-[var(--text-main)] cursor-pointer active:scale-95 transition-all bg-[var(--bg-surface)]"
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                          <span>PLAY SAMPLE & READ</span>
+                        </button>
+                      </div>
 
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setFeaturedIndex((prev) => (prev - 1 + novels.length) % novels.length)}
-                      aria-label="Previous featured novel"
-                      className="boxed-btn p-1.5 text-[var(--text-sub)] hover:text-[var(--text-main)] active:scale-95 cursor-pointer"
-                    >
-                      <IconChevronLeft className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setFeaturedIndex((prev) => (prev + 1) % novels.length)}
-                      aria-label="Next featured novel"
-                      className="boxed-btn p-1.5 text-[var(--text-sub)] hover:text-[var(--text-main)] active:scale-95 cursor-pointer"
-                    >
-                      <IconChevronRight className="w-3.5 h-3.5" />
-                    </button>
+                      <div className="text-[10px] font-mono text-[var(--text-muted)] flex justify-between items-center pt-2 border-t border-[var(--border-subtle)]">
+                        <span>STATUS: {featuredNovel.status?.toUpperCase() || 'READY'}</span>
+                        <span>{featuredNovel.chapter_count || 1} CHAPTERS</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              )}
+
+                {/* Minimal Numbered Counters & Arrows */}
+                {novels.length > 1 && (
+                  <div className="flex items-center justify-between pt-4 border-t border-[var(--border-subtle)] font-mono text-xs">
+                    <div className="flex items-center gap-3">
+                      {novels.slice(0, 5).map((novelItem, idx) => {
+                        const isActive = idx === (featuredIndex % Math.min(novels.length, 5));
+                        const numStr = String(idx + 1).padStart(2, '0');
+                        return (
+                          <button
+                            key={novelItem.id || idx}
+                            type="button"
+                            onClick={() => setFeaturedIndex(idx)}
+                            aria-label={`Jump to slide ${idx + 1}: ${novelItem.title}`}
+                            className={`flex items-center gap-2 cursor-pointer transition-colors ${
+                              isActive
+                                ? 'text-[var(--text-main)] font-bold'
+                                : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
+                            }`}
+                          >
+                            <span>{numStr}</span>
+                            {isActive && <span className="w-8 h-[1px] bg-[var(--text-main)] inline-block" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setFeaturedIndex((prev) => (prev - 1 + novels.length) % novels.length)}
+                        aria-label="Previous featured novel"
+                        className="boxed-btn p-1.5 text-[var(--text-sub)] hover:text-[var(--text-main)] active:scale-95 cursor-pointer"
+                      >
+                        <IconChevronLeft className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFeaturedIndex((prev) => (prev + 1) % novels.length)}
+                        aria-label="Next featured novel"
+                        className="boxed-btn p-1.5 text-[var(--text-sub)] hover:text-[var(--text-main)] active:scale-95 cursor-pointer"
+                      >
+                        <IconChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </section>
           )}
 
@@ -654,23 +565,135 @@ export default function NovelCatalog({
           {/* ================================================================= */}
           {/* 4. SECTION 2: VERIFIED & COMMUNITY VOLUMES GRID                   */}
           {/* ================================================================= */}
-          <section className="space-y-4 pt-2" aria-label="Novel Catalog Grid">
-            <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-3">
-              <div className="flex flex-col gap-0.5">
-                <span className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-wider">
-                  // ARCHIVE REPERTORY
-                </span>
-                <h3 className="text-base sm:text-lg font-bold font-sans uppercase tracking-tight text-[var(--text-main)]">
-                  {channel === 'verified'
-                    ? 'Verified Repertory'
-                    : channel === 'community'
-                    ? 'Community Volumes'
-                    : 'Literary Volumes in Repertory'}
-                </h3>
+          <section className="space-y-6 pt-4" aria-label="Novel Catalog Grid">
+            <div className="border-b border-[var(--border-subtle)] pb-5 space-y-4">
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-wider">
+                      // ARCHIVE CATALOG —
+                    </span>
+                    <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[var(--text-main)]">
+                      Novel Library
+                    </span>
+                  </div>
+                  <h3 className="text-base sm:text-xl font-bold font-sans uppercase tracking-tight text-[var(--text-main)]">
+                    {channel === 'verified'
+                      ? 'Verified Repertory'
+                      : channel === 'community'
+                      ? 'Community Volumes'
+                      : 'Literary Volumes in Repertory'}
+                  </h3>
+                </div>
+
+                {/* Channel Filter Tabs (Accessible & Keyboard Navigable) */}
+                <div
+                  className="inline-flex p-0.5 rounded-[1px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] gap-1 flex-wrap self-start md:self-auto"
+                  role="tablist"
+                  aria-label="Channel selection"
+                >
+                  <button
+                    ref={(el) => (tabRefs.current[0] = el)}
+                    role="tab"
+                    aria-selected={channel === 'verified'}
+                    tabIndex={channel === 'verified' ? 0 : -1}
+                    onClick={() => setChannel('verified')}
+                    onKeyDown={(e) => handleTabKeyDown(e, 0)}
+                    className={`px-2.5 py-1 text-[11px] font-mono uppercase tracking-wider rounded-[1px] transition-all cursor-pointer ${
+                      channel === 'verified'
+                        ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold'
+                        : 'text-[var(--text-sub)] hover:text-[var(--text-main)]'
+                    }`}
+                  >
+                    + Verified Originals
+                  </button>
+                  <button
+                    ref={(el) => (tabRefs.current[1] = el)}
+                    role="tab"
+                    aria-selected={channel === 'community'}
+                    tabIndex={channel === 'community' ? 0 : -1}
+                    onClick={() => setChannel('community')}
+                    onKeyDown={(e) => handleTabKeyDown(e, 1)}
+                    className={`px-2.5 py-1 text-[11px] font-mono uppercase tracking-wider rounded-[1px] transition-all cursor-pointer ${
+                      channel === 'community'
+                        ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold'
+                        : 'text-[var(--text-sub)] hover:text-[var(--text-main)]'
+                    }`}
+                  >
+                    + Community Novels
+                  </button>
+                  <button
+                    ref={(el) => (tabRefs.current[2] = el)}
+                    role="tab"
+                    aria-selected={channel === 'all'}
+                    tabIndex={channel === 'all' ? 0 : -1}
+                    onClick={() => setChannel('all')}
+                    onKeyDown={(e) => handleTabKeyDown(e, 2)}
+                    className={`px-2.5 py-1 text-[11px] font-mono uppercase tracking-wider rounded-[1px] transition-all cursor-pointer ${
+                      channel === 'all'
+                        ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold'
+                        : 'text-[var(--text-sub)] hover:text-[var(--text-main)]'
+                    }`}
+                  >
+                    + All Novels
+                  </button>
+                </div>
               </div>
-              <span className="text-xs text-[var(--text-sub)] font-mono">
-                {filteredNovels.length} {filteredNovels.length === 1 ? 'VOLUME' : 'VOLUMES'}
-              </span>
+
+              {/* Instant Search Bar & Genre Filter Chips */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
+                {/* Monospace Genre Filter Chips */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 flex-shrink-0">
+                  {availableGenres.map((g) => (
+                    <button
+                      key={g}
+                      onClick={() => setSelectedGenre(g)}
+                      className={`px-2 py-0.5 text-[10px] font-mono tracking-wider uppercase rounded-[1px] border cursor-pointer transition ${
+                        selectedGenre === g
+                          ? 'bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)] font-bold'
+                          : 'border-[var(--border-subtle)] text-[var(--text-sub)] hover:text-[var(--text-main)] hover:border-[var(--border-strong)]'
+                      }`}
+                    >
+                      [ {g === 'ALL' ? 'ALL VOLUMES' : g} ]
+                    </button>
+                  ))}
+                </div>
+
+                {/* Search Box & Controls */}
+                <div className="flex items-center gap-2 flex-1 max-w-md sm:ml-auto">
+                  <div className="relative w-full">
+                    <span className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-[var(--text-muted)]">
+                      <IconSearch className="w-3.5 h-3.5" />
+                    </span>
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search by title, author, or narrator... (/ to focus)"
+                      className="w-full pl-8 pr-8 py-1.5 text-xs font-mono bg-[var(--bg-card)] border border-[var(--border-strong)] rounded-[1px] text-[var(--text-main)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--text-main)] transition"
+                      aria-label="Search novels"
+                    />
+                    <span className="hidden sm:flex absolute inset-y-0 right-2 items-center pointer-events-none text-[10px] font-mono text-[var(--text-muted)] border border-[var(--border-subtle)] rounded-[1px] px-1 py-0.5 my-auto">
+                      /
+                    </span>
+                  </div>
+
+                  {isWriterOrAdmin && onOpenAddNovel && (
+                    <button
+                      onClick={onOpenAddNovel}
+                      className="boxed-btn px-3 py-1.5 bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] text-[var(--text-main)] text-[11px] font-mono uppercase font-semibold rounded-[1px] border border-[var(--border-strong)] hover:border-[var(--text-main)] transition flex items-center gap-1.5 flex-shrink-0 cursor-pointer"
+                    >
+                      <IconPlus className="w-3.5 h-3.5" />
+                      <span className="hidden md:inline">Add</span>
+                    </button>
+                  )}
+
+                  <span className="text-xs text-[var(--text-sub)] font-mono flex-shrink-0 pl-1">
+                    {filteredNovels.length} {filteredNovels.length === 1 ? 'VOL' : 'VOLS'}
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* Empty Search Results State */}

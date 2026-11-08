@@ -1,0 +1,10 @@
+{
+  "topBarHeight": null,
+  "playerBarHeight": null,
+  "typeSizes": {
+    "heading1": "20px",
+    "bodyProse": "14px",
+    "monoMicro": null
+  },
+  "contrastChecks": {}
+}
