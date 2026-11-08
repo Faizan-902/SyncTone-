@@ -533,11 +533,11 @@ function AppContent() {
             )}
 
             {/* VIEW 2: NOVEL DETAILS */}
-            {view === 'details' && (selectedNovelId || currentNovel?.id) && (
+            {view === 'details' && (selectedNovelId || routeNovelId || currentNovel?.id) && (
               <ErrorBoundary friendlyMessage="Couldn't load novel details.">
                 <Suspense fallback={<RouteSkeleton />}>
                   <NovelDetails
-                    novelId={selectedNovelId || currentNovel?.id}
+                    novelId={selectedNovelId || routeNovelId || currentNovel?.id}
                     onBack={() => handleNavigate('catalog')}
                     onSelectChapter={handleSelectChapter}
                     onOpenUploadChapter={(novel) => {

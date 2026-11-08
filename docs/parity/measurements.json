@@ -1,10 +1,10 @@
 {
-  "topBarHeight": null,
+  "topBarHeight": 56,
   "playerBarHeight": null,
   "typeSizes": {
-    "heading1": "20px",
-    "bodyProse": "14px",
-    "monoMicro": null
+    "heading1": "131.2px",
+    "bodyProse": "16px",
+    "monoMicro": "10px"
   },
   "contrastChecks": {}
 }
