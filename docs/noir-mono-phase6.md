@@ -13,18 +13,18 @@
 Phase 6 implements full visual, structural, and behavioral parity for the Novel Detail view (`NovelDetails.jsx`) against `docs/design-preview/novel-detail.html` under the strict Noir Monochrome design specification:
 
 1. **Back Navigation & Breadcrumb Bar**:
-   - Primary label: `← BACK TO ARCHIVE CATALOG`.
+   - Primary label: `← BACK TO ARCHIVE CATALOG` (single glyph arrow matching preview, without duplicate SVG icon).
    - Dual-channel accessibility: `<span className="sr-only">Back to Library</span>` preserves exact backwards-compatibility with `catalog.test.jsx`.
-   - Dynamic archive locator: `CATALOG // {CHANNEL} // {TITLE} // ID: {ID}`.
+   - Dynamic archive locator: `CATALOG // {CHANNEL} // {TITLE} // ID: {ID}` with truncate safety.
 
 2. **Display Headline & Stage Header**:
-   - Giant ultra-heavy display title (`font-black`, `uppercase`, `tracking-[-0.04em]`, `leading-[0.95]`) matching `novel-detail.html`.
+   - Giant ultra-heavy display title (`font-black`, `uppercase`, `tracking-[-0.04em]`, `leading-[0.95]`, `word-break: break-word`) matching `novel-detail.html`.
    - Boxed eyebrow badge with neutral dot per Section 9.4 (`VERIFIED REPERTORY // AUDIO ARCHIVE` / `COMMUNITY ARCHIVE`).
    - Monospace metadata line bound exclusively to authentic database fields (`AUTHOR`, `DURATION`, `CHAPTERS`, `VOICES`, `FORMAT`).
 
 3. **Boxed Action Cluster**:
-   - `• LISTEN`: Inverted primary boxed button (`btn-primary`), triggers playback on Chapter 1. Accessible label `Start Listening (Ch. 1)` ensures end-to-end integration pass.
-   - `• OPEN READER`: Secondary boxed button opening reader view.
+   - `• LISTEN`: Inverted primary boxed button (`btn-primary`), triggers playback on Chapter 1. Accessible label `Start Listening (Ch. 1)` ensures end-to-end integration pass. Preserved in disabled state if chapters list is empty.
+   - `• OPEN READER`: Secondary boxed button opening reader view. Preserved in disabled state if chapters list is empty.
    - `• VOICE STUDIO`: Secondary boxed button switching immediately to the CAST panel (matches Playwright parity harness selector `button:has-text("VOICE STUDIO")`).
    - Neutral dot `•` (`.dot`) strictly enforced for non-playing buttons per Section 9.4.
    - Preserves `+ ADD TO LIBRARY` / `✓ IN LIBRARY` local storage sync.

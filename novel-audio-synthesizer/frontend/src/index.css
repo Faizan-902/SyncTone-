@@ -1009,6 +1009,8 @@ body.focus-fullscreen-mode footer {
   line-height: 0.95;
   text-transform: uppercase;
   color: var(--text-main);
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .detail-metadata-bar {

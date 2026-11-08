@@ -3,7 +3,6 @@ import { api, ApiError } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 import { preloadUploadChapterModal, preloadReaderView } from '../App';
 import {
-  IconArrowLeft,
   IconPlay,
   IconRefresh,
   IconTrash,
@@ -204,11 +203,10 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
           className="mono-xs text-[var(--text-sub)] hover:text-[var(--text-main)] transition-colors cursor-pointer flex items-center gap-1.5"
           aria-label="Back to Library"
         >
-          <IconArrowLeft className="w-3.5 h-3.5" />
           <span>← BACK TO ARCHIVE CATALOG</span>
           <span className="sr-only">Back to Library</span>
         </button>
-        <span className="mono-xs text-[var(--text-muted)]">
+        <span className="mono-xs text-[var(--text-muted)] truncate max-w-full">
           CATALOG // {isVerified ? 'VERIFIED' : 'COMMUNITY'} // {novel.title.toUpperCase()} // ID: {novel.id}
         </span>
       </div>
@@ -238,34 +236,32 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
 
         {/* Action Buttons Cluster */}
         <div className="detail-actions-cluster">
-          {chapters.length > 0 && (
-            <button
-              onClick={() => onSelectChapter(novel, chapters[0])}
-              onMouseEnter={preloadReaderView}
-              onFocus={preloadReaderView}
-              onPointerDown={preloadReaderView}
-              className="btn btn-lg btn-primary cursor-pointer active:scale-95 transition-transform"
-              aria-label="Start Listening (Ch. 1)"
-            >
-              <span className="dot" aria-hidden="true" />
-              <span>LISTEN</span>
-              <span className="sr-only">Start Listening (Ch. 1)</span>
-            </button>
-          )}
+          <button
+            onClick={() => chapters.length > 0 && onSelectChapter(novel, chapters[0])}
+            disabled={chapters.length === 0}
+            onMouseEnter={preloadReaderView}
+            onFocus={preloadReaderView}
+            onPointerDown={preloadReaderView}
+            className="btn btn-lg btn-primary cursor-pointer active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Start Listening (Ch. 1)"
+          >
+            <span className="dot" aria-hidden="true" />
+            <span>LISTEN</span>
+            <span className="sr-only">Start Listening (Ch. 1)</span>
+          </button>
 
-          {chapters.length > 0 && (
-            <button
-              onClick={() => onSelectChapter(novel, chapters[0])}
-              onMouseEnter={preloadReaderView}
-              onFocus={preloadReaderView}
-              onPointerDown={preloadReaderView}
-              className="btn btn-lg cursor-pointer active:scale-95 transition-all"
-              aria-label="Open Reader"
-            >
-              <span className="dot" aria-hidden="true" />
-              <span>OPEN READER</span>
-            </button>
-          )}
+          <button
+            onClick={() => chapters.length > 0 && onSelectChapter(novel, chapters[0])}
+            disabled={chapters.length === 0}
+            onMouseEnter={preloadReaderView}
+            onFocus={preloadReaderView}
+            onPointerDown={preloadReaderView}
+            className="btn btn-lg cursor-pointer active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Open Reader"
+          >
+            <span className="dot" aria-hidden="true" />
+            <span>OPEN READER</span>
+          </button>
 
           <button
             onClick={() => setActiveTab('cast')}
@@ -497,6 +493,11 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
                 const chTitle = ch.title || `Chapter ${chNumber}`;
                 const chDuration = ch.total_duration_ms || ch.duration_ms || 0;
                 const hasAudio = chDuration > 0 || ch.has_studio_audio;
+                const progressPercent = typeof ch.progress_percent === 'number'
+                  ? ch.progress_percent
+                  : (chDuration > 0 && typeof ch.playback_progress_ms === 'number'
+                    ? Math.min(100, Math.round((ch.playback_progress_ms / chDuration) * 100))
+                    : (ch.status === 'completed' ? 100 : null));
                 return (
                   <div
                     key={ch.id || idx}
@@ -521,6 +522,11 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
                       <span className="dot" aria-hidden="true" />
                       <span>{hasAudio ? 'SYNTHESIZED' : 'PENDING'}</span>
                     </span>
+                    {progressPercent !== null && (
+                      <span className="mono-xs text-[var(--text-muted)] text-[10px] hidden sm:inline">
+                        {progressPercent === 100 ? 'COMPLETED' : `${progressPercent}%`}
+                      </span>
+                    )}
                     <button
                       className="btn btn-sm btn-primary"
                       onClick={(e) => {

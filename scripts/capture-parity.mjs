@@ -267,7 +267,7 @@ const screensToCapture = [
     title: 'Screen 2: Novel Detail',
     route: '/novel/n-sherlock-1',
     action: async (page) => {
-      await page.waitForSelector('h1', { timeout: 5000 });
+      await page.waitForSelector('.detail-stage, .detail-giant-title', { timeout: 8000 });
     },
   },
   {
@@ -294,8 +294,9 @@ const screensToCapture = [
     title: 'Screen 5: Voice Studio / Character Roster',
     route: '/novel/n-sherlock-1',
     action: async (page) => {
-      // Click Cast Roster button to open modal
-      const rosterBtn = await page.$('button:has-text("Cast Roster"), button:has-text("VOICE STUDIO"), button:has-text("CHARACTER CAST")');
+      await page.waitForSelector('.detail-stage, .detail-giant-title', { timeout: 8000 });
+      // Click Cast Roster button to open modal or switch tab
+      const rosterBtn = await page.$('button:has-text("VOICE STUDIO"), button[data-tab="cast"], button:has-text("Character Cast")');
       if (rosterBtn) {
         await rosterBtn.click();
         await page.waitForTimeout(300);
@@ -314,6 +315,7 @@ try {
     const context = await browser.newContext({
       viewport: { width: vp.width, height: vp.height },
       deviceScaleFactor: 2,
+      serviceWorkers: 'block',
     });
     const page = await context.newPage();
     await setupPageRoutes(page);
@@ -335,6 +337,7 @@ try {
             document.documentElement.classList.add('dark');
             document.documentElement.classList.remove('light');
           }
+          localStorage.setItem('synctone_theme', th);
           localStorage.setItem('synctone-theme', th);
         }, theme);
 
@@ -395,7 +398,7 @@ try {
 
   // 3. Assemble Side-by-Side Parity Comparison Images (Concept vs Real)
   console.log('Assembling Side-by-Side Parity Images...');
-  const assembleContext = await browser.newContext({ viewport: { width: 1920, height: 1080 } });
+  const assembleContext = await browser.newContext({ viewport: { width: 1920, height: 1080 }, serviceWorkers: 'block' });
   const assemblePage = await assembleContext.newPage();
 
   for (const theme of ['dark', 'light']) {
