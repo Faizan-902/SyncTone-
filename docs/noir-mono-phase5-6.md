@@ -60,3 +60,4 @@ Phases 5 and 6 overhaul the home catalog, billboard hero stage, catalog grid, no
 | **Monochrome Chrome** | Zero chromatic tokens | **PASS** | 100% compliant |
 | **Micro Signal Dot** | $\le 8\text{px}$, active state only | **PASS** | Fully compliant |
 | **No Left Rail** | Section 9.6 Top bar only | **PASS** | Desktop rail removed, top bar 56px |
+

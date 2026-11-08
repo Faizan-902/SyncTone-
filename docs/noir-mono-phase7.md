@@ -66,3 +66,4 @@ Phase 7 implements the **Noir Monochrome Reading Surface** (Screen 3) and **Dock
 | **Monochrome Chrome** | Neutral greys only, zero chromatic fills | **PASS** | 100% compliant |
 | **Micro Signal Dot** | $\le 8\text{px}$, playing/live only | **PASS** | Verified active only when playing |
 | **Dual Reader Modes** | Both Normal and 3D OpenGL spread intact | **PASS** | Verified dual modes with fit engine |
+
