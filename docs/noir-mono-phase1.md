@@ -2,14 +2,14 @@
 
 **Project**: SyncTone — Noir Monochrome Redesign (Full Visual & UX Overhaul)  
 **Phase**: Phase 1 of 10 (Docs Only)  
-**Precedence**: Supersedes `docs/noir-yellow-spec.md` (withdrawn), `docs/editorial-orange-spec.md`, and `THEME_LOCK` v1.  
-**Status**: **PHASE 1 COMPLETE (READ-ONLY AUDIT & SPECIFICATION)**. No production source code in `src/` modified.
+**Precedence**: Supersedes `docs/noir-yellow-spec.md` (withdrawn: yellow accent was a misreading of external viewer chrome), `docs/editorial-orange-spec.md`, and `THEME_LOCK` v1.  
+**Status**: **PHASE 1 COMPLETE (READ-ONLY AUDIT & SPECIFICATION)**. Strictly zero lines of production code in `src/` modified.
 
 ---
 
 ## 1. Executive Summary & Authorization Precedence
 
-This document fulfills the requirements for **Phase 1: Reference Analysis, Pixel Sampling, Token Proposal, and WCAG Contrast Table** for the Noir Monochrome redesign of SyncTone.
+This specification establishes the architectural foundation for **Phase 1: Reference Analysis, Pixel Sampling, Token Proposal, and Mathematical WCAG Contrast Table** for the Noir Monochrome redesign of SyncTone.
 
 ### Precedence & Authorization
 - **Written Owner Authorization**: Full visual and UX redesign encompassing color tokens, typography scales, layout geometry, component shapes, navigation structures, and editorial-voice copy.
@@ -28,7 +28,7 @@ This document fulfills the requirements for **Phase 1: Reference Analysis, Pixel
 
 ## 2. Reference Analysis: Deconstructing the Visual Language
 
-The design language is derived from the primary reference (`reference-hero.png`), which defines the site's true visual identity. An external viewer overlay (`reference.png`) includes Awwwards chrome—specifically a floating rounded yellow button, a rounded pill dock, and a light top bar. These elements are confirmed as third-party viewer chrome and are excluded from the design language.
+The design language is derived from the primary reference (`reference-hero.png`), which defines the site's true visual identity. An external viewer overlay (`reference.png`) includes third-party Awwwards chrome—specifically a floating rounded yellow button, a rounded pill dock, and a light top bar. These elements are confirmed as third-party viewer chrome and are strictly excluded from the theme.
 
 ```
 +-------------------------------------------------------------------------------+
@@ -55,18 +55,18 @@ The design language is derived from the primary reference (`reference-hero.png`)
 ### Visual Grammar Principles
 
 1. **Strictly Monochrome Chrome**:
-   - Zero chromatic hues are allowed in the UI chrome. No yellow, green, orange fills, blue, or purple.
-   - The only chromatic exception is **one tiny signal dot** (`--signal: #FF5A1F`, $\le$ 8px diameter) used strictly for active live/playing/recording states. It is never used as text, background fill, border, or icon glyph.
+   - Zero chromatic hues are allowed anywhere in the UI chrome. No yellow, green, orange fills, blue, or purple.
+   - The only chromatic exception is **one tiny signal dot** (`--signal: #FF5A1F`, $\le$ 8px diameter) used strictly for active live/playing/recording states. It is never used as text, background fill, border, or icon glyph. If the owner selects "zero color", `--signal` evaluates directly to `--text-main`.
    - Book cover art, user avatars, and procedural novel jackets are content, not UI chrome.
 
 2. **Stage Background Gradient**:
-   - Landing and hero stages utilize a tall vertical 4-stop gradient transitioning from near-black at the top, fading to mid-grey, then to light grey at the bottom (inverted for light mode).
+   - Landing and hero stages utilize a tall vertical 4-stop gradient transitioning from near-black at the top, fading to mid-grey, then to light grey at the bottom (mirrored for light mode).
    - In-app utility surfaces (Reader, Voice Studio, Account, Modal dialogs) use flat, calm near-black or off-white neutral surfaces.
 
 3. **Display Typography & Skewed Italic**:
    - Headline typography is set in Inter 800–900, fully uppercase, with tight tracking (`-0.05em`) and compressed line-height (`~0.85`).
    - The headline is filled with a vertical grey gradient applied via `background-clip: text`.
-   - The secondary word features an aggressive skewed italic treatment (`transform: skewX(-10deg) italic`) that fades into the backdrop gradient.
+   - The secondary word features an aggressive skewed italic treatment (`transform: skewX(-10deg) italic`) that fades into the backdrop gradient. Essential semantic text remains fully intact in the DOM and `aria-label`.
 
 4. **Micro UI & Boxed Geometry**:
    - Navigation links, metadata labels, tags, and timestamps use JetBrains Mono in uppercase with letter-spacing (`0.08em` to `0.12em`).
@@ -82,9 +82,9 @@ The design language is derived from the primary reference (`reference-hero.png`)
 
 ---
 
-## 3. Token Proposal: Dark & Light Monochrome Architecture
+## 3. Comprehensive Token Proposal: Dark & Light Monochrome Architecture
 
-Existing CSS custom properties in `src/index.css` and `tailwind.config.js` will be re-valued, and four new tokens (`--stage-gradient`, `--headline-gradient`, `--signal`, `--bg-bar`) are added.
+Existing CSS custom properties in `src/index.css` and `tailwind.config.js` will be re-valued, legacy aliases harmonized, and four new tokens (`--stage-gradient`, `--headline-gradient`, `--signal`, `--bg-bar`) introduced.
 
 ### 3.1 Dark Mode (`:root, html.dark`) — Default Nocturne
 
@@ -98,26 +98,40 @@ Existing CSS custom properties in `src/index.css` and `tailwind.config.js` will 
 | `--bg-bar` | `#141416` | Shell | Fixed top navigation and bottom audio bar |
 | `--text-main` | `#F2F2F3` | Typography | Primary headings, titles, body text (17.58:1 on page) |
 | `--text-sub` | `#A9A9AF` | Typography | Secondary metadata, author credits, synopsis (8.41:1 on page) |
-| `--text-muted` | `#84848D` | Typography | Timestamps, mono tags, disabled labels (4.64:1 on card, $\ge 4.5:1$ AA) |
+| `--text-muted` | `#898992` | Typography | Micro UI tags, timestamps, secondary labels (calibrated: 4.52:1 on hover, 4.96:1 on card) |
 | `--accent` | `#F2F2F3` | Inverse CTA | Inverted primary fill (text-main tone; white button on dark) |
-| `--on-accent` | `#0B0B0D` | Inverse CTA | Text on inverted primary button (page color; near-black text) |
+| `--on-accent` | `#0B0B0D` | Inverse CTA | Text on inverted primary button (page color; near-black text, 17.58:1 AAA) |
 | `--accent-hover`| `#DCDCDF` | Interaction | One grey step darker for inverted button hover |
 | `--accent-surface`| `rgba(242, 242, 243, 0.10)` | State | Subtle 10% alpha wash for selected tab/chip |
 | `--border-subtle` | `#2E2E33` | Hairline | 1px card separators, catalog dividers |
-| `--border-strong` | `#44444A` | Boundary | Boxed button borders, modal perimeter |
-| `--border-focus` | `#F2F2F3` | Focus Ring | 2px text-main outline ring with 2px offset |
+| `--border-strong` | `#5E5E66` | Boundary | Boxed button borders, inputs (calibrated: 3.06:1 on page, $\ge 3:1$ AA Non-Text) |
+| `--border-focus` | `#F2F2F3` | Focus Ring | 2px text-main outline ring with 2px offset in `#0B0B0D` |
+| `--top10-fill` | `#0B0B0D` | Editorial | Rank billboard glyph background fill |
+| `--top10-stroke` | `rgba(242, 242, 243, 0.25)` | Editorial | Rank billboard outline hairline |
 | `--top10-active`| `#F2F2F3` | Editorial | Active billboard rank selector |
 | `--card-accent` | `#F2F2F3` | Editorial | Active card accent line |
-| `--speaker-narrator` | `#A9A9AF` | Voice | Narrator voice metadata |
+| `--speaker-narrator` | `#A9A9AF` | Voice | Narrator voice metadata (7.35:1 on card) |
 | `--speaker-a` | `#F2F2F3` | Voice | Lead dialogue speaker (differentiated via mono badge weight) |
 | `--speaker-b` | `#DCDCDF` | Voice | Secondary character speaker |
 | `--speaker-c` | `#A9A9AF` | Voice | Tertiary character speaker |
-| `--speaker-d` | `#84848D` | Voice | Background dialogue speaker |
-| `--color-status-success` | `#F2F2F3` | Status | Neutral inverted banner + `<IconCheck />` |
-| `--color-status-warning` | `#DCDCDF` | Status | Neutral border banner + `<IconAlertTriangle />` |
-| `--color-status-danger` | `#F2F2F3` | Status | Inverted high-contrast banner + `<IconAlertCircle />` |
-| `--color-status-info` | `#A9A9AF` | Status | Muted border banner + `<IconInfo />` |
-| `--signal` | `#FF5A1F` | Signal Dot | Tiny $\le$ 8px dot for active playing/recording indicator |
+| `--speaker-d` | `#898992` | Voice | Background dialogue speaker |
+| `--color-speaker-narrator` | `var(--speaker-narrator)` | Voice Alias | Backward-compatible voice alias |
+| `--color-speaker-dialogue` | `var(--speaker-a)` | Voice Alias | Backward-compatible dialogue alias |
+| `--color-speaker-system` | `var(--text-sub)` | Voice Alias | Backward-compatible system alias |
+| `--success` | `#F2F2F3` | Status | Neutral inverted badge/icon fill |
+| `--warning` | `#DCDCDF` | Status | Neutral bordered badge fill |
+| `--danger` | `#F2F2F3` | Status | Inverted high-contrast neutral badge fill |
+| `--info` | `#A9A9AF` | Status | Neutral muted badge fill |
+| `--color-status-success` | `var(--success)` | Status Alias | Backward-compatible status alias |
+| `--color-status-warning` | `var(--warning)` | Status Alias | Backward-compatible status alias |
+| `--color-status-danger` | `var(--danger)` | Status Alias | Backward-compatible status alias |
+| `--color-status-info` | `var(--info)` | Status Alias | Backward-compatible status alias |
+| `--cta-primary-bg` | `var(--accent)` | CTA Alias | Primary button background |
+| `--cta-primary-hover` | `var(--accent-hover)` | CTA Alias | Primary button hover |
+| `--cta-primary-text` | `var(--on-accent)` | CTA Alias | Primary button text |
+| `--glass-bg` | `rgba(20, 20, 22, 0.98)` | Deprecated Glass | Flattened to opaque surface |
+| `--glass-dock` | `rgba(20, 20, 22, 0.98)` | Deprecated Glass | Flattened to opaque bar |
+| `--signal` | `#FF5A1F` | Signal Dot | Tiny $\le$ 8px dot for active playing/recording indicator (6.31:1 on page) |
 | `--stage-gradient` | `linear-gradient(180deg, #0A0A0C 0%, #2A2A2E 35%, #7B7B7E 70%, #C2C2C4 100%)` | Stage | Tall vertical hero background (scrim applied on bottom half) |
 | `--headline-gradient` | `linear-gradient(180deg, #B4B4B6 0%, #3A3A3E 100%)` | Display | Background-clip text gradient on display headline |
 
@@ -135,34 +149,48 @@ Existing CSS custom properties in `src/index.css` and `tailwind.config.js` will 
 | `--bg-bar` | `#F7F7F8` | Shell | Fixed top navigation and bottom audio bar |
 | `--text-main` | `#0B0B0D` | Typography | Deep near-black titles, body text, headlines (17.11:1 on page) |
 | `--text-sub` | `#4F4F56` | Typography | Secondary metadata, author credits (7.07:1 on page) |
-| `--text-muted` | `#6B6B72` | Typography | Micro UI tags, timestamps, secondary labels (4.60:1 on page, $\ge 4.5:1$ AA) |
+| `--text-muted` | `#65656C` | Typography | Micro UI tags, timestamps, secondary labels (calibrated: 4.55:1 on hover, 5.03:1 on page) |
 | `--accent` | `#0B0B0D` | Inverse CTA | Inverted primary fill (text-main tone; black button on light) |
-| `--on-accent` | `#FFFFFF` | Inverse CTA | Text on inverted primary button (pure white text on black) |
+| `--on-accent` | `#FFFFFF` | Inverse CTA | Text on inverted primary button (pure white text on black, 19.66:1 AAA) |
 | `--accent-hover`| `#232327` | Interaction | One grey step lighter for inverted button hover |
 | `--accent-surface`| `rgba(11, 11, 13, 0.08)` | State | Subtle 8% alpha wash for selected tab/chip |
 | `--border-subtle` | `#D0D0D4` | Hairline | 1px card separators, catalog dividers |
 | `--border-strong` | `#86868A` | Boundary | Boxed button borders, inputs (3.16:1 on page, $\ge 3:1$ AA Non-Text) |
-| `--border-focus` | `#0B0B0D` | Focus Ring | 2px text-main outline ring with 2px offset |
+| `--border-focus` | `#0B0B0D` | Focus Ring | 2px text-main outline ring with 2px offset in `#FFFFFF` |
+| `--top10-fill` | `#EFEFF0` | Editorial | Rank billboard glyph background fill |
+| `--top10-stroke` | `rgba(11, 11, 13, 0.25)` | Editorial | Rank billboard outline hairline |
 | `--top10-active`| `#0B0B0D` | Editorial | Active billboard rank selector |
 | `--card-accent` | `#0B0B0D` | Editorial | Active card accent line |
-| `--speaker-narrator` | `#4F4F56` | Voice | Narrator voice metadata |
+| `--speaker-narrator` | `#4F4F56` | Voice | Narrator voice metadata (8.12:1 on card) |
 | `--speaker-a` | `#0B0B0D` | Voice | Lead dialogue speaker (differentiated via mono badge weight) |
 | `--speaker-b` | `#232327` | Voice | Secondary character speaker |
 | `--speaker-c` | `#4F4F56` | Voice | Tertiary character speaker |
-| `--speaker-d` | `#6B6B72` | Voice | Background dialogue speaker |
-| `--color-status-success` | `#0B0B0D` | Status | Neutral inverted banner + `<IconCheck />` |
-| `--color-status-warning` | `#232327` | Status | Neutral border banner + `<IconAlertTriangle />` |
-| `--color-status-danger` | `#0B0B0D` | Status | Inverted high-contrast banner + `<IconAlertCircle />` |
-| `--color-status-info` | `#4F4F56` | Status | Muted border banner + `<IconInfo />` |
-| `--signal` | `#FF5A1F` | Signal Dot | Tiny $\le$ 8px dot for active playing/recording indicator |
+| `--speaker-d` | `#65656C` | Voice | Background dialogue speaker |
+| `--color-speaker-narrator` | `var(--speaker-narrator)` | Voice Alias | Backward-compatible voice alias |
+| `--color-speaker-dialogue` | `var(--speaker-a)` | Voice Alias | Backward-compatible dialogue alias |
+| `--color-speaker-system` | `var(--text-sub)` | Voice Alias | Backward-compatible system alias |
+| `--success` | `#0B0B0D` | Status | Neutral inverted badge/icon fill |
+| `--warning` | `#232327` | Status | Neutral bordered badge fill |
+| `--danger` | `#0B0B0D` | Status | Inverted high-contrast neutral badge fill |
+| `--info` | `#4F4F56` | Status | Neutral muted badge fill |
+| `--color-status-success` | `var(--success)` | Status Alias | Backward-compatible status alias |
+| `--color-status-warning` | `var(--warning)` | Status Alias | Backward-compatible status alias |
+| `--color-status-danger` | `var(--danger)` | Status Alias | Backward-compatible status alias |
+| `--color-status-info` | `var(--info)` | Status Alias | Backward-compatible status alias |
+| `--cta-primary-bg` | `var(--accent)` | CTA Alias | Primary button background |
+| `--cta-primary-hover` | `var(--accent-hover)` | CTA Alias | Primary button hover |
+| `--cta-primary-text` | `var(--on-accent)` | CTA Alias | Primary button text |
+| `--glass-bg` | `rgba(247, 247, 248, 0.98)` | Deprecated Glass | Flattened to opaque surface |
+| `--glass-dock` | `rgba(247, 247, 248, 0.98)` | Deprecated Glass | Flattened to opaque bar |
+| `--signal` | `#F05010` | Signal Dot | Tiny $\le$ 8px dot (calibrated for light surfaces: 3.12:1 on page, 3.35:1 on bar, $\ge 3:1$ Non-Text AA) |
 | `--stage-gradient` | `linear-gradient(180deg, #F4F4F5 0%, #D9D9DB 35%, #8A8A8D 70%, #1A1A1C 100%)` | Stage | Mirrored tall vertical hero gradient |
 | `--headline-gradient` | `linear-gradient(180deg, #1A1A1C 0%, #8A8A8D 100%)` | Display | Background-clip text gradient (dark to mid-grey fade) |
 
 ---
 
-## 4. Mathematical WCAG 2.2 AA Contrast Verification Table
+## 4. Mathematical WCAG 2.2 AA Contrast Verification Tables
 
-Every pair was tested using the standard W3C relative luminance formula:
+All pairs were computed using the standard W3C relative luminance formula:
 $$L = 0.2126 \times R_{\text{lin}} + 0.7152 \times G_{\text{lin}} + 0.0722 \times B_{\text{lin}}$$
 $$\text{Contrast Ratio} = \frac{L_{\text{lighter}} + 0.05}{L_{\text{darker}} + 0.05}$$
 
@@ -171,7 +199,36 @@ Under WCAG 2.2 AA:
 - **Large Text ($\ge$ 18pt or $\ge$ 14pt bold)**: Minimum **3.0:1** (AAA requires 4.5:1).
 - **UI Components & Graphical Objects (SC 1.4.11)**: Minimum **3.0:1**.
 
-### 4.1 Dark Theme Contrast Matrix
+---
+
+### 4.1 Evaluation of Task Baseline Estimates & Required Calibrations
+
+The task prompt provided baseline estimates and explicitly instructed: `text-muted ~#81818A (verify >= 4.5:1)` in Dark mode, and `muted #6E6E75` in Light mode. Our rigorous verification reveals that raw prompt estimates fail on key surfaces and require specific calibrated coordinates:
+
+| Token / Baseline Coordinate | Surface Evaluated | Local Background | Measured Ratio | WCAG AA Status | Root Cause & Required Calibration |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Dark Baseline `~#81818A`** | `--bg-page` | `#0B0B0D` | **5.09:1** | PASS (AA) | Compliant on base page. |
+| **Dark Baseline `~#81818A`** | `--bg-surface` | `#141416` | **4.77:1** | PASS (AA) | Compliant on navigation surface. |
+| **Dark Baseline `~#81818A`** | `--bg-card` | `#1B1B1E` | **4.45:1** | **FAIL (< 4.5:1)** | Fails by 0.05. Luminance of `#1B1B1E` is too elevated. |
+| **Dark Baseline `~#81818A`** | `--bg-hover` | `#232327` | **4.06:1** | **FAIL (< 4.5:1)** | Fails significantly during hover on chapter/catalog rows. |
+| **Dark Prior Attempt `#84848D`** | `--bg-card` | `#1B1B1E` | **4.64:1** | PASS (AA) | Fixed card, but left hover broken. |
+| **Dark Prior Attempt `#84848D`** | `--bg-hover` | `#232327` | **4.22:1** | **FAIL (< 4.5:1)** | Hidden in prior report; fails on hovered interactive rows. |
+| **Dark Calibrated `--text-muted: #898992`** | `--bg-card` / `--bg-hover` | `#1B1B1E` / `#232327` | **4.96:1** / **4.52:1** | **PASS (AA ALL)** | **Fully compliant across all dark surfaces including hover.** |
+| **Light Baseline `#6E6E75`** | `--bg-page` | `#EFEFF0` | **4.40:1** | **FAIL (< 4.5:1)** | Fails baseline canvas contrast by 0.10. |
+| **Light Baseline `#6E6E75`** | `--bg-surface` | `#F7F7F8` | **4.73:1** | PASS (AA) | Compliant on navigation bar. |
+| **Light Baseline `#6E6E75`** | `--bg-card` | `#FFFFFF` | **5.06:1** | PASS (AA) | Compliant on pure white card. |
+| **Light Baseline `#6E6E75`** | `--bg-hover` | `#E4E4E6` | **3.99:1** | **FAIL (< 4.5:1)** | Fails severely on hovered list rows. |
+| **Light Prior Attempt `#6B6B72`** | `--bg-page` | `#EFEFF0` | **4.60:1** | PASS (AA) | Fixed page, but left hover broken. |
+| **Light Prior Attempt `#6B6B72`** | `--bg-hover` | `#E4E4E6` | **4.16:1** | **FAIL (< 4.5:1)** | Hidden in prior report; fails on hovered interactive rows. |
+| **Light Calibrated `--text-muted: #65656C`** | `--bg-page` / `--bg-hover` | `#EFEFF0` / `#E4E4E6` | **5.03:1** / **4.55:1** | **PASS (AA ALL)** | **Fully compliant across all light surfaces including hover.** |
+| **Dark Baseline `--border-strong: #44444A`** | `--bg-page` / `--bg-card` | `#0B0B0D` / `#1B1B1E` | **2.03:1** / **1.78:1** | **FAIL (< 3.0:1)** | Fails SC 1.4.11 Non-Text boundary contrast. |
+| **Dark Calibrated `--border-strong: #5E5E66`** | `--bg-page` | `#0B0B0D` | **3.06:1** | **PASS (AA Non-Text)** | **Provides verified 3:1 boundary for boxed buttons & inputs.** |
+| **Light Baseline `--signal: #FF5A1F`** | `--bg-page` / `--bg-bar` | `#EFEFF0` / `#F7F7F8` | **2.71:1** / **2.91:1** | **FAIL (< 3.0:1)** | Fails SC 1.4.11 Non-Text indicator dot requirement. |
+| **Light Calibrated `--signal: #F05010`** | `--bg-page` / `--bg-bar` | `#EFEFF0` / `#F7F7F8` | **3.12:1** / **3.35:1** | **PASS (AA Non-Text)** | **Guarantees $\ge 3.0:1$ non-text contrast in Light Mode.** |
+
+---
+
+### 4.2 Dark Theme Mathematical Contrast Matrix
 
 | Interface Element & Location | Foreground Token / Hex | Local Background Token / Hex | Measured Contrast Ratio | WCAG 2.2 Requirement | Compliance Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -183,24 +240,35 @@ Under WCAG 2.2 AA:
 | **Secondary Text on Surface** | `--text-sub` (`#A9A9AF`) | `--bg-surface` (`#141416`) | **7.87:1** | $\ge 4.5:1$ Normal | **PASS (AAA)** |
 | **Secondary Text on Card** | `--text-sub` (`#A9A9AF`) | `--bg-card` (`#1B1B1E`) | **7.35:1** | $\ge 4.5:1$ Normal | **PASS (AAA)** |
 | **Secondary Text on Hover Row**| `--text-sub` (`#A9A9AF`) | `--bg-hover` (`#232327`) | **6.70:1** | $\ge 4.5:1$ Normal | **PASS (AA)** |
-| **Muted Metadata on Page** | `--text-muted` (`#84848D`) | `--bg-page` (`#0B0B0D`) | **5.31:1** | $\ge 4.5:1$ Normal | **PASS (AA)** |
-| **Muted Metadata on Surface** | `--text-muted` (`#84848D`) | `--bg-surface` (`#141416`) | **4.96:1** | $\ge 4.5:1$ Normal | **PASS (AA)** |
-| **Muted Metadata on Card** | `--text-muted` (`#84848D`) | `--bg-card` (`#1B1B1E`) | **4.64:1** | $\ge 4.5:1$ Normal | **PASS (AA)** |
+| **Calibrated Muted Text on Page**| `--text-muted` (`#898992`) | `--bg-page` (`#0B0B0D`) | **5.67:1** | $\ge 4.5:1$ Normal | **PASS (AA)** |
+| **Calibrated Muted Text on Surface**| `--text-muted` (`#898992`) | `--bg-surface` (`#141416`) | **5.31:1** | $\ge 4.5:1$ Normal | **PASS (AA)** |
+| **Calibrated Muted Text on Card**| `--text-muted` (`#898992`) | `--bg-card` (`#1B1B1E`) | **4.96:1** | $\ge 4.5:1$ Normal | **PASS (AA)** |
+| **Calibrated Muted Text on Hover**| `--text-muted` (`#898992`) | `--bg-hover` (`#232327`) | **4.52:1** | $\ge 4.5:1$ Normal | **PASS (AA)** |
 | **Primary CTA Button Text** | `--on-accent` (`#0B0B0D`) | `--accent` (`#F2F2F3`) | **17.58:1** | $\ge 4.5:1$ Normal | **PASS (AAA)** |
 | **Primary CTA Hover State** | `--on-accent` (`#0B0B0D`) | `--accent-hover` (`#DCDCDF`) | **14.37:1** | $\ge 4.5:1$ Normal | **PASS (AAA)** |
 | **Keyboard Focus Ring Indicator**| `--border-focus` (`#F2F2F3`) | `--bg-page` (`#0B0B0D`) | **17.58:1** | $\ge 3.0:1$ UI Indicator | **PASS (AAA)** |
-| **Form Input Boundary** | High-Contrast Line (`#5E5E66`)| `--bg-page` (`#0B0B0D`) | **3.06:1** | $\ge 3.0:1$ UI Component | **PASS (AA Non-Text)** |
+| **Form Input / Boxed Boundary**| `--border-strong` (`#5E5E66`)| `--bg-page` (`#0B0B0D`) | **3.06:1** | $\ge 3.0:1$ UI Component | **PASS (AA Non-Text)** |
+| **Signal Dot Indicator on Page**| `--signal` (`#FF5A1F`) | `--bg-page` (`#0B0B0D`) | **6.31:1** | $\ge 3.0:1$ UI Component | **PASS (AAA Non-Text)**|
+| **Signal Dot Indicator on Bar** | `--signal` (`#FF5A1F`) | `--bg-bar` (`#141416`) | **5.90:1** | $\ge 3.0:1$ UI Component | **PASS (AA Non-Text)** |
 | **Display Headline (Top 0%)** | Gradient Start (`#B4B4B6`)| Stage Stop 0% (`#0A0A0C`) | **9.56:1** | $\ge 3.0:1$ Large Text | **PASS (AAA)** |
-| **Display Headline (Mid 35%)**| Gradient Mid (`#76767A`) | Stage Stop 35% (`#2A2A2E`)| **3.68:1** | $\ge 3.0:1$ Large Text | **PASS (AA Large)** |
-| **Informational Hero Text (0%)**| `--text-main` (`#F2F2F3`) | Stage Stop 0% (`#0A0A0C`) | **17.68:1** | $\ge 4.5:1$ Normal | **PASS (AAA)** |
-| **Informational Hero Text (35%)**| `--text-main` (`#F2F2F3`) | Stage Stop 35% (`#2A2A2E`)| **12.78:1** | $\ge 4.5:1$ Normal | **PASS (AAA)** |
-| **Informational Hero Text (70%)**| `--text-main` (`#F2F2F3`) | Solid Scrim (`#0B0B0D/90`)| **16.15:1** | $\ge 4.5:1$ Normal | **PASS (AAA)** |
-
-*Critical Finding on Dark Stage Gradient*: When the vertical stage gradient transitions below 50% toward `#7B7B7E` and `#C2C2C4`, raw contrast against light text falls below 4.5:1. As mandated by the specification, all informational copy in the lower stage will be backed by a solid/semi-translucent scrim (`rgba(11, 11, 13, 0.92)` achieving 16.15:1 AAA) or structured within card surfaces (`#1B1B1E`). The fading italic second headline word is decorative and verified to retain an accessible full DOM text/`aria-label` equivalent.
+| **Display Headline (Mid 35%)**| Gradient Mid (`#76767A`) | Stage Stop 35% (`#2A2A2E`)| **3.16:1** *(corrected)* | $\ge 3.0:1$ Large Text | **PASS (AA Large)** |
+| **Hero Info Text on Stage 0%** | `--text-main` (`#F2F2F3`) | Stage Stop 0% (`#0A0A0C`) | **17.68:1** | $\ge 4.5:1$ Normal | **PASS (AAA)** |
+| **Hero Info Text on Stage 35%**| `--text-main` (`#F2F2F3`) | Stage Stop 35% (`#2A2A2E`)| **12.78:1** | $\ge 4.5:1$ Normal | **PASS (AAA)** |
+| **Hero Info Text on Stage 70% (RAW)**| `--text-main` (`#F2F2F3`)| Stage Stop 70% (`#7B7B7E`)| **3.77:1** | $\ge 4.5:1$ Normal | **FAIL (Needs Scrim)** |
+| **Hero Info Text on Stage 100% (RAW)**| `--text-main` (`#F2F2F3`)| Stage Stop 100% (`#C2C2C4`)| **1.59:1** | $\ge 4.5:1$ Normal | **FAIL (Needs Scrim)** |
+| **Hero Info Text with Solid Scrim**| `--text-main` (`#F2F2F3`)| Scrim (`rgba(11,11,13,0.92)`)| **16.15:1** | $\ge 4.5:1$ Normal | **PASS (AAA)** |
+| **Speaker Lead Dialogue on Card**| `--speaker-a` (`#F2F2F3`) | `--bg-card` (`#1B1B1E`) | **15.36:1** | $\ge 4.5:1$ Normal | **PASS (AAA)** |
+| **Speaker Narrator on Card** | `--speaker-narrator` (`#A9A9AF`)| `--bg-card` (`#1B1B1E`) | **7.35:1** | $\ge 4.5:1$ Normal | **PASS (AAA)** |
+| **Speaker Secondary on Card** | `--speaker-b` (`#DCDCDF`) | `--bg-card` (`#1B1B1E`) | **12.56:1** | $\ge 4.5:1$ Normal | **PASS (AAA)** |
+| **Speaker Background on Card** | `--speaker-d` (`#898992`) | `--bg-card` (`#1B1B1E`) | **4.96:1** | $\ge 4.5:1$ Normal | **PASS (AA)** |
+| **Status Banner Inverted Text** | Inverted Text (`#0B0B0D`) | Inverted Banner (`#F2F2F3`)| **17.58:1** | $\ge 4.5:1$ Normal | **PASS (AAA)** |
+| **Text on Selected Tab / Chip**| `--text-main` (`#F2F2F3`) | `--accent-surface` (`#313133`)| **11.60:1** | $\ge 4.5:1$ Normal | **PASS (AAA)** |
+| **Sub-text on Selected Tab** | `--text-sub` (`#A9A9AF`) | `--accent-surface` (`#313133`)| **5.55:1** | $\ge 4.5:1$ Normal | **PASS (AA)** |
+| *Muted Text on Selected Tab (PROHIBITED)*| `--text-muted` (`#898992`)| `--accent-surface` (`#313133`)| **3.74:1** | $\ge 4.5:1$ Normal | **VIOLATION (Prohibited)**|
 
 ---
 
-### 4.2 Light Theme Contrast Matrix
+### 4.3 Light Theme Mathematical Contrast Matrix
 
 | Interface Element & Location | Foreground Token / Hex | Local Background Token / Hex | Measured Contrast Ratio | WCAG 2.2 Requirement | Compliance Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -212,21 +280,58 @@ Under WCAG 2.2 AA:
 | **Secondary Text on Surface** | `--text-sub` (`#4F4F56`) | `--bg-surface` (`#F7F7F8`) | **7.59:1** | $\ge 4.5:1$ Normal | **PASS (AAA)** |
 | **Secondary Text on Card** | `--text-sub` (`#4F4F56`) | `--bg-card` (`#FFFFFF`) | **8.12:1** | $\ge 4.5:1$ Normal | **PASS (AAA)** |
 | **Secondary Text on Hover Row**| `--text-sub` (`#4F4F56`) | `--bg-hover` (`#E4E4E6`) | **6.40:1** | $\ge 4.5:1$ Normal | **PASS (AA)** |
-| **Muted Metadata on Page** | `--text-muted` (`#6B6B72`) | `--bg-page` (`#EFEFF0`) | **4.60:1** | $\ge 4.5:1$ Normal | **PASS (AA)** |
-| **Muted Metadata on Surface** | `--text-muted` (`#6B6B72`) | `--bg-surface` (`#F7F7F8`) | **4.94:1** | $\ge 4.5:1$ Normal | **PASS (AA)** |
-| **Muted Metadata on Card** | `--text-muted` (`#6B6B72`) | `--bg-card` (`#FFFFFF`) | **5.29:1** | $\ge 4.5:1$ Normal | **PASS (AA)** |
+| **Calibrated Muted Text on Page**| `--text-muted` (`#65656C`) | `--bg-page` (`#EFEFF0`) | **5.03:1** | $\ge 4.5:1$ Normal | **PASS (AA)** |
+| **Calibrated Muted Text on Surface**| `--text-muted` (`#65656C`) | `--bg-surface` (`#F7F7F8`) | **5.40:1** | $\ge 4.5:1$ Normal | **PASS (AA)** |
+| **Calibrated Muted Text on Card**| `--text-muted` (`#65656C`) | `--bg-card` (`#FFFFFF`) | **5.78:1** | $\ge 4.5:1$ Normal | **PASS (AA)** |
+| **Calibrated Muted Text on Hover**| `--text-muted` (`#65656C`) | `--bg-hover` (`#E4E4E6`) | **4.55:1** | $\ge 4.5:1$ Normal | **PASS (AA)** |
 | **Primary CTA Button Text** | `--on-accent` (`#FFFFFF`) | `--accent` (`#0B0B0D`) | **19.66:1** | $\ge 4.5:1$ Normal | **PASS (AAA)** |
 | **Primary CTA Hover State** | `--on-accent` (`#FFFFFF`) | `--accent-hover` (`#232327`) | **15.66:1** | $\ge 4.5:1$ Normal | **PASS (AAA)** |
 | **Keyboard Focus Ring Indicator**| `--border-focus` (`#0B0B0D`) | `--bg-page` (`#EFEFF0`) | **17.11:1** | $\ge 3.0:1$ UI Indicator | **PASS (AAA)** |
-| **Form Input Boundary** | `--border-strong` (`#86868A`)| `--bg-page` (`#EFEFF0`) | **3.16:1** | $\ge 3.0:1$ UI Component | **PASS (AA Non-Text)** |
-| **Form Input on Card** | `--border-strong` (`#86868A`)| `--bg-card` (`#FFFFFF`) | **3.63:1** | $\ge 3.0:1$ UI Component | **PASS (AA Non-Text)** |
+| **Form Input Boundary on Page** | `--border-strong` (`#86868A`)| `--bg-page` (`#EFEFF0`) | **3.16:1** | $\ge 3.0:1$ UI Component | **PASS (AA Non-Text)** |
+| **Form Input Boundary on Card** | `--border-strong` (`#86868A`)| `--bg-card` (`#FFFFFF`) | **3.63:1** | $\ge 3.0:1$ UI Component | **PASS (AA Non-Text)** |
+| **Calibrated Signal Dot on Page**| `--signal` (`#F05010`) | `--bg-page` (`#EFEFF0`) | **3.12:1** | $\ge 3.0:1$ UI Component | **PASS (AA Non-Text)** |
+| **Calibrated Signal Dot on Bar** | `--signal` (`#F05010`) | `--bg-bar` (`#F7F7F8`) | **3.35:1** | $\ge 3.0:1$ UI Component | **PASS (AA Non-Text)** |
+| **Signal Dot on Pure White Card**| `--signal` (`#FF5A1F` / `#F05010`)| `--bg-card` (`#FFFFFF`) | **3.12:1** / **3.58:1** | $\ge 3.0:1$ UI Component | **PASS (AA Non-Text)** |
 | **Display Headline (Top 0%)** | Gradient Start (`#1A1A1C`)| Stage Stop 0% (`#F4F4F5`) | **15.81:1** | $\ge 3.0:1$ Large Text | **PASS (AAA)** |
 | **Display Headline (Mid 35%)**| Gradient Mid (`#4F4F56`) | Stage Stop 35% (`#D9D9DB`)| **5.76:1** | $\ge 3.0:1$ Large Text | **PASS (AAA)** |
-| **Informational Hero Text (0%)**| `--text-main` (`#0B0B0D`) | Stage Stop 0% (`#F4F4F5`) | **17.89:1** | $\ge 4.5:1$ Normal | **PASS (AAA)** |
-| **Informational Hero Text (35%)**| `--text-main` (`#0B0B0D`) | Stage Stop 35% (`#D9D9DB`)| **13.95:1** | $\ge 4.5:1$ Normal | **PASS (AAA)** |
-| **Lower Stage Content Scrim** | `--text-main` (`#0B0B0D`) | Solid Scrim (`#FFFFFF/95`)| **18.80:1** | $\ge 4.5:1$ Normal | **PASS (AAA)** |
+| **Hero Info Text on Stage 0%** | `--text-main` (`#0B0B0D`) | Stage Stop 0% (`#F4F4F5`) | **17.89:1** | $\ge 4.5:1$ Normal | **PASS (AAA)** |
+| **Hero Info Text on Stage 35%**| `--text-main` (`#0B0B0D`) | Stage Stop 35% (`#D9D9DB`)| **13.95:1** | $\ge 4.5:1$ Normal | **PASS (AAA)** |
+| **Hero Main Text on Stage 70% (RAW)**| `--text-main` (`#0B0B0D`)| Stage Stop 70% (`#8A8A8D`)| **5.71:1** | $\ge 4.5:1$ Normal | **PASS (AA)** |
+| **Hero Sub Text on Stage 70% (RAW)**| `--text-sub` (`#4F4F56`) | Stage Stop 70% (`#8A8A8D`)| **2.36:1** | $\ge 4.5:1$ Normal | **FAIL (Needs Scrim)** |
+| **Hero Main Text on Stage 100% (RAW)**| `--text-main` (`#0B0B0D`)| Stage Stop 100% (`#1A1A1C`)| **1.13:1** | $\ge 4.5:1$ Normal | **FAIL (Black-on-Black)**|
+| **Hero Info Text with White Scrim**| `--text-main` (`#0B0B0D`)| White Scrim (`rgba(255,255,255,0.95)`)| **18.80:1**| $\ge 4.5:1$ Normal | **PASS (AAA)** |
+| **Speaker Lead Dialogue on Card**| `--speaker-a` (`#0B0B0D`) | `--bg-card` (`#FFFFFF`) | **19.66:1** | $\ge 4.5:1$ Normal | **PASS (AAA)** |
+| **Speaker Narrator on Card** | `--speaker-narrator` (`#4F4F56`)| `--bg-card` (`#FFFFFF`) | **8.12:1** | $\ge 4.5:1$ Normal | **PASS (AAA)** |
+| **Speaker Secondary on Card** | `--speaker-b` (`#232327`) | `--bg-card` (`#FFFFFF`) | **15.66:1** | $\ge 4.5:1$ Normal | **PASS (AAA)** |
+| **Speaker Background on Card** | `--speaker-d` (`#65656C`) | `--bg-card` (`#FFFFFF`) | **5.78:1** | $\ge 4.5:1$ Normal | **PASS (AA)** |
+| **Status Banner Inverted Text** | Inverted Text (`#FFFFFF`) | Inverted Banner (`#0B0B0D`)| **19.66:1** | $\ge 4.5:1$ Normal | **PASS (AAA)** |
+| **Text on Selected Tab / Chip**| `--text-main` (`#0B0B0D`) | `--accent-surface` (`#EBEBEB`)| **16.50:1** | $\ge 4.5:1$ Normal | **PASS (AAA)** |
+| **Sub-text on Selected Tab** | `--text-sub` (`#4F4F56`) | `--accent-surface` (`#EBEBEB`)| **6.81:1** | $\ge 4.5:1$ Normal | **PASS (AA)** |
+| **Muted Text on Selected Tab** | `--text-muted` (`#65656C`)| `--accent-surface` (`#EBEBEB`)| **4.85:1** | $\ge 4.5:1$ Normal | **PASS (AA)** |
 
-*Critical Finding on Light Stage Gradient*: In Light Mode, the stage gradient mirrors dark mode, fading from light (`#F4F4F5`) at the top down to dark (`#1A1A1C`) at the bottom. Therefore, any content positioned in the lower third of the light hero stage will use pure white card containers (`#FFFFFF` with `#0B0B0D` text, 19.66:1 AAA) or an inverted light scrim (`rgba(255, 255, 255, 0.95)`, 18.80:1 AAA) to prevent black-on-black collisions.
+---
+
+### 4.4 Architectural Scrim & Contrast Directives
+
+1. **Dark Mode Stage Gradient Scrim Rule**:
+   - Above the 50% vertical viewport threshold, informational light text (`#F2F2F3`) achieves 17.68:1 (Stop 0%) and 12.78:1 (Stop 35%), exceeding WCAG AAA.
+   - Below 50%, transitioning toward `#7B7B7E` (Stop 70%, 3.77:1) and `#C2C2C4` (Stop 100%, 1.59:1), raw light text fails WCAG AA.
+   - **Directive**: Any informational text, CTA button cluster, or metadata placed in the lower half of the hero stage must strictly reside over a solid neutral scrim (`rgba(11, 11, 13, 0.92)` achieving 16.15:1 AAA) or inside card containers (`#1B1B1E`).
+   - The secondary headline word (`skewX(-10deg) italic`) that fades into the gradient is purely decorative; the accessible label is provided via DOM/`aria-label`.
+
+2. **Light Mode Stage Gradient Scrim Rule**:
+   - The light stage gradient mirrors dark mode, terminating at near-black (`#1A1A1C`) at Stop 100%. Raw dark text (`#0B0B0D`) produces an unreadable 1.13:1 black-on-black collision.
+   - **Directive**: Lower hero content in Light Mode must strictly be housed in pure white card containers (`#FFFFFF` with `#0B0B0D` text, 19.66:1 AAA) or an inverted light scrim (`rgba(255, 255, 255, 0.95)`, 18.80:1 AAA).
+
+3. **Active Surface Text Selection Policy**:
+   - When elements are rendered over an `--accent-surface` tint wash (10% alpha in dark, 8% alpha in light):
+   - In Dark Mode, muted text (`#898992` on `#313133`) drops to 3.74:1 (violating WCAG AA).
+   - **Directive**: Text nested inside an element with an active `--accent-surface` fill must strictly utilize `--text-main` (11.60:1 AAA) or `--text-sub` (5.55:1 AA). Never assign `--text-muted` inside an active `--accent-surface` container.
+
+4. **Signal Indicator Dot Policy**:
+   - In Dark Mode, `#FF5A1F` achieves 6.31:1 on page and 5.90:1 on bar, fully compliant with WCAG SC 1.4.11 non-text contrast ($\ge 3.0:1$).
+   - In Light Mode, `#FF5A1F` achieves only 2.71:1 on page and 2.91:1 on bar.
+   - **Directive**: When rendering the $\le$ 8px signal dot over light backgrounds, the calibrated coordinate `--signal: #F05010` (3.12:1 on page, 3.35:1 on bar) must be utilized, or if the "zero color" option is chosen, `--signal` evaluates directly to `--text-main` (`#0B0B0D`, 17.11:1).
 
 ---
 
@@ -238,7 +343,7 @@ SyncTone's typography system uses the three existing self-hosted variable font p
 1. **Display & Giant Headline (`font-sans`)**:
    - Family: **Inter Variable** (`@fontsource-variable/inter`)
    - Weights: **800 to 900** (Heavy / Black)
-   - Specifications: Fully uppercase, `letter-spacing: -0.05em`, `line-height: 0.85`, dynamic fluid sizing via `clamp(2.5rem, 7vw, 6.5rem)`.
+   - Specifications: Fully uppercase, `letter-spacing: -0.05em`, `line-height: ~0.85`, dynamic fluid sizing via `clamp(2.5rem, 7vw, 6.5rem)`.
    - Headline Gradient: `background: var(--headline-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;`
    - Secondary Word Effect: Skewed italic (`display: inline-block; transform: skewX(-10deg); font-style: italic; opacity: 0.45;`) fading into the background gradient.
 
@@ -333,11 +438,11 @@ An audit of the installed `@fontsource-variable` packages confirmed:
    - Page turn chevrons positioned strictly in outer margins/gutters, never overlaying literary text.
 
 5. **Docked Bottom Audio Player (`AudioPlayer.jsx`)**:
-   - Fixed sharp bottom bar with 1px top hairline border.
+   - Fixed sharp bottom bar with 1px top hairline border (`--border-subtle`).
    - 48x48px sharp cover thumbnail with mono chapter title and real-time millisecond timecode (`04:12 / 28:45`).
    - Central boxed controls: Skip backward (`[◀◀ 10s]`), inverted primary `[▶ PLAY]` / `[⏸ PAUSE]`, skip forward (`[▶▶ 10s]`).
    - Full-width interactive audio scrubber styled in `--text-main` with subtle unbuffered track in `--border-strong`.
-   - When active, displays the tiny $\le$ 8px `--signal` dot (`#FF5A1F`) adjacent to the playback status label.
+   - When active, displays the tiny $\le$ 8px `--signal` dot adjacent to the playback status label.
 
 6. **Voice Studio (`SettingsModal.jsx` & `CharacterRoster.jsx`)**:
    - Sharp sheet container with boxed mono navigation tabs: `[ CAST ]`, `[ VOICES ]`, `[ SETTINGS ]`, `[ GENERATE ]`.
@@ -379,10 +484,11 @@ $$\text{Plan Artifact} \longrightarrow \text{Owner Approval} \longrightarrow \te
 - [x] **Owner Authorization Recorded**: Clear precedence established superseding `docs/noir-yellow-spec.md`, `docs/editorial-orange-spec.md`, and `THEME_LOCK` v1.
 - [x] **Strictly Monochrome Visual Language**: Reference visual grammar deconstructed (neutral greys, tall stage gradient, headline gradient with skewed italic fade, boxed micro UI, 3D tilted cover, zero chromatic hues, single `--signal` dot).
 - [x] **Viewer Chrome Clarified**: Awwwards viewer chrome (yellow button, rounded pill dock, light top bar) identified and eliminated from design system.
-- [x] **Token Re-Valuation & Proposal**: Complete Dark and Light token tables documented, adding `--stage-gradient`, `--headline-gradient`, `--signal`, and `--bg-bar`.
-- [x] **Mathematical Contrast Verification**: 100% of informational text pairs confirmed $\ge 4.5:1$ AA. Display headlines confirmed $\ge 3.0:1$ AA Large. Scrim requirements for stage gradient documented.
+- [x] **Token Re-Valuation & Proposal**: Complete Dark and Light token tables documented, adding `--stage-gradient`, `--headline-gradient`, `--signal`, and `--bg-bar`, with full coverage of legacy status, cta, and speaker aliases.
+- [x] **Mathematical Contrast Verification**: 100% of informational text pairs confirmed $\ge 4.5:1$ AA across all surfaces (page, surface, card, hover). Display headlines confirmed $\ge 3.0:1$ AA Large. Direct measurements for all 4 gradient stops provided with explicit mathematical scrim rules.
+- [x] **Signal Non-Text Contrast Verified**: Light mode coordinate calibrated to `#F05010` (3.12:1 / 3.35:1) ensuring compliance with WCAG 2.2 SC 1.4.11.
 - [x] **Typography & Budget Verified**: Confirmed Inter 800–900 already present in variable `@fontsource-variable/inter` with 0 bytes added to cold load.
 - [x] **Strict Boundary Observed**: **Zero lines of application code modified outside `docs/`**.
-- [x] **Phase Report Committed**: `docs/noir-mono-phase1.md` written and verified.
+- [x] **Phase Report Committed**: `docs/noir-mono-phase1.md` written and mathematically verified.
 
 **Next Immediate Step**: Await user approval of Phase 1 before proceeding to Phase 2 (Concept Preview in `docs/design-preview/`).
