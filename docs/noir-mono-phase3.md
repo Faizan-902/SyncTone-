@@ -150,3 +150,4 @@ With Phase 3 tokens and regression locks active, Phase 4 will proceed to redesig
 1. `TopHeader.jsx`: Monospace navigation items prefixed with `+` (`+ LIBRARY`, `+ VOICES`, `+ PROFILE`), boxed search bar with sharp corners (`0-2px`), boxed sign-in CTA (`[● SIGN IN]`), and neutral dark/light theme toggle.
 2. `SidebarNav.jsx`: Monolithic boxed icons with hairline borders, active state indicator (`[●]`), and sharp geometry.
 3. Stop for preview and approval before proceeding to Phase 5.
+
