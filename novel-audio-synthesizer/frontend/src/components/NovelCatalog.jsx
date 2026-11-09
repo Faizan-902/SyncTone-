@@ -21,6 +21,24 @@ import {
   IconTrash,
 } from './icons';
 
+const SEED_NOVELS = [
+  {
+    id: '14ee0456-ad37-4867-9190-938b0e7d14ad',
+    title: 'A Study in Scarlet',
+    synopsis: 'The landmark debut of Sherlock Holmes and Dr. John Watson.',
+    channel: 'verified',
+    status: 'draft',
+    portfolio_source: 'ai',
+    cover_object: null,
+    added_by: 'a9da22c3-d45d-4997-ba10-7e5a235334f1',
+    author_username: 'writer_1792437336846',
+    narrator_name: 'Dr. John Watson',
+    narrator_voice_id: 'bm_george',
+    narrator_voice_label: 'George (British Received)',
+    chapter_count: 1,
+  },
+];
+
 export default function NovelCatalog({
   onSelectNovel,
   onSelectChapter,
@@ -40,22 +58,13 @@ export default function NovelCatalog({
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
     } catch (_) {}
-    return [];
+    return SEED_NOVELS;
   });
   const [channel, setChannel] = useState('verified'); // 'verified' | 'community' | 'all'
   const [selectedGenre, setSelectedGenre] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 200);
-  const [isLoading, setIsLoading] = useState(() => {
-    try {
-      const cached = sessionStorage.getItem('synctone_cached_novels');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) return false;
-      }
-    } catch (_) {}
-    return true;
-  });
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [novelToDelete, setNovelToDelete] = useState(null);
   const [isDeletingNovel, setIsDeletingNovel] = useState(false);
@@ -105,8 +114,7 @@ export default function NovelCatalog({
 
   // Fetch novels by channel filter
   const fetchNovels = async (selectedChannel, signal) => {
-    // Keep showing cached/current novels while revalidating; only pulse skeleton if empty
-    setIsLoading((prev) => (novels.length === 0 ? true : prev));
+    setIsLoading(true);
     setError(null);
     try {
       const channelParam = selectedChannel === 'all' ? undefined : selectedChannel;
@@ -123,6 +131,7 @@ export default function NovelCatalog({
       if (err.name === 'AbortError' || (signal && signal.aborted)) return;
       const msg = err instanceof ApiError ? err.message : err.message || 'Failed to load novel catalog';
       setError(msg);
+      setNovels([]);
     } finally {
       if (!signal || !signal.aborted) {
         setIsLoading(false);
@@ -245,7 +254,7 @@ export default function NovelCatalog({
           <p className="text-sm font-semibold text-[var(--danger)]">{error}</p>
           <button
             onClick={() => fetchNovels(channel)}
-            className="px-5 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] text-xs font-bold rounded-xl shadow-md transition inline-flex items-center gap-2 cursor-pointer"
+            className="px-5 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] text-xs font-bold rounded-full shadow-md hover:scale-[1.03] active:scale-[0.96] transition-all duration-200 inline-flex items-center gap-2 cursor-pointer"
           >
             <IconRefresh className="w-4 h-4" />
             <span>Retry</span>
@@ -416,14 +425,14 @@ export default function NovelCatalog({
                       <div className="flex flex-col gap-2.5">
                         <button
                           onClick={(e) => handleStartListening(featuredNovel, e)}
-                          className="boxed-btn-primary py-3 px-5 text-xs font-mono uppercase flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-all duration-200 rounded-xl shadow-md hover:scale-[1.02]"
+                          className="boxed-btn-primary py-3 px-6 text-xs font-mono uppercase flex items-center justify-center gap-2 cursor-pointer rounded-full shadow-md hover:scale-[1.03] active:scale-[0.96] transition-all duration-200"
                         >
                           <span className="w-2 h-2 rounded-full bg-current" />
                           <span>LISTEN NOW</span>
                         </button>
                         <button
                           onClick={() => onSelectNovel(featuredNovel.id)}
-                          className="boxed-btn py-2.5 px-4 text-xs font-mono uppercase flex items-center justify-center gap-2 text-[var(--text-main)] hover:border-[var(--text-main)] cursor-pointer active:scale-95 transition-all duration-200 bg-[var(--bg-surface)] rounded-xl"
+                          className="boxed-btn py-2.5 px-5 text-xs font-mono uppercase flex items-center justify-center gap-2 text-[var(--text-main)] hover:border-[var(--text-main)] cursor-pointer rounded-full bg-[var(--bg-surface)] hover:scale-[1.03] active:scale-[0.96] transition-all duration-200"
                         >
                           <span className="w-2 h-2 rounded-full bg-current" />
                           <span>PLAY SAMPLE & READ</span>
@@ -624,7 +633,7 @@ export default function NovelCatalog({
                     tabIndex={channel === 'verified' ? 0 : -1}
                     onClick={() => setChannel('verified')}
                     onKeyDown={(e) => handleTabKeyDown(e, 0)}
-                    className={`px-3 py-1.5 text-[11px] font-mono uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
+                    className={`px-3.5 py-1.5 text-[11px] font-mono uppercase tracking-wider rounded-full transition-all duration-200 cursor-pointer ${
                       channel === 'verified'
                         ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold shadow-xs'
                         : 'text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
@@ -639,7 +648,7 @@ export default function NovelCatalog({
                     tabIndex={channel === 'community' ? 0 : -1}
                     onClick={() => setChannel('community')}
                     onKeyDown={(e) => handleTabKeyDown(e, 1)}
-                    className={`px-3 py-1.5 text-[11px] font-mono uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
+                    className={`px-3.5 py-1.5 text-[11px] font-mono uppercase tracking-wider rounded-full transition-all duration-200 cursor-pointer ${
                       channel === 'community'
                         ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold shadow-xs'
                         : 'text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
@@ -654,7 +663,7 @@ export default function NovelCatalog({
                     tabIndex={channel === 'all' ? 0 : -1}
                     onClick={() => setChannel('all')}
                     onKeyDown={(e) => handleTabKeyDown(e, 2)}
-                    className={`px-3 py-1.5 text-[11px] font-mono uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
+                    className={`px-3.5 py-1.5 text-[11px] font-mono uppercase tracking-wider rounded-full transition-all duration-200 cursor-pointer ${
                       channel === 'all'
                         ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold shadow-xs'
                         : 'text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
@@ -687,7 +696,7 @@ export default function NovelCatalog({
                 {/* Search Box & Controls */}
                 <div className="flex items-center gap-2 flex-1 max-w-md sm:ml-auto">
                   <div className="relative w-full">
-                    <span className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-[var(--text-muted)]">
+                    <span className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none text-[var(--text-muted)]">
                       <IconSearch className="w-3.5 h-3.5" />
                     </span>
                     <input
@@ -696,7 +705,7 @@ export default function NovelCatalog({
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Search by title, author, or narrator... (/ to focus)"
-                      className="w-full pl-8 pr-8 py-1.5 text-xs font-mono bg-[var(--bg-card)] border border-[var(--border-strong)] rounded-xl text-[var(--text-main)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--text-main)] focus:ring-1 focus:ring-[var(--text-main)] transition shadow-xs"
+                      className="w-full pl-9 pr-9 py-2 text-xs font-mono bg-[var(--bg-card)] border border-[var(--border-strong)] rounded-full text-[var(--text-main)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--text-main)] focus:ring-1 focus:ring-[var(--text-main)] transition shadow-xs"
                       aria-label="Search novels"
                     />
                     <span className="hidden sm:flex absolute inset-y-0 right-2 items-center pointer-events-none text-[10px] font-mono text-[var(--text-muted)] border border-[var(--border-subtle)] rounded-md px-1.5 py-0.5 my-auto">
@@ -707,7 +716,7 @@ export default function NovelCatalog({
                   {isWriterOrAdmin && onOpenAddNovel && (
                     <button
                       onClick={onOpenAddNovel}
-                      className="boxed-btn px-3 py-1.5 bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] text-[var(--text-main)] text-[11px] font-mono uppercase font-semibold rounded-lg border border-[var(--border-strong)] hover:border-[var(--text-main)] transition-all flex items-center gap-1.5 flex-shrink-0 cursor-pointer shadow-xs"
+                      className="boxed-btn px-3.5 py-1.5 bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] text-[var(--text-main)] text-[11px] font-mono uppercase font-semibold rounded-full border border-[var(--border-strong)] hover:border-[var(--text-main)] transition-all flex items-center gap-1.5 flex-shrink-0 cursor-pointer shadow-xs hover:scale-105 active:scale-95"
                       aria-label="Add Novel"
                       title="Add Novel"
                     >
@@ -733,7 +742,7 @@ export default function NovelCatalog({
                 </p>
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="boxed-btn px-4 py-2 text-xs font-mono uppercase cursor-pointer active:scale-95 transition-all"
+                  className="boxed-btn px-4 py-2 text-xs font-mono uppercase cursor-pointer rounded-full active:scale-95 transition-all hover:scale-105"
                 >
                   Clear Search
                 </button>
@@ -751,7 +760,7 @@ export default function NovelCatalog({
                 {isWriterOrAdmin && onOpenAddNovel && (
                   <button
                     onClick={onOpenAddNovel}
-                    className="boxed-btn-primary px-5 py-2.5 text-xs font-mono uppercase inline-flex items-center gap-2 cursor-pointer active:scale-95 transition-transform rounded-xl mt-2"
+                    className="boxed-btn-primary px-5 py-2.5 text-xs font-mono uppercase inline-flex items-center gap-2 cursor-pointer active:scale-95 transition-transform rounded-full mt-2 hover:scale-105"
                   >
                     <IconPlus className="w-4 h-4" />
                     <span>Upload First Novel</span>
@@ -840,7 +849,7 @@ export default function NovelCatalog({
                         onMouseEnter={preloadReaderView}
                         onFocus={preloadReaderView}
                         onPointerDown={preloadReaderView}
-                        className="boxed-btn-primary flex-1 py-1.5 px-3 text-xs flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 transition-all"
+                        className="boxed-btn-primary flex-1 py-1.5 px-4 text-xs flex items-center justify-center gap-1.5 cursor-pointer rounded-full active:scale-95 transition-all hover:scale-[1.03]"
                       >
                         <IconPlay className="w-3.5 h-3.5 fill-current" />
                         <span>Play</span>
@@ -853,7 +862,7 @@ export default function NovelCatalog({
                         onMouseEnter={preloadNovelDetails}
                         onFocus={preloadNovelDetails}
                         onPointerDown={preloadNovelDetails}
-                        className="boxed-btn p-1.5 text-[var(--text-sub)] hover:text-[var(--text-main)] cursor-pointer active:scale-95 min-w-[32px] flex items-center justify-center transition-all"
+                        className="boxed-btn p-2 text-[var(--text-sub)] hover:text-[var(--text-main)] cursor-pointer rounded-full active:scale-95 min-w-[34px] min-h-[34px] flex items-center justify-center transition-all hover:scale-105"
                         title="View Novel Details"
                         aria-label="View Novel Details"
                       >
@@ -864,7 +873,7 @@ export default function NovelCatalog({
                           e.stopPropagation();
                           setNovelToDelete(novel);
                         }}
-                        className="boxed-btn p-1.5 text-[var(--text-sub)] hover:text-[var(--text-main)] cursor-pointer active:scale-95 min-w-[32px] flex items-center justify-center transition-all"
+                        className="boxed-btn p-2 text-[var(--text-sub)] hover:text-[var(--text-main)] cursor-pointer rounded-full active:scale-95 min-w-[34px] min-h-[34px] flex items-center justify-center transition-all hover:scale-105"
                         title="Delete Novel (Local Dev)"
                         aria-label={`Delete ${novel.title}`}
                         data-testid={`delete-novel-${novel.id}`}
@@ -953,7 +962,7 @@ export default function NovelCatalog({
                 <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-3">
                   <button
                     onClick={onOpenAddNovel}
-                    className="boxed-btn-primary px-5 py-2.5 text-xs font-mono uppercase flex items-center gap-2 cursor-pointer active:scale-95 transition-transform rounded-xl"
+                    className="boxed-btn-primary px-6 py-2.5 text-xs font-mono uppercase flex items-center gap-2 cursor-pointer active:scale-95 transition-transform rounded-full hover:scale-105"
                   >
                     <IconPlus className="w-4 h-4" />
                     <span>Upload Novel</span>
@@ -963,7 +972,7 @@ export default function NovelCatalog({
                       setChannel('community');
                       window.scrollTo({ top: 600, behavior: 'smooth' });
                     }}
-                    className="boxed-btn px-5 py-2.5 text-xs font-mono uppercase text-[var(--text-main)] hover:border-[var(--text-main)] cursor-pointer active:scale-95 transition-colors rounded-xl"
+                    className="boxed-btn px-6 py-2.5 text-xs font-mono uppercase text-[var(--text-main)] hover:border-[var(--text-main)] cursor-pointer active:scale-95 transition-colors rounded-full hover:scale-105"
                   >
                     Explore Community Stories
                   </button>
@@ -1024,7 +1033,7 @@ export default function NovelCatalog({
                 type="button"
                 onClick={() => setNovelToDelete(null)}
                 disabled={isDeletingNovel}
-                className="boxed-btn px-4 py-2 text-xs font-mono uppercase text-[var(--text-sub)] hover:text-[var(--text-main)] cursor-pointer rounded-lg"
+                className="boxed-btn px-4 py-2 text-xs font-mono uppercase text-[var(--text-sub)] hover:text-[var(--text-main)] cursor-pointer rounded-full active:scale-95 transition-all hover:scale-105"
                 data-testid="cancel-delete-novel-btn"
               >
                 Cancel
@@ -1033,7 +1042,7 @@ export default function NovelCatalog({
                 type="button"
                 onClick={handleConfirmDelete}
                 disabled={isDeletingNovel}
-                className="boxed-btn-primary px-4 py-2 text-xs font-mono uppercase flex items-center gap-1.5 cursor-pointer disabled:opacity-50 rounded-lg"
+                className="boxed-btn-primary px-5 py-2 text-xs font-mono uppercase flex items-center gap-1.5 cursor-pointer disabled:opacity-50 rounded-full active:scale-95 transition-all hover:scale-105"
                 data-testid="confirm-delete-novel-btn"
               >
                 {isDeletingNovel ? (

@@ -135,7 +135,7 @@ export default function SettingsModal({
                 type="button"
                 onClick={handleProbeAll}
                 disabled={probing}
-                className="px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] text-[var(--text-main)] border border-[var(--border-strong)] hover:border-[var(--text-main)] transition cursor-pointer flex items-center gap-1 shadow-xs"
+                className="px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)] text-[var(--text-main)] border border-[var(--border-strong)] hover:border-[var(--text-main)] transition-all duration-200 cursor-pointer flex items-center gap-1 shadow-xs hover:scale-[1.03] active:scale-[0.96]"
                 title="Probe real engine readiness"
               >
                 {probing ? 'Probing...' : 'Check / Test'}
@@ -512,7 +512,7 @@ export default function SettingsModal({
         <button
           type="button"
           onClick={onClose}
-          className="w-full mt-2 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] font-mono font-bold uppercase rounded-xl text-xs transition-all duration-200 cursor-pointer border border-[var(--accent)] shadow-md hover:shadow-lg active:scale-98"
+          className="w-full mt-2 py-3 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] font-mono font-bold uppercase rounded-full text-xs transition-all duration-200 cursor-pointer border border-[var(--accent)] shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.96]"
         >
           Done
         </button>

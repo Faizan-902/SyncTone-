@@ -13,6 +13,7 @@
       --text-muted: #A9A9AF;
       --accent: #F2F2F3;
       --on-accent: #0B0B0D;
+      --signal: #FF5A1F;
     }
     @media (prefers-color-scheme: light) {
       :root {
@@ -23,6 +24,7 @@
         --text-muted: #4F4F56;
         --accent: #0B0B0D;
         --on-accent: #FFFFFF;
+        --signal: #FF5A1F;
       }
     }
     body {
@@ -41,95 +43,97 @@
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 40px 32px;
-      max-width: 420px;
+      border-radius: 28px;
+      padding: 44px 36px;
+      max-width: 440px;
       margin: 20px;
-      box-shadow: 0 12px 32px -4px rgba(0,0,0,0.45);
+      box-shadow: 0 20px 48px -12px rgba(0, 0, 0, 0.7);
     }
     .brand {
       display: inline-flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       margin-bottom: 24px;
     }
     .brand-badge {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
+      width: 36px;
+      height: 36px;
+      border-radius: 9999px;
       background: var(--text);
       color: var(--bg);
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
     }
     .brand-icon {
-      width: 18px;
-      height: 18px;
+      width: 20px;
+      height: 20px;
     }
     .brand-title {
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 0.16em;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.2em;
       text-transform: uppercase;
       font-family: monospace;
       color: var(--text);
     }
     .icon {
-      width: 56px;
-      height: 56px;
-      border-radius: 14px;
-      background: rgba(242, 242, 243, 0.08);
+      width: 60px;
+      height: 60px;
+      border-radius: 9999px;
+      background: rgba(242, 242, 243, 0.06);
       color: var(--text);
       display: inline-flex;
       align-items: center;
       justify-content: center;
       margin-bottom: 20px;
+      border: 1px solid var(--border);
     }
     h1 {
       font-size: 20px;
       margin: 0 0 8px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.05em;
     }
     p {
       color: var(--text-muted);
       font-size: 14px;
       line-height: 1.6;
-      margin: 0 0 24px;
+      margin: 0 0 28px;
     }
     button {
       background: var(--accent);
       color: var(--on-accent);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px 24px;
-      min-height: 44px;
-      min-width: 120px;
-      font-size: 13px;
-      font-weight: 700;
+      border: 1px solid var(--accent);
+      border-radius: 9999px;
+      padding: 13px 36px;
+      min-height: 46px;
+      min-width: 140px;
+      font-size: 12px;
+      font-weight: 800;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.1em;
+      font-family: monospace;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
     }
     button:hover {
-      opacity: 0.95;
-      transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+      opacity: 0.96;
+      transform: translateY(-1px) scale(1.03);
+      box-shadow: 0 8px 24px rgba(255, 255, 255, 0.16);
     }
     button:active {
-      transform: scale(0.98);
+      transform: scale(0.96);
     }
     button:focus-visible {
       outline: 2px solid var(--text);
-      outline-offset: 2px;
+      outline-offset: 3px;
     }
   </style>
 </head>
@@ -137,13 +141,13 @@
   <div class="card">
     <div class="brand">
       <div class="brand-badge">
-        <svg class="brand-icon" viewBox="0 0 24 24" fill="currentColor">
-          <rect x="3" y="10" width="2" height="5" rx="1" />
-          <rect x="7" y="6" width="2" height="11" rx="1" />
-          <rect x="11" y="2.5" width="2" height="16" rx="1" />
-          <rect x="15" y="6" width="2" height="11" rx="1" />
-          <rect x="19" y="10" width="2" height="5" rx="1" />
-          <path d="M2.5 19.5C5.5 18 8.5 18.2 11.25 19.8C11.72 20.07 12.28 20.07 12.75 19.8C15.5 18.2 18.5 18 21.5 19.5" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" />
+        <svg class="brand-icon" viewBox="0 0 24 24" fill="none">
+          <rect x="2.5" y="9.5" width="2" height="5" rx="1" fill="currentColor" opacity="0.65" />
+          <rect x="6.5" y="6" width="2.2" height="12" rx="1.1" fill="currentColor" opacity="0.9" />
+          <rect x="10.8" y="2.5" width="2.4" height="19" rx="1.2" fill="currentColor" />
+          <rect x="15.2" y="6" width="2.2" height="12" rx="1.1" fill="currentColor" opacity="0.9" />
+          <rect x="19.5" y="9.5" width="2" height="5" rx="1" fill="currentColor" opacity="0.65" />
+          <circle cx="19.5" cy="4" r="1.5" fill="#FF5A1F" />
         </svg>
       </div>
       <span class="brand-title">SYNCTONE</span>
@@ -160,7 +164,7 @@
       </svg>
     </div>
     <h1>You're Offline</h1>
-    <p>Please check your internet connection. Previously loaded chapters and downloaded audio remain accessible.</p>
+    <p>Please check your connection. Previously loaded chapters and downloaded audio remain accessible.</p>
     <button onclick="cleanAndReload()">Reconnect</button>
   </div>
   <script>
@@ -168,7 +172,7 @@
       fetch('/', { method: 'HEAD', cache: 'no-store' })
         .then(function(res) {
           if (res.ok) {
-            window.location.reload();
+            cleanAndReload();
           }
         })
         .catch(function() {});
@@ -176,7 +180,7 @@
 
     // Auto-reconnect when connection recovers or if loaded on local dev
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      setTimeout(cleanAndReload, 100);
+      setTimeout(cleanAndReload, 50);
     } else {
       setInterval(checkConnection, 2000);
       window.addEventListener('online', checkConnection);
@@ -193,10 +197,10 @@
             });
           }
         }).catch(function() {}).then(function() {
-          window.location.reload();
+          window.location.href = window.location.origin + '/';
         });
       } else {
-        window.location.reload();
+        window.location.href = window.location.origin + '/';
       }
     }
   </script>

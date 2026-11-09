@@ -18,13 +18,13 @@ export default function ProfileView({ onOpenAuth, onNavigateHome }) {
         <div className="flex justify-center gap-3">
           <button
             onClick={() => onOpenAuth?.('login')}
-            className="px-6 py-2.5 rounded-xl bg-[var(--cta-primary-bg)] text-[var(--cta-primary-text)] text-xs font-bold hover:bg-[var(--cta-primary-hover)] transition shadow-sm"
+            className="px-6 py-2.5 rounded-full bg-[var(--cta-primary-bg)] text-[var(--cta-primary-text)] text-xs font-bold hover:bg-[var(--cta-primary-hover)] transition-all duration-200 shadow-md hover:scale-[1.03] active:scale-[0.96] cursor-pointer"
           >
             Sign In
           </button>
           <button
             onClick={() => onOpenAuth?.('register')}
-            className="px-6 py-2.5 rounded-xl border theme-border theme-surface theme-heading text-xs font-medium hover:bg-[var(--bg-hover)] transition"
+            className="px-6 py-2.5 rounded-full border theme-border theme-surface theme-heading text-xs font-medium hover:bg-[var(--bg-hover)] transition-all duration-200 shadow-sm hover:scale-[1.03] active:scale-[0.96] cursor-pointer"
           >
             Create Account
           </button>
@@ -54,7 +54,7 @@ export default function ProfileView({ onOpenAuth, onNavigateHome }) {
           </div>
           <button
             onClick={logout}
-            className="px-4 py-2 rounded-xl border theme-border text-xs theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition"
+            className="px-5 py-2 rounded-full border theme-border text-xs theme-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition-all duration-200 hover:scale-[1.03] active:scale-[0.96] cursor-pointer"
           >
             Sign Out
           </button>

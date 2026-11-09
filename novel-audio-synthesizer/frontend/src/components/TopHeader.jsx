@@ -28,29 +28,34 @@ export default function TopHeader({
     <header className="sticky top-0 z-40 bg-[var(--bg-bar)] border-b border-[var(--border-subtle)] h-14 backdrop-blur-md bg-opacity-95">
       <div className="max-w-7xl mx-auto px-2 sm:px-8 h-full flex items-center justify-between gap-2 sm:gap-4">
         {/* Brand & Primary Navigation Links */}
-        <div className="flex items-center gap-4 sm:gap-8 min-w-0">
+        <div className="flex items-center gap-4 sm:gap-6 min-w-0">
           {/* Brand Logo */}
           <button
             onClick={() => onNavigate('catalog')}
             className="flex items-center gap-2.5 group text-left outline-none flex-shrink-0 cursor-pointer active:scale-95 transition-all duration-200"
             aria-label="SyncTone Home"
           >
-            <div className="w-7 h-7 rounded-lg bg-[var(--text-main)] text-[var(--bg-page)] flex items-center justify-center shadow-xs group-hover:scale-105 group-hover:shadow-md transition-all duration-200">
-              <IconSyncToneLogo className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-full bg-[var(--text-main)] text-[var(--bg-page)] flex items-center justify-center shadow-md group-hover:scale-105 group-hover:shadow-lg transition-all duration-200 border border-[var(--border-subtle)]">
+              <IconSyncToneLogo className="w-4.5 h-4.5" />
             </div>
-            <span className="text-xs font-mono font-bold tracking-[0.16em] uppercase text-[var(--text-main)] group-hover:opacity-90 transition-opacity">
-              SYNCTONE
-            </span>
+            <div className="flex flex-col">
+              <span className="text-[13px] font-mono font-bold tracking-[0.18em] uppercase text-[var(--text-main)] group-hover:opacity-90 transition-opacity leading-none">
+                SYNCTONE
+              </span>
+              <span className="text-[8px] font-mono tracking-[0.22em] uppercase text-[var(--text-sub)] leading-tight mt-0.5 hidden xs:inline">
+                AUDIO STUDIO
+              </span>
+            </div>
           </button>
 
           {/* Monospace Editorial Nav Links */}
-          <nav className="hidden sm:flex items-center gap-4 text-xs font-mono tracking-wider min-w-0" aria-label="Main Navigation">
+          <nav className="hidden sm:flex items-center gap-1.5 text-xs font-mono tracking-wider min-w-0" aria-label="Main Navigation">
             <button
               onClick={() => onNavigate('catalog')}
-              className={`transition-colors py-1 cursor-pointer uppercase ${
+              className={`transition-all duration-200 px-3 py-1 rounded-full cursor-pointer uppercase ${
                 view === 'catalog'
-                  ? 'text-[var(--text-main)] font-bold border-b border-[var(--text-main)]'
-                  : 'text-[var(--text-sub)] hover:text-[var(--text-main)]'
+                  ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold shadow-xs'
+                  : 'text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
               }`}
             >
               + LIBRARY
@@ -61,10 +66,10 @@ export default function TopHeader({
                 else if (currentNovel?.id) onNavigate('details', currentNovel.id);
                 else onNavigate('catalog');
               }}
-              className={`transition-colors py-1 cursor-pointer uppercase ${
+              className={`transition-all duration-200 px-3 py-1 rounded-full cursor-pointer uppercase ${
                 view === 'details'
-                  ? 'text-[var(--text-main)] font-bold border-b border-[var(--text-main)]'
-                  : 'text-[var(--text-sub)] hover:text-[var(--text-main)]'
+                  ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold shadow-xs'
+                  : 'text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
               }`}
             >
               + ARCHIVE
@@ -77,10 +82,10 @@ export default function TopHeader({
                   onOpenSettings();
                 }
               }}
-              className={`transition-colors py-1 cursor-pointer uppercase ${
+              className={`transition-all duration-200 px-3 py-1 rounded-full cursor-pointer uppercase ${
                 showRoster
-                  ? 'text-[var(--text-main)] font-bold border-b border-[var(--text-main)]'
-                  : 'text-[var(--text-sub)] hover:text-[var(--text-main)]'
+                  ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold shadow-xs'
+                  : 'text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
               }`}
             >
               + VOICES
@@ -92,10 +97,10 @@ export default function TopHeader({
                 else if (currentNovel && onNavigate) onNavigate('details', currentNovel.id);
                 else onNavigate('catalog');
               }}
-              className={`transition-colors py-1 cursor-pointer uppercase ${
+              className={`transition-all duration-200 px-3 py-1 rounded-full cursor-pointer uppercase ${
                 view === 'reader'
-                  ? 'text-[var(--text-main)] font-bold border-b border-[var(--text-main)]'
-                  : 'text-[var(--text-sub)] hover:text-[var(--text-main)]'
+                  ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold shadow-xs'
+                  : 'text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
               }`}
             >
               + READER
@@ -103,7 +108,7 @@ export default function TopHeader({
             {isWriterOrAdmin && onOpenAddNovel && (
               <button
                 onClick={onOpenAddNovel}
-                className="transition-colors py-1 cursor-pointer uppercase text-[var(--text-sub)] hover:text-[var(--text-main)]"
+                className="transition-all duration-200 px-3 py-1 rounded-full cursor-pointer uppercase text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]"
                 title="Create New Novel"
               >
                 + STUDIO

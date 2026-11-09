@@ -5,25 +5,19 @@ export function IconSyncToneLogo({ className = 'w-5 h-5', ...props }) {
     <svg
       className={className}
       viewBox="0 0 24 24"
-      fill="currentColor"
+      fill="none"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
       {...props}
     >
-      {/* Symmetrical Resonant Soundwave Harmonic Bars */}
-      <rect x="3" y="10" width="2" height="5" rx="1" />
-      <rect x="7" y="6" width="2" height="11" rx="1" />
-      <rect x="11" y="2.5" width="2" height="16" rx="1" />
-      <rect x="15" y="6" width="2" height="11" rx="1" />
-      <rect x="19" y="10" width="2" height="5" rx="1" />
-      {/* Open-Book Acoustic Shelf / Resonance Mark */}
-      <path
-        d="M2.5 19.5C5.5 18 8.5 18.2 11.25 19.8C11.72 20.07 12.28 20.07 12.75 19.8C15.5 18.2 18.5 18 21.5 19.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.85"
-        strokeLinecap="round"
-      />
+      {/* Precision Harmonic Acoustic Soundwave Spectrum */}
+      <rect x="2.5" y="9.5" width="2" height="5" rx="1" fill="currentColor" opacity="0.65" />
+      <rect x="6.5" y="6" width="2.2" height="12" rx="1.1" fill="currentColor" opacity="0.9" />
+      <rect x="10.8" y="2.5" width="2.4" height="19" rx="1.2" fill="currentColor" />
+      <rect x="15.2" y="6" width="2.2" height="12" rx="1.1" fill="currentColor" opacity="0.9" />
+      <rect x="19.5" y="9.5" width="2" height="5" rx="1" fill="currentColor" opacity="0.65" />
+      {/* Signature Resonance Signal Beacon */}
+      <circle cx="19.5" cy="4" r="1.5" fill="var(--signal, #FF5A1F)" />
     </svg>
   );
 }

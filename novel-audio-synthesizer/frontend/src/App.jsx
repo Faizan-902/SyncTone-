@@ -422,19 +422,25 @@ function AppContent() {
 
   // Seamless Archive Navigation: opens catalog and scrolls directly to library shelves
   const handleOpenArchive = useCallback(() => {
-    if (view === 'catalog') {
+    const scrollToArchive = () => {
       const el = document.getElementById('archive-catalog') || document.querySelector('.volume-card') || document.querySelector('input[aria-label="Search novels"]');
       if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return true;
+      }
+      return false;
+    };
+
+    if (view === 'catalog') {
+      if (!scrollToArchive()) {
+        setTimeout(scrollToArchive, 100);
+        setTimeout(scrollToArchive, 300);
       }
     } else {
       handleNavigate('catalog');
-      setTimeout(() => {
-        const el = document.getElementById('archive-catalog') || document.querySelector('.volume-card');
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }, 150);
+      setTimeout(scrollToArchive, 100);
+      setTimeout(scrollToArchive, 300);
+      setTimeout(scrollToArchive, 600);
     }
   }, [view, handleNavigate]);
 

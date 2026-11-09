@@ -257,7 +257,7 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
             onMouseEnter={preloadReaderView}
             onFocus={preloadReaderView}
             onPointerDown={preloadReaderView}
-            className="btn btn-lg btn-primary cursor-pointer active:scale-[0.98] hover:-translate-y-0.5 transition-all duration-200 rounded-xl shadow-md hover:shadow-lg"
+            className="btn btn-lg btn-primary cursor-pointer active:scale-[0.96] hover:scale-[1.03] hover:-translate-y-0.5 transition-all duration-200 rounded-full shadow-md hover:shadow-lg"
             aria-label={chapters.length > 0 ? 'Start Listening (Ch. 1)' : 'Add Chapter'}
           >
             <span className="dot" aria-hidden="true" />
@@ -276,7 +276,7 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
             onMouseEnter={preloadReaderView}
             onFocus={preloadReaderView}
             onPointerDown={preloadReaderView}
-            className="btn btn-lg cursor-pointer active:scale-[0.98] hover:-translate-y-0.5 transition-all duration-200 rounded-xl shadow-xs hover:shadow-md"
+            className="btn btn-lg cursor-pointer active:scale-[0.96] hover:scale-[1.03] hover:-translate-y-0.5 transition-all duration-200 rounded-full shadow-xs hover:shadow-md"
             aria-label={chapters.length > 0 ? 'Open Reader' : 'Upload Manuscript'}
           >
             <span className="dot" aria-hidden="true" />
@@ -285,7 +285,7 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
 
           <button
             onClick={() => setActiveTab('cast')}
-            className="btn btn-lg cursor-pointer active:scale-[0.98] hover:-translate-y-0.5 transition-all duration-200 rounded-xl shadow-xs hover:shadow-md"
+            className="btn btn-lg cursor-pointer active:scale-[0.96] hover:scale-[1.03] hover:-translate-y-0.5 transition-all duration-200 rounded-full shadow-xs hover:shadow-md"
             aria-label="Voice Studio"
           >
             <span className="dot" aria-hidden="true" />
@@ -293,7 +293,7 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
           </button>
 
           <button
-            className={`btn btn-lg cursor-pointer active:scale-[0.98] hover:-translate-y-0.5 transition-all duration-200 rounded-xl shadow-xs hover:shadow-md ${
+            className={`btn btn-lg cursor-pointer active:scale-[0.96] hover:scale-[1.03] hover:-translate-y-0.5 transition-all duration-200 rounded-full shadow-xs hover:shadow-md ${
               inLibrary ? 'btn-primary' : ''
             }`}
             onClick={handleToggleLibrary}
@@ -308,7 +308,7 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
               onClick={() => onOpenUploadChapter(novel)}
               onMouseEnter={preloadUploadChapterModal}
               onFocus={preloadUploadChapterModal}
-              className="btn btn-lg cursor-pointer active:scale-[0.98] hover:-translate-y-0.5 transition-all duration-200 rounded-xl shadow-xs hover:shadow-md"
+              className="btn btn-lg cursor-pointer active:scale-[0.96] hover:scale-[1.03] hover:-translate-y-0.5 transition-all duration-200 rounded-full shadow-xs hover:shadow-md"
               aria-label="Upload Chapter"
             >
               <span className="dot" aria-hidden="true" />
@@ -319,7 +319,7 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
           <button
             type="button"
             onClick={() => setShowDeleteModal(true)}
-            className="btn btn-lg cursor-pointer active:scale-[0.98] hover:-translate-y-0.5 transition-all duration-200 rounded-xl shadow-xs hover:shadow-md ml-auto flex items-center gap-1.5"
+            className="btn btn-lg cursor-pointer active:scale-[0.96] hover:scale-[1.03] hover:-translate-y-0.5 transition-all duration-200 rounded-full shadow-xs hover:shadow-md ml-auto flex items-center gap-1.5"
             title="Delete Novel (Local Dev)"
             data-testid="delete-novel-btn"
             aria-label="Delete Novel (Dev)"
@@ -541,7 +541,7 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
                     <span className="mono-xs text-[var(--text-muted)]">// CHARACTER VOICE ASSIGNMENTS</span>
                     <button
                       type="button"
-                      className="boxed-btn px-2.5 py-1 text-[11px] font-mono cursor-pointer flex items-center gap-1.5 rounded-lg active:scale-95 transition-all shadow-xs"
+                      className="boxed-btn px-3 py-1 text-[11px] font-mono cursor-pointer flex items-center gap-1.5 rounded-full active:scale-95 transition-all shadow-xs hover:scale-105"
                     >
                       <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-main)]" />
                       <span>+ ADD CHARACTER</span>
@@ -693,7 +693,7 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
                     <button
                       type="button"
                       onClick={() => chapters.length > 0 && onSelectChapter(novel, chapters[0])}
-                      className="boxed-btn-primary px-3.5 py-2 text-xs font-mono cursor-pointer flex items-center gap-2 rounded-xl active:scale-[0.98] hover:-translate-y-0.5 transition-all shadow-md"
+                      className="boxed-btn-primary px-4 py-2 text-xs font-mono cursor-pointer flex items-center gap-2 rounded-full active:scale-[0.96] hover:scale-[1.03] hover:-translate-y-0.5 transition-all shadow-md"
                     >
                       <span className="w-1.5 h-1.5 rounded-full bg-current" />
                       <span>GENERATE AUDIO FOR CH. 01</span>
@@ -759,7 +759,7 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
                       </span>
                     )}
                     <button
-                      className="btn btn-sm btn-primary rounded-lg active:scale-95 transition-all shadow-xs"
+                      className="btn btn-sm btn-primary rounded-full active:scale-95 transition-all shadow-xs hover:scale-105"
                       onClick={(e) => {
                         e.stopPropagation();
                         onSelectChapter(novel, ch);
@@ -891,7 +891,7 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
                 type="button"
                 onClick={() => setShowDeleteModal(false)}
                 disabled={isDeleting}
-                className="btn btn-sm cursor-pointer rounded-xl active:scale-[0.98] transition-all"
+                className="btn btn-sm cursor-pointer rounded-full active:scale-[0.96] hover:scale-105 transition-all"
                 data-testid="cancel-delete-novel-btn"
               >
                 Cancel
@@ -900,7 +900,7 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
                 type="button"
                 onClick={handleDeleteNovel}
                 disabled={isDeleting}
-                className="btn btn-sm btn-primary flex items-center gap-1.5 cursor-pointer disabled:opacity-50 rounded-xl shadow-md active:scale-[0.98] transition-all"
+                className="btn btn-sm btn-primary flex items-center gap-1.5 cursor-pointer disabled:opacity-50 rounded-full shadow-md active:scale-[0.96] hover:scale-105 transition-all"
                 data-testid="confirm-delete-novel-btn"
               >
                 {isDeleting ? (

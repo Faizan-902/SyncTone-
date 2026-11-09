@@ -44,7 +44,7 @@ export function Button({
       type={type}
       disabled={disabled || isLoading}
       onClick={onClick}
-      className={`inline-flex items-center justify-center gap-2 rounded-xl transition-all duration-100 ease-out cursor-pointer select-none hover:-translate-y-0.5 active:scale-95 disabled:hover:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 ${sizeClasses} ${variantClasses} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-full transition-all duration-200 ease-out cursor-pointer select-none hover:scale-[1.03] hover:-translate-y-0.5 active:scale-[0.96] disabled:hover:scale-100 disabled:hover:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 ${sizeClasses} ${variantClasses} ${className}`}
       {...props}
     >
       {isLoading ? (

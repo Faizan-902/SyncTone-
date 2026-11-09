@@ -191,14 +191,14 @@ export default function UploadChapterModal({ isOpen, novel, onClose, onChapterUp
             <button
               type="button"
               onClick={onClose}
-              className="boxed-btn px-4 py-2 text-xs uppercase text-[var(--text-sub)] hover:text-[var(--text-main)] cursor-pointer rounded-xl active:scale-[0.98] transition-all"
+              className="boxed-btn px-5 py-2 text-xs uppercase text-[var(--text-sub)] hover:text-[var(--text-main)] cursor-pointer rounded-full active:scale-[0.96] hover:scale-105 transition-all"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="boxed-btn-primary px-5 py-2 text-xs uppercase cursor-pointer disabled:opacity-50 rounded-xl shadow-md hover:shadow-lg active:scale-[0.98] hover:-translate-y-0.5 transition-all duration-200"
+              className="boxed-btn-primary px-6 py-2 text-xs uppercase cursor-pointer disabled:opacity-50 rounded-full shadow-md hover:shadow-lg active:scale-[0.96] hover:scale-[1.03] hover:-translate-y-0.5 transition-all duration-200"
             >
               {isSubmitting ? 'Ingesting...' : 'Upload & Parse Prose'}
             </button>
