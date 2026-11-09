@@ -66,6 +66,9 @@
   --dock-safe-bottom: 72px;
 
   /* Typography / WCAG 2.2 AA Contrast Verified Coordinates */
+  --font-sans: 'Inter Variable', Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Newsreader Variable', Newsreader, Georgia, Cambria, 'Times New Roman', Times, serif;
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', Menlo, Monaco, Consolas, monospace;
   --text-main: #F2F2F3;
   --text-sub: #A9A9AF;
   --text-muted: #898992;
@@ -1331,4 +1334,164 @@ body.focus-fullscreen-mode footer {
     display: none;
   }
 }
+
+/* ========================================================================= */
+/* 8. SCREEN 3: NOIR MONOCHROME READER CANVAS & STAGE                        */
+/* ========================================================================= */
+.reader-canvas-container {
+  background-color: var(--bg-page);
+  min-height: calc(100vh - 56px - var(--dock-safe-bottom, 72px));
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+.reader-floating-toolbar {
+  position: sticky;
+  top: 56px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 24px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.reader-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.reader-content-stage {
+  max-width: 72ch;
+  margin: 0 auto;
+  padding: 48px 24px 100px;
+  width: 100%;
+  position: relative;
+}
+
+.reader-book-header {
+  text-align: center;
+  margin-bottom: 40px;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 24px;
+}
+
+.reader-chapter-title {
+  font-family: var(--font-serif, 'Newsreader Variable', serif);
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+  color: var(--text-main);
+}
+
+.reader-body-text {
+  font-family: var(--font-serif, 'Newsreader Variable', serif);
+  font-size: 1.18rem;
+  line-height: 1.85;
+  color: var(--text-main);
+  text-rendering: optimizeLegibility;
+}
+
+.reader-body-text p {
+  margin-bottom: 1.8em;
+  text-indent: 1.8em;
+}
+
+.reader-body-text p:first-of-type {
+  text-indent: 0;
+}
+
+.drop-cap {
+  float: left;
+  font-family: var(--font-serif, 'Newsreader Variable', serif);
+  font-size: 4.8rem;
+  line-height: 0.8;
+  padding-top: 4px;
+  padding-right: 12px;
+  padding-bottom: 4px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.reader-sync-active-para {
+  background: var(--accent-surface);
+  border-left: 2px solid var(--text-main);
+  padding: 12px 18px;
+  margin-left: -20px;
+  margin-right: -20px;
+  border-radius: 0px;
+}
+
+/* Chevrons in outer gutters */
+.gutter-chevron {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-sub);
+  cursor: pointer;
+  z-index: 25;
+  font-family: var(--font-mono, monospace);
+  font-size: 20px;
+  font-weight: 700;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.gutter-chevron:hover:not(:disabled) {
+  background: var(--bg-hover);
+  color: var(--text-main);
+  border-color: var(--border-strong);
+}
+
+.gutter-chevron:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.gutter-chevron-left {
+  left: 20px;
+}
+
+.gutter-chevron-right {
+  right: 20px;
+}
+
+@media (max-width: 768px) {
+  .desktop-only-tag {
+    display: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .gutter-chevron {
+    display: none;
+  }
+  .reader-floating-toolbar {
+    padding: 8px 12px;
+  }
+  .reader-content-stage {
+    padding: 24px 16px 80px;
+  }
+  .reader-sync-active-para {
+    margin-left: -8px;
+    margin-right: -8px;
+  }
+}
+
 

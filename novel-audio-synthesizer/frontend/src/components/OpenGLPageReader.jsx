@@ -5,6 +5,8 @@ import { parseSegmentImage } from '../utils/segmentUtils';
 import { measureAndPaginateSegments } from '../utils/readerLayoutEngine';
 import NovelCover from './NovelCover';
 import { paginateSegments } from '../reader/paginate';
+import { useBookFit } from '../reader/useBookFit';
+import { derivePageIndexFromAnchor, getAnchorSegmentIdFromPage } from '../reader/anchor';
 import PageNavButtons from '../reader/PageNavButtons';
 import SpineShadowCanvas from '../reader/SpineShadowCanvas';
 import {
@@ -187,6 +189,9 @@ export default function OpenGLPageReader({
   }, [currentChapter?.id, currentChapter?.chapter_number]);
 
   const bookContainerRef = useRef(null);
+  const stageRef = useRef(null);
+  const fit = useBookFit(stageRef);
+  const anchorSegmentIdRef = useRef(null);
   const autoFlipLockRef = useRef(false);
   const lastAutoFlippedSegRef = useRef(-1);
 
@@ -202,27 +207,49 @@ export default function OpenGLPageReader({
     return currentChapter?.image_url || null;
   }, [segments, currentChapter]);
 
-  // Paginate prose into book pages using Moon+ Reader dynamic measurement
+  // Paginate prose into book pages using fit engine contentBox
   const pages = useMemo(() => {
     return measureAndPaginateSegments(segments, {
-      containerWidth: 440,
-      containerHeight: isFocusMode ? 750 : 640,
+      containerWidth: fit.contentBox?.w || 440,
+      containerHeight: fit.contentBox?.h || (isFocusMode ? 750 : 640),
       fontSize,
       lineHeight: 1.85,
     });
-  }, [segments, fontSize, isFocusMode]);
+  }, [segments, fit.contentBox?.w, fit.contentBox?.h, fontSize, isFocusMode]);
 
   const totalPages = Math.max(1, pages.length);
-  // Total two-page spreads: 2 pages per spread
-  const totalSpreads = Math.max(1, Math.ceil(totalPages / 2));
+  const isSingleLayout = fit.layout === 'single';
+  const totalSpreads = isSingleLayout ? totalPages : Math.max(1, Math.ceil(totalPages / 2));
 
   // Determine which pages belong to the current spread
-  const leftPageIdx = currentSpreadIndex * 2;
-  const rightPageIdx = currentSpreadIndex * 2 + 1;
+  const leftPageIdx = isSingleLayout ? currentSpreadIndex : currentSpreadIndex * 2;
+  const rightPageIdx = isSingleLayout ? -1 : currentSpreadIndex * 2 + 1;
   const leftPageSegments = pages[leftPageIdx] || [];
-  const rightPageSegments = pages[rightPageIdx] || [];
+  const rightPageSegments = rightPageIdx >= 0 ? pages[rightPageIdx] || [] : [];
   const leftPageNum = leftPageIdx + 1;
-  const rightPageNum = rightPageIdx + 1;
+  const rightPageNum = rightPageIdx >= 0 ? rightPageIdx + 1 : 0;
+
+  // Track anchor when user turns spread
+  useEffect(() => {
+    if (pages.length > 0) {
+      const pageIdx = isSingleLayout ? currentSpreadIndex : currentSpreadIndex * 2;
+      const anchor = getAnchorSegmentIdFromPage(pages, pageIdx);
+      if (anchor != null) {
+        anchorSegmentIdRef.current = anchor;
+      }
+    }
+  }, [currentSpreadIndex, pages, isSingleLayout]);
+
+  // Restore spread index from anchor after re-pagination (e.g. font scale A+/A- or live resize)
+  useEffect(() => {
+    if (anchorSegmentIdRef.current != null && pages.length > 0) {
+      const targetPageIdx = derivePageIndexFromAnchor(pages, anchorSegmentIdRef.current);
+      const targetSpreadIdx = isSingleLayout ? targetPageIdx : Math.floor(targetPageIdx / 2);
+      if (targetSpreadIdx >= 0 && targetSpreadIdx < totalSpreads) {
+        setCurrentSpreadIndex(targetSpreadIdx);
+      }
+    }
+  }, [pages, isSingleLayout, totalSpreads]);
 
   // Auto-flip spread to track active spoken segment & fragment
   useEffect(() => {
@@ -246,18 +273,18 @@ export default function OpenGLPageReader({
     );
 
     if (targetPageIdx !== -1) {
-      const targetSpreadIdx = Math.floor(targetPageIdx / 2);
+      const targetSpreadIdx = isSingleLayout ? targetPageIdx : Math.floor(targetPageIdx / 2);
       const flipKey = `${activeSegmentId}_spread_${targetSpreadIdx}`;
       if (flipKey === lastAutoFlippedSegRef.current) return;
       lastAutoFlippedSegRef.current = flipKey;
 
       // If active segment is on Page 2 of Spread 0 while cover is showing, automatically switch to prose
-      if (targetSpreadIdx === 0 && targetPageIdx === 1 && showCoverSpread) {
+      if (!isSingleLayout && targetSpreadIdx === 0 && targetPageIdx === 1 && showCoverSpread) {
         setShowCoverSpread(false);
       }
 
       if (targetSpreadIdx !== currentSpreadIndex && !autoFlipLockRef.current) {
-        setLastJumpPage(currentSpreadIndex * 2 + 1);
+        setLastJumpPage(isSingleLayout ? currentSpreadIndex + 1 : currentSpreadIndex * 2 + 1);
         setFlipDirection(targetSpreadIdx > currentSpreadIndex ? 'next' : 'prev');
         setIsFlipping(true);
         autoFlipLockRef.current = true;
@@ -271,7 +298,7 @@ export default function OpenGLPageReader({
         return () => clearTimeout(timer);
       }
     }
-  }, [activeSegmentId, segmentProgress, pages, currentSpreadIndex, showCoverSpread]);
+  }, [activeSegmentId, segmentProgress, pages, currentSpreadIndex, showCoverSpread, isSingleLayout]);
 
   // Turn to Next Spread
   const handleNextPage = useCallback(() => {
@@ -297,13 +324,13 @@ export default function OpenGLPageReader({
     }
     setCurrentSpreadIndex((prev) => {
       if (prev >= totalSpreads - 1) return prev;
-      setLastJumpPage(prev * 2 + 1);
+      setLastJumpPage(isSingleLayout ? prev + 1 : prev * 2 + 1);
       setFlipDirection('next');
       setIsFlipping(true);
       setTimeout(() => setIsFlipping(false), 280);
       return prev + 1;
     });
-  }, [totalSpreads, currentSpreadIndex, showCoverSpread, nextChapter, onNextChapter]);
+  }, [totalSpreads, currentSpreadIndex, showCoverSpread, nextChapter, onNextChapter, isSingleLayout]);
 
   // Turn to Previous Spread (Fixes previous page button bug on Spread 0 and cover transitions)
   const handlePrevPage = useCallback(() => {
@@ -318,19 +345,21 @@ export default function OpenGLPageReader({
     }
     setCurrentSpreadIndex((prev) => {
       if (prev <= 0) return 0;
-      setLastJumpPage(prev * 2 + 1);
+      setLastJumpPage(isSingleLayout ? prev + 1 : prev * 2 + 1);
       setFlipDirection('prev');
       setIsFlipping(true);
       setTimeout(() => setIsFlipping(false), 280);
       return prev - 1;
     });
-  }, [currentSpreadIndex, showCoverSpread, currentNovel?.cover_object]);
+  }, [currentSpreadIndex, showCoverSpread, currentNovel?.cover_object, isSingleLayout]);
 
   // Apple Books Jump-Back (matching Screenshot 1 bottom-left ↩ pill)
   const handleJumpBack = useCallback(() => {
-    const targetSpread = Math.floor(Math.max(0, lastJumpPage - 1) / 2);
+    const targetSpread = isSingleLayout
+      ? Math.max(0, lastJumpPage - 1)
+      : Math.floor(Math.max(0, lastJumpPage - 1) / 2);
     if (targetSpread !== currentSpreadIndex && !isFlipping) {
-      setLastJumpPage(currentSpreadIndex * 2 + 1);
+      setLastJumpPage(isSingleLayout ? currentSpreadIndex + 1 : currentSpreadIndex * 2 + 1);
       setFlipDirection(targetSpread > currentSpreadIndex ? 'next' : 'prev');
       setIsFlipping(true);
       setTimeout(() => {
@@ -338,7 +367,7 @@ export default function OpenGLPageReader({
         setIsFlipping(false);
       }, 300);
     }
-  }, [lastJumpPage, currentSpreadIndex, isFlipping]);
+  }, [lastJumpPage, currentSpreadIndex, isFlipping, isSingleLayout]);
 
   // Keyboard navigation (Left / Right arrow keys & PageUp / PageDown)
   useEffect(() => {
@@ -623,18 +652,30 @@ export default function OpenGLPageReader({
       />
 
       {/* 3D Apple Books Two-Page Spread Stage */}
-      <div className={`relative w-full perspective-1200 ${isFocusMode ? 'flex-1 flex flex-col justify-center my-auto py-1' : 'py-2 sm:py-4'}`}>
+      <div
+        ref={stageRef}
+        className={`relative w-full perspective-1200 flex flex-col justify-center items-center ${
+          isFocusMode ? 'flex-1 my-auto py-1' : 'py-2 sm:py-4'
+        }`}
+        style={{
+          minHeight: isFocusMode ? 'calc(100vh - 140px)' : 'calc(100vh - 56px - var(--dock-safe-bottom, 72px))',
+        }}
+      >
         {/* Apple Books Hardcover Canvas Container */}
         <div
           ref={bookContainerRef}
           className={`
-            relative ${isFocusMode ? 'min-h-[calc(100vh-140px)]' : 'min-h-[640px] sm:min-h-[720px]'} rounded-3xl
-            bg-[#fcfaf6] text-[#1c1917] border border-stone-300/70
-            dark:bg-[var(--bg-page,#1A120E)] dark:text-[var(--text-main,#D5C4AE)] dark:border-white/10
+            relative ${isFocusMode ? 'min-h-[calc(100vh-140px)]' : ''} rounded-[1px]
+            bg-[var(--bg-card)] text-[var(--text-main)] border border-[var(--border-subtle)]
             shadow-2xl overflow-hidden transition-all duration-300 flex flex-col justify-between
             ${isFlipping ? (flipDirection === 'next' ? 'page-curl-flip-next' : 'page-curl-flip-prev') : ''}
           `}
           style={{
+            width: fit.book?.w ? `${fit.book.w}px` : (typeof window !== 'undefined' && window.innerWidth < 640 ? '100%' : '900px'),
+            height: fit.book?.h ? `${fit.book.h}px` : (typeof window !== 'undefined' && window.innerHeight < 640 ? '440px' : '630px'),
+            maxWidth: '100%',
+            maxHeight: '100%',
+            margin: '0 auto',
             transformStyle: 'preserve-3d',
             fontSize: `${fontSize}px`,
           }}
@@ -646,14 +687,14 @@ export default function OpenGLPageReader({
             flipDirection={flipDirection}
           />
 
-          {/* Two-Page Side-by-Side Spread: Left Page (Page 2k) | Right Page (Page 2k + 1) */}
-          <div className="relative z-10 flex-1 grid grid-cols-1 lg:grid-cols-2 lg:divide-x lg:divide-stone-300/70 dark:lg:divide-white/10">
+          {/* Two-Page Side-by-Side Spread or Single-Page Mobile Surface */}
+          <div className={`relative z-10 flex-1 grid ${isSingleLayout ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2 lg:divide-x lg:divide-[var(--border-subtle)]'}`}>
             {/* ========================================================================= */}
-            {/* LEFT PAGE: (Page 2k)                                                      */}
+            {/* LEFT PAGE: (Page 2k) or Single Page on Mobile                             */}
             {/* ========================================================================= */}
             <div
               className={`
-                flex flex-col justify-between p-6 sm:p-10 lg:p-12 ${isFocusMode ? 'min-h-[calc(100vh-220px)]' : 'min-h-[580px] sm:min-h-[660px]'}
+                flex flex-col justify-between p-6 sm:p-10 lg:p-12 ${isFocusMode ? 'min-h-[calc(100vh-220px)]' : ''}
                 ${fontFamily === 'serif' ? 'font-serif' : 'font-sans'}
               `}
             >
@@ -724,9 +765,10 @@ export default function OpenGLPageReader({
             {/* ========================================================================= */}
             {/* RIGHT PAGE: (Page 2k + 1) or Illustrated Cover on Spread 0                 */}
             {/* ========================================================================= */}
+            {!isSingleLayout && (
             <div
               className={`
-                flex flex-col justify-between p-6 sm:p-10 lg:p-12 ${isFocusMode ? 'min-h-[calc(100vh-220px)]' : 'min-h-[580px] sm:min-h-[660px]'}
+                flex flex-col justify-between p-6 sm:p-10 lg:p-12 ${isFocusMode ? 'min-h-[calc(100vh-220px)]' : ''}
                 ${fontFamily === 'serif' ? 'font-serif' : 'font-sans'}
               `}
             >
@@ -815,6 +857,7 @@ export default function OpenGLPageReader({
                 </span>
               </div>
             </div>
+            )}
           </div>
 
           {/* Bottom Left Apple Books Jump-Back Pill (Matching Screenshot 1 ↩ 50) */}

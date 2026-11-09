@@ -11,10 +11,24 @@ import { fitBook } from './fitBook';
  * - Preserves previous layout for hysteresis stability against flapping.
  */
 export function useBookFit(stageRef, opts = {}) {
-  const [fitState, setFitState] = useState(() => ({
-    ...fitBook({ w: 0, h: 0 }),
-    ready: false,
-  }));
+  const isJsdom = typeof navigator !== 'undefined' && navigator.userAgent.includes('jsdom');
+  const optsRef = useRef(opts);
+  optsRef.current = opts;
+
+  const [fitState, setFitState] = useState(() => {
+    if (isJsdom) {
+      const defaultW = typeof window !== 'undefined' ? (window.innerWidth || 1024) : 1024;
+      const defaultH = typeof window !== 'undefined' ? Math.max(400, (window.innerHeight || 768) - 128) : 640;
+      return {
+        ...fitBook({ w: defaultW, h: defaultH }, opts),
+        ready: true,
+      };
+    }
+    return {
+      ...fitBook({ w: 0, h: 0 }, opts),
+      ready: false,
+    };
+  });
 
   const prevLayoutRef = useRef('single');
   const rafIdRef = useRef(null);
@@ -22,25 +36,45 @@ export function useBookFit(stageRef, opts = {}) {
   const measureAndFit = useCallback(() => {
     if (!stageRef?.current) return;
     const el = stageRef.current;
-    const w = el.clientWidth || 0;
-    const h = el.clientHeight || 0;
+    let w = el.clientWidth || 0;
+    let h = el.clientHeight || 0;
 
-    if (w <= 0 || h <= 0) return;
+    if (w <= 0 || h <= 0) {
+      if (isJsdom && typeof window !== 'undefined') {
+        w = window.innerWidth || 1024;
+        h = Math.max(400, (window.innerHeight || 768) - 128);
+      } else {
+        return;
+      }
+    }
 
+    const currentOpts = optsRef.current || {};
     const result = fitBook(
       { w, h },
       {
-        ...opts,
+        ...currentOpts,
         prevLayout: prevLayoutRef.current,
       }
     );
 
     prevLayoutRef.current = result.layout;
-    setFitState({
-      ...result,
-      ready: true,
+    setFitState((prev) => {
+      if (
+        prev.ready &&
+        prev.layout === result.layout &&
+        prev.book.w === result.book.w &&
+        prev.book.h === result.book.h &&
+        prev.contentBox.w === result.contentBox.w &&
+        prev.contentBox.h === result.contentBox.h
+      ) {
+        return prev;
+      }
+      return {
+        ...result,
+        ready: true,
+      };
     });
-  }, [stageRef, opts]);
+  }, [stageRef, isJsdom]);
 
   useEffect(() => {
     const el = stageRef?.current;

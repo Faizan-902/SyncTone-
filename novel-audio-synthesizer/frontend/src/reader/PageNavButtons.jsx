@@ -24,10 +24,10 @@ export default function PageNavButtons({
         aria-label="Previous Page"
         onClick={onPrev}
         disabled={!canPrev}
-        className={`fixed sm:absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-30 w-9 h-9 sm:w-11 sm:h-11 rounded-[1px] flex items-center justify-center text-[var(--text-sub)] hover:text-[var(--text-main)] bg-[var(--bg-card)] border border-[var(--border-subtle)] hover:border-[var(--border-strong)] transition-all disabled:opacity-0 disabled:pointer-events-none cursor-pointer shadow-md group ${className}`}
+        className={`gutter-chevron gutter-chevron-left ${className}`}
         title={prevTitle}
       >
-        <IconChevronLeft className="w-5 h-5 -ml-0.5 group-hover:-translate-x-0.5 transition-transform" />
+        <span aria-hidden="true" className="text-xl">‹</span>
       </button>
 
       {/* Right Navigation Chevron */}
@@ -36,10 +36,10 @@ export default function PageNavButtons({
         aria-label="Next Page"
         onClick={onNext}
         disabled={!canNext}
-        className={`fixed sm:absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30 w-9 h-9 sm:w-11 sm:h-11 rounded-[1px] flex items-center justify-center text-[var(--text-sub)] hover:text-[var(--text-main)] bg-[var(--bg-card)] border border-[var(--border-subtle)] hover:border-[var(--border-strong)] transition-all disabled:opacity-0 disabled:pointer-events-none cursor-pointer shadow-md group ${className}`}
+        className={`gutter-chevron gutter-chevron-right ${className}`}
         title={nextTitle}
       >
-        <IconChevronRight className="w-5 h-5 -mr-0.5 group-hover:translate-x-0.5 transition-transform" />
+        <span aria-hidden="true" className="text-xl">›</span>
       </button>
     </>
   );

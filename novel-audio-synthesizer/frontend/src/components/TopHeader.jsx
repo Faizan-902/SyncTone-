@@ -23,13 +23,13 @@ export default function TopHeader({
 
   return (
     <header className="sticky top-0 z-40 bg-[var(--bg-bar)] border-b border-[var(--border-subtle)] h-14">
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 h-full flex items-center justify-between gap-4">
+      <div className="max-w-7xl mx-auto px-2 sm:px-8 h-full flex items-center justify-between gap-2 sm:gap-4">
         {/* Brand & Primary Navigation Links */}
-        <div className="flex items-center gap-6 sm:gap-8 min-w-0">
+        <div className="flex items-center gap-4 sm:gap-8 min-w-0">
           {/* Brand Logo */}
           <button
             onClick={() => onNavigate('catalog')}
-            className="flex items-center gap-2.5 group text-left outline-none flex-shrink-0 cursor-pointer active:scale-95 transition-transform"
+            className="flex items-center gap-2 group text-left outline-none flex-shrink-0 cursor-pointer active:scale-95 transition-transform"
             aria-label="SyncTone Home"
           >
             <span className="w-3.5 h-3.5 bg-[var(--text-main)] inline-block flex-shrink-0" />
@@ -106,14 +106,14 @@ export default function TopHeader({
         </div>
 
         {/* Right Action Controls: Cast Roster, Theme Toggle, Settings & Auth */}
-        <div className="flex items-center gap-2 sm:gap-2.5 flex-shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0">
           {/* Cast Roster Toggle (active only in reader view) */}
           {view === 'reader' && (
             <button
               onClick={onToggleRoster}
               onMouseEnter={preloadCharacterRoster}
               onFocus={preloadCharacterRoster}
-              className={`boxed-btn px-2.5 py-1 text-[11px] font-mono flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+              className={`boxed-btn px-2 sm:px-2.5 py-1 text-[10px] sm:text-[11px] font-mono flex items-center gap-1 sm:gap-1.5 cursor-pointer active:scale-95 ${
                 showRoster
                   ? 'bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)] font-bold'
                   : 'bg-[var(--bg-card)] text-[var(--text-main)] border-[var(--border-strong)] hover:border-[var(--text-main)]'
@@ -121,20 +121,22 @@ export default function TopHeader({
               aria-label="Toggle Cast Roster"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-current" />
-              <span>Cast Roster</span>
+              <span className="hidden sm:inline">Cast Roster</span>
+              <span className="sm:hidden">Cast</span>
             </button>
           )}
 
           {/* Theme Toggle Button */}
           <button
             onClick={cycleTheme}
-            className="boxed-btn px-2.5 py-1 text-[11px] font-mono uppercase text-[var(--text-sub)] hover:text-[var(--text-main)] bg-[var(--bg-card)] border-[var(--border-strong)] hover:border-[var(--text-main)] flex items-center gap-1.5 cursor-pointer active:scale-95"
+            className="boxed-btn px-2 sm:px-2.5 py-1 text-[10px] sm:text-[11px] font-mono uppercase text-[var(--text-sub)] hover:text-[var(--text-main)] bg-[var(--bg-card)] border-[var(--border-strong)] hover:border-[var(--text-main)] flex items-center gap-1 sm:gap-1.5 cursor-pointer active:scale-95"
             title={`Switch theme (currently ${theme})`}
             aria-label="Switch theme"
             aria-pressed={theme === 'dark'}
           >
             <span className="w-1.5 h-1.5 rounded-full bg-current" />
-            <span>THEME: {theme.toUpperCase()}</span>
+            <span className="hidden sm:inline">THEME: </span>
+            <span>{theme.toUpperCase()}</span>
           </button>
 
           {/* Settings Trigger */}
