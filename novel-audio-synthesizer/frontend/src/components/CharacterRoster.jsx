@@ -200,10 +200,7 @@ export default function CharacterRoster({
                 {/* Character Name & Dialogue count */}
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-bold font-sans uppercase tracking-tight text-xs text-[var(--text-main)] flex items-center gap-1.5 min-w-0 truncate">
-                    <span
-                      className="w-2 h-2 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: getSpeakerColor(char.id).hex }}
-                    />
+                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-[var(--text-main)]" />
                     <span className="truncate">{char.name}</span>
                   </span>
                   <div className="flex items-center gap-1.5 flex-shrink-0">

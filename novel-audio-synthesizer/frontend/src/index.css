@@ -494,9 +494,75 @@ html.light .architectural-portal {
   left: 0;
   right: 0;
   height: var(--dock-safe-bottom, 72px);
+  min-height: 72px;
   background: var(--bg-bar);
   border-top: 1px solid var(--border-subtle);
   z-index: 50;
+  user-select: none;
+}
+
+.mobile-top-scrubber {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--border-subtle);
+  cursor: pointer;
+  z-index: 10;
+}
+
+.mobile-top-scrubber .scrubber-played-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  background: var(--text-main);
+  will-change: transform;
+}
+
+@media (max-width: 639px) {
+  .mobile-top-scrubber {
+    display: block;
+  }
+}
+
+.audio-track-art {
+  width: 48px;
+  height: 48px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono, 'JetBrains Mono Variable', 'JetBrains Mono', monospace);
+  font-size: 10px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.audio-track-title {
+  font-family: var(--font-sans, 'Inter Variable', Inter, sans-serif);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+  line-height: 1.25;
+}
+
+.audio-track-sub {
+  font-family: var(--font-mono, 'JetBrains Mono Variable', 'JetBrains Mono', monospace);
+  font-size: 10px;
+  color: var(--text-sub);
+  line-height: 1.4;
+}
+
+.audio-track-timecode {
+  font-family: var(--font-mono, 'JetBrains Mono Variable', 'JetBrains Mono', monospace);
+  font-size: 10px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ========================================================================= */
@@ -1206,6 +1272,65 @@ body.focus-fullscreen-mode footer {
   font-family: var(--font-mono, 'JetBrains Mono Variable', 'JetBrains Mono', monospace);
   font-size: 11px;
   color: var(--text-sub);
+}
+
+/* ========================================================================= */
+/* VOICE SYNTHESIS STUDIO & CAST ROSTER (PHASE 8 PARITY)                    */
+/* ========================================================================= */
+.studio-sheet-wrapper {
+  padding: 24px 20px 80px;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.studio-card-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+}
+
+.studio-header {
+  padding: 16px 20px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.studio-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.synthesis-banner-box {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.synthesis-progress-track {
+  height: 6px;
+  background: var(--border-subtle);
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.synthesis-progress-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--text-main);
+  transition: width 0.3s ease;
 }
 
 /* Micro UI Primitives */

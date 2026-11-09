@@ -27,6 +27,15 @@ function formatHoverTime(ms) {
   return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
 
+function formatTimecodeWithMs(ms) {
+  if (!ms || isNaN(ms) || ms < 0) return '00:00.00';
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  const hundredths = Math.floor((ms % 1000) / 10);
+  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${hundredths.toString().padStart(2, '0')}`;
+}
+
 const SPEED_OPTIONS = [0.75, 1.0, 1.25, 1.5, 2.0];
 
 export default function AudioPlayer({
@@ -278,7 +287,7 @@ export default function AudioPlayer({
 
   return (
     <footer
-      className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--bg-bar)] border-t border-[var(--border-subtle)] h-[72px] px-3 sm:px-6 flex items-center select-none"
+      className="audio-player-dock px-3 sm:px-6 flex items-center select-none"
       aria-label="Floating Audio Dock"
     >
       {/* Hidden audio element for audio sync engine */}
@@ -293,12 +302,22 @@ export default function AudioPlayer({
         onError={onError}
       />
 
+      {/* Mobile Top Edge Scrubber Line (Phase 8 Parity) */}
+      <div
+        className="mobile-top-scrubber"
+        onClick={handleScrubberClick}
+        role="presentation"
+        aria-hidden="true"
+      >
+        <div className="scrubber-played-fill" style={scrubScaleStyle} />
+      </div>
+
       {/* Main 3-zone container */}
       <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-3 sm:gap-6">
         {/* Left: Track Information */}
-        <div className="flex items-center gap-3 min-w-0 max-w-[180px] sm:max-w-[240px] md:max-w-xs shrink-0">
+        <div className="audio-track-info flex items-center gap-3 min-w-0 max-w-[180px] sm:max-w-[240px] md:max-w-xs shrink-0">
           {/* 48x48 Sharp Book Jacket Artwork */}
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-[1px] flex items-center justify-center font-mono text-[10px] text-[var(--text-sub)] shrink-0 overflow-hidden">
+          <div className="audio-track-art w-10 h-10 sm:w-12 sm:h-12 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-[1px] flex items-center justify-center font-mono text-[10px] text-[var(--text-sub)] shrink-0 overflow-hidden">
             {currentNovel?.cover_object ? (
               <img src={currentNovel.cover_object} alt="" className="w-full h-full object-cover" />
             ) : (
@@ -308,24 +327,24 @@ export default function AudioPlayer({
             )}
           </div>
 
-          <div className="min-w-0 flex flex-col justify-center">
-            <h4 className="text-xs font-bold text-[var(--text-main)] truncate leading-tight font-sans">
+          <div className="audio-track-text min-w-0 flex flex-col justify-center">
+            <h4 className="audio-track-title text-xs sm:text-[13px] font-semibold text-[var(--text-main)] truncate leading-tight font-sans">
               {currentChapter?.title || 'Chapter Audio Track'}
             </h4>
-            <p className="text-[10px] text-[var(--text-sub)] font-mono truncate mt-0.5 hidden sm:block">
+            <p className="audio-track-sub text-[10px] text-[var(--text-sub)] font-mono truncate mt-0.5 hidden sm:block">
               {currentNovel?.title || 'SyncTone'}
               {currentNovel?.author_username ? ` • By ${currentNovel.author_username}` : ''}
             </p>
-            <div className="text-[10px] font-mono text-[var(--text-muted)] tabular-nums mt-0.5">
-              {formatTime(currentTimeMs)} / {formatTime(totalDurationMs)}
+            <div className="audio-track-timecode text-[10px] font-mono text-[var(--text-muted)] tabular-nums mt-0.5">
+              {formatTimecodeWithMs(currentTimeMs)} / {formatTimecodeWithMs(totalDurationMs)}
             </div>
           </div>
         </div>
 
         {/* Center: Playback Transport Buttons & Scrubber */}
-        <div className="flex-1 max-w-xl mx-auto flex flex-col justify-center gap-1 min-w-0">
+        <div className="audio-central-cluster flex-1 max-w-xl mx-auto flex flex-col justify-center gap-1 min-w-0">
           {/* Transport Buttons Row */}
-          <div className="flex items-center justify-center gap-1.5 sm:gap-2">
+          <div className="audio-control-buttons flex items-center justify-center gap-1.5 sm:gap-2">
             {/* Skip -10s */}
             <button
               onClick={() => handleSkip(-10)}
@@ -350,7 +369,7 @@ export default function AudioPlayer({
             {/* Play / Pause Toggle Button (Inverted Primary CTA) */}
             <button
               onClick={onToggle}
-              className="boxed-btn-primary px-3 sm:px-4 py-1 text-[11px] font-mono cursor-pointer flex items-center gap-1.5"
+              className="btn-play-pause boxed-btn-primary px-3 sm:px-4 py-1 text-[11px] font-mono cursor-pointer flex items-center gap-1.5"
               aria-label={isPlaying ? 'Pause audio' : 'Play audio'}
             >
               {isPlaying ? (
@@ -389,8 +408,8 @@ export default function AudioPlayer({
           </div>
 
           {/* Scrubber Track Row */}
-          <div className="w-full flex items-center gap-2">
-            <span className="text-[10px] font-mono text-[var(--text-muted)] w-8 sm:w-10 text-right select-none tabular-nums font-medium">
+          <div className="audio-scrubber-row w-full flex items-center gap-2">
+            <span className="scrubber-current-time text-[10px] font-mono text-[var(--text-muted)] w-8 sm:w-10 text-right select-none tabular-nums font-medium">
               {formatTime(currentTimeMs)}
             </span>
 
@@ -406,7 +425,7 @@ export default function AudioPlayer({
               aria-valuemin={0}
               aria-valuemax={Math.floor(totalDurationMs / 1000)}
               aria-valuenow={Math.floor(currentTimeMs / 1000)}
-              className="flex-1 py-1 cursor-pointer relative flex items-center group focus:outline-none"
+              className="scrubber-track-bar flex-1 py-1 cursor-pointer relative flex items-center group focus:outline-none"
             >
               {/* Scrubber timecode hover preview badge */}
               {hoverTimeMs !== null && (
@@ -422,14 +441,14 @@ export default function AudioPlayer({
               <div className="w-full h-1 bg-[var(--border-subtle)] relative overflow-hidden group-hover:h-1.5 transition-all">
                 {/* Progress Bar with Zero Layout Shift */}
                 <div
-                  className="h-full w-full bg-[var(--text-main)] will-change-transform"
+                  className="h-full w-full bg-[var(--text-main)] will-change-transform scrubber-played-fill"
                   style={scrubScaleStyle}
                 />
               </div>
 
               {/* Scrubber Thumb Indicator on hover */}
               <div
-                className="absolute w-2.5 h-2.5 rounded-[1px] bg-[var(--accent)] border border-[var(--border-strong)] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-100 transform -translate-x-1/2"
+                className="scrubber-thumb absolute w-2.5 h-2.5 rounded-[1px] bg-[var(--accent)] border border-[var(--border-strong)] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-100 transform -translate-x-1/2"
                 style={{ left: `${progressFraction * 100}%` }}
               />
             </div>
@@ -441,7 +460,16 @@ export default function AudioPlayer({
         </div>
 
         {/* Right: Signal Dot, Engine Mode, TTS Dropdown, Speed & Volume Controls */}
-        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+        <div className="audio-right-cluster flex items-center gap-2 sm:gap-2.5 shrink-0">
+          {/* Mobile Play/Pause CTA (shown on narrow screens) */}
+          <button
+            onClick={onToggle}
+            className="mobile-play-btn boxed-btn-primary px-2.5 py-1 text-[11px] font-mono sm:hidden cursor-pointer"
+            aria-label={isPlaying ? 'Pause audio' : 'Play audio'}
+          >
+            {isPlaying ? '❚❚' : '▶'}
+          </button>
+
           {/* Signal Dot: Active strictly when isPlaying per Section 9.4 */}
           {isPlaying && (
             <span
@@ -521,6 +549,26 @@ export default function AudioPlayer({
           >
             <span>{speed}×</span>
           </button>
+
+          {/* Expand Reader Button */}
+          {currentChapter?.id && (
+            <a
+              href={`/reader/${currentChapter.id}`}
+              onClick={(e) => {
+                e.preventDefault();
+                if (typeof window !== 'undefined') {
+                  window.history.pushState(null, '', `/reader/${currentChapter.id}`);
+                  window.dispatchEvent(new PopStateEvent('popstate'));
+                }
+              }}
+              className="boxed-btn px-2 py-1 text-[11px] font-mono text-[var(--text-main)] hover:bg-[var(--bg-hover)] cursor-pointer hidden md:flex items-center gap-1"
+              title="Expand Reader"
+              aria-label="Expand Reader"
+            >
+              <span aria-hidden="true">📖</span>
+              <span className="hidden xl:inline text-[10px]">READER</span>
+            </a>
+          )}
 
           {/* Volume Control */}
           <div

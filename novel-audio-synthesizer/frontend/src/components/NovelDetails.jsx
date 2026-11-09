@@ -29,10 +29,19 @@ function formatTotalDuration(ms) {
   return `${String(minutes).padStart(2, '0')}M ${String(seconds).padStart(2, '0')}S`;
 }
 
+const ARCHIVED_MODELS = [
+  { id: 'Neural-Docu-UK-M', role: 'DOCUMENTARIAN', timbre: 'Warm British Tenor, balanced literary tone', freq: '48kHz PCM // Latency: 42ms' },
+  { id: 'Neural-Analytical-V2', role: 'RP ANALYTICAL', timbre: 'Sharp Victorian RP, crisp consonants', freq: '48kHz PCM // Latency: 38ms' },
+  { id: 'Neural-Warm-Male-UK', role: 'WARM MALE', timbre: 'Resonant, intimate companionable baritone', freq: '48kHz PCM // Latency: 40ms' },
+  { id: 'Neural-Cockney-Male', role: 'COCKNEY MALE', timbre: 'Raspy authentic 19th-c urban dialect', freq: '48kHz PCM // Latency: 45ms' },
+  { id: 'Neural-Matron-Female', role: 'MATRON FEMALE', timbre: 'Warm maternal Victorian cadence', freq: '48kHz PCM // Latency: 44ms' },
+];
+
 export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenUploadChapter, onNovelDeleted }) {
   const { isWriterOrAdmin } = useAuth();
   const [data, setData] = useState(null);
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'cast' | 'chapters' | 'details' | 'score'
+  const [studioTab, setStudioTab] = useState('cast'); // 'cast' | 'voices' | 'settings' | 'generate'
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [inLibrary, setInLibrary] = useState(() => {
@@ -423,7 +432,7 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
           </div>
         </section>
 
-        {/* Tab 2: Cast Panel */}
+        {/* Tab 2: Cast Panel (Voice Synthesis Studio Parity) */}
         <section
           id="tab-panel-cast"
           role="tabpanel"
@@ -431,46 +440,257 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
           className={`tab-content-panel ${activeTab === 'cast' ? 'active' : ''}`}
           style={{ display: activeTab === 'cast' ? 'block' : 'none' }}
         >
-          <div className="flex items-center justify-between mb-4">
-            <span className="mono-xs text-[var(--text-muted)]">// CHARACTER VOICE PORTFOLIO</span>
-            <span className="mono-xs text-[var(--text-sub)]">{characters.length} VOICES REGISTERED</span>
-          </div>
-
-          <div className="roster-grid">
-            {characters.length === 0 ? (
-              <div className="col-span-full p-8 text-center bg-[var(--bg-card)] border border-[var(--border-subtle)] text-[var(--text-muted)] font-mono text-xs">
-                No character profiles generated.
+          <div className="studio-card-container">
+            {/* Studio Header */}
+            <div className="studio-header">
+              <div className="flex items-center gap-3">
+                <span className="brand-symbol" />
+                <span className="font-mono text-xs sm:text-[13px] font-bold text-[var(--text-main)]">
+                  VOICE SYNTHESIS STUDIO // ENSEMBLE &amp; TIMBRE
+                </span>
               </div>
-            ) : (
-              characters.map((char) => {
-                const charName = char.canonical_name || char.name || 'Character';
-                const charRole = char.role || (char.is_narrator ? 'NARRATOR' : 'CAST');
-                const charVoice = char.voice_id || 'en-GB-RyanNeural';
-                return (
-                  <div key={char.id || charName} className="character-card">
-                    <div className="char-header-row">
-                      <span className="char-name">{charName}</span>
-                      <span className="char-role-badge">{charRole.toUpperCase()}</span>
-                    </div>
-                    <div className="char-traits-list">
-                      <div className="flex justify-between items-center">
-                        <span>VOICE:</span>
-                        <span className="text-[var(--text-main)] font-semibold">{charVoice}</span>
+              <button
+                type="button"
+                onClick={() => setActiveTab('overview')}
+                className="boxed-btn px-2.5 py-1 text-[11px] font-mono cursor-pointer"
+                aria-label="Close Voice Studio"
+              >
+                CLOSE [×]
+              </button>
+            </div>
+
+            {/* Sub-Navigation Tabs */}
+            <nav className="tabs-bar">
+              <button
+                type="button"
+                onClick={() => setStudioTab('cast')}
+                className={`tab-btn ${studioTab === 'cast' ? 'active' : ''}`}
+                data-tab="cast"
+              >
+                CAST ({characters.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setStudioTab('voices')}
+                className={`tab-btn ${studioTab === 'voices' ? 'active' : ''}`}
+                data-tab="voices"
+              >
+                VOICES
+              </button>
+              <button
+                type="button"
+                onClick={() => setStudioTab('settings')}
+                className={`tab-btn ${studioTab === 'settings' ? 'active' : ''}`}
+                data-tab="settings"
+              >
+                SETTINGS
+              </button>
+              <button
+                type="button"
+                onClick={() => setStudioTab('generate')}
+                className={`tab-btn ${studioTab === 'generate' ? 'active' : ''}`}
+                data-tab="generate"
+              >
+                GENERATE
+              </button>
+            </nav>
+
+            <div className="studio-body">
+              {/* Persistent Synthesis Progress Banner (Section 9.4 Compliant) */}
+              <section className="synthesis-banner-box">
+                <div className="flex justify-between items-center flex-wrap gap-2">
+                  <span className="mono-xs font-semibold text-[var(--text-main)]">
+                    SYNTHESIS STATUS // {novel.title.toUpperCase()}
+                  </span>
+                  <span className="badge">
+                    {/* Section 9.4: Neutral dot when ready/complete, signal dot strictly when synthesizing */}
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-main)]" />
+                    <span>AUDIO ENSEMBLE READY</span>
+                  </span>
+                </div>
+
+                <div className="synthesis-progress-track">
+                  <div className="synthesis-progress-fill" style={{ width: '100%' }} />
+                </div>
+
+                <div className="flex justify-between items-center flex-wrap gap-2 mono-xs">
+                  <span className="text-[var(--text-muted)]">
+                    PROGRESS: 100% COMPLETE // {characters.length} OF {characters.length} VOICES ASSIGNED
+                  </span>
+                  <span className="text-[var(--text-main)]">
+                    MULTI-VOICE ENSEMBLE // 48KHZ READY
+                  </span>
+                </div>
+              </section>
+
+              {/* Sub-Tab 1: Cast */}
+              {studioTab === 'cast' && (
+                <div>
+                  <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                    <span className="mono-xs text-[var(--text-muted)]">// CHARACTER VOICE ASSIGNMENTS</span>
+                    <button
+                      type="button"
+                      className="boxed-btn px-2.5 py-1 text-[11px] font-mono cursor-pointer flex items-center gap-1.5"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-main)]" />
+                      <span>+ ADD CHARACTER</span>
+                    </button>
+                  </div>
+
+                  <div className="roster-grid">
+                    {characters.length === 0 ? (
+                      <div className="col-span-full p-8 text-center bg-[var(--bg-card)] border border-[var(--border-subtle)] text-[var(--text-muted)] font-mono text-xs">
+                        No character profiles generated.
                       </div>
-                      <div>
-                        <span>ROLE: {char.is_narrator ? 'First-person Narrator & Chronicler' : (char.gender ? `${char.gender.toUpperCase()} Cast` : 'Dialogue Speaker')}</span>
-                      </div>
-                      {char.age_band && <div>AGE: {char.age_band.toUpperCase()}</div>}
-                      {char.sample_quote && (
-                        <div className="italic font-serif text-xs text-[var(--text-sub)] line-clamp-2 pt-1 border-t border-[var(--border-subtle)]">
-                          &ldquo;{char.sample_quote}&rdquo;
+                    ) : (
+                      characters.map((char) => {
+                        const charName = char.canonical_name || char.name || 'Character';
+                        const charRole = char.role || (char.is_narrator ? 'NARRATOR' : 'CAST');
+                        const charVoice = char.voice_id || 'en-GB-RyanNeural';
+                        return (
+                          <div key={char.id || charName} className="character-card">
+                            <div className="char-header-row">
+                              <span className="char-name">{charName}</span>
+                              <span className="char-role-badge">{charRole.toUpperCase()}</span>
+                            </div>
+                            <div className="char-traits-list">
+                              <div className="flex justify-between items-center">
+                                <span>MODEL:</span>
+                                <span className="text-[var(--text-main)] font-semibold">{charVoice}</span>
+                              </div>
+                              <div>PITCH OFFSET: +0.00 ST</div>
+                              <div>CADENCE PACE: 1.00×</div>
+                              <div>
+                                STATUS: <span className="text-[var(--text-main)]">● ASSIGNED</span>
+                              </div>
+                              {char.sample_quote && (
+                                <div className="italic font-serif text-xs text-[var(--text-sub)] line-clamp-2 pt-2 mt-1 border-t border-[var(--border-subtle)]">
+                                  &ldquo;{char.sample_quote}&rdquo;
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Sub-Tab 2: Voices */}
+              {studioTab === 'voices' && (
+                <div>
+                  <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                    <span className="mono-xs text-[var(--text-muted)]">// NEURAL VOICE LIBRARY</span>
+                    <span className="mono-xs text-[var(--text-sub)]">5 ARCHIVED MODELS</span>
+                  </div>
+
+                  <div className="roster-grid">
+                    {ARCHIVED_MODELS.map((m) => (
+                      <div key={m.id} className="character-card">
+                        <div className="char-header-row">
+                          <span className="char-name">{m.id}</span>
+                          <span className="char-role-badge">{m.role}</span>
                         </div>
-                      )}
+                        <div className="char-traits-list">
+                          <div>TIMBRE: {m.timbre}</div>
+                          <div>FREQUENCY: {m.freq}</div>
+                          <div className="pt-2 mt-1 border-t border-[var(--border-subtle)] flex items-center justify-between">
+                            <span className="text-[10px] text-[var(--text-muted)] font-mono">STATUS: REGISTERED</span>
+                            <span className="text-[10px] text-[var(--text-main)] font-mono font-bold">● ACTIVE</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Sub-Tab 3: Settings */}
+              {studioTab === 'settings' && (
+                <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] p-5 flex flex-col gap-5">
+                  <span className="mono-xs text-[var(--text-muted)] block">
+                    // SYNTHESIS TIMBRE PARAMETERS
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                    <div>
+                      <label className="mono-xs text-[var(--text-sub)] block mb-2">
+                        EMOTIONAL RANGE [78%]
+                      </label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        defaultValue="78"
+                        className="w-full accent-[var(--accent)] cursor-pointer"
+                        aria-label="Emotional Range"
+                      />
+                    </div>
+                    <div>
+                      <label className="mono-xs text-[var(--text-sub)] block mb-2">
+                        BREATH PHONEME RATE [42%]
+                      </label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        defaultValue="42"
+                        className="w-full accent-[var(--accent)] cursor-pointer"
+                        aria-label="Breath Phoneme Rate"
+                      />
+                    </div>
+                    <div>
+                      <label className="mono-xs text-[var(--text-sub)] block mb-2">
+                        ACOUSTIC REVERB [15%]
+                      </label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        defaultValue="15"
+                        className="w-full accent-[var(--accent)] cursor-pointer"
+                        aria-label="Acoustic Reverb"
+                      />
+                    </div>
+                    <div>
+                      <label className="mono-xs text-[var(--text-sub)] block mb-2">
+                        PACING MULTIPLIER [1.00×]
+                      </label>
+                      <input
+                        type="range"
+                        min="80"
+                        max="140"
+                        defaultValue="100"
+                        className="w-full accent-[var(--accent)] cursor-pointer"
+                        aria-label="Pacing Multiplier"
+                      />
                     </div>
                   </div>
-                );
-              })
-            )}
+                </div>
+              )}
+
+              {/* Sub-Tab 4: Generate */}
+              {studioTab === 'generate' && (
+                <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] p-5 flex flex-col gap-4">
+                  <span className="mono-xs text-[var(--text-muted)] block">
+                    // CHAPTER AUDIO GENERATION
+                  </span>
+                  <p className="text-xs text-[var(--text-sub)] leading-relaxed">
+                    Synthesize multi-voice audio for uploaded chapters. Audio segments are generated according to character voice assignments above.
+                  </p>
+                  <div className="flex items-center gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => chapters.length > 0 && onSelectChapter(novel, chapters[0])}
+                      className="boxed-btn-primary px-3 py-1.5 text-xs font-mono cursor-pointer flex items-center gap-2"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                      <span>GENERATE AUDIO FOR CH. 01</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </section>
 
