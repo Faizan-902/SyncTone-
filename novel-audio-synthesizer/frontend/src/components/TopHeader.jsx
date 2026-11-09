@@ -1,13 +1,10 @@
 import React from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { useTheme } from '../context/ThemeContext';
 import { preloadAuthModal, preloadSettingsModal, preloadCharacterRoster } from '../App';
 import {
-  IconSoundwave,
-  IconUsers,
   IconSettings,
-  IconUser,
   IconShield,
-  IconArrowLeft,
 } from './icons';
 
 export default function TopHeader({
@@ -20,131 +17,152 @@ export default function TopHeader({
   onOpenSettings,
   onOpenAuth,
 }) {
-  const { user, role, isAuthenticated, logout } = useAuth();
+  const { role, isAuthenticated, logout } = useAuth();
+  const { theme, cycleTheme } = useTheme();
 
   return (
-    <header className="sticky top-0 z-40 glass-header border-b">
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between gap-4">
-        {/* Brand & Breadcrumbs */}
-        <div className="flex items-center gap-4 sm:gap-6 min-w-0">
+    <header className="sticky top-0 z-40 bg-[var(--bg-bar)] border-b border-[var(--border-subtle)] h-14">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 h-full flex items-center justify-between gap-4">
+        {/* Brand & Primary Navigation Links */}
+        <div className="flex items-center gap-6 sm:gap-8 min-w-0">
+          {/* Brand Logo */}
           <button
             onClick={() => onNavigate('catalog')}
-            className="flex items-center gap-2.5 group text-left outline-none flex-shrink-0 cursor-pointer active:scale-95 transition-transform duration-100 ease-out"
+            className="flex items-center gap-2.5 group text-left outline-none flex-shrink-0 cursor-pointer active:scale-95 transition-transform"
             aria-label="SyncTone Home"
           >
-            <div className="w-8 h-8 rounded-lg bg-[var(--brand-walnut,#5A3E2B)] border border-[var(--brand-amber,#D5851F)]/40 text-[var(--brand-amber,#D5851F)] flex items-center justify-center transition-colors shadow-xs">
-              <IconSoundwave className="w-4 h-4 text-[var(--brand-amber,#D5851F)]" />
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-base font-bold tracking-tight text-[var(--text-main)] font-display">
-                SyncTone
-              </span>
-              <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] font-mono tracking-wider uppercase rounded-full bg-[var(--brand-walnut,#5A3E2B)] text-[var(--brand-sage,#87A96B)] border border-[var(--brand-sage,#87A96B)]/40 font-bold shadow-xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-sage,#87A96B)]" />
-                <span>Full Cast Audio</span>
-              </span>
-            </div>
+            <span className="w-3.5 h-3.5 bg-[var(--text-main)] inline-block flex-shrink-0" />
+            <span className="text-xs font-mono font-bold tracking-[0.14em] uppercase text-[var(--text-main)]">
+              SYNCTONE
+            </span>
           </button>
 
-          {/* Breadcrumb Navigation */}
-          <nav className="hidden md:flex items-center gap-2 text-xs theme-muted font-medium min-w-0" aria-label="Breadcrumb">
-            <span className="theme-muted opacity-50">/</span>
+          {/* Monospace Editorial Nav Links */}
+          <nav className="hidden sm:flex items-center gap-4 text-xs font-mono tracking-wider min-w-0" aria-label="Main Navigation">
             <button
               onClick={() => onNavigate('catalog')}
-              className={`hover:text-[var(--text-main)] active:scale-95 transition-all duration-100 ease-out flex-shrink-0 cursor-pointer ${
+              className={`transition-colors py-1 cursor-pointer uppercase ${
                 view === 'catalog'
-                  ? 'text-[var(--brand-sand,#D5C4AE)] font-semibold bg-[var(--brand-walnut,#5A3E2B)] px-2.5 py-1 rounded-lg border border-[var(--brand-amber,#D5851F)]/40 shadow-xs'
-                  : 'px-2 py-1'
+                  ? 'text-[var(--text-main)] font-bold border-b border-[var(--text-main)]'
+                  : 'text-[var(--text-sub)] hover:text-[var(--text-main)]'
               }`}
             >
-              Library
+              + LIBRARY
             </button>
-            {view !== 'catalog' && currentNovel && (
-              <>
-                <span className="theme-muted opacity-50">/</span>
-                <button
-                  onClick={() => onNavigate('details')}
-                  className={`hover:text-[var(--text-main)] active:scale-95 transition-all duration-100 ease-out truncate max-w-[180px] cursor-pointer ${
-                    view === 'details'
-                      ? 'text-[var(--brand-sand,#D5C4AE)] font-semibold bg-[var(--brand-walnut,#5A3E2B)] px-2.5 py-1 rounded-lg border border-[var(--brand-amber,#D5851F)]/40 shadow-xs'
-                      : 'px-2 py-1'
-                  }`}
-                  title={currentNovel.title}
-                >
-                  {currentNovel.title}
-                </button>
-              </>
-            )}
-            {view === 'reader' && currentChapter && (
-              <>
-                <span className="theme-muted opacity-50">/</span>
-                <span
-                  className="text-[var(--text-main)] font-semibold truncate max-w-[200px]"
-                  title={currentChapter.title}
-                >
-                  {currentChapter.title}
-                </span>
-              </>
-            )}
+            <button
+              onClick={() => {
+                if (currentNovel?.id) onNavigate('details', currentNovel.id);
+                else onNavigate('catalog');
+              }}
+              className={`transition-colors py-1 cursor-pointer uppercase ${
+                view === 'details'
+                  ? 'text-[var(--text-main)] font-bold border-b border-[var(--text-main)]'
+                  : 'text-[var(--text-sub)] hover:text-[var(--text-main)]'
+              }`}
+            >
+              + ARCHIVE
+            </button>
+            <button
+              onClick={() => {
+                if (view === 'reader' && onToggleRoster) {
+                  onToggleRoster();
+                } else if (onNavigate) {
+                  onNavigate('upload');
+                }
+              }}
+              className={`transition-colors py-1 cursor-pointer uppercase ${
+                showRoster || view === 'upload'
+                  ? 'text-[var(--text-main)] font-bold border-b border-[var(--text-main)]'
+                  : 'text-[var(--text-sub)] hover:text-[var(--text-main)]'
+              }`}
+            >
+              + VOICES
+            </button>
+            <button
+              onClick={() => {
+                if (currentChapter && onNavigate) onNavigate('reader');
+                else if (currentNovel && onNavigate) onNavigate('details', currentNovel.id);
+                else onNavigate('catalog');
+              }}
+              className={`transition-colors py-1 cursor-pointer uppercase ${
+                view === 'reader'
+                  ? 'text-[var(--text-main)] font-bold border-b border-[var(--text-main)]'
+                  : 'text-[var(--text-sub)] hover:text-[var(--text-main)]'
+              }`}
+            >
+              + READER
+            </button>
           </nav>
         </div>
 
-        {/* Right Action Controls */}
-        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+        {/* Right Action Controls: Cast Roster, Theme Toggle, Settings & Auth */}
+        <div className="flex items-center gap-2 sm:gap-2.5 flex-shrink-0">
           {/* Cast Roster Toggle (active only in reader view) */}
           {view === 'reader' && (
             <button
               onClick={onToggleRoster}
               onMouseEnter={preloadCharacterRoster}
               onFocus={preloadCharacterRoster}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-xl border transition-all duration-100 ease-out active:scale-95 flex items-center gap-1.5 cursor-pointer ${
+              className={`boxed-btn px-2.5 py-1 text-[11px] font-mono flex items-center gap-1.5 cursor-pointer active:scale-95 ${
                 showRoster
-                  ? 'bg-[var(--cta-primary-bg)] text-[var(--brand-amber,#D5851F)] border-[var(--brand-amber,#D5851F)]/60 shadow-sm'
-                  : 'theme-card hover:border-[var(--border-focus)]'
+                  ? 'bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)] font-bold'
+                  : 'bg-[var(--bg-card)] text-[var(--text-main)] border-[var(--border-strong)] hover:border-[var(--text-main)]'
               }`}
               aria-label="Toggle Cast Roster"
             >
-              <IconUsers className="w-4 h-4 text-[var(--brand-sage,#87A96B)]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-current" />
               <span>Cast Roster</span>
             </button>
           )}
+
+          {/* Theme Toggle Button */}
+          <button
+            onClick={cycleTheme}
+            className="boxed-btn px-2.5 py-1 text-[11px] font-mono uppercase text-[var(--text-sub)] hover:text-[var(--text-main)] bg-[var(--bg-card)] border-[var(--border-strong)] hover:border-[var(--text-main)] flex items-center gap-1.5 cursor-pointer active:scale-95"
+            title={`Switch theme (currently ${theme})`}
+            aria-label="Switch theme"
+            aria-pressed={theme === 'dark'}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-current" />
+            <span>THEME: {theme.toUpperCase()}</span>
+          </button>
 
           {/* Settings Trigger */}
           <button
             onClick={onOpenSettings}
             onMouseEnter={preloadSettingsModal}
             onFocus={preloadSettingsModal}
-            className="p-2.5 theme-muted hover:text-[var(--text-main)] rounded-xl hover:bg-[var(--bg-hover)] border border-transparent hover:border-[var(--border-subtle)] active:scale-95 transition-all duration-100 ease-out cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
+            className="boxed-btn p-1.5 text-[var(--text-sub)] hover:text-[var(--text-main)] bg-[var(--bg-card)] border-[var(--border-strong)] hover:border-[var(--text-main)] active:scale-95 cursor-pointer flex items-center justify-center min-w-[32px] min-h-[32px]"
             title="Settings & Preferences"
             aria-label="Settings"
           >
-            <IconSettings className="w-4 h-4" />
+            <IconSettings className="w-3.5 h-3.5" />
           </button>
 
           {/* User Session / Auth Trigger */}
           {isAuthenticated ? (
             <div className="flex items-center gap-2 pl-2 border-l border-[var(--border-subtle)]">
-              <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono tracking-wide uppercase rounded-md theme-card border">
-                <IconShield className="w-3 h-3 text-[var(--accent-text)]" />
+              <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono uppercase bg-[var(--bg-card)] border border-[var(--border-subtle)] text-[var(--text-sub)]">
+                <IconShield className="w-3 h-3 text-[var(--text-main)]" />
                 {role}
               </span>
               <button
                 onClick={logout}
-                className="px-3 py-1.5 text-xs theme-muted hover:text-[var(--danger)] rounded-lg hover:bg-[var(--bg-hover)] active:scale-95 transition-all duration-100 ease-out font-medium cursor-pointer"
+                className="boxed-btn px-2.5 py-1 text-[11px] font-mono uppercase text-[var(--text-sub)] hover:text-[var(--text-main)] bg-[var(--bg-card)] border-[var(--border-strong)] hover:border-[var(--text-main)] active:scale-95 cursor-pointer"
                 title="Sign out of SyncTone"
               >
                 Sign out
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-2 pl-2 border-l border-[var(--border-subtle)]">
+            <div className="flex items-center gap-2 pl-1 sm:pl-2 sm:border-l sm:border-[var(--border-subtle)]">
               <button
                 onClick={() => onOpenAuth('login')}
                 onMouseEnter={preloadAuthModal}
                 onFocus={preloadAuthModal}
-                className="px-3.5 py-2 text-xs font-semibold rounded-xl bg-[var(--cta-primary-bg)] hover:bg-[var(--cta-primary-hover)] text-[var(--cta-primary-text)] shadow-sm active:scale-95 transition-all duration-100 ease-out flex items-center gap-1.5 cursor-pointer min-h-[36px]"
+                className="boxed-btn-primary px-3 py-1 text-[11px] font-mono uppercase flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-none"
               >
-                <IconUser className="w-3.5 h-3.5" />
+                <span className="w-1.5 h-1.5 rounded-full bg-current" />
                 <span>Sign In</span>
               </button>
             </div>

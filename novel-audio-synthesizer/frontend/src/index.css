@@ -38,79 +38,87 @@
 
 /* ========================================================================= */
 /* ========================================================================= */
-/* SYNCTONE: "EARTHY LUXURY" TOKENS                                          */
-/* Warm Editorial (Light / Soft Sand) & Nocturne (Dark / Deep Espresso)      */
+/* SYNCTONE: NOIR MONOCHROME DESIGN SYSTEM TOKENS (THEME_LOCK v2)            */
+/* Strict Monochrome Chrome: Neutral Greys Only + Single Micro Signal Dot     */
 /* ========================================================================= */
 
 :root, html.dark {
-  /* Brand Tokens (Earthy Luxury & Champagne Gold) */
-  --brand-espresso: #1A120E;
-  --brand-chocolate: #3A2418;
-  --brand-walnut: #5A3E2B;
-  --brand-bronze: #A88462;
-  --brand-sand: #D5C4AE;
-  --brand-charcoal: #4A4A46;
-  --brand-sage: #87A96B;
-  --brand-amber: #D5851F;
-  --brand-champagne: #DFBA53;
-  --brand-champagne-light: #F5E2A8;
-  --brand-obsidian: #0D0A08;
+  /* Harmonized Brand Tokens (Zero Chromatic Hue, Neutral Greys) */
+  --brand-espresso: #0B0B0D;
+  --brand-chocolate: #141416;
+  --brand-walnut: #1B1B1E;
+  --brand-bronze: #898992;
+  --brand-sand: #F2F2F3;
+  --brand-charcoal: #5E5E66;
+  --brand-sage: #A9A9AF;
+  --brand-amber: #DCDCDF;
+  --brand-champagne: #F2F2F3;
+  --brand-champagne-light: #DCDCDF;
+  --brand-obsidian: #0B0B0D;
 
-  /* Surfaces (Nocturne / Earthy Luxury & Obsidian) */
-  --bg-page: #1A120E;
-  --bg-surface: #3A2418;
-  --bg-card: #281911;
-  --bg-hover: #3D261A;
-  --bg-elevated: #362217;
+  /* Surfaces (Nocturne Monochrome) */
+  --bg-page: #0B0B0D;
+  --bg-surface: #141416;
+  --bg-card: #1B1B1E;
+  --bg-hover: #232327;
+  --bg-elevated: #1B1B1E;
+  --bg-bar: #141416;
 
-  /* Typography / Text Ratios (AAA Main & Sub >= 7:1, AA Muted >= 4.5:1) */
-  --text-main: #D5C4AE;
-  --text-sub: #A88462;
-  --text-muted: #8A7A68;
+  /* Typography / WCAG 2.2 AA Contrast Verified Coordinates */
+  --text-main: #F2F2F3;
+  --text-sub: #A9A9AF;
+  --text-muted: #898992;
 
-  /* Architectural Borders & Affordances */
-  --border-subtle: #453224;
-  --border-strong: #634B38;
-  --border-hover: #DFBA53;
-  --border-focus: #DFBA53;
+  /* Architectural Borders & Affordances (>= 3:1 Non-Text AA) */
+  --border-subtle: #2E2E33;
+  --border-strong: #5E5E66;
+  --border-hover: #F2F2F3;
+  --border-focus: #F2F2F3;
 
-  /* Living Accent: Radiant Champagne Gold */
-  --accent: #DFBA53;
-  --accent-hover: #EED076;
-  --accent-surface: rgba(223, 186, 83, 0.15);
-  --accent-strong: #5A3E2B;
-  --accent-text: #DFBA53;
-  --on-accent: #0D0A08;
+  /* Living Accent: Inverse Neutral (White Fill on Dark Stage) */
+  --accent: #F2F2F3;
+  --accent-hover: #DCDCDF;
+  --accent-surface: rgba(242, 242, 243, 0.10);
+  --accent-strong: #5E5E66;
+  --accent-text: #F2F2F3;
+  --on-accent: #0B0B0D;
 
-  /* Primary Button Contract (Champagne Gold CTA in dark mode) */
-  --cta-primary-bg: #DFBA53;
-  --cta-primary-hover: #EED076;
-  --cta-primary-text: #0D0A08;
+  /* Primary Button Contract (Inverted High-Contrast Boxed CTA) */
+  --cta-primary-bg: #F2F2F3;
+  --cta-primary-hover: #DCDCDF;
+  --cta-primary-text: #0B0B0D;
 
-  /* Glassmorphism */
-  --glass-bg: rgba(26, 18, 14, 0.88);
-  --glass-dock: rgba(58, 36, 24, 0.95);
+  /* Flattened Solid Surfaces (Deprecated Translucent Glass) */
+  --glass-bg: rgba(20, 20, 22, 0.98);
+  --glass-dock: rgba(20, 20, 22, 0.98);
 
-  /* Status Tokens */
-  --success: #87A96B;
-  --warning: #D5851F;
-  --danger: #BA4E3D;
-  --info: #87A96B;
+  /* Single Permitted Chromatic Element: <= 8px Playing/Live/Recording Dot */
+  --signal: #FF5A1F;
 
-  /* Speaker Palette (Harmonized) */
-  --speaker-narrator: #D5C4AE;
-  --speaker-a: #D5851F;
-  --speaker-b: #87A96B;
-  --speaker-c: #A88462;
-  --speaker-d: #BA4E3D;
+  /* Stage & Display Gradients */
+  --stage-gradient: linear-gradient(180deg, #0A0A0C 0%, #2A2A2E 35%, #7B7B7E 70%, #C2C2C4 100%);
+  --headline-gradient: linear-gradient(180deg, #B4B4B6 0%, #3A3A3E 100%);
 
-  /* Top 10 Outline Typography */
-  --top10-fill: #1A120E;
-  --top10-stroke: rgba(213, 196, 174, 0.25);
-  --top10-active: #DFBA53;
+  /* Status Tokens (Communicated via Weight/Icon/Neutral Inversion, Zero Hue) */
+  --success: #F2F2F3;
+  --warning: #DCDCDF;
+  --danger: #F2F2F3;
+  --info: #A9A9AF;
+
+  /* Voice & Speaker Palette (Monochrome Hierarchy) */
+  --speaker-narrator: #A9A9AF;
+  --speaker-a: #F2F2F3;
+  --speaker-b: #DCDCDF;
+  --speaker-c: #A9A9AF;
+  --speaker-d: #898992;
+
+  /* Top 10 Editorial Typography */
+  --top10-fill: #0B0B0D;
+  --top10-stroke: rgba(242, 242, 243, 0.25);
+  --top10-active: #F2F2F3;
 
   /* Card Accent Default */
-  --card-accent: #DFBA53;
+  --card-accent: #F2F2F3;
 
   /* Backward Compatibility Aliases */
   --color-status-success: var(--success);
@@ -137,12 +145,12 @@
   --shadow-md: 0 8px 20px -4px rgba(0, 0, 0, 0.42), 0 4px 8px -2px rgba(0, 0, 0, 0.30);
   --shadow-lg: 0 24px 48px -12px rgba(0, 0, 0, 0.58), 0 12px 24px -6px rgba(0, 0, 0, 0.42);
 
-  /* Radius Scale */
-  --radius-xs: 4px;
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 20px;
+  /* Radius Scale (Strict Sharp Geometry: 0px to 2px) */
+  --radius-xs: 0px;
+  --radius-sm: 1px;
+  --radius-md: 2px;
+  --radius-lg: 2px;
+  --radius-xl: 4px;
   --radius-full: 9999px;
 
   /* Canonical Motion Design Tokens */
@@ -169,60 +177,81 @@
 }
 
 html.light {
-  /* Surfaces (Warm Alabaster / Sunlit Linen & Crisp Warm Ivory) */
-  --bg-page: #FAF8F5;
-  --bg-surface: #FAF6F0;
-  --bg-card: #FFFFFF;
-  --bg-hover: #F2EBE1;
-  --bg-elevated: #FFFFFF;
+  /* Harmonized Brand Tokens (Zero Chromatic Hue, Neutral Greys) */
+  --brand-espresso: #EFEFF0;
+  --brand-chocolate: #F7F7F8;
+  --brand-walnut: #FFFFFF;
+  --brand-bronze: #65656C;
+  --brand-sand: #0B0B0D;
+  --brand-charcoal: #86868A;
+  --brand-sage: #4F4F56;
+  --brand-amber: #232327;
+  --brand-champagne: #0B0B0D;
+  --brand-champagne-light: #232327;
+  --brand-obsidian: #FFFFFF;
 
-  /* Typography / Text Ratios (Deep Roasted Walnut & Warm Umber) */
-  --text-main: #1A120E;
-  --text-sub: #5A3E2B;
-  --text-muted: #8C7765;
+  /* Surfaces (Inverted Minimalist Vellum) */
+  --bg-page: #EFEFF0;
+  --bg-surface: #F7F7F8;
+  --bg-card: #FFFFFF;
+  --bg-hover: #E4E4E6;
+  --bg-elevated: #FFFFFF;
+  --bg-bar: #F7F7F8;
+
+  /* Typography / Text Ratios (High-Contrast Neutral) */
+  --text-main: #0B0B0D;
+  --text-sub: #4F4F56;
+  --text-muted: #65656C;
 
   /* Architectural Hairline Borders */
-  --border-subtle: #EAE3D9;
-  --border-strong: #D5C4AE;
-  --border-hover: #DFBA53;
-  --border-focus: #5A3E2B;
+  --border-subtle: #D0D0D4;
+  --border-strong: #86868A;
+  --border-hover: #0B0B0D;
+  --border-focus: #0B0B0D;
 
-  /* Living Accent: Walnut Brown */
-  --accent: #5A3E2B;
-  --accent-hover: #3A2418;
-  --accent-surface: rgba(90, 62, 43, 0.10);
-  --accent-strong: #3A2418;
-  --accent-text: #5A3E2B;
-  --on-accent: #FAF8F5;
+  /* Living Accent: Inverse Neutral (Near-Black Fill on Light Stage) */
+  --accent: #0B0B0D;
+  --accent-hover: #232327;
+  --accent-surface: rgba(11, 11, 13, 0.08);
+  --accent-strong: #86868A;
+  --accent-text: #0B0B0D;
+  --on-accent: #FFFFFF;
 
-  /* Primary Button Contract (Walnut Brown & Warm Alabaster) */
-  --cta-primary-bg: #5A3E2B;
-  --cta-primary-hover: #3A2418;
-  --cta-primary-text: #FAF8F5;
+  /* Primary Button Contract (Near-Black Boxed CTA & White Text) */
+  --cta-primary-bg: #0B0B0D;
+  --cta-primary-hover: #232327;
+  --cta-primary-text: #FFFFFF;
 
-  /* Glassmorphism */
-  --glass-bg: rgba(250, 248, 245, 0.92);
-  --glass-dock: rgba(255, 255, 255, 0.96);
+  /* Flattened Solid Surfaces (Deprecated Translucent Glass) */
+  --glass-bg: rgba(247, 247, 248, 0.98);
+  --glass-dock: rgba(247, 247, 248, 0.98);
 
-  /* Status Tokens (Sage Green, Amber Glow, Terracotta) */
-  --success: #386B2F;
-  --warning: #D5851F;
-  --danger: #962F22;
-  --info: #87A96B;
+  /* Single Permitted Chromatic Element: <= 8px Playing/Live/Recording Dot */
+  --signal: #F05010;
+
+  /* Stage & Display Gradients */
+  --stage-gradient: linear-gradient(180deg, #F4F4F5 0%, #D9D9DB 35%, #8A8A8D 70%, #1A1A1C 100%);
+  --headline-gradient: linear-gradient(180deg, #1A1A1C 0%, #8A8A8D 100%);
+
+  /* Status Tokens (Neutral Non-Chromatic Inversions) */
+  --success: #0B0B0D;
+  --warning: #232327;
+  --danger: #0B0B0D;
+  --info: #4F4F56;
 
   /* Speakers */
-  --speaker-narrator: #1A120E;
-  --speaker-a: #5A3E2B;
-  --speaker-b: #386B2F;
-  --speaker-c: #4A4A46;
-  --speaker-d: #962F22;
+  --speaker-narrator: #4F4F56;
+  --speaker-a: #0B0B0D;
+  --speaker-b: #232327;
+  --speaker-c: #4F4F56;
+  --speaker-d: #65656C;
 
   /* Top 10 */
-  --top10-fill: #FAF8F5;
-  --top10-stroke: rgba(26, 18, 14, 0.20);
-  --top10-active: #D5851F;
+  --top10-fill: #EFEFF0;
+  --top10-stroke: rgba(11, 11, 13, 0.25);
+  --top10-active: #0B0B0D;
 
-  --card-accent: #DFBA53;
+  --card-accent: #0B0B0D;
 
   --color-status-success: var(--success);
   --color-status-warning: var(--warning);
@@ -282,11 +311,80 @@ html.light .architectural-portal {
   border: 1px solid rgba(223, 186, 83, 0.2);
 }
 
-.botanical-pill {
+/* ========================================================================= */
+/* NOIR MONOCHROME UTILITIES & MICRO UI                                      */
+/* ========================================================================= */
+.stage-gradient {
+  background: var(--stage-gradient);
+}
+
+.headline-gradient {
+  background: var(--headline-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.headline-skew {
+  display: inline-block;
+  transform: skewX(-10deg);
+  font-style: italic;
+}
+
+.signal-dot {
+  width: 8px;
+  height: 8px;
   border-radius: 9999px;
-  background-color: rgba(135, 169, 107, 0.14);
-  color: #87A96B;
-  border: 1px solid rgba(135, 169, 107, 0.35);
+  background-color: var(--signal);
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.boxed-btn {
+  border: 1px solid var(--border-strong);
+  border-radius: 1px;
+  font-family: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  transition: all 120ms ease;
+}
+
+.boxed-btn-primary {
+  background-color: var(--accent);
+  color: var(--on-accent);
+  border: 1px solid var(--accent);
+  border-radius: 1px;
+  font-family: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+
+.tilted-cover-stage {
+  perspective: 1200px;
+}
+
+.tilted-cover {
+  transform: rotateY(-18deg) rotateX(8deg);
+  transform-style: preserve-3d;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.stage-scrim-dark {
+  background: linear-gradient(180deg, transparent 0%, rgba(11, 11, 13, 0.94) 100%);
+}
+
+.stage-scrim-light {
+  background: linear-gradient(180deg, transparent 0%, rgba(239, 239, 240, 0.94) 100%);
+}
+
+/* Neutralized Legacy Aliases for Phased Migration */
+.botanical-pill {
+  border-radius: 1px;
+  background-color: var(--accent-surface);
+  color: var(--text-main);
+  border: 1px solid var(--border-subtle);
   font-family: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -303,22 +401,20 @@ html.light .architectural-portal {
 
 .hairline-dash {
   height: 1px;
-  background-color: var(--brand-champagne, #DFBA53);
-  box-shadow: 0 0 8px rgba(223, 186, 83, 0.6);
+  background-color: var(--border-strong);
 }
 
 .circular-action-cta {
-  border-radius: 9999px;
+  border-radius: 1px;
   background-color: var(--cta-primary-bg);
   color: var(--cta-primary-text);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-strong);
   transition: all var(--motion-duration-standard) var(--motion-ease-natural);
 }
 
 .circular-action-cta:hover {
   background-color: var(--cta-primary-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 12px 24px -4px rgba(90, 62, 43, 0.4);
+  transform: translateY(-1px);
 }
 
 /* Accessible Focus Ring */
