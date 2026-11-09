@@ -464,7 +464,7 @@ export default function AudioPlayer({
             {/* Skip -10s */}
             <button
               onClick={() => handleSkip(-10)}
-              className="boxed-btn px-2.5 sm:px-3 py-1 text-[11px] font-mono text-[var(--text-main)] hover:bg-[var(--bg-hover)] cursor-pointer rounded-full active:scale-95 transition-transform"
+              className="boxed-btn px-2.5 sm:px-3 py-1 text-[11px] font-mono text-[var(--text-main)] hover:bg-[var(--bg-hover)] cursor-pointer rounded-full active:scale-90 transition-transform"
               title="Skip back 10 seconds (J)"
               aria-label="Skip back 10 seconds"
             >
@@ -475,7 +475,7 @@ export default function AudioPlayer({
             {playbackMode === 'tts' && onSeekSegment && (
               <button
                 onClick={() => onSeekSegment(-1)}
-                className="boxed-btn px-2 sm:px-2.5 py-1 text-[11px] font-mono text-[var(--text-main)] hover:bg-[var(--bg-hover)] cursor-pointer rounded-full active:scale-95 transition-transform"
+                className="boxed-btn px-2 sm:px-2.5 py-1 text-[11px] font-mono text-[var(--text-main)] hover:bg-[var(--bg-hover)] cursor-pointer rounded-full active:scale-90 transition-transform"
                 title="Previous dialogue turn"
                 aria-label="Previous turn"
               >
@@ -486,7 +486,7 @@ export default function AudioPlayer({
             {/* Play / Pause Toggle Button (Inverted Primary CTA) */}
             <button
               onClick={onToggle}
-              className="btn-play-pause boxed-btn-primary px-4 sm:px-5 py-1.5 text-[11px] font-mono cursor-pointer flex items-center gap-1.5 rounded-full shadow-md hover:scale-105 active:scale-95 transition-all duration-200"
+              className="btn-play-pause boxed-btn-primary px-4 sm:px-5 py-1.5 text-[11px] font-mono cursor-pointer flex items-center gap-1.5 rounded-full shadow-md hover:scale-105 active:scale-90 transition-all duration-200"
               aria-label={isBuffering ? 'Audio buffering' : isPlaying ? 'Pause audio' : 'Play audio'}
             >
               {isBuffering ? (
@@ -511,7 +511,7 @@ export default function AudioPlayer({
             {playbackMode === 'tts' && onSeekSegment && (
               <button
                 onClick={() => onSeekSegment(1)}
-                className="boxed-btn px-2 sm:px-2.5 py-1 text-[11px] font-mono text-[var(--text-main)] hover:bg-[var(--bg-hover)] cursor-pointer rounded-full active:scale-95 transition-transform"
+                className="boxed-btn px-2 sm:px-2.5 py-1 text-[11px] font-mono text-[var(--text-main)] hover:bg-[var(--bg-hover)] cursor-pointer rounded-full active:scale-90 transition-transform"
                 title="Next dialogue turn"
                 aria-label="Next turn"
               >
@@ -522,7 +522,7 @@ export default function AudioPlayer({
             {/* Skip +10s */}
             <button
               onClick={() => handleSkip(10)}
-              className="boxed-btn px-2.5 sm:px-3 py-1 text-[11px] font-mono text-[var(--text-main)] hover:bg-[var(--bg-hover)] cursor-pointer rounded-full active:scale-95 transition-transform"
+              className="boxed-btn px-2.5 sm:px-3 py-1 text-[11px] font-mono text-[var(--text-main)] hover:bg-[var(--bg-hover)] cursor-pointer rounded-full active:scale-90 transition-transform"
               title="Skip forward 10 seconds (L)"
               aria-label="Skip forward 10 seconds"
             >
@@ -600,7 +600,7 @@ export default function AudioPlayer({
           {/* Mobile Play/Pause CTA (shown on narrow screens <640px) */}
           <button
             onClick={onToggle}
-            className="mobile-play-btn boxed-btn-primary px-3.5 py-1.5 text-[11px] font-mono sm:hidden cursor-pointer flex items-center gap-1.5 rounded-full shadow-md active:scale-95 transition-all"
+            className="mobile-play-btn boxed-btn-primary px-3.5 py-1.5 text-[11px] font-mono sm:hidden cursor-pointer flex items-center gap-1.5 rounded-full shadow-md active:scale-90 transition-all"
             aria-label={isBuffering ? 'Audio buffering' : isPlaying ? 'Pause audio' : 'Play audio'}
           >
             {isBuffering ? (
@@ -631,9 +631,9 @@ export default function AudioPlayer({
           <button
             type="button"
             onClick={() => setFollowAlong((prev) => !prev)}
-            className={`boxed-btn px-3 py-1 text-[11px] font-mono cursor-pointer hidden md:inline-flex items-center gap-1.5 transition-colors rounded-full ${
+            className={`boxed-btn px-3 py-1 text-[11px] font-mono cursor-pointer hidden md:inline-flex items-center gap-1.5 rounded-full active:scale-95 transition-all ${
               followAlong && isPlaying
-                ? 'text-[var(--text-main)] border-[var(--border-strong)] shadow-xs'
+                ? 'text-[var(--text-main)] border-[var(--border-strong)]'
                 : 'text-[var(--text-muted)] border-[var(--border-subtle)] hover:border-[var(--border-strong)]'
             }`}
             title={followAlong ? 'Follow Along: Active (click to disable)' : 'Follow Along: Paused (click to enable)'}
@@ -654,7 +654,7 @@ export default function AudioPlayer({
               <select
                 value={ttsEngine}
                 onChange={(e) => onChangeTtsEngine(e.target.value)}
-                className="boxed-btn px-2.5 py-1 text-[11px] font-mono bg-[var(--bg-card)] text-[var(--text-main)] border border-[var(--border-strong)] cursor-pointer focus:outline-none rounded-lg"
+                className="boxed-btn px-2.5 py-1 text-[11px] font-mono bg-[var(--bg-card)] text-[var(--text-main)] border border-[var(--border-strong)] cursor-pointer focus:outline-none rounded-xl shadow-xs transition-all"
                 title={`TTS Engine: ${
                   ttsEngine === 'msedge-tts'
                     ? 'Microsoft Edge Cloud Neural TTS'
@@ -682,7 +682,7 @@ export default function AudioPlayer({
             <button
               type="button"
               onClick={() => onTogglePlaybackMode?.()}
-              className="boxed-btn px-2.5 sm:px-3 py-1 text-[11px] font-mono cursor-pointer flex items-center gap-1.5 rounded-full"
+              className="boxed-btn px-2.5 sm:px-3 py-1 text-[11px] font-mono cursor-pointer flex items-center gap-1.5 rounded-full active:scale-95 transition-all"
               title={
                 playbackMode === 'tts'
                   ? 'Voice TTS: Playing live character TTS segment-by-segment. Click to switch to Studio Track.'
@@ -707,7 +707,7 @@ export default function AudioPlayer({
           {/* Playback Speed Button */}
           <button
             onClick={handleSpeedChange}
-            className="boxed-btn px-2.5 py-1 text-[11px] font-mono text-[var(--text-main)] hover:bg-[var(--bg-hover)] cursor-pointer rounded-full"
+            className="boxed-btn px-2.5 py-1 text-[11px] font-mono text-[var(--text-main)] hover:bg-[var(--bg-hover)] cursor-pointer rounded-full active:scale-95 transition-all"
             title="Cycle playback speed"
             aria-label={`Playback speed: ${speed}x`}
           >
@@ -725,7 +725,7 @@ export default function AudioPlayer({
                   window.dispatchEvent(new PopStateEvent('popstate'));
                 }
               }}
-              className="boxed-btn px-2.5 py-1 text-[11px] font-mono text-[var(--text-main)] hover:bg-[var(--bg-hover)] cursor-pointer hidden md:flex items-center gap-1 rounded-full"
+              className="boxed-btn px-2.5 py-1 text-[11px] font-mono text-[var(--text-main)] hover:bg-[var(--bg-hover)] cursor-pointer hidden md:flex items-center gap-1 rounded-full active:scale-95 transition-all"
               title="Expand Reader"
               aria-label="Expand Reader"
             >
@@ -748,7 +748,7 @@ export default function AudioPlayer({
           >
             <button
               onClick={handleVolumeToggle}
-              className="boxed-btn p-1.5 text-[var(--text-main)] hover:bg-[var(--bg-hover)] cursor-pointer rounded-full"
+              className="boxed-btn p-1.5 text-[var(--text-main)] hover:bg-[var(--bg-hover)] cursor-pointer rounded-full active:scale-95 transition-all"
               title={isMuted ? 'Unmute (M)' : 'Mute (M)'}
               aria-label={isMuted ? 'Unmute audio' : 'Mute audio'}
             >

@@ -823,7 +823,7 @@ export default function AddNovelModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 theme-card border rounded-xl text-xs font-semibold theme-muted hover:text-[var(--text-main)] transition cursor-pointer"
+              className="px-4 py-2 theme-card border rounded-xl text-xs font-semibold theme-muted hover:text-[var(--text-main)] transition cursor-pointer active:scale-[0.98]"
             >
               Cancel
             </button>
@@ -834,7 +834,7 @@ export default function AddNovelModal({
                 type="button"
                 onClick={(e) => handleSubmit(e, true)}
                 disabled={isSubmitting || isParsingFile}
-                className="px-4 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] text-xs font-bold rounded-xl shadow-md transition disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+                className="px-4 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] text-xs font-bold rounded-xl shadow-md transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
               >
                 <IconPlay className="w-3.5 h-3.5 fill-current" />
                 <span>{isSubmitting ? 'Creating & Ingesting...' : 'Create & Read Now'}</span>
@@ -844,7 +844,7 @@ export default function AddNovelModal({
             <button
               type="submit"
               disabled={isSubmitting || isParsingFile}
-              className="px-4 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] text-xs font-bold rounded-xl shadow-md transition disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+              className="px-4 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] text-xs font-bold rounded-xl shadow-md transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
             >
               <IconPlus className="w-3.5 h-3.5" />
               <span>{isParsingFile ? 'Analyzing File...' : isSubmitting ? 'Creating...' : 'Create Novel'}</span>

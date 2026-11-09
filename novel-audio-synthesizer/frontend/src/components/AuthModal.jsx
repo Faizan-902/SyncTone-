@@ -269,7 +269,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3 px-4 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] font-bold rounded-xl shadow-md text-xs transition min-h-[44px] cursor-pointer disabled:opacity-50 select-none"
+                className="w-full py-3 px-4 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] font-bold rounded-xl shadow-md text-xs transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] min-h-[44px] cursor-pointer disabled:opacity-50 select-none"
               >
                 {isSubmitting
                   ? 'Connecting...'

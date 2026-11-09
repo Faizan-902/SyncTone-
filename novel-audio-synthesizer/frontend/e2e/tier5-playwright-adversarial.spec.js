@@ -72,7 +72,7 @@ test.describe('Tier 5: Adversarial Coverage Hardening (Live Browser)', () => {
     expect(htmlClass).toContain('dark');
 
     const metaColor = await page.locator('#meta-theme-color').getAttribute('content');
-    expect(metaColor).toBe('#1A120E');
+    expect(metaColor).toBe('#0B0B0D');
 
     // 2. Rapid Theme Switch Stress (15 successive clicks with 30ms gap)
     const toggle = page.locator('button[title*="Switch Theme"], button[aria-label="Switch theme"]').first();
@@ -93,9 +93,9 @@ test.describe('Tier 5: Adversarial Coverage Hardening (Live Browser)', () => {
 
     const finalMeta = await page.locator('#meta-theme-color').getAttribute('content');
     if (isDark) {
-      expect(finalMeta).toBe('#1A120E');
+      expect(finalMeta).toBe('#0B0B0D');
     } else {
-      expect(finalMeta).toBe('#FAF8F5');
+      expect(finalMeta).toBe('#EFEFF0');
     }
   });
 

@@ -47,6 +47,35 @@
       margin: 20px;
       box-shadow: 0 12px 32px -4px rgba(0,0,0,0.45);
     }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .brand-badge {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--text);
+      color: var(--bg);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+    .brand-icon {
+      width: 18px;
+      height: 18px;
+    }
+    .brand-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-family: monospace;
+      color: var(--text);
+    }
     .icon {
       width: 56px;
       height: 56px;
@@ -106,6 +135,19 @@
 </head>
 <body>
   <div class="card">
+    <div class="brand">
+      <div class="brand-badge">
+        <svg class="brand-icon" viewBox="0 0 24 24" fill="currentColor">
+          <rect x="3" y="10" width="2" height="5" rx="1" />
+          <rect x="7" y="6" width="2" height="11" rx="1" />
+          <rect x="11" y="2.5" width="2" height="16" rx="1" />
+          <rect x="15" y="6" width="2" height="11" rx="1" />
+          <rect x="19" y="10" width="2" height="5" rx="1" />
+          <path d="M2.5 19.5C5.5 18 8.5 18.2 11.25 19.8C11.72 20.07 12.28 20.07 12.75 19.8C15.5 18.2 18.5 18 21.5 19.5" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" />
+        </svg>
+      </div>
+      <span class="brand-title">SYNCTONE</span>
+    </div>
     <div class="icon">
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="1" y1="1" x2="23" y2="23"></line>

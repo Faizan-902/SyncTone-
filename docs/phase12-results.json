@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-11-09T18:13:26.029Z",
+  "timestamp": "2026-11-09T18:38:34.152Z",
   "viewports": [
     {
       "name": "1440x900",
@@ -287,16 +287,16 @@
   ],
   "coldLoadMetrics": {
     "navTiming": {
-      "domContentLoaded": 669.7000000178814,
-      "loadTime": 672,
-      "domInteractive": 663.9000000059605
+      "domContentLoaded": 199.80000001192093,
+      "loadTime": 200.5,
+      "domInteractive": 197.60000002384186
     },
-    "wallClockDurationMs": 679,
+    "wallClockDurationMs": 203,
     "totalRequests": 11,
-    "totalTransferBytes": 373063,
+    "totalTransferBytes": 374029,
     "reactVendorBytes": 142571,
-    "indexJsBytes": 107797,
-    "indexCssBytes": 98852,
+    "indexJsBytes": 108214,
+    "indexCssBytes": 99399,
     "requests": [
       {
         "url": "http://localhost:5174/",
@@ -308,13 +308,13 @@
         "url": "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap",
         "type": "Stylesheet",
         "status": 200,
-        "encodedBytes": 11329
+        "encodedBytes": 11331
       },
       {
-        "url": "http://localhost:5174/assets/index-BA8QFNws.js",
+        "url": "http://localhost:5174/assets/index-BCK7eHQA.js",
         "type": "Script",
         "status": 200,
-        "encodedBytes": 107797
+        "encodedBytes": 108214
       },
       {
         "url": "http://localhost:5174/assets/react-vendor-5TPL3RWa.js",
@@ -329,22 +329,16 @@
         "encodedBytes": 9953
       },
       {
-        "url": "http://localhost:5174/assets/index-B9l_23CK.css",
+        "url": "http://localhost:5174/assets/index-Bo3OVp2t.css",
         "type": "Stylesheet",
         "status": 200,
-        "encodedBytes": 98852
+        "encodedBytes": 99399
       },
       {
         "url": "http://localhost:5174/registerSW.js",
         "type": "Script",
         "status": 200,
         "encodedBytes": 403
-      },
-      {
-        "url": "http://localhost:5174/assets/jetbrains-mono-latin-wght-normal-B9CIFXIH.woff2",
-        "type": "Font",
-        "status": null,
-        "encodedBytes": 0
       },
       {
         "url": "http://localhost:5174/api/novels?channel=verified",
@@ -361,6 +355,12 @@
       {
         "url": "http://localhost:5174/api/auth/me",
         "type": "Fetch",
+        "status": null,
+        "encodedBytes": 0
+      },
+      {
+        "url": "http://localhost:5174/assets/jetbrains-mono-latin-wght-normal-B9CIFXIH.woff2",
+        "type": "Font",
         "status": null,
         "encodedBytes": 0
       }
@@ -390,8 +390,8 @@
         "/assets/inter-greek-ext-wght-normal-DlzME5K_.woff2",
         "/assets/inter-cyrillic-wght-normal-DqGufNeO.woff2",
         "/assets/inter-cyrillic-ext-wght-normal-BOeWTOD4.woff2",
-        "/assets/index-B9l_23CK.css",
-        "/assets/index-BA8QFNws.js",
+        "/assets/index-Bo3OVp2t.css",
+        "/assets/index-BCK7eHQA.js",
         "/assets/react-vendor-5TPL3RWa.js",
         "/assets/router-vendor-DpxZgJma.js",
         "/registerSW.js",
@@ -399,10 +399,10 @@
       ]
     },
     "offlineLoadOk": true,
-    "offlineContentLength": 46954,
+    "offlineContentLength": 47833,
     "apiOfflineBehavior": {
       "rejectedCleanly": false,
-      "durationMs": 2
+      "durationMs": 1
     }
   },
   "clsResults": [
@@ -420,7 +420,7 @@
     },
     {
       "target": "Settings Modal (Fast 3G)",
-      "cls": 0.0028118186791737873
+      "cls": 0.002178964720831977
     }
   ],
   "themeSeedingResults": {
@@ -428,12 +428,12 @@
     "lightTheme": {
       "cls": "light",
       "storage": "light",
-      "meta": "#FAF8F5"
+      "meta": "#EFEFF0"
     },
     "reloadedLight": {
       "cls": "light",
       "storage": "light",
-      "meta": "#FAF8F5"
+      "meta": "#EFEFF0"
     },
     "paramDark": {
       "cls": "dark",

@@ -494,7 +494,7 @@ function AppContent() {
                 </div>
                 <button
                   onClick={playbackProgress.dismissResumeBanner}
-                  className="hover:opacity-80 p-1"
+                  className="p-1.5 rounded-full hover:bg-black/10 transition active:scale-95 cursor-pointer"
                   aria-label="Dismiss resume notification"
                 >
                   <IconX className="w-4 h-4" />

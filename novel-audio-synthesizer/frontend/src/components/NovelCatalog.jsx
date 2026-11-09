@@ -5,6 +5,7 @@ import { useDebounce } from '../hooks/useDebounce';
 import { preloadNovelDetails, preloadReaderView } from '../App';
 import NovelCover from './NovelCover';
 import {
+  IconSyncToneLogo,
   IconSearch,
   IconPlay,
   IconBook,
@@ -285,7 +286,7 @@ export default function NovelCatalog({
                     <span>FEATURED VOLUME // VOL. {String(featuredIndex + 1).padStart(2, '0')} — {featuredNovel.title.toUpperCase()}</span>
                   </span>
                   {isBillboardPaused && (
-                    <span className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
+                    <span className="text-[11px] font-mono text-[var(--text-sub)] uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
                       Paused
                     </span>
                   )}
@@ -304,7 +305,7 @@ export default function NovelCatalog({
                   {/* Left Column: Mono Metadata Credits ("AT A GLANCE") */}
                   <div className="border-l border-[var(--border-strong)] pl-5 flex flex-col gap-3.5 font-mono">
                     <div className="flex flex-col gap-0.5">
-                      <span className="text-[10px] text-[var(--text-muted)] tracking-wider">FEATURED TITLE</span>
+                      <span className="text-[11px] text-[var(--text-sub)] tracking-wider">FEATURED TITLE</span>
                       <span
                         onClick={() => onSelectNovel(featuredNovel.id)}
                         className="text-xs font-bold text-[var(--text-main)] truncate cursor-pointer hover:underline"
@@ -314,25 +315,25 @@ export default function NovelCatalog({
                       </span>
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <span className="text-[10px] text-[var(--text-muted)] tracking-wider">AUTHOR</span>
+                      <span className="text-[11px] text-[var(--text-sub)] tracking-wider">AUTHOR</span>
                       <span className="text-xs font-bold text-[var(--text-main)]">
                         {(featuredNovel.author_username || 'SYNCTONE AUTHOR').toUpperCase()}
                       </span>
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <span className="text-[10px] text-[var(--text-muted)] tracking-wider">NARRATOR</span>
+                      <span className="text-[11px] text-[var(--text-sub)] tracking-wider">NARRATOR</span>
                       <span className="text-xs font-bold text-[var(--text-main)]">
                         {(featuredNovel.narrator_name || 'STUDIO ENSEMBLE').toUpperCase()}
                       </span>
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <span className="text-[10px] text-[var(--text-muted)] tracking-wider">SCOPE</span>
+                      <span className="text-[11px] text-[var(--text-sub)] tracking-wider">SCOPE</span>
                       <span className="text-xs font-bold text-[var(--text-main)]">
                         {featuredNovel.chapter_count || 1} CHAPTERS
                       </span>
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <span className="text-[10px] text-[var(--text-muted)] tracking-wider">FORMAT</span>
+                      <span className="text-[11px] text-[var(--text-sub)] tracking-wider">FORMAT</span>
                       <span className="text-xs font-bold text-[var(--text-main)]">
                         {(featuredNovel.global_tone || 'SYNCHRONIZED MULTI-VOICE').toUpperCase()}
                       </span>
@@ -359,9 +360,8 @@ export default function NovelCatalog({
                         </div>
 
                         <div className="flex flex-col items-center text-center my-auto px-2">
-                          <div className="w-14 h-14 border border-white/30 rounded-xl flex items-center justify-center mb-3 relative">
-                            <div className="w-10 h-10 border border-white/20 rounded-lg transform rotate-45 absolute" />
-                            <span className="text-[10px] font-mono text-[#A9A9AF]">▲</span>
+                          <div className="w-14 h-14 border border-white/30 rounded-2xl flex items-center justify-center mb-3 bg-white/5 backdrop-blur-xs shadow-md">
+                            <IconSyncToneLogo className="w-7 h-7 text-[#F2F2F3]" />
                           </div>
                           <h2 className="font-sans font-black text-base sm:text-lg uppercase leading-tight line-clamp-2">
                             {featuredNovel.title}
@@ -371,7 +371,7 @@ export default function NovelCatalog({
                           </span>
                         </div>
 
-                        <div className="flex justify-between text-[9px] font-mono text-[#898992] border-t border-white/15 pt-2 pl-1">
+                        <div className="flex justify-between text-[11px] font-mono text-[#A9A9AF] border-t border-white/15 pt-2 pl-1">
                           <span>SYNCTONE AUDIO</span>
                           <span>STUDIO CAST</span>
                         </div>
@@ -405,7 +405,7 @@ export default function NovelCatalog({
                         </button>
                       </div>
 
-                      <div className="text-[10px] font-mono text-[var(--text-muted)] flex justify-between items-center pt-2 border-t border-[var(--border-subtle)]">
+                      <div className="text-[11px] font-mono text-[var(--text-sub)] flex justify-between items-center pt-2 border-t border-[var(--border-subtle)]">
                         <span>STATUS: {featuredNovel.status?.toUpperCase() || 'READY'}</span>
                         <span>{featuredNovel.chapter_count || 1} CHAPTERS</span>
                       </div>
@@ -444,7 +444,7 @@ export default function NovelCatalog({
                         type="button"
                         onClick={() => setFeaturedIndex((prev) => (prev - 1 + novels.length) % novels.length)}
                         aria-label="Previous featured novel"
-                        className="boxed-btn p-1.5 text-[var(--text-sub)] hover:text-[var(--text-main)] active:scale-90 cursor-pointer"
+                        className="boxed-btn p-2 rounded-full text-[var(--text-sub)] hover:text-[var(--text-main)] active:scale-95 hover:scale-105 transition-all duration-200 shadow-xs cursor-pointer"
                       >
                         <IconChevronLeft className="w-3.5 h-3.5" />
                       </button>
@@ -452,7 +452,7 @@ export default function NovelCatalog({
                         type="button"
                         onClick={() => setFeaturedIndex((prev) => (prev + 1) % novels.length)}
                         aria-label="Next featured novel"
-                        className="boxed-btn p-1.5 text-[var(--text-sub)] hover:text-[var(--text-main)] active:scale-90 cursor-pointer"
+                        className="boxed-btn p-2 rounded-full text-[var(--text-sub)] hover:text-[var(--text-main)] active:scale-95 hover:scale-105 transition-all duration-200 shadow-xs cursor-pointer"
                       >
                         <IconChevronRight className="w-3.5 h-3.5" />
                       </button>
@@ -470,7 +470,7 @@ export default function NovelCatalog({
             <section className="space-y-4 pt-2" aria-label="Top 10 Audiobooks">
               <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-3">
                 <div className="flex flex-col gap-0.5">
-                  <span className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-wider">
+                  <span className="text-[11px] font-mono text-[var(--text-sub)] uppercase tracking-wider">
                     // CURATED VOLUMES
                   </span>
                   <h3 className="text-base sm:text-lg font-bold font-sans uppercase tracking-tight text-[var(--text-main)]">
@@ -483,14 +483,14 @@ export default function NovelCatalog({
                   <button
                     onClick={() => scrollCarousel(-1)}
                     aria-label="Scroll carousel left"
-                    className="boxed-btn p-1.5 text-[var(--text-sub)] hover:text-[var(--text-main)] active:scale-95 cursor-pointer"
+                    className="boxed-btn p-2 rounded-full text-[var(--text-sub)] hover:text-[var(--text-main)] active:scale-90 hover:scale-105 transition-all duration-200 shadow-xs cursor-pointer"
                   >
                     <IconChevronLeft className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => scrollCarousel(1)}
                     aria-label="Scroll carousel right"
-                    className="boxed-btn p-1.5 text-[var(--text-sub)] hover:text-[var(--text-main)] active:scale-95 cursor-pointer"
+                    className="boxed-btn p-2 rounded-full text-[var(--text-sub)] hover:text-[var(--text-main)] active:scale-90 hover:scale-105 transition-all duration-200 shadow-xs cursor-pointer"
                   >
                     <IconChevronRight className="w-4 h-4" />
                   </button>
@@ -550,7 +550,7 @@ export default function NovelCatalog({
                             <span className="sr-only">Rank #{rank}: </span>
                             {novel.title}
                           </h4>
-                          <p className="text-[11px] font-mono text-[var(--text-muted)] truncate">
+                          <p className="text-[11px] font-mono text-[var(--text-sub)] truncate">
                             By {novel.author_username || 'SyncTone Author'}
                           </p>
                         </div>
@@ -570,7 +570,7 @@ export default function NovelCatalog({
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-wider">
+                    <span className="text-[11px] font-mono text-[var(--text-sub)] uppercase tracking-wider">
                       // ARCHIVE CATALOG —
                     </span>
                     <h2 className="text-[11px] font-mono font-bold uppercase tracking-wider text-[var(--text-main)]">
@@ -708,7 +708,7 @@ export default function NovelCatalog({
                 </p>
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="boxed-btn px-4 py-2 text-xs font-mono uppercase"
+                  className="boxed-btn px-4 py-2 text-xs font-mono uppercase cursor-pointer active:scale-95 transition-all"
                 >
                   Clear Search
                 </button>
@@ -774,12 +774,12 @@ export default function NovelCatalog({
                             {novel.title}
                           </h4>
 
-                          <div className="flex items-center justify-between text-xs font-mono text-[var(--text-muted)] mt-1 gap-2">
+                          <div className="flex items-center justify-between text-xs font-mono text-[var(--text-sub)] mt-1 gap-2">
                             <span className="truncate">
                               By {novel.author_username || 'SyncTone Author'}
                             </span>
                             {novel.narrator_name && (
-                              <span className="text-[10px] truncate max-w-[100px]" title={`Narrator: ${novel.narrator_name}`}>
+                              <span className="text-[11px] truncate max-w-[100px]" title={`Narrator: ${novel.narrator_name}`}>
                                 {novel.narrator_name}
                               </span>
                             )}
@@ -795,7 +795,7 @@ export default function NovelCatalog({
                         onMouseEnter={preloadReaderView}
                         onFocus={preloadReaderView}
                         onPointerDown={preloadReaderView}
-                        className="boxed-btn-primary flex-1 py-1.5 px-3 text-xs flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                        className="boxed-btn-primary flex-1 py-1.5 px-3 text-xs flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 transition-all"
                       >
                         <IconPlay className="w-3.5 h-3.5 fill-current" />
                         <span>Play</span>
@@ -808,7 +808,7 @@ export default function NovelCatalog({
                         onMouseEnter={preloadNovelDetails}
                         onFocus={preloadNovelDetails}
                         onPointerDown={preloadNovelDetails}
-                        className="boxed-btn p-1.5 text-[var(--text-sub)] hover:text-[var(--text-main)] cursor-pointer active:scale-95 min-w-[32px] flex items-center justify-center"
+                        className="boxed-btn p-1.5 text-[var(--text-sub)] hover:text-[var(--text-main)] cursor-pointer active:scale-95 min-w-[32px] flex items-center justify-center transition-all"
                         title="View Novel Details"
                         aria-label="View Novel Details"
                       >
@@ -819,7 +819,7 @@ export default function NovelCatalog({
                           e.stopPropagation();
                           setNovelToDelete(novel);
                         }}
-                        className="boxed-btn p-1.5 text-[var(--text-sub)] hover:text-[var(--text-main)] cursor-pointer active:scale-95 min-w-[32px] flex items-center justify-center"
+                        className="boxed-btn p-1.5 text-[var(--text-sub)] hover:text-[var(--text-main)] cursor-pointer active:scale-95 min-w-[32px] flex items-center justify-center transition-all"
                         title="Delete Novel (Local Dev)"
                         aria-label={`Delete ${novel.title}`}
                         data-testid={`delete-novel-${novel.id}`}
@@ -851,7 +851,7 @@ export default function NovelCatalog({
                     <span className="text-sm font-mono uppercase font-bold text-[var(--text-main)]">
                       Upload Novel
                     </span>
-                    <span className="text-[11px] text-[var(--text-muted)] mt-1 font-mono">
+                    <span className="text-[11px] text-[var(--text-sub)] mt-1 font-mono">
                       Multi-Voice Audio Synthesis
                     </span>
                     <span className="boxed-btn mt-4 px-3 py-1 text-[11px] font-mono uppercase text-[var(--text-main)] rounded-lg">

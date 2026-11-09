@@ -23,14 +23,14 @@ Phase 12 conducts exhaustive end-to-end verification of the SyncTone Noir Monoch
 
 | Gate / Requirement | Target / Constraint | Measured Real Number | Status |
 | :--- | :--- | :--- | :--- |
-| **Vitest Unit Suite** | 19 suites, 136 tests green | **19/19 suites passed, 136/136 tests green** (2.67s) | **PASS** |
-| **Production Build** | Vite build succeeds without errors | **Built cleanly in 3.63s** (506 modules transformed) | **PASS** |
+| **Vitest Unit Suite** | 19 suites, 136 tests green | **19/19 suites passed, 136/136 tests green** (1.67s) | **PASS** |
+| **Production Build** | Vite build succeeds without errors | **Built cleanly in 1.91s** (506 modules transformed) | **PASS** |
 | **`react-vendor` Chunk** | $\le 150\text{ kB}$ uncompressed | **142.22 kB** uncompressed (45.56 kB gzip) | **PASS** |
-| **Home Cold-Load JS Gzip** | $\le 75,000\text{ B}$ gzip ceiling | **74,629 B** gzip (371 B headroom) | **PASS** |
+| **Home Cold-Load JS Gzip** | $\le 75,000\text{ B}$ gzip ceiling | **74,969 B** gzip (31 B headroom) | **PASS** |
 | **Axe Accessibility Audit** | `color-contrast` configured as **ERROR** | **0 contrast violations, 0 general violations** | **PASS** |
-| **Home Cold-Load (CDP)** | Full request waterfall & timing | **679 ms total, 669.7 ms DOMContentLoaded, 11 requests** | **PASS** |
-| **PWA Service Worker** | Precache & offline boot | **26 assets precached; offline boot renders 46,954 B shell** | **PASS** |
-| **Fast 3G Cumulative Layout Shift** | Zero layout shift ($\text{CLS} < 0.05$) | **Home: 0.0000, Detail: 0.0000, Reader: 0.0000, Modal: 0.0028** | **PASS** |
+| **Home Cold-Load (CDP)** | Full request waterfall & timing | **203 ms total, 199.8 ms DOMContentLoaded, 11 requests** | **PASS** |
+| **PWA Service Worker** | Precache & offline boot | **26 assets precached; offline boot renders 47,833 B shell** | **PASS** |
+| **Fast 3G Cumulative Layout Shift** | Zero layout shift ($\text{CLS} < 0.05$) | **Home: 0.0000, Detail: 0.0000, Reader: 0.0000, Modal: 0.0022** | **PASS** |
 | **Theme Seeding & FOWT** | Zero flicker, reload persistence | **Dark & Light persist across reloads; corrupt recovers to dark** | **PASS** |
 | **Zero Color Delta Gate** | 0 delta against reference tokens | **18/18 tests passed (`npm run theme:check`)** | **PASS** |
 | **Multi-Viewport Captures** | 5 viewports × 2 themes × all screens | **100 visual capture files in `docs/screenshots/phase12/`** | **PASS** |
@@ -90,11 +90,11 @@ Every target view and modal was evaluated across both Dark and Light themes at d
 ### 3.3 Home Cold-Load Measurement via CDP
 Captured using Chrome DevTools Protocol (`Network.enable`, `Performance.enable`) on cold boot with fresh cache:
 
-- **Wall-Clock Duration**: `679 ms`
-- **DOMContentLoaded**: `669.7 ms`
-- **DOMInteractive**: `663.9 ms`
+- **Wall-Clock Duration**: `203 ms`
+- **DOMContentLoaded**: `199.8 ms`
+- **DOMInteractive**: `197.6 ms`
 - **Total Requests**: 11
-- **Total Transferred Bytes**: `373,063 bytes` (`364.32 KiB`)
+- **Total Transferred Bytes**: `374,029 bytes` (`365.26 KiB`)
 
 #### Complete Cold-Load Request Waterfall:
 | # | URL Path | Resource Type | HTTP Status | Transferred (Encoded Bytes) |

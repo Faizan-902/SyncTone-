@@ -291,7 +291,7 @@ body {
 /* ========================================================================= */
 .architectural-portal {
   position: relative;
-  border-radius: var(--radius-sm);
+  border-radius: 20px;
   overflow: hidden;
   background: var(--bg-card);
 }
@@ -347,7 +347,7 @@ html.light .architectural-portal {
 
 .boxed-btn {
   border: 1px solid var(--border-strong);
-  border-radius: 8px;
+  border-radius: 10px;
   font-family: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
   text-transform: uppercase;
   font-size: 11px;
@@ -363,14 +363,14 @@ html.light .architectural-portal {
 }
 
 .boxed-btn:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 
 .boxed-btn-primary {
   background-color: var(--accent);
   color: var(--on-accent);
   border: 1px solid var(--accent);
-  border-radius: 8px;
+  border-radius: 10px;
   font-family: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
   text-transform: uppercase;
   font-size: 11px;
@@ -388,7 +388,7 @@ html.light .architectural-portal {
 }
 
 .boxed-btn-primary:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 
 .tilted-cover-stage {
@@ -1486,7 +1486,7 @@ body.focus-fullscreen-mode footer {
   font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  border-radius: 8px;
+  border-radius: 10px;
   border: 1px solid var(--border-strong);
   background: transparent;
   color: var(--text-main);
@@ -1502,7 +1502,7 @@ body.focus-fullscreen-mode footer {
 }
 
 .btn:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 
 .btn-primary {
@@ -1525,6 +1525,7 @@ body.focus-fullscreen-mode footer {
   padding: 5px 10px;
   font-size: 11px;
   gap: 6px;
+  border-radius: 8px;
 }
 
 .btn-lg {
@@ -1532,6 +1533,7 @@ body.focus-fullscreen-mode footer {
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.1em;
+  border-radius: 12px;
 }
 
 .badge {
@@ -1697,7 +1699,7 @@ body.focus-fullscreen-mode footer {
   justify-content: center;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
-  border-radius: 12px;
+  border-radius: 9999px;
   color: var(--text-sub);
   cursor: pointer;
   z-index: 25;

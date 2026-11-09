@@ -116,7 +116,7 @@ export default function TopHeader({
               onClick={onToggleRoster}
               onMouseEnter={preloadCharacterRoster}
               onFocus={preloadCharacterRoster}
-              className={`boxed-btn px-2 sm:px-2.5 py-1 text-[10px] sm:text-[11px] font-mono flex items-center gap-1 sm:gap-1.5 cursor-pointer active:scale-95 ${
+              className={`boxed-btn px-2.5 sm:px-3 py-1 text-[10px] sm:text-[11px] font-mono flex items-center gap-1 sm:gap-1.5 cursor-pointer rounded-full active:scale-95 transition-all ${
                 showRoster
                   ? 'bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)] font-bold'
                   : 'bg-[var(--bg-card)] text-[var(--text-main)] border-[var(--border-strong)] hover:border-[var(--text-main)]'
@@ -132,7 +132,7 @@ export default function TopHeader({
           {/* Theme Toggle Button */}
           <button
             onClick={cycleTheme}
-            className="boxed-btn px-2 sm:px-2.5 py-1 text-[10px] sm:text-[11px] font-mono uppercase text-[var(--text-sub)] hover:text-[var(--text-main)] bg-[var(--bg-card)] border-[var(--border-strong)] hover:border-[var(--text-main)] flex items-center gap-1 sm:gap-1.5 cursor-pointer active:scale-95"
+            className="boxed-btn px-2.5 sm:px-3 py-1 text-[10px] sm:text-[11px] font-mono uppercase text-[var(--text-sub)] hover:text-[var(--text-main)] bg-[var(--bg-card)] border-[var(--border-strong)] hover:border-[var(--text-main)] flex items-center gap-1 sm:gap-1.5 cursor-pointer rounded-full active:scale-95 transition-all"
             title={`Switch Theme (currently ${theme})`}
             aria-label={`Switch Theme: ${theme.toUpperCase()}`}
             aria-pressed={theme === 'dark'}
@@ -147,7 +147,7 @@ export default function TopHeader({
             onClick={onOpenSettings}
             onMouseEnter={preloadSettingsModal}
             onFocus={preloadSettingsModal}
-            className="boxed-btn p-1.5 text-[var(--text-sub)] hover:text-[var(--text-main)] bg-[var(--bg-card)] border-[var(--border-strong)] hover:border-[var(--text-main)] active:scale-95 cursor-pointer flex items-center justify-center min-w-[32px] min-h-[32px]"
+            className="boxed-btn p-1.5 text-[var(--text-sub)] hover:text-[var(--text-main)] bg-[var(--bg-card)] border-[var(--border-strong)] hover:border-[var(--text-main)] active:scale-95 cursor-pointer flex items-center justify-center min-w-[32px] min-h-[32px] rounded-full transition-all"
             title="Settings & Preferences"
             aria-label="Settings"
           >
@@ -163,7 +163,7 @@ export default function TopHeader({
               </span>
               <button
                 onClick={logout}
-                className="boxed-btn px-2.5 py-1 text-[11px] font-mono uppercase text-[var(--text-sub)] hover:text-[var(--text-main)] bg-[var(--bg-card)] border-[var(--border-strong)] hover:border-[var(--text-main)] active:scale-95 cursor-pointer"
+                className="boxed-btn px-3 py-1 text-[11px] font-mono uppercase text-[var(--text-sub)] hover:text-[var(--text-main)] bg-[var(--bg-card)] border-[var(--border-strong)] hover:border-[var(--text-main)] active:scale-95 cursor-pointer rounded-full transition-all"
                 title="Sign out of SyncTone"
               >
                 Sign out
@@ -175,7 +175,7 @@ export default function TopHeader({
                 onClick={() => onOpenAuth('login')}
                 onMouseEnter={preloadAuthModal}
                 onFocus={preloadAuthModal}
-                className="boxed-btn-primary px-3 py-1 text-[11px] font-mono uppercase flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-none"
+                className="boxed-btn-primary px-3.5 py-1 text-[11px] font-mono uppercase flex items-center gap-1.5 cursor-pointer rounded-full active:scale-95 transition-all shadow-none"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-current" />
                 <span>Sign In</span>

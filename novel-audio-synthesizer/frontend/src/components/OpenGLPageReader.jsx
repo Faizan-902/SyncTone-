@@ -514,7 +514,7 @@ export default function OpenGLPageReader({
             className={`leading-[1.85] tracking-[0.01em] text-justify indent-6 select-text ${
             isDialogue ? 'italic font-serif theme-main' : 'theme-sub'
           }`}>
-            <mark className="bg-[var(--accent-surface)] text-[var(--text-main)] rounded-sm">
+            <mark className="bg-[var(--accent-surface)] text-[var(--text-main)] rounded">
               {tokens.map((token, idx) => {
                 if (idx === activeTokenIdx) {
                   return (
@@ -525,7 +525,7 @@ export default function OpenGLPageReader({
                         display: 'inline',
                         textIndent: '0px',
                       }}
-                      className="inline bg-yellow-400 text-stone-900 font-bold rounded-sm px-0.5 shadow-xs"
+                      className="inline bg-yellow-400 text-stone-900 font-bold rounded px-1 shadow-xs"
                     >
                       {token}
                     </span>
@@ -546,7 +546,7 @@ export default function OpenGLPageReader({
             <mark
               data-active-word="true"
               style={{ display: 'inline', textIndent: '0px' }}
-              className="inline bg-[var(--accent-surface)] text-[var(--text-main)] rounded-sm"
+              className="inline bg-[var(--accent-surface)] text-[var(--text-main)] rounded"
             >
               {rawText}
             </mark>
