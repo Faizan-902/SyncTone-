@@ -420,6 +420,58 @@ function AppContent() {
     };
   }, [currentChapter, novelChapters, currentNovel, handleSelectChapter]);
 
+  // Seamless Archive Navigation: opens catalog and scrolls directly to library shelves
+  const handleOpenArchive = useCallback(() => {
+    if (view === 'catalog') {
+      const el = document.getElementById('archive-catalog') || document.querySelector('.volume-card') || document.querySelector('input[aria-label="Search novels"]');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    } else {
+      handleNavigate('catalog');
+      setTimeout(() => {
+        const el = document.getElementById('archive-catalog') || document.querySelector('.volume-card');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 150);
+    }
+  }, [view, handleNavigate]);
+
+  // Seamless Reader Launch: opens current chapter, or novel chapter 1, or flagship novel chapter 1
+  const handleOpenReaderQuick = useCallback(async () => {
+    if (currentChapter?.id) {
+      handleNavigate('reader', currentChapter.id);
+      return;
+    }
+    if (currentNovel?.id) {
+      try {
+        const nData = await api.novels.get(currentNovel.id);
+        const ch1 = (nData.chapters || []).find((c) => c.chapter_number === 1) || nData.chapters?.[0];
+        if (ch1) {
+          handleSelectChapter(currentNovel, ch1);
+          return;
+        }
+      } catch (_) {}
+    }
+    // Launch flagship volume with active audio
+    try {
+      const data = await api.novels.list();
+      const targetNovel = (data.novels || []).find((n) => n.chapter_count > 0) || data.novels?.[0];
+      if (targetNovel) {
+        const nData = await api.novels.get(targetNovel.id);
+        const ch1 = (nData.chapters || []).find((c) => c.chapter_number === 1) || nData.chapters?.[0];
+        if (ch1) {
+          handleSelectChapter(targetNovel, ch1);
+          return;
+        }
+        handleNavigate('details', targetNovel.id);
+        return;
+      }
+    } catch (_) {}
+    handleNavigate('catalog');
+  }, [currentChapter, currentNovel, handleNavigate, handleSelectChapter]);
+
   const handleOpenAuth = (mode = 'login') => {
     setAuthMode(typeof mode === 'string' ? mode : 'login');
     setShowAuthModal(true);
@@ -478,6 +530,8 @@ function AppContent() {
             currentNovel={currentNovel}
             currentChapter={currentChapter}
             onNavigate={handleNavigate}
+            onOpenArchive={handleOpenArchive}
+            onOpenReader={handleOpenReaderQuick}
             showRoster={showRoster}
             onToggleRoster={() => setShowRoster((prev) => !prev)}
             onOpenSettings={() => setShowSettings(true)}

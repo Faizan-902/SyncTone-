@@ -13,6 +13,8 @@ export default function TopHeader({
   currentNovel,
   currentChapter,
   onNavigate,
+  onOpenArchive,
+  onOpenReader,
   showRoster,
   onToggleRoster,
   onOpenSettings,
@@ -55,7 +57,8 @@ export default function TopHeader({
             </button>
             <button
               onClick={() => {
-                if (currentNovel?.id) onNavigate('details', currentNovel.id);
+                if (onOpenArchive) onOpenArchive();
+                else if (currentNovel?.id) onNavigate('details', currentNovel.id);
                 else onNavigate('catalog');
               }}
               className={`transition-colors py-1 cursor-pointer uppercase ${
@@ -70,12 +73,12 @@ export default function TopHeader({
               onClick={() => {
                 if (view === 'reader' && onToggleRoster) {
                   onToggleRoster();
-                } else if (onNavigate) {
-                  onNavigate('upload');
+                } else if (onOpenSettings) {
+                  onOpenSettings();
                 }
               }}
               className={`transition-colors py-1 cursor-pointer uppercase ${
-                showRoster || view === 'upload'
+                showRoster
                   ? 'text-[var(--text-main)] font-bold border-b border-[var(--text-main)]'
                   : 'text-[var(--text-sub)] hover:text-[var(--text-main)]'
               }`}
@@ -84,7 +87,8 @@ export default function TopHeader({
             </button>
             <button
               onClick={() => {
-                if (currentChapter && onNavigate) onNavigate('reader');
+                if (onOpenReader) onOpenReader();
+                else if (currentChapter && onNavigate) onNavigate('reader');
                 else if (currentNovel && onNavigate) onNavigate('details', currentNovel.id);
                 else onNavigate('catalog');
               }}

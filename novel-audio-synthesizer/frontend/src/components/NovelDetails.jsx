@@ -247,30 +247,40 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
         {/* Action Buttons Cluster */}
         <div className="detail-actions-cluster">
           <button
-            onClick={() => chapters.length > 0 && onSelectChapter(novel, chapters[0])}
-            disabled={chapters.length === 0}
+            onClick={() => {
+              if (chapters.length > 0) {
+                onSelectChapter(novel, chapters[0]);
+              } else if (onOpenUploadChapter) {
+                onOpenUploadChapter(novel);
+              }
+            }}
             onMouseEnter={preloadReaderView}
             onFocus={preloadReaderView}
             onPointerDown={preloadReaderView}
-            className="btn btn-lg btn-primary cursor-pointer active:scale-[0.98] hover:-translate-y-0.5 transition-all duration-200 rounded-xl shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label="Start Listening (Ch. 1)"
+            className="btn btn-lg btn-primary cursor-pointer active:scale-[0.98] hover:-translate-y-0.5 transition-all duration-200 rounded-xl shadow-md hover:shadow-lg"
+            aria-label={chapters.length > 0 ? 'Start Listening (Ch. 1)' : 'Add Chapter'}
           >
             <span className="dot" aria-hidden="true" />
-            <span>LISTEN</span>
-            <span className="sr-only">Start Listening (Ch. 1)</span>
+            <span>{chapters.length > 0 ? 'LISTEN' : 'ADD CHAPTER'}</span>
+            <span className="sr-only">{chapters.length > 0 ? 'Start Listening (Ch. 1)' : 'Add Chapter'}</span>
           </button>
 
           <button
-            onClick={() => chapters.length > 0 && onSelectChapter(novel, chapters[0])}
-            disabled={chapters.length === 0}
+            onClick={() => {
+              if (chapters.length > 0) {
+                onSelectChapter(novel, chapters[0]);
+              } else if (onOpenUploadChapter) {
+                onOpenUploadChapter(novel);
+              }
+            }}
             onMouseEnter={preloadReaderView}
             onFocus={preloadReaderView}
             onPointerDown={preloadReaderView}
-            className="btn btn-lg cursor-pointer active:scale-[0.98] hover:-translate-y-0.5 transition-all duration-200 rounded-xl shadow-xs hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label="Open Reader"
+            className="btn btn-lg cursor-pointer active:scale-[0.98] hover:-translate-y-0.5 transition-all duration-200 rounded-xl shadow-xs hover:shadow-md"
+            aria-label={chapters.length > 0 ? 'Open Reader' : 'Upload Manuscript'}
           >
             <span className="dot" aria-hidden="true" />
-            <span>OPEN READER</span>
+            <span>{chapters.length > 0 ? 'OPEN READER' : 'UPLOAD MANUSCRIPT'}</span>
           </button>
 
           <button

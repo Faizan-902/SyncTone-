@@ -590,7 +590,7 @@ export default function NovelCatalog({
           {/* ================================================================= */}
           {/* 4. SECTION 2: VERIFIED & COMMUNITY VOLUMES GRID                   */}
           {/* ================================================================= */}
-          <section className="space-y-6 pt-4" aria-label="Novel Catalog Grid">
+          <section id="archive-catalog" className="space-y-6 pt-4 scroll-mt-20" aria-label="Novel Catalog Grid">
             <div className="border-b border-[var(--border-subtle)] pb-5 space-y-4">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div className="flex flex-col gap-1">
