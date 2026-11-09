@@ -571,8 +571,10 @@ console.log('\n\x1b[1m==========================================================
 console.log(`\x1b[1m  TIER 5 ADVERSARIAL HARDENING SUMMARY: ${RESULTS.passed} passed, ${RESULTS.failed} failed\x1b[0m`);
 console.log('\x1b[1m======================================================================\x1b[0m\n');
 
-if (RESULTS.failed > 0) {
-  process.exit(1);
-} else {
-  process.exit(0);
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  if (RESULTS.failed > 0) {
+    process.exit(1);
+  } else {
+    process.exit(0);
+  }
 }

@@ -55,6 +55,10 @@ function ModalSkeleton() {
   return null;
 }
 
+function SimError() {
+  throw new Error('Simulated system fault for visual audit');
+}
+
 function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -170,9 +174,9 @@ function AppContent() {
   let routeNovelId = null;
   let routeChapterId = null;
 
-  if (pathname.startsWith('/novel/')) {
+  if (pathname.startsWith('/novel/') || pathname.startsWith('/novels/')) {
     view = 'details';
-    routeNovelId = pathname.replace('/novel/', '').split('/')[0];
+    routeNovelId = pathname.replace(/^\/novels?\//, '').split('/')[0];
   } else if (pathname.startsWith('/reader/')) {
     view = 'reader';
     routeChapterId = pathname.replace('/reader/', '').split('/')[0];
@@ -184,6 +188,8 @@ function AppContent() {
     view = 'admin';
   } else if (pathname === '/settings') {
     view = 'catalog';
+  } else if (pathname.startsWith('/test/')) {
+    view = 'test';
   }
 
   // Safe scroll helper
@@ -230,12 +236,26 @@ function AppContent() {
     });
   }, [navigate, selectedNovelId, currentNovel?.id, currentChapter?.id]);
 
-  // Sync /settings route with settings modal
+  // Sync /settings route with settings modal and deep-link modal triggers
   useEffect(() => {
     if (pathname === '/settings') {
       setShowSettings(true);
     }
-  }, [pathname]);
+    const params = new URLSearchParams(location.search);
+    const modal = params.get('modal');
+    if (modal === 'auth' || params.has('auth')) {
+      setAuthMode(params.get('auth') === 'register' ? 'register' : 'login');
+      setShowAuthModal(true);
+    } else if (modal === 'add-novel') {
+      setShowAddNovelModal(true);
+    } else if (modal === 'upload-chapter') {
+      setShowUploadChapterModal(true);
+    } else if (modal === 'settings') {
+      setShowSettings(true);
+    } else if (modal === 'roster') {
+      setShowRoster(true);
+    }
+  }, [pathname, location.search]);
 
   // Sync routeNovelId with selectedNovelId
   useEffect(() => {
@@ -518,6 +538,28 @@ function AppContent() {
                   />
                 </div>
               </Suspense>
+            )}
+
+            {/* TEST VIEWS */}
+            {pathname === '/test/error-boundary' && (
+              <ErrorBoundary friendlyMessage="Simulated system fault for visual audit.">
+                <SimError />
+              </ErrorBoundary>
+            )}
+
+            {pathname === '/test/synthesis-progress' && (
+              <div className="p-8 max-w-2xl mx-auto">
+                <Suspense fallback={null}>
+                  <SynthesisProgressBar
+                    status="synthesizing"
+                    percentComplete={68}
+                    currentSegment={14}
+                    totalSegments={20}
+                    message="Generating multi-voice chapter audio..."
+                    isConnected={true}
+                  />
+                </Suspense>
+              </div>
             )}
 
             {/* VIEW 1: NOVEL CATALOG (Home) */}

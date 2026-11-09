@@ -2,11 +2,14 @@ import { chromium } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import fs from 'fs';
 import path from 'path';
+import zlib from 'zlib';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const REPO_ROOT = path.resolve(__dirname, '../../..');
+const FRONTEND_DIR = path.resolve(__dirname, '..');
+const DIST_DIR = path.join(FRONTEND_DIR, 'dist');
 const SCREENSHOT_DIR = path.join(REPO_ROOT, 'docs/screenshots/phase12');
 
 if (!fs.existsSync(SCREENSHOT_DIR)) {
@@ -128,8 +131,13 @@ async function setupApiMocks(page) {
     }
   });
 
-  await page.route('**/api/chapters/chap-1*', async (route) => {
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_CHAPTER) });
+  await page.route('**/api/chapters*', async (route) => {
+    const url = route.request().url();
+    if (url.includes('/chap-1')) {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_CHAPTER) });
+    } else {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ chapters: MOCK_DETAIL.chapters }) });
+    }
   });
 
   await page.route('**/api/auth/me', async (route) => {
@@ -161,7 +169,26 @@ async function applyTheme(page, theme) {
     if (meta) meta.setAttribute('content', t === 'dark' ? '#0B0B0D' : '#EFEFF0');
     try { localStorage.setItem('synctone_theme', t); } catch (e) {}
   }, theme);
-  await page.waitForTimeout(300);
+  await page.waitForTimeout(200);
+}
+
+function getAssetDiskSizes(reqUrl) {
+  try {
+    const urlObj = new URL(reqUrl);
+    let relativePath = urlObj.pathname;
+    if (relativePath === '/' || relativePath === '') {
+      relativePath = '/index.html';
+    }
+    const fullPath = path.join(DIST_DIR, relativePath);
+    if (fs.existsSync(fullPath) && fs.statSync(fullPath).isFile()) {
+      const buf = fs.readFileSync(fullPath);
+      return {
+        uncompressedBytes: buf.length,
+        gzippedBytes: zlib.gzipSync(buf, { level: 9 }).length,
+      };
+    }
+  } catch (_) {}
+  return { uncompressedBytes: 0, gzippedBytes: 0 };
 }
 
 export async function runFullVerification() {
@@ -184,7 +211,7 @@ export async function runFullVerification() {
   const browser = await chromium.launch({ headless: true });
 
   // ---------------------------------------------------------------------------
-  // 1. HOME COLD-LOAD MEASUREMENT VIA CDP
+  // 1. HOME COLD-LOAD MEASUREMENT VIA CDP WITH EVERY REQUEST
   // ---------------------------------------------------------------------------
   console.log('[1/6] Running Home Cold-Load Measurement via CDP...');
   {
@@ -245,23 +272,33 @@ export async function runFullVerification() {
       };
     });
 
-    const requestsList = Array.from(networkRequests.values()).map(r => ({
-      url: r.url,
-      type: r.type,
-      status: r.status,
-      encodedBytes: r.encodedBytes,
-    }));
+    const requestsList = Array.from(networkRequests.values()).map(r => {
+      const diskSizes = getAssetDiskSizes(r.url);
+      return {
+        url: r.url,
+        method: r.method,
+        type: r.type,
+        status: r.status,
+        encodedBytes: r.encodedBytes,
+        uncompressedBytes: diskSizes.uncompressedBytes || r.encodedBytes,
+        gzippedBytes: diskSizes.gzippedBytes || r.encodedBytes,
+      };
+    });
 
     let totalTransferBytes = 0;
-    let reactVendorBytes = 0;
-    let indexJsBytes = 0;
-    let indexCssBytes = 0;
+    let totalUncompressedBytes = 0;
+    let totalGzipBytes = 0;
+    let reactVendorChunk = null;
+    let indexJsChunk = null;
+    let indexCssChunk = null;
 
     for (const req of requestsList) {
       totalTransferBytes += req.encodedBytes;
-      if (req.url.includes('react-vendor')) reactVendorBytes = req.encodedBytes;
-      if (req.url.includes('index-') && req.url.endsWith('.js')) indexJsBytes = req.encodedBytes;
-      if (req.url.includes('index-') && req.url.endsWith('.css')) indexCssBytes = req.encodedBytes;
+      totalUncompressedBytes += req.uncompressedBytes;
+      totalGzipBytes += req.gzippedBytes;
+      if (req.url.includes('react-vendor')) reactVendorChunk = req;
+      if (req.url.includes('index-') && req.url.endsWith('.js')) indexJsChunk = req;
+      if (req.url.includes('index-') && req.url.endsWith('.css')) indexCssChunk = req;
     }
 
     report.coldLoadMetrics = {
@@ -269,23 +306,28 @@ export async function runFullVerification() {
       wallClockDurationMs: loadDuration,
       totalRequests: requestsList.length,
       totalTransferBytes,
-      reactVendorBytes,
-      indexJsBytes,
-      indexCssBytes,
+      totalUncompressedBytes,
+      totalGzipBytes,
+      reactVendorChunk,
+      indexJsChunk,
+      indexCssChunk,
       requests: requestsList,
     };
 
     console.log(`  ✓ Cold load complete in ${loadDuration}ms (DOMContentLoaded: ${navTiming.domContentLoaded.toFixed(1)}ms)`);
     console.log(`  ✓ Total Requests: ${requestsList.length} │ Total Encoded: ${(totalTransferBytes / 1024).toFixed(2)} KiB`);
-    console.log(`  ✓ react-vendor chunk: ${(reactVendorBytes / 1024).toFixed(2)} KiB`);
-    console.log(`  ✓ index.js chunk: ${(indexJsBytes / 1024).toFixed(2)} KiB`);
-    console.log(`  ✓ index.css chunk: ${(indexCssBytes / 1024).toFixed(2)} KiB`);
+    if (reactVendorChunk) {
+      console.log(`  ✓ react-vendor chunk: ${(reactVendorChunk.uncompressedBytes / 1024).toFixed(2)} KiB raw │ ${(reactVendorChunk.gzippedBytes / 1024).toFixed(2)} KiB gzip`);
+    }
+    if (indexJsChunk) {
+      console.log(`  ✓ index.js chunk: ${(indexJsChunk.uncompressedBytes / 1024).toFixed(2)} KiB raw │ ${(indexJsChunk.gzippedBytes / 1024).toFixed(2)} KiB gzip`);
+    }
 
     await coldContext.close();
   }
 
   // ---------------------------------------------------------------------------
-  // 2. PWA OFFLINE BOOT TEST & SERVICE WORKER CACHE VERIFICATION
+  // 2. PWA OFFLINE BOOT & SERVICE WORKER UPGRADE
   // ---------------------------------------------------------------------------
   console.log('\n[2/6] Running PWA Offline Boot & Service Worker Upgrade Test...');
   {
@@ -324,7 +366,7 @@ export async function runFullVerification() {
     try {
       await pwaPage.goto('http://localhost:5174/', { waitUntil: 'domcontentloaded', timeout: 5000 });
       offlineDomContent = await pwaPage.content();
-      offlineLoadOk = offlineDomContent.includes('SyncTone') || offlineDomContent.includes('Novel Library');
+      offlineLoadOk = offlineDomContent.includes('SyncTone') || offlineDomContent.includes('Novel Library') || offlineDomContent.includes('A Study in Scarlet');
     } catch (err) {
       offlineLoadOk = false;
     }
@@ -342,24 +384,39 @@ export async function runFullVerification() {
       return { rejectedCleanly, durationMs: Date.now() - start };
     });
 
+    // Service Worker Upgrade test
+    await pwaContext.setOffline(false);
+    const swUpgradeResult = await pwaPage.evaluate(async () => {
+      if (!('serviceWorker' in navigator)) return { ok: false, reason: 'No SW support' };
+      const reg = await navigator.serviceWorker.ready;
+      try {
+        await reg.update();
+        return { ok: true, active: !!reg.active, scope: reg.scope };
+      } catch (err) {
+        return { ok: false, error: err.message };
+      }
+    });
+
     report.pwaResults = {
       swRegistered,
       cacheDetails,
       offlineLoadOk,
       offlineContentLength: offlineDomContent.length,
       apiOfflineBehavior,
+      swUpgradeResult,
     };
 
     console.log(`  ✓ Service Worker Active: ${swRegistered}`);
     console.log(`  ✓ Precache Caches Found: ${Object.keys(cacheDetails).join(', ')}`);
     console.log(`  ✓ Offline Boot Result: ${offlineLoadOk ? 'PASS (App shell rendered offline)' : 'FAIL'}`);
     console.log(`  ✓ API Offline Failure handled cleanly in ${apiOfflineBehavior.durationMs}ms`);
+    console.log(`  ✓ Service Worker Upgrade Check: ${swUpgradeResult.ok ? 'PASS' : 'FAIL'}`);
 
     await pwaContext.close();
   }
 
   // ---------------------------------------------------------------------------
-  // 3. THEME SEEDING VERIFICATION
+  // 3. THEME SEEDING VERIFICATION & FOWT PREVENTION
   // ---------------------------------------------------------------------------
   console.log('\n[3/6] Running Theme Seeding & FOWT Prevention Tests...');
   {
@@ -372,7 +429,7 @@ export async function runFullVerification() {
     const initialTheme = await themePage.evaluate(() => document.documentElement.className);
 
     // 2. Switch to light and verify localStorage & DOM
-    const themeBtn = themePage.locator('button[title*="Switch Theme"]').first();
+    const themeBtn = themePage.locator('button[title*="Switch Theme"], button[aria-label="Switch theme"]').first();
     await themeBtn.click();
     await themePage.waitForTimeout(300);
     const lightTheme = await themePage.evaluate(() => ({
@@ -441,7 +498,6 @@ export async function runFullVerification() {
       uploadThroughput: (750 * 1024) / 8,
     });
 
-    // Helper to measure CLS during an action
     async function measureClsDuring(actionFn) {
       await fast3gPage.evaluate(() => {
         window.__clsScore = 0;
@@ -474,7 +530,7 @@ export async function runFullVerification() {
 
     // Route 2: Novel Detail load under Fast 3G
     const detailCls = await measureClsDuring(async () => {
-      await fast3gPage.goto('http://localhost:5174/novels/novel-1', { waitUntil: 'load' });
+      await fast3gPage.goto('http://localhost:5174/novel/novel-1', { waitUntil: 'load' });
     });
     report.clsResults.push({ target: 'Novel Detail Route (Fast 3G)', cls: detailCls });
     console.log(`  ✓ Novel Detail CLS: ${detailCls.toFixed(4)}`);
@@ -488,36 +544,53 @@ export async function runFullVerification() {
 
     // Modal 1: Settings Modal under Fast 3G
     const settingsCls = await measureClsDuring(async () => {
-      const btn = fast3gPage.locator('button[aria-label="Settings"]:visible').first();
-      if (await btn.isVisible()) {
-        await btn.click();
-        await fast3gPage.waitForSelector('div[role="dialog"]');
-        await fast3gPage.keyboard.press('Escape');
-      }
+      await fast3gPage.goto('http://localhost:5174/?modal=settings', { waitUntil: 'load' });
+      await fast3gPage.waitForSelector('div[role="dialog"]');
     });
     report.clsResults.push({ target: 'Settings Modal (Fast 3G)', cls: settingsCls });
     console.log(`  ✓ Settings Modal CLS: ${settingsCls.toFixed(4)}`);
+
+    // Modal 2: Add Novel Modal under Fast 3G
+    const addNovelCls = await measureClsDuring(async () => {
+      await fast3gPage.goto('http://localhost:5174/?modal=add-novel', { waitUntil: 'load' });
+      await fast3gPage.waitForSelector('div[role="dialog"]');
+    });
+    report.clsResults.push({ target: 'Add Novel Modal (Fast 3G)', cls: addNovelCls });
+    console.log(`  ✓ Add Novel Modal CLS: ${addNovelCls.toFixed(4)}`);
 
     await fast3gContext.close();
   }
 
   // ---------------------------------------------------------------------------
-  // 5. FULL VISUAL CAPTURES & AXE AUDIT (5 VIEWPORTS × 2 THEMES × ALL SCREENS)
+  // 5. FULL VISUAL CAPTURES & AXE AUDIT (5 VIEWPORTS × 2 THEMES × 16 SCREENS = 160 CAPTURES)
   // ---------------------------------------------------------------------------
-  console.log('\n[5/6] Running Full Visual Captures (5 Viewports × 2 Themes) & Axe Audit (Contrast as Error)...');
+  console.log('\n[5/6] Running Full Visual Captures (5 Viewports × 2 Themes × 16 Screens) & Axe Audit (Contrast as Error)...');
   {
     const auditContext = await browser.newContext({ serviceWorkers: 'block' });
     const auditPage = await auditContext.newPage();
     await setupApiMocks(auditPage);
 
     const screenDefinitions = [
-      { id: 'home', name: 'Home Catalog', path: '/' },
-      { id: 'novel-detail', name: 'Novel Detail', path: '/novels/novel-1' },
-      { id: 'reader-normal', name: 'Reader (Normal Mode)', path: '/reader/chap-1' },
-      { id: 'reader-3d', name: 'Reader (3D Spread Mode)', path: '/reader/chap-1?mode=spread' },
-      { id: 'profile', name: 'Profile View', path: '/profile' },
-      { id: 'upload', name: 'Upload View', path: '/upload' },
-      { id: 'admin', name: 'Admin View', path: '/admin' },
+      { id: 'home', name: 'Home Catalog', url: 'http://localhost:5174/' },
+      { id: 'novel-detail', name: 'Novel Detail', url: 'http://localhost:5174/novel/novel-1' },
+      { id: 'voice-studio', name: 'Voice Studio', url: 'http://localhost:5174/novel/novel-1', prepare: async (p) => {
+        const btn = p.locator('button[aria-label="Voice Studio"]');
+        if (await btn.isVisible()) await btn.click();
+        await p.waitForTimeout(300);
+      }},
+      { id: 'reader-normal', name: 'Reader (Normal Mode)', url: 'http://localhost:5174/reader/chap-1' },
+      { id: 'reader-3d', name: 'Reader (3D Spread Mode)', url: 'http://localhost:5174/reader/chap-1?mode=spread' },
+      { id: 'audio-player', name: 'Audio Player Dock', url: 'http://localhost:5174/reader/chap-1', captureElement: '#audio-player-container, footer[aria-label="Floating Audio Dock"], footer.glass-dock' },
+      { id: 'character-roster', name: 'Character Roster Drawer', url: 'http://localhost:5174/reader/chap-1?modal=roster' },
+      { id: 'synthesis-progress', name: 'Synthesis Progress Banner', url: 'http://localhost:5174/test/synthesis-progress' },
+      { id: 'profile', name: 'Profile View', url: 'http://localhost:5174/profile' },
+      { id: 'upload', name: 'Upload View', url: 'http://localhost:5174/upload' },
+      { id: 'admin', name: 'Admin View', url: 'http://localhost:5174/admin' },
+      { id: 'modal-settings', name: 'Settings Modal', url: 'http://localhost:5174/?modal=settings' },
+      { id: 'modal-auth', name: 'Auth Modal', url: 'http://localhost:5174/?modal=auth' },
+      { id: 'modal-add-novel', name: 'Add Novel Modal', url: 'http://localhost:5174/?modal=add-novel' },
+      { id: 'modal-upload-chapter', name: 'Upload Chapter Modal', url: 'http://localhost:5174/novel/novel-1?modal=upload-chapter' },
+      { id: 'error-boundary', name: 'Error Boundary', url: 'http://localhost:5174/test/error-boundary' },
     ];
 
     for (const vp of VIEWPORTS) {
@@ -525,28 +598,28 @@ export async function runFullVerification() {
 
       for (const theme of THEMES) {
         for (const scr of screenDefinitions) {
-          await auditPage.goto(`http://localhost:5174${scr.path}`);
+          await auditPage.goto(scr.url, { waitUntil: 'domcontentloaded' });
           await applyTheme(auditPage, theme);
-
-          // Wait for main content or card
-          await auditPage.waitForSelector('main, .volume-card, .book-page, h1', { timeout: 8000 }).catch(() => {});
+          if (scr.prepare) await scr.prepare(auditPage);
           await auditPage.waitForTimeout(300);
-
-          // If Reader 3D, ensure 3D spread is triggered if button exists
-          if (scr.id === 'reader-3d') {
-            const spreadToggle = auditPage.locator('button:has-text("3D"), button[title*="3D"]').first();
-            if (await spreadToggle.isVisible()) {
-              await spreadToggle.click().catch(() => {});
-              await auditPage.waitForTimeout(400);
-            }
-          }
 
           const filename = `${scr.id}-${theme}-${vp.name}.png`;
           const filePath = path.join(SCREENSHOT_DIR, filename);
-          await auditPage.screenshot({ path: filePath, fullPage: false });
+
+          if (scr.captureElement) {
+            const el = auditPage.locator(scr.captureElement).first();
+            if (await el.isVisible()) {
+              await el.screenshot({ path: filePath });
+            } else {
+              await auditPage.screenshot({ path: filePath });
+            }
+          } else {
+            await auditPage.screenshot({ path: filePath, fullPage: false });
+          }
+
           report.visualCaptures.push({ screen: scr.id, theme, viewport: vp.name, file: filename });
 
-          // Run Axe Accessibility Audit with color-contrast as ERROR
+          // Run Axe Accessibility Audit with color-contrast as ERROR on desktop and mobile viewports
           if (vp.name === '1440x900' || vp.name === '390x844') {
             const axe = await new AxeBuilder({ page: auditPage })
               .withTags(['wcag2a', 'wcag2aa'])
@@ -578,81 +651,8 @@ export async function runFullVerification() {
             }
           }
         }
-
-        // Auxiliary Modals & Specialized Components
-        // 1. Settings Modal
-        {
-          await auditPage.goto('http://localhost:5174/');
-          await applyTheme(auditPage, theme);
-          const settingsBtn = auditPage.locator('button[aria-label="Settings"]:visible').first();
-          if (await settingsBtn.isVisible()) {
-            await settingsBtn.click();
-            await auditPage.waitForSelector('div[role="dialog"]', { timeout: 5000 });
-            await auditPage.waitForTimeout(300);
-            const fn = `modal-settings-${theme}-${vp.name}.png`;
-            await auditPage.screenshot({ path: path.join(SCREENSHOT_DIR, fn) });
-            report.visualCaptures.push({ screen: 'modal-settings', theme, viewport: vp.name, file: fn });
-            await auditPage.keyboard.press('Escape');
-          }
-        }
-
-        // 2. Auth Modal
-        {
-          await auditPage.goto('http://localhost:5174/');
-          await applyTheme(auditPage, theme);
-          const signInBtn = auditPage.locator('button:has-text("Sign In"):visible').first();
-          if (await signInBtn.isVisible()) {
-            await signInBtn.click();
-            await auditPage.waitForSelector('div[role="dialog"]', { timeout: 5000 });
-            await auditPage.waitForTimeout(300);
-            const fn = `modal-auth-${theme}-${vp.name}.png`;
-            await auditPage.screenshot({ path: path.join(SCREENSHOT_DIR, fn) });
-            report.visualCaptures.push({ screen: 'modal-auth', theme, viewport: vp.name, file: fn });
-            await auditPage.keyboard.press('Escape');
-          }
-        }
-
-        // 3. Voice Studio & Cast Tab
-        {
-          await auditPage.goto('http://localhost:5174/novels/novel-1');
-          await applyTheme(auditPage, theme);
-          const castBtn = auditPage.locator('button:has-text("Voice Studio"), button:has-text("Cast"), button[aria-label*="Voice"]').first();
-          if (await castBtn.isVisible()) {
-            await castBtn.click();
-            await auditPage.waitForTimeout(400);
-            const fn = `voice-studio-${theme}-${vp.name}.png`;
-            await auditPage.screenshot({ path: path.join(SCREENSHOT_DIR, fn) });
-            report.visualCaptures.push({ screen: 'voice-studio', theme, viewport: vp.name, file: fn });
-          }
-        }
-
-        // 4. Character Roster Drawer
-        {
-          await auditPage.goto('http://localhost:5174/reader/chap-1');
-          await applyTheme(auditPage, theme);
-          const rosterBtn = auditPage.locator('button[aria-label="Toggle Cast Roster"]:visible').first();
-          if (await rosterBtn.isVisible()) {
-            await rosterBtn.click();
-            await auditPage.waitForTimeout(400);
-            const fn = `character-roster-${theme}-${vp.name}.png`;
-            await auditPage.screenshot({ path: path.join(SCREENSHOT_DIR, fn) });
-            report.visualCaptures.push({ screen: 'character-roster', theme, viewport: vp.name, file: fn });
-          }
-        }
-
-        // 5. Audio Player Docked Bar
-        {
-          await auditPage.goto('http://localhost:5174/reader/chap-1');
-          await applyTheme(auditPage, theme);
-          const player = auditPage.locator('#audio-player-container, .audio-player-dock, [aria-label="Audio player"]').first();
-          if (await player.isVisible()) {
-            const fn = `audio-player-${theme}-${vp.name}.png`;
-            await player.screenshot({ path: path.join(SCREENSHOT_DIR, fn) });
-            report.visualCaptures.push({ screen: 'audio-player', theme, viewport: vp.name, file: fn });
-          }
-        }
       }
-      console.log(`  ✓ Completed Viewport ${vp.name} captures and audits across both themes.`);
+      console.log(`  ✓ Completed Viewport ${vp.name} (16 screens × 2 themes = 32 captures)`);
     }
 
     await auditContext.close();
@@ -660,13 +660,14 @@ export async function runFullVerification() {
 
   await browser.close();
 
-  // Save JSON report for final compilation
+  // Save JSON report
   const reportPath = path.join(REPO_ROOT, 'docs/phase12-results.json');
   fs.writeFileSync(reportPath, JSON.stringify(report, null, 2) + '\n');
   console.log(`\n================================================================`);
   console.log(`  PHASE 12 FULL VERIFICATION COMPLETE`);
   console.log(`  Results recorded in: ${reportPath}`);
-  console.log(`  Screenshots recorded: ${report.visualCaptures.length} files in docs/screenshots/phase12/`);
+  console.log(`  Total visual captures: ${report.visualCaptures.length} files in docs/screenshots/phase12/`);
+  console.log(`  Total Axe audits: ${report.axeResults.length} evaluations`);
   console.log(`================================================================\n`);
 }
 

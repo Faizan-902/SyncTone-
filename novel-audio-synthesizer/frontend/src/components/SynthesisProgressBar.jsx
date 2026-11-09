@@ -88,6 +88,7 @@ export default function SynthesisProgressBar({
       <div
         className="w-full bg-[var(--bg-surface)] rounded-full h-2 overflow-hidden border border-[var(--border-subtle)] shadow-xs"
         role="progressbar"
+        aria-label="Audio synthesis progress"
         aria-valuenow={Math.round(percentComplete)}
         aria-valuemin={0}
         aria-valuemax={100}

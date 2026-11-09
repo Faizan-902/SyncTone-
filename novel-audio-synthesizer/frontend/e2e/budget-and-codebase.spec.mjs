@@ -197,38 +197,39 @@ export async function runBudgetAndCodebaseAudits() {
     expect(Boolean(foliateChunk)).toBe(true);
   });
 
-  // --- TIER 1: R2 - Color Palette & Guardrails Tests ---
-  test('T1-R2-01: Sage Green (#87A96B) is configured in Tailwind brand tokens', () => {
+  // --- TIER 1: R2 - Color Palette & Guardrails Tests (THEME_LOCK v2 Noir Monochrome) ---
+  test('T1-R2-01: Noir Monochrome brand tokens are configured in Tailwind', () => {
     const tailwindPath = path.join(frontendDir, 'tailwind.config.js');
     const content = fs.readFileSync(tailwindPath, 'utf-8');
-    expect(content.toLowerCase()).toContain('#87a96b');
-    expect(content).toMatch(/sage:\s*['"]#87A96B['"]/i);
+    expect(content.toLowerCase()).toContain('#0b0b0d');
+    expect(content.toLowerCase()).toContain('#f2f2f3');
+    expect(content).toMatch(/signal:\s*['"]var\(--signal\)['"]/i);
   });
 
-  test('T1-R2-02: Walnut Brown (#5A3E2B) is configured in Tailwind brand tokens', () => {
+  test('T1-R2-02: Zero chromatic brand tokens in Tailwind (except --signal)', () => {
     const tailwindPath = path.join(frontendDir, 'tailwind.config.js');
     const content = fs.readFileSync(tailwindPath, 'utf-8');
-    expect(content.toLowerCase()).toContain('#5a3e2b');
-    expect(content).toMatch(/['"]walnut-deep['"]:\s*['"]#5A3E2B['"]/i);
+    expect(content.toLowerCase()).not.toContain('#87a96b');
+    expect(content.toLowerCase()).not.toContain('#5a3e2b');
+    expect(content.toLowerCase()).not.toContain('#d5851f');
   });
 
-  test('T1-R2-03: Amber Glow (#D5851F) is configured in Tailwind brand tokens', () => {
+  test('T1-R2-03: Signal token is isolated chromatic indicator', () => {
     const tailwindPath = path.join(frontendDir, 'tailwind.config.js');
     const content = fs.readFileSync(tailwindPath, 'utf-8');
-    expect(content.toLowerCase()).toContain('#d5851f');
-    expect(content).toMatch(/amber(?:-glow)?['"]?:\s*['"]#D5851F['"]/i);
+    expect(content).toMatch(/signal:\s*['"]var\(--signal\)['"]/i);
   });
 
-  test('T1-R2-04: Earthy Luxury core variables maintain strict parity in index.css', () => {
+  test('T1-R2-04: Noir Monochrome core variables maintain strict parity in index.css', () => {
     const cssPath = path.join(srcDir, 'index.css');
     const content = fs.readFileSync(cssPath, 'utf-8');
-    expect(content).toContain('--brand-espresso: #1A120E');
-    expect(content).toContain('--brand-chocolate: #3A2418');
-    expect(content).toContain('--brand-walnut: #5A3E2B');
-    expect(content).toContain('--brand-bronze: #A88462');
-    expect(content).toContain('--brand-sand: #D5C4AE');
-    expect(content).toContain('--bg-page: #1A120E');
-    expect(content).toContain('--bg-surface: #3A2418');
+    expect(content).toContain('--brand-espresso: #0B0B0D');
+    expect(content).toContain('--brand-chocolate: #141416');
+    expect(content).toContain('--brand-walnut: #1B1B1E');
+    expect(content).toContain('--brand-sand: #F2F2F3');
+    expect(content).toContain('--bg-page: #0B0B0D');
+    expect(content).toContain('--bg-surface: #141416');
+    expect(content).toContain('--signal: #FF5A1F');
   });
 
   // --- TIER 2: Boundary & Corner Cases ---
@@ -276,16 +277,16 @@ export async function runBudgetAndCodebaseAudits() {
     }
   });
 
-  test('T2-R2-02: Color Contrast Boundary — Sage Green (#87A96B) against Deep Espresso (#1A120E) >= 4.5:1', () => {
-    const ratio = getContrastRatio('#87A96B', '#1A120E');
-    console.log(`    [Contrast] Sage Green on Espresso: ${ratio.toFixed(2)}:1`);
+  test('T2-R2-02: Color Contrast Boundary — Text Main (#F2F2F3) against Page (#0B0B0D) >= 4.5:1 (WCAG AA)', () => {
+    const ratio = getContrastRatio('#F2F2F3', '#0B0B0D');
+    console.log(`    [Contrast] Text Main on Page: ${ratio.toFixed(2)}:1`);
     expect(ratio).toBeGreaterThanOrEqual(4.5);
   });
 
-  test('T2-R2-03: Color Contrast Boundary — Amber Glow (#D5851F) against Deep Espresso (#1A120E) >= 4.5:1', () => {
-    const ratio = getContrastRatio('#D5851F', '#1A120E');
-    console.log(`    [Contrast] Amber Glow on Espresso: ${ratio.toFixed(2)}:1`);
-    expect(ratio).toBeGreaterThanOrEqual(4.5);
+  test('T2-R2-03: Color Contrast Boundary — Signal Dot (#FF5A1F) against Page (#0B0B0D) >= 3.0:1 (WCAG Non-Text AA)', () => {
+    const ratio = getContrastRatio('#FF5A1F', '#0B0B0D');
+    console.log(`    [Contrast] Signal Dot on Page: ${ratio.toFixed(2)}:1`);
+    expect(ratio).toBeGreaterThanOrEqual(3.0);
   });
 
   test('T2-R2-05: SVG Asset Scan — All public SVG icons use approved palette colors', () => {

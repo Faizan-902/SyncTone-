@@ -687,6 +687,7 @@ export default function AddNovelModal({
               type="button"
               role="switch"
               data-testid="tts-sanitizer-toggle"
+              aria-label="Toggle TTS prose cleaning"
               aria-checked={useTtsSanitizer}
               onClick={() => setUseTtsSanitizer((prev) => !prev)}
               className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
@@ -718,10 +719,12 @@ export default function AddNovelModal({
 
           {/* Distribution Channel Selector */}
           <div>
-            <label className="block text-xs font-semibold theme-sub uppercase tracking-wider mb-1.5 font-mono">
+            <label htmlFor="novel-distribution-channel" className="block text-xs font-semibold theme-sub uppercase tracking-wider mb-1.5 font-mono">
               Distribution Channel
             </label>
             <select
+              id="novel-distribution-channel"
+              aria-label="Distribution Channel"
               value={channel}
               onChange={(e) => setChannel(e.target.value)}
               className="w-full px-3.5 py-2.5 text-xs theme-card border rounded-xl focus:outline-none focus:border-[var(--border-focus)] transition"

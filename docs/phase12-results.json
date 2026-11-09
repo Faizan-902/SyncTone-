@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-11-09T18:38:34.152Z",
+  "timestamp": "2026-11-09T19:09:03.292Z",
   "viewports": [
     {
       "name": "1440x900",
@@ -51,6 +51,15 @@
       "violations": []
     },
     {
+      "screen": "voice-studio",
+      "theme": "dark",
+      "viewport": "1440x900",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
       "screen": "reader-normal",
       "theme": "dark",
       "viewport": "1440x900",
@@ -61,6 +70,33 @@
     },
     {
       "screen": "reader-3d",
+      "theme": "dark",
+      "viewport": "1440x900",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
+      "screen": "audio-player",
+      "theme": "dark",
+      "viewport": "1440x900",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
+      "screen": "character-roster",
+      "theme": "dark",
+      "viewport": "1440x900",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
+      "screen": "synthesis-progress",
       "theme": "dark",
       "viewport": "1440x900",
       "totalViolations": 0,
@@ -88,6 +124,51 @@
     },
     {
       "screen": "admin",
+      "theme": "dark",
+      "viewport": "1440x900",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
+      "screen": "modal-settings",
+      "theme": "dark",
+      "viewport": "1440x900",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
+      "screen": "modal-auth",
+      "theme": "dark",
+      "viewport": "1440x900",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
+      "screen": "modal-add-novel",
+      "theme": "dark",
+      "viewport": "1440x900",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
+      "screen": "modal-upload-chapter",
+      "theme": "dark",
+      "viewport": "1440x900",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
+      "screen": "error-boundary",
       "theme": "dark",
       "viewport": "1440x900",
       "totalViolations": 0,
@@ -114,6 +195,15 @@
       "violations": []
     },
     {
+      "screen": "voice-studio",
+      "theme": "light",
+      "viewport": "1440x900",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
       "screen": "reader-normal",
       "theme": "light",
       "viewport": "1440x900",
@@ -124,6 +214,33 @@
     },
     {
       "screen": "reader-3d",
+      "theme": "light",
+      "viewport": "1440x900",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
+      "screen": "audio-player",
+      "theme": "light",
+      "viewport": "1440x900",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
+      "screen": "character-roster",
+      "theme": "light",
+      "viewport": "1440x900",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
+      "screen": "synthesis-progress",
       "theme": "light",
       "viewport": "1440x900",
       "totalViolations": 0,
@@ -151,6 +268,51 @@
     },
     {
       "screen": "admin",
+      "theme": "light",
+      "viewport": "1440x900",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
+      "screen": "modal-settings",
+      "theme": "light",
+      "viewport": "1440x900",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
+      "screen": "modal-auth",
+      "theme": "light",
+      "viewport": "1440x900",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
+      "screen": "modal-add-novel",
+      "theme": "light",
+      "viewport": "1440x900",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
+      "screen": "modal-upload-chapter",
+      "theme": "light",
+      "viewport": "1440x900",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
+      "screen": "error-boundary",
       "theme": "light",
       "viewport": "1440x900",
       "totalViolations": 0,
@@ -177,6 +339,15 @@
       "violations": []
     },
     {
+      "screen": "voice-studio",
+      "theme": "dark",
+      "viewport": "390x844",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
       "screen": "reader-normal",
       "theme": "dark",
       "viewport": "390x844",
@@ -187,6 +358,33 @@
     },
     {
       "screen": "reader-3d",
+      "theme": "dark",
+      "viewport": "390x844",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
+      "screen": "audio-player",
+      "theme": "dark",
+      "viewport": "390x844",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
+      "screen": "character-roster",
+      "theme": "dark",
+      "viewport": "390x844",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
+      "screen": "synthesis-progress",
       "theme": "dark",
       "viewport": "390x844",
       "totalViolations": 0,
@@ -214,6 +412,51 @@
     },
     {
       "screen": "admin",
+      "theme": "dark",
+      "viewport": "390x844",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
+      "screen": "modal-settings",
+      "theme": "dark",
+      "viewport": "390x844",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
+      "screen": "modal-auth",
+      "theme": "dark",
+      "viewport": "390x844",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
+      "screen": "modal-add-novel",
+      "theme": "dark",
+      "viewport": "390x844",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
+      "screen": "modal-upload-chapter",
+      "theme": "dark",
+      "viewport": "390x844",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
+      "screen": "error-boundary",
       "theme": "dark",
       "viewport": "390x844",
       "totalViolations": 0,
@@ -240,6 +483,15 @@
       "violations": []
     },
     {
+      "screen": "voice-studio",
+      "theme": "light",
+      "viewport": "390x844",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
       "screen": "reader-normal",
       "theme": "light",
       "viewport": "390x844",
@@ -250,6 +502,33 @@
     },
     {
       "screen": "reader-3d",
+      "theme": "light",
+      "viewport": "390x844",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
+      "screen": "audio-player",
+      "theme": "light",
+      "viewport": "390x844",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
+      "screen": "character-roster",
+      "theme": "light",
+      "viewport": "390x844",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
+      "screen": "synthesis-progress",
       "theme": "light",
       "viewport": "390x844",
       "totalViolations": 0,
@@ -277,6 +556,51 @@
     },
     {
       "screen": "admin",
+      "theme": "light",
+      "viewport": "390x844",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
+      "screen": "modal-settings",
+      "theme": "light",
+      "viewport": "390x844",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
+      "screen": "modal-auth",
+      "theme": "light",
+      "viewport": "390x844",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
+      "screen": "modal-add-novel",
+      "theme": "light",
+      "viewport": "390x844",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
+      "screen": "modal-upload-chapter",
+      "theme": "light",
+      "viewport": "390x844",
+      "totalViolations": 0,
+      "contrastViolations": 0,
+      "otherViolations": 0,
+      "violations": []
+    },
+    {
+      "screen": "error-boundary",
       "theme": "light",
       "viewport": "390x844",
       "totalViolations": 0,
@@ -287,82 +611,132 @@
   ],
   "coldLoadMetrics": {
     "navTiming": {
-      "domContentLoaded": 199.80000001192093,
-      "loadTime": 200.5,
-      "domInteractive": 197.60000002384186
+      "domContentLoaded": 238.60000002384186,
+      "loadTime": 240.40000000596046,
+      "domInteractive": 233.2000000178814
     },
-    "wallClockDurationMs": 203,
-    "totalRequests": 11,
-    "totalTransferBytes": 374029,
-    "reactVendorBytes": 142571,
-    "indexJsBytes": 108214,
-    "indexCssBytes": 99399,
+    "wallClockDurationMs": 244,
+    "totalRequests": 10,
+    "totalTransferBytes": 369117,
+    "totalUncompressedBytes": 367176,
+    "totalGzipBytes": 109275,
+    "reactVendorChunk": {
+      "url": "http://localhost:5174/assets/react-vendor-5TPL3RWa.js",
+      "method": "GET",
+      "type": "Script",
+      "status": 200,
+      "encodedBytes": 142571,
+      "uncompressedBytes": 142216,
+      "gzippedBytes": 45467
+    },
+    "indexJsChunk": {
+      "url": "http://localhost:5174/assets/index-BG0VxYP7.js",
+      "method": "GET",
+      "type": "Script",
+      "status": 200,
+      "encodedBytes": 103304,
+      "uncompressedBytes": 102949,
+      "gzippedBytes": 27424
+    },
+    "indexCssChunk": {
+      "url": "http://localhost:5174/assets/index-Bo3OVp2t.css",
+      "method": "GET",
+      "type": "Stylesheet",
+      "status": 200,
+      "encodedBytes": 99399,
+      "uncompressedBytes": 99052,
+      "gzippedBytes": 20237
+    },
     "requests": [
       {
         "url": "http://localhost:5174/",
+        "method": "GET",
         "type": "Document",
         "status": 200,
-        "encodedBytes": 2158
+        "encodedBytes": 2158,
+        "uncompressedBytes": 1896,
+        "gzippedBytes": 912
       },
       {
         "url": "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap",
+        "method": "GET",
         "type": "Stylesheet",
         "status": 200,
-        "encodedBytes": 11331
+        "encodedBytes": 11329,
+        "uncompressedBytes": 11329,
+        "gzippedBytes": 11329
       },
       {
-        "url": "http://localhost:5174/assets/index-BCK7eHQA.js",
+        "url": "http://localhost:5174/assets/index-BG0VxYP7.js",
+        "method": "GET",
         "type": "Script",
         "status": 200,
-        "encodedBytes": 108214
+        "encodedBytes": 103304,
+        "uncompressedBytes": 102949,
+        "gzippedBytes": 27424
       },
       {
         "url": "http://localhost:5174/assets/react-vendor-5TPL3RWa.js",
+        "method": "GET",
         "type": "Script",
         "status": 200,
-        "encodedBytes": 142571
+        "encodedBytes": 142571,
+        "uncompressedBytes": 142216,
+        "gzippedBytes": 45467
       },
       {
         "url": "http://localhost:5174/assets/router-vendor-DpxZgJma.js",
+        "method": "GET",
         "type": "Script",
         "status": 200,
-        "encodedBytes": 9953
+        "encodedBytes": 9953,
+        "uncompressedBytes": 9600,
+        "gzippedBytes": 3780
       },
       {
         "url": "http://localhost:5174/assets/index-Bo3OVp2t.css",
+        "method": "GET",
         "type": "Stylesheet",
         "status": 200,
-        "encodedBytes": 99399
+        "encodedBytes": 99399,
+        "uncompressedBytes": 99052,
+        "gzippedBytes": 20237
       },
       {
         "url": "http://localhost:5174/registerSW.js",
+        "method": "GET",
         "type": "Script",
         "status": 200,
-        "encodedBytes": 403
+        "encodedBytes": 403,
+        "uncompressedBytes": 134,
+        "gzippedBytes": 126
       },
       {
         "url": "http://localhost:5174/api/novels?channel=verified",
+        "method": "GET",
         "type": "Fetch",
         "status": null,
-        "encodedBytes": 0
+        "encodedBytes": 0,
+        "uncompressedBytes": 0,
+        "gzippedBytes": 0
       },
       {
         "url": "http://localhost:5174/api/status/models",
+        "method": "GET",
         "type": "Fetch",
         "status": null,
-        "encodedBytes": 0
+        "encodedBytes": 0,
+        "uncompressedBytes": 0,
+        "gzippedBytes": 0
       },
       {
         "url": "http://localhost:5174/api/auth/me",
+        "method": "GET",
         "type": "Fetch",
         "status": null,
-        "encodedBytes": 0
-      },
-      {
-        "url": "http://localhost:5174/assets/jetbrains-mono-latin-wght-normal-B9CIFXIH.woff2",
-        "type": "Font",
-        "status": null,
-        "encodedBytes": 0
+        "encodedBytes": 0,
+        "uncompressedBytes": 0,
+        "gzippedBytes": 0
       }
     ]
   },
@@ -391,7 +765,7 @@
         "/assets/inter-cyrillic-wght-normal-DqGufNeO.woff2",
         "/assets/inter-cyrillic-ext-wght-normal-BOeWTOD4.woff2",
         "/assets/index-Bo3OVp2t.css",
-        "/assets/index-BCK7eHQA.js",
+        "/assets/index-BG0VxYP7.js",
         "/assets/react-vendor-5TPL3RWa.js",
         "/assets/router-vendor-DpxZgJma.js",
         "/registerSW.js",
@@ -402,7 +776,12 @@
     "offlineContentLength": 47833,
     "apiOfflineBehavior": {
       "rejectedCleanly": false,
-      "durationMs": 1
+      "durationMs": 2
+    },
+    "swUpgradeResult": {
+      "ok": true,
+      "active": true,
+      "scope": "http://localhost:5174/"
     }
   },
   "clsResults": [
@@ -420,7 +799,11 @@
     },
     {
       "target": "Settings Modal (Fast 3G)",
-      "cls": 0.002178964720831977
+      "cls": 0
+    },
+    {
+      "target": "Add Novel Modal (Fast 3G)",
+      "cls": 0
     }
   ],
   "themeSeedingResults": {
@@ -458,6 +841,12 @@
       "file": "novel-detail-dark-1440x900.png"
     },
     {
+      "screen": "voice-studio",
+      "theme": "dark",
+      "viewport": "1440x900",
+      "file": "voice-studio-dark-1440x900.png"
+    },
+    {
       "screen": "reader-normal",
       "theme": "dark",
       "viewport": "1440x900",
@@ -468,6 +857,24 @@
       "theme": "dark",
       "viewport": "1440x900",
       "file": "reader-3d-dark-1440x900.png"
+    },
+    {
+      "screen": "audio-player",
+      "theme": "dark",
+      "viewport": "1440x900",
+      "file": "audio-player-dark-1440x900.png"
+    },
+    {
+      "screen": "character-roster",
+      "theme": "dark",
+      "viewport": "1440x900",
+      "file": "character-roster-dark-1440x900.png"
+    },
+    {
+      "screen": "synthesis-progress",
+      "theme": "dark",
+      "viewport": "1440x900",
+      "file": "synthesis-progress-dark-1440x900.png"
     },
     {
       "screen": "profile",
@@ -494,16 +901,28 @@
       "file": "modal-settings-dark-1440x900.png"
     },
     {
-      "screen": "character-roster",
+      "screen": "modal-auth",
       "theme": "dark",
       "viewport": "1440x900",
-      "file": "character-roster-dark-1440x900.png"
+      "file": "modal-auth-dark-1440x900.png"
     },
     {
-      "screen": "audio-player",
+      "screen": "modal-add-novel",
       "theme": "dark",
       "viewport": "1440x900",
-      "file": "audio-player-dark-1440x900.png"
+      "file": "modal-add-novel-dark-1440x900.png"
+    },
+    {
+      "screen": "modal-upload-chapter",
+      "theme": "dark",
+      "viewport": "1440x900",
+      "file": "modal-upload-chapter-dark-1440x900.png"
+    },
+    {
+      "screen": "error-boundary",
+      "theme": "dark",
+      "viewport": "1440x900",
+      "file": "error-boundary-dark-1440x900.png"
     },
     {
       "screen": "home",
@@ -518,6 +937,12 @@
       "file": "novel-detail-light-1440x900.png"
     },
     {
+      "screen": "voice-studio",
+      "theme": "light",
+      "viewport": "1440x900",
+      "file": "voice-studio-light-1440x900.png"
+    },
+    {
       "screen": "reader-normal",
       "theme": "light",
       "viewport": "1440x900",
@@ -528,6 +953,24 @@
       "theme": "light",
       "viewport": "1440x900",
       "file": "reader-3d-light-1440x900.png"
+    },
+    {
+      "screen": "audio-player",
+      "theme": "light",
+      "viewport": "1440x900",
+      "file": "audio-player-light-1440x900.png"
+    },
+    {
+      "screen": "character-roster",
+      "theme": "light",
+      "viewport": "1440x900",
+      "file": "character-roster-light-1440x900.png"
+    },
+    {
+      "screen": "synthesis-progress",
+      "theme": "light",
+      "viewport": "1440x900",
+      "file": "synthesis-progress-light-1440x900.png"
     },
     {
       "screen": "profile",
@@ -554,16 +997,28 @@
       "file": "modal-settings-light-1440x900.png"
     },
     {
-      "screen": "character-roster",
+      "screen": "modal-auth",
       "theme": "light",
       "viewport": "1440x900",
-      "file": "character-roster-light-1440x900.png"
+      "file": "modal-auth-light-1440x900.png"
     },
     {
-      "screen": "audio-player",
+      "screen": "modal-add-novel",
       "theme": "light",
       "viewport": "1440x900",
-      "file": "audio-player-light-1440x900.png"
+      "file": "modal-add-novel-light-1440x900.png"
+    },
+    {
+      "screen": "modal-upload-chapter",
+      "theme": "light",
+      "viewport": "1440x900",
+      "file": "modal-upload-chapter-light-1440x900.png"
+    },
+    {
+      "screen": "error-boundary",
+      "theme": "light",
+      "viewport": "1440x900",
+      "file": "error-boundary-light-1440x900.png"
     },
     {
       "screen": "home",
@@ -578,6 +1033,12 @@
       "file": "novel-detail-dark-1190x770.png"
     },
     {
+      "screen": "voice-studio",
+      "theme": "dark",
+      "viewport": "1190x770",
+      "file": "voice-studio-dark-1190x770.png"
+    },
+    {
       "screen": "reader-normal",
       "theme": "dark",
       "viewport": "1190x770",
@@ -588,6 +1049,24 @@
       "theme": "dark",
       "viewport": "1190x770",
       "file": "reader-3d-dark-1190x770.png"
+    },
+    {
+      "screen": "audio-player",
+      "theme": "dark",
+      "viewport": "1190x770",
+      "file": "audio-player-dark-1190x770.png"
+    },
+    {
+      "screen": "character-roster",
+      "theme": "dark",
+      "viewport": "1190x770",
+      "file": "character-roster-dark-1190x770.png"
+    },
+    {
+      "screen": "synthesis-progress",
+      "theme": "dark",
+      "viewport": "1190x770",
+      "file": "synthesis-progress-dark-1190x770.png"
     },
     {
       "screen": "profile",
@@ -614,16 +1093,28 @@
       "file": "modal-settings-dark-1190x770.png"
     },
     {
-      "screen": "character-roster",
+      "screen": "modal-auth",
       "theme": "dark",
       "viewport": "1190x770",
-      "file": "character-roster-dark-1190x770.png"
+      "file": "modal-auth-dark-1190x770.png"
     },
     {
-      "screen": "audio-player",
+      "screen": "modal-add-novel",
       "theme": "dark",
       "viewport": "1190x770",
-      "file": "audio-player-dark-1190x770.png"
+      "file": "modal-add-novel-dark-1190x770.png"
+    },
+    {
+      "screen": "modal-upload-chapter",
+      "theme": "dark",
+      "viewport": "1190x770",
+      "file": "modal-upload-chapter-dark-1190x770.png"
+    },
+    {
+      "screen": "error-boundary",
+      "theme": "dark",
+      "viewport": "1190x770",
+      "file": "error-boundary-dark-1190x770.png"
     },
     {
       "screen": "home",
@@ -638,6 +1129,12 @@
       "file": "novel-detail-light-1190x770.png"
     },
     {
+      "screen": "voice-studio",
+      "theme": "light",
+      "viewport": "1190x770",
+      "file": "voice-studio-light-1190x770.png"
+    },
+    {
       "screen": "reader-normal",
       "theme": "light",
       "viewport": "1190x770",
@@ -648,6 +1145,24 @@
       "theme": "light",
       "viewport": "1190x770",
       "file": "reader-3d-light-1190x770.png"
+    },
+    {
+      "screen": "audio-player",
+      "theme": "light",
+      "viewport": "1190x770",
+      "file": "audio-player-light-1190x770.png"
+    },
+    {
+      "screen": "character-roster",
+      "theme": "light",
+      "viewport": "1190x770",
+      "file": "character-roster-light-1190x770.png"
+    },
+    {
+      "screen": "synthesis-progress",
+      "theme": "light",
+      "viewport": "1190x770",
+      "file": "synthesis-progress-light-1190x770.png"
     },
     {
       "screen": "profile",
@@ -674,16 +1189,28 @@
       "file": "modal-settings-light-1190x770.png"
     },
     {
-      "screen": "character-roster",
+      "screen": "modal-auth",
       "theme": "light",
       "viewport": "1190x770",
-      "file": "character-roster-light-1190x770.png"
+      "file": "modal-auth-light-1190x770.png"
     },
     {
-      "screen": "audio-player",
+      "screen": "modal-add-novel",
       "theme": "light",
       "viewport": "1190x770",
-      "file": "audio-player-light-1190x770.png"
+      "file": "modal-add-novel-light-1190x770.png"
+    },
+    {
+      "screen": "modal-upload-chapter",
+      "theme": "light",
+      "viewport": "1190x770",
+      "file": "modal-upload-chapter-light-1190x770.png"
+    },
+    {
+      "screen": "error-boundary",
+      "theme": "light",
+      "viewport": "1190x770",
+      "file": "error-boundary-light-1190x770.png"
     },
     {
       "screen": "home",
@@ -698,6 +1225,12 @@
       "file": "novel-detail-dark-768x1024.png"
     },
     {
+      "screen": "voice-studio",
+      "theme": "dark",
+      "viewport": "768x1024",
+      "file": "voice-studio-dark-768x1024.png"
+    },
+    {
       "screen": "reader-normal",
       "theme": "dark",
       "viewport": "768x1024",
@@ -708,6 +1241,24 @@
       "theme": "dark",
       "viewport": "768x1024",
       "file": "reader-3d-dark-768x1024.png"
+    },
+    {
+      "screen": "audio-player",
+      "theme": "dark",
+      "viewport": "768x1024",
+      "file": "audio-player-dark-768x1024.png"
+    },
+    {
+      "screen": "character-roster",
+      "theme": "dark",
+      "viewport": "768x1024",
+      "file": "character-roster-dark-768x1024.png"
+    },
+    {
+      "screen": "synthesis-progress",
+      "theme": "dark",
+      "viewport": "768x1024",
+      "file": "synthesis-progress-dark-768x1024.png"
     },
     {
       "screen": "profile",
@@ -734,16 +1285,28 @@
       "file": "modal-settings-dark-768x1024.png"
     },
     {
-      "screen": "character-roster",
+      "screen": "modal-auth",
       "theme": "dark",
       "viewport": "768x1024",
-      "file": "character-roster-dark-768x1024.png"
+      "file": "modal-auth-dark-768x1024.png"
     },
     {
-      "screen": "audio-player",
+      "screen": "modal-add-novel",
       "theme": "dark",
       "viewport": "768x1024",
-      "file": "audio-player-dark-768x1024.png"
+      "file": "modal-add-novel-dark-768x1024.png"
+    },
+    {
+      "screen": "modal-upload-chapter",
+      "theme": "dark",
+      "viewport": "768x1024",
+      "file": "modal-upload-chapter-dark-768x1024.png"
+    },
+    {
+      "screen": "error-boundary",
+      "theme": "dark",
+      "viewport": "768x1024",
+      "file": "error-boundary-dark-768x1024.png"
     },
     {
       "screen": "home",
@@ -758,6 +1321,12 @@
       "file": "novel-detail-light-768x1024.png"
     },
     {
+      "screen": "voice-studio",
+      "theme": "light",
+      "viewport": "768x1024",
+      "file": "voice-studio-light-768x1024.png"
+    },
+    {
       "screen": "reader-normal",
       "theme": "light",
       "viewport": "768x1024",
@@ -768,6 +1337,24 @@
       "theme": "light",
       "viewport": "768x1024",
       "file": "reader-3d-light-768x1024.png"
+    },
+    {
+      "screen": "audio-player",
+      "theme": "light",
+      "viewport": "768x1024",
+      "file": "audio-player-light-768x1024.png"
+    },
+    {
+      "screen": "character-roster",
+      "theme": "light",
+      "viewport": "768x1024",
+      "file": "character-roster-light-768x1024.png"
+    },
+    {
+      "screen": "synthesis-progress",
+      "theme": "light",
+      "viewport": "768x1024",
+      "file": "synthesis-progress-light-768x1024.png"
     },
     {
       "screen": "profile",
@@ -794,16 +1381,28 @@
       "file": "modal-settings-light-768x1024.png"
     },
     {
-      "screen": "character-roster",
+      "screen": "modal-auth",
       "theme": "light",
       "viewport": "768x1024",
-      "file": "character-roster-light-768x1024.png"
+      "file": "modal-auth-light-768x1024.png"
     },
     {
-      "screen": "audio-player",
+      "screen": "modal-add-novel",
       "theme": "light",
       "viewport": "768x1024",
-      "file": "audio-player-light-768x1024.png"
+      "file": "modal-add-novel-light-768x1024.png"
+    },
+    {
+      "screen": "modal-upload-chapter",
+      "theme": "light",
+      "viewport": "768x1024",
+      "file": "modal-upload-chapter-light-768x1024.png"
+    },
+    {
+      "screen": "error-boundary",
+      "theme": "light",
+      "viewport": "768x1024",
+      "file": "error-boundary-light-768x1024.png"
     },
     {
       "screen": "home",
@@ -818,6 +1417,12 @@
       "file": "novel-detail-dark-390x844.png"
     },
     {
+      "screen": "voice-studio",
+      "theme": "dark",
+      "viewport": "390x844",
+      "file": "voice-studio-dark-390x844.png"
+    },
+    {
       "screen": "reader-normal",
       "theme": "dark",
       "viewport": "390x844",
@@ -828,6 +1433,24 @@
       "theme": "dark",
       "viewport": "390x844",
       "file": "reader-3d-dark-390x844.png"
+    },
+    {
+      "screen": "audio-player",
+      "theme": "dark",
+      "viewport": "390x844",
+      "file": "audio-player-dark-390x844.png"
+    },
+    {
+      "screen": "character-roster",
+      "theme": "dark",
+      "viewport": "390x844",
+      "file": "character-roster-dark-390x844.png"
+    },
+    {
+      "screen": "synthesis-progress",
+      "theme": "dark",
+      "viewport": "390x844",
+      "file": "synthesis-progress-dark-390x844.png"
     },
     {
       "screen": "profile",
@@ -854,16 +1477,28 @@
       "file": "modal-settings-dark-390x844.png"
     },
     {
-      "screen": "character-roster",
+      "screen": "modal-auth",
       "theme": "dark",
       "viewport": "390x844",
-      "file": "character-roster-dark-390x844.png"
+      "file": "modal-auth-dark-390x844.png"
     },
     {
-      "screen": "audio-player",
+      "screen": "modal-add-novel",
       "theme": "dark",
       "viewport": "390x844",
-      "file": "audio-player-dark-390x844.png"
+      "file": "modal-add-novel-dark-390x844.png"
+    },
+    {
+      "screen": "modal-upload-chapter",
+      "theme": "dark",
+      "viewport": "390x844",
+      "file": "modal-upload-chapter-dark-390x844.png"
+    },
+    {
+      "screen": "error-boundary",
+      "theme": "dark",
+      "viewport": "390x844",
+      "file": "error-boundary-dark-390x844.png"
     },
     {
       "screen": "home",
@@ -878,6 +1513,12 @@
       "file": "novel-detail-light-390x844.png"
     },
     {
+      "screen": "voice-studio",
+      "theme": "light",
+      "viewport": "390x844",
+      "file": "voice-studio-light-390x844.png"
+    },
+    {
       "screen": "reader-normal",
       "theme": "light",
       "viewport": "390x844",
@@ -888,6 +1529,24 @@
       "theme": "light",
       "viewport": "390x844",
       "file": "reader-3d-light-390x844.png"
+    },
+    {
+      "screen": "audio-player",
+      "theme": "light",
+      "viewport": "390x844",
+      "file": "audio-player-light-390x844.png"
+    },
+    {
+      "screen": "character-roster",
+      "theme": "light",
+      "viewport": "390x844",
+      "file": "character-roster-light-390x844.png"
+    },
+    {
+      "screen": "synthesis-progress",
+      "theme": "light",
+      "viewport": "390x844",
+      "file": "synthesis-progress-light-390x844.png"
     },
     {
       "screen": "profile",
@@ -914,16 +1573,28 @@
       "file": "modal-settings-light-390x844.png"
     },
     {
-      "screen": "character-roster",
+      "screen": "modal-auth",
       "theme": "light",
       "viewport": "390x844",
-      "file": "character-roster-light-390x844.png"
+      "file": "modal-auth-light-390x844.png"
     },
     {
-      "screen": "audio-player",
+      "screen": "modal-add-novel",
       "theme": "light",
       "viewport": "390x844",
-      "file": "audio-player-light-390x844.png"
+      "file": "modal-add-novel-light-390x844.png"
+    },
+    {
+      "screen": "modal-upload-chapter",
+      "theme": "light",
+      "viewport": "390x844",
+      "file": "modal-upload-chapter-light-390x844.png"
+    },
+    {
+      "screen": "error-boundary",
+      "theme": "light",
+      "viewport": "390x844",
+      "file": "error-boundary-light-390x844.png"
     },
     {
       "screen": "home",
@@ -938,6 +1609,12 @@
       "file": "novel-detail-dark-320x568.png"
     },
     {
+      "screen": "voice-studio",
+      "theme": "dark",
+      "viewport": "320x568",
+      "file": "voice-studio-dark-320x568.png"
+    },
+    {
       "screen": "reader-normal",
       "theme": "dark",
       "viewport": "320x568",
@@ -948,6 +1625,24 @@
       "theme": "dark",
       "viewport": "320x568",
       "file": "reader-3d-dark-320x568.png"
+    },
+    {
+      "screen": "audio-player",
+      "theme": "dark",
+      "viewport": "320x568",
+      "file": "audio-player-dark-320x568.png"
+    },
+    {
+      "screen": "character-roster",
+      "theme": "dark",
+      "viewport": "320x568",
+      "file": "character-roster-dark-320x568.png"
+    },
+    {
+      "screen": "synthesis-progress",
+      "theme": "dark",
+      "viewport": "320x568",
+      "file": "synthesis-progress-dark-320x568.png"
     },
     {
       "screen": "profile",
@@ -974,16 +1669,28 @@
       "file": "modal-settings-dark-320x568.png"
     },
     {
-      "screen": "character-roster",
+      "screen": "modal-auth",
       "theme": "dark",
       "viewport": "320x568",
-      "file": "character-roster-dark-320x568.png"
+      "file": "modal-auth-dark-320x568.png"
     },
     {
-      "screen": "audio-player",
+      "screen": "modal-add-novel",
       "theme": "dark",
       "viewport": "320x568",
-      "file": "audio-player-dark-320x568.png"
+      "file": "modal-add-novel-dark-320x568.png"
+    },
+    {
+      "screen": "modal-upload-chapter",
+      "theme": "dark",
+      "viewport": "320x568",
+      "file": "modal-upload-chapter-dark-320x568.png"
+    },
+    {
+      "screen": "error-boundary",
+      "theme": "dark",
+      "viewport": "320x568",
+      "file": "error-boundary-dark-320x568.png"
     },
     {
       "screen": "home",
@@ -998,6 +1705,12 @@
       "file": "novel-detail-light-320x568.png"
     },
     {
+      "screen": "voice-studio",
+      "theme": "light",
+      "viewport": "320x568",
+      "file": "voice-studio-light-320x568.png"
+    },
+    {
       "screen": "reader-normal",
       "theme": "light",
       "viewport": "320x568",
@@ -1008,6 +1721,24 @@
       "theme": "light",
       "viewport": "320x568",
       "file": "reader-3d-light-320x568.png"
+    },
+    {
+      "screen": "audio-player",
+      "theme": "light",
+      "viewport": "320x568",
+      "file": "audio-player-light-320x568.png"
+    },
+    {
+      "screen": "character-roster",
+      "theme": "light",
+      "viewport": "320x568",
+      "file": "character-roster-light-320x568.png"
+    },
+    {
+      "screen": "synthesis-progress",
+      "theme": "light",
+      "viewport": "320x568",
+      "file": "synthesis-progress-light-320x568.png"
     },
     {
       "screen": "profile",
@@ -1034,16 +1765,28 @@
       "file": "modal-settings-light-320x568.png"
     },
     {
-      "screen": "character-roster",
+      "screen": "modal-auth",
       "theme": "light",
       "viewport": "320x568",
-      "file": "character-roster-light-320x568.png"
+      "file": "modal-auth-light-320x568.png"
     },
     {
-      "screen": "audio-player",
+      "screen": "modal-add-novel",
       "theme": "light",
       "viewport": "320x568",
-      "file": "audio-player-light-320x568.png"
+      "file": "modal-add-novel-light-320x568.png"
+    },
+    {
+      "screen": "modal-upload-chapter",
+      "theme": "light",
+      "viewport": "320x568",
+      "file": "modal-upload-chapter-light-320x568.png"
+    },
+    {
+      "screen": "error-boundary",
+      "theme": "light",
+      "viewport": "320x568",
+      "file": "error-boundary-light-320x568.png"
     }
   ]
 }

@@ -5,7 +5,10 @@ import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './context/ToastContext';
 import './index.css';
-import './utils/ttsSanitizer';
+
+if (typeof window !== 'undefined') {
+  window.__loadTtsSanitizer = () => import('./utils/ttsSanitizer');
+}
 
 // In development, ensure no rogue service worker intercepts requests
 if (import.meta.env.DEV && typeof window !== 'undefined' && 'serviceWorker' in navigator) {

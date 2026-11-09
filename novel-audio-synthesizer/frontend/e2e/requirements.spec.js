@@ -148,15 +148,14 @@ test.describe('Tier 1: Feature Coverage', () => {
     expect(hasSageToken).toBe(true);
   });
 
-  test('T1-R2-02: Walnut Brown (#5A3E2B) provides deep roasted espresso anchor tone', async ({ page }) => {
+  test('T1-R2-02: Noir Monochrome surface (#141416) provides deep Stage backdrop', async ({ page }) => {
     await page.goto('/');
 
-    // Inspect sidebar or background colors
-    const sidebarBg = await page.locator('aside').first().evaluate(el => {
-      return window.getComputedStyle(el).backgroundColor;
+    const surfaceBg = await page.evaluate(() => {
+      return window.getComputedStyle(document.documentElement).getPropertyValue('--bg-surface').trim();
     });
 
-    expect(sidebarBg).toMatch(/rgb\((?:58,\s*36,\s*24|90,\s*62,\s*43|26,\s*18,\s*14)\)/);
+    expect(surfaceBg.toLowerCase()).toBe('#141416');
   });
 
   test('T1-R2-03: Amber Glow (#D5851F) accent illuminates active indicators and ratings', async ({ page }) => {
@@ -170,7 +169,7 @@ test.describe('Tier 1: Feature Coverage', () => {
     expect(accentTokens).toBeTruthy();
   });
 
-  test('T1-R2-04: Earthy Luxury palette integrity maintained across theme variables', async ({ page }) => {
+  test('T1-R2-04: Noir Monochrome palette integrity maintained across theme variables', async ({ page }) => {
     await page.goto('/');
 
     const vars = await page.evaluate(() => {
@@ -184,9 +183,9 @@ test.describe('Tier 1: Feature Coverage', () => {
     });
 
     // Dark mode defaults
-    expect(vars.bgPage).toBe('#1A120E');
-    expect(vars.bgSurface).toBe('#3A2418');
-    expect(vars.textMain).toBe('#D5C4AE');
+    expect(vars.bgPage.toLowerCase()).toBe('#0b0b0d');
+    expect(vars.bgSurface.toLowerCase()).toBe('#141416');
+    expect(vars.textMain.toLowerCase()).toBe('#f2f2f3');
   });
 
   test('T1-R2-05: Strict Zero-Blue Rule: Rendered Home view contains no blue utility classes or elements', async ({ page }) => {
@@ -213,7 +212,7 @@ test.describe('Tier 1: Feature Coverage', () => {
     const lightBg = await page.evaluate(() => {
       return window.getComputedStyle(document.documentElement).getPropertyValue('--bg-page').trim();
     });
-    expect(lightBg).toBe('#FAF8F5');
+    expect(lightBg.toLowerCase()).toBe('#efeff0');
 
     // Toggle back to Dark mode
     await themeToggle.click();
@@ -222,7 +221,7 @@ test.describe('Tier 1: Feature Coverage', () => {
     const darkBg = await page.evaluate(() => {
       return window.getComputedStyle(document.documentElement).getPropertyValue('--bg-page').trim();
     });
-    expect(darkBg).toBe('#1A120E');
+    expect(darkBg.toLowerCase()).toBe('#0b0b0d');
   });
 
   // --- R3: Performance Budget & Test Suite ---
@@ -307,7 +306,7 @@ test.describe('Tier 2: Boundary & Corner Cases', () => {
     expect(respectsReducedMotion).toBe(true);
   });
 
-  test('T2-R2-01: Inverted theme boundary: Light mode surface has warm editorial ivory tone', async ({ page }) => {
+  test('T2-R2-01: Inverted theme boundary: Light mode surface has locked Noir light tone', async ({ page }) => {
     await page.goto('/');
     const toggle = page.locator('button[title*="Switch Theme"], button[aria-label="Switch theme"]').first();
     await toggle.click(); // switch to light
@@ -316,7 +315,7 @@ test.describe('Tier 2: Boundary & Corner Cases', () => {
     const surfaceColor = await page.evaluate(() => {
       return window.getComputedStyle(document.documentElement).getPropertyValue('--bg-surface').trim();
     });
-    expect(surfaceColor).toBe('#FAF6F0');
+    expect(surfaceColor.toLowerCase()).toBe('#f7f7f8');
   });
 
   test('T2-R3-01: Error boundary resilience: Graceful state on simulated network failure', async ({ page }) => {
