@@ -112,3 +112,4 @@ All components conform strictly to the Noir Monochrome design language: 100% neu
   - `docs/parity/voice-studio-light.png`
   - `docs/parity/measurements.json`
 - **Git Branch**: `design/noir-mono`
+

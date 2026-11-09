@@ -340,6 +340,7 @@ html.light .architectural-portal {
   height: 8px;
   border-radius: 9999px;
   background-color: var(--signal);
+  box-shadow: 0 0 6px rgba(255, 90, 31, 0.4);
   display: inline-block;
   flex-shrink: 0;
 }
@@ -513,18 +514,45 @@ html.light .architectural-portal {
   z-index: 10;
 }
 
+.mobile-top-scrubber .scrubber-buffered-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  background: var(--border-strong);
+  will-change: transform;
+}
+
 .mobile-top-scrubber .scrubber-played-fill {
   position: absolute;
   top: 0;
   left: 0;
   bottom: 0;
+  width: 100%;
   background: var(--text-main);
   will-change: transform;
+}
+
+.mobile-play-btn {
+  display: none !important;
 }
 
 @media (max-width: 639px) {
   .mobile-top-scrubber {
     display: block;
+  }
+  .audio-central-cluster {
+    display: none !important;
+  }
+  .audio-track-sub {
+    display: none !important;
+  }
+  .audio-right-cluster .mobile-play-btn {
+    display: inline-flex !important;
+  }
+  .audio-right-cluster .desktop-only-ctrl {
+    display: none !important;
   }
 }
 
@@ -533,6 +561,7 @@ html.light .architectural-portal {
   height: 48px;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
+  border-radius: 1px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -563,6 +592,41 @@ html.light .architectural-portal {
   font-size: 10px;
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
+}
+
+.scrubber-track-bar {
+  flex-grow: 1;
+  height: 4px;
+  background: var(--border-subtle);
+  position: relative;
+  cursor: pointer;
+}
+
+.scrubber-buffered-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--border-strong);
+}
+
+.scrubber-played-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--text-main);
+}
+
+.scrubber-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  background: var(--text-main);
+  border: 1px solid var(--bg-page);
+  border-radius: 0;
 }
 
 /* ========================================================================= */
