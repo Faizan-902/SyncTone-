@@ -12,11 +12,11 @@ import {
 } from './icons';
 
 function formatTime(ms) {
-  if (!ms || isNaN(ms) || ms < 0) return '0:00';
+  if (!ms || isNaN(ms) || ms < 0) return '00:00';
   const totalSeconds = Math.floor(ms / 1000);
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
 
 function formatHoverTime(ms) {
@@ -48,7 +48,7 @@ export default function AudioPlayer({
   audioUrl,
   isPlaying,
   currentTimeMs = 0,
-  totalDurationMs = 0,
+  totalDurationMs: propTotalDurationMs = 0,
   onToggle,
   onSetPlaybackRate,
   onSeek,
@@ -80,6 +80,11 @@ export default function AudioPlayer({
   const [localError, setLocalError] = useState(null);
   const error = propError || localError;
   const scrubberTrackRef = useRef(null);
+
+  const totalDurationMs =
+    propTotalDurationMs > 0
+      ? propTotalDurationMs
+      : currentChapter?.total_duration_ms || currentChapter?.duration_ms || 0;
 
   const progressFraction = totalDurationMs > 0 ? Math.min(1, Math.max(0, currentTimeMs / totalDurationMs)) : 0;
 
@@ -206,10 +211,12 @@ export default function AudioPlayer({
 
   const handleVolumeToggle = useCallback(() => {
     if (!audioRef?.current) return;
-    if (isMuted) {
+    if (isMuted || volume === 0) {
       audioRef.current.muted = false;
       setIsMuted(false);
-      audioRef.current.volume = volume || 1.0;
+      const restored = volume === 0 ? 1.0 : volume;
+      setVolume(restored);
+      audioRef.current.volume = restored;
     } else {
       audioRef.current.muted = true;
       setIsMuted(true);
@@ -325,16 +332,18 @@ export default function AudioPlayer({
     };
   }, [isPlaying, onToggle, currentNovel, currentChapter, audioRef, handleSkip]);
 
-  const authorDisplay = currentNovel?.author_username || currentNovel?.author || '';
+  const novelObj = currentNovel?.novel || currentNovel;
+  const authorDisplay = novelObj?.author_username || novelObj?.author || '';
   const narratorDisplay =
-    currentNovel?.narrator ||
-    currentNovel?.narrator_name ||
-    currentNovel?.narrator_voice_label ||
+    novelObj?.narrator ||
+    novelObj?.narrator_name ||
+    novelObj?.narrator_voice_label ||
+    currentChapter?.narrator ||
     '';
   const sublineText =
     authorDisplay && narratorDisplay
       ? `${authorDisplay} • ${narratorDisplay}`
-      : authorDisplay || narratorDisplay || currentNovel?.title || 'SyncTone';
+      : authorDisplay || narratorDisplay || novelObj?.title || currentChapter?.title || 'SyncTone';
 
   return (
     <footer
@@ -416,8 +425,8 @@ export default function AudioPlayer({
         <div className="audio-track-info flex items-center gap-3 min-w-0 max-w-[200px] sm:max-w-[240px] md:max-w-xs shrink-0">
           {/* 48x48 Sharp Book Jacket Artwork */}
           <div className="audio-track-art w-12 h-12 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-[1px] flex items-center justify-center font-mono text-[10px] text-[var(--text-sub)] shrink-0 overflow-hidden">
-            {currentNovel?.cover_object ? (
-              <img src={currentNovel.cover_object} alt="" className="w-full h-full object-cover" />
+            {novelObj?.cover_object ? (
+              <img src={novelObj.cover_object} alt="" className="w-full h-full object-cover" />
             ) : (
               <span className="font-mono font-bold tracking-wider text-[var(--text-muted)]">
                 VOL.{String(currentChapter?.chapter_number || 1).padStart(2, '0')}
@@ -426,7 +435,7 @@ export default function AudioPlayer({
           </div>
 
           <div className="audio-track-text min-w-0 flex flex-col justify-center">
-            <h4 className="audio-track-title text-xs sm:text-[13px] font-semibold text-[var(--text-main)] truncate leading-tight font-sans">
+            <h4 className="audio-track-title text-[13px] font-semibold text-[var(--text-main)] truncate leading-tight font-sans">
               {currentChapter?.title || 'Chapter Audio Track'}
             </h4>
             <p className="audio-track-sub text-[10px] text-[var(--text-sub)] font-mono truncate mt-0.5 hidden sm:block">
@@ -462,15 +471,17 @@ export default function AudioPlayer({
               <span>◀◀ 10s</span>
             </button>
 
-            {/* Previous Turn */}
-            <button
-              onClick={() => onSeekSegment && onSeekSegment(-1)}
-              className="boxed-btn px-1.5 sm:px-2 py-1 text-[11px] font-mono text-[var(--text-main)] hover:bg-[var(--bg-hover)] cursor-pointer"
-              title="Previous dialogue turn"
-              aria-label="Previous turn"
-            >
-              <IconPrev className="w-3.5 h-3.5" />
-            </button>
+            {/* Previous Turn (TTS segment mode) */}
+            {playbackMode === 'tts' && onSeekSegment && (
+              <button
+                onClick={() => onSeekSegment(-1)}
+                className="boxed-btn px-1.5 sm:px-2 py-1 text-[11px] font-mono text-[var(--text-main)] hover:bg-[var(--bg-hover)] cursor-pointer"
+                title="Previous dialogue turn"
+                aria-label="Previous turn"
+              >
+                <IconPrev className="w-3.5 h-3.5" />
+              </button>
+            )}
 
             {/* Play / Pause Toggle Button (Inverted Primary CTA) */}
             <button
@@ -496,15 +507,17 @@ export default function AudioPlayer({
               )}
             </button>
 
-            {/* Next Turn */}
-            <button
-              onClick={() => onSeekSegment && onSeekSegment(1)}
-              className="boxed-btn px-1.5 sm:px-2 py-1 text-[11px] font-mono text-[var(--text-main)] hover:bg-[var(--bg-hover)] cursor-pointer"
-              title="Next dialogue turn"
-              aria-label="Next turn"
-            >
-              <IconNext className="w-3.5 h-3.5" />
-            </button>
+            {/* Next Turn (TTS segment mode) */}
+            {playbackMode === 'tts' && onSeekSegment && (
+              <button
+                onClick={() => onSeekSegment(1)}
+                className="boxed-btn px-1.5 sm:px-2 py-1 text-[11px] font-mono text-[var(--text-main)] hover:bg-[var(--bg-hover)] cursor-pointer"
+                title="Next dialogue turn"
+                aria-label="Next turn"
+              >
+                <IconNext className="w-3.5 h-3.5" />
+              </button>
+            )}
 
             {/* Skip +10s */}
             <button
@@ -571,7 +584,7 @@ export default function AudioPlayer({
 
               {/* Scrubber Thumb Indicator on hover */}
               <div
-                className="scrubber-thumb absolute w-2.5 h-2.5 rounded-[1px] bg-[var(--accent)] border border-[var(--border-strong)] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-100 transform -translate-x-1/2"
+                className="scrubber-thumb absolute pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-100"
                 style={{ left: `${progressFraction * 100}%` }}
               />
             </div>
@@ -630,7 +643,7 @@ export default function AudioPlayer({
             {followAlong && isPlaying ? (
               <span className="signal-dot" title="Active Audio Playback" />
             ) : (
-              <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)] opacity-40" />
+              <span className="dot text-[var(--text-muted)]" />
             )}
             <span className="font-bold tracking-wider">FOLLOW ALONG</span>
           </button>
@@ -677,11 +690,11 @@ export default function AudioPlayer({
               }
               aria-label={`Playback engine: ${playbackMode === 'tts' ? 'Voice TTS' : 'Studio Track'}`}
             >
-              <span
-                className={`w-1.5 h-1.5 rounded-full ${
-                  playbackMode === 'tts' && isPlaying ? 'bg-[var(--signal)]' : 'bg-[var(--text-muted)]'
-                }`}
-              />
+              {playbackMode === 'tts' && isPlaying ? (
+                <span className="signal-dot" />
+              ) : (
+                <span className="dot text-[var(--text-muted)]" />
+              )}
               <span className="hidden sm:inline">
                 {playbackMode === 'tts' ? 'VOICE TTS' : 'STUDIO'}
               </span>

@@ -101,6 +101,30 @@ const mockNovels = [
   },
 ];
 
+function createSilentWavBuffer(durationSeconds = 10) {
+  const sampleRate = 8000;
+  const numChannels = 1;
+  const bytesPerSample = 2;
+  const numSamples = sampleRate * durationSeconds;
+  const dataSize = numSamples * numChannels * bytesPerSample;
+  const buffer = Buffer.alloc(44 + dataSize);
+  buffer.write('RIFF', 0);
+  buffer.writeUInt32LE(36 + dataSize, 4);
+  buffer.write('WAVE', 8);
+  buffer.write('fmt ', 12);
+  buffer.writeUInt32LE(16, 16);
+  buffer.writeUInt16LE(1, 20);
+  buffer.writeUInt16LE(numChannels, 22);
+  buffer.writeUInt32LE(sampleRate, 24);
+  buffer.writeUInt32LE(sampleRate * numChannels * bytesPerSample, 28);
+  buffer.writeUInt16LE(numChannels * bytesPerSample, 32);
+  buffer.writeUInt16LE(bytesPerSample * 8, 34);
+  buffer.write('data', 36);
+  buffer.writeUInt32LE(dataSize, 40);
+  return buffer;
+}
+const silentWavBuffer = createSilentWavBuffer(10);
+
 const mockNovelDetail = {
   ...mockNovels[0],
   chapters: [
@@ -109,7 +133,8 @@ const mockNovelDetail = {
       novel_id: 'n-sherlock-1',
       chapter_number: 1,
       title: 'Chapter I. A Scandal in Bohemia',
-      duration_ms: 185000,
+      duration_ms: 2294000,
+      total_duration_ms: 2294000,
       has_studio_audio: true,
       audio_url: '/api/stream/mock-audio',
     },
@@ -119,6 +144,7 @@ const mockNovelDetail = {
       chapter_number: 2,
       title: 'Chapter II. The Red-Headed League',
       duration_ms: 210000,
+      total_duration_ms: 210000,
       has_studio_audio: true,
       audio_url: '/api/stream/mock-audio-2',
     },
@@ -137,7 +163,8 @@ const mockChapter1 = {
   novel_id: 'n-sherlock-1',
   chapter_number: 1,
   title: 'Chapter I. A Scandal in Bohemia',
-  duration_ms: 185000,
+  duration_ms: 2294000,
+  total_duration_ms: 2294000,
   has_studio_audio: true,
   audio_url: '/api/stream/mock-audio',
   segments: [
@@ -171,6 +198,8 @@ const mockChapter1 = {
     },
   ],
   manifest: {
+    total_duration_ms: 2294000,
+    audio_stream_url: '/api/stream/mock-audio',
     timeline: [
       { segment_id: 1, order: 1, start_ms: 0, end_ms: 5000 },
       { segment_id: 2, order: 2, start_ms: 5000, end_ms: 11000 },
@@ -243,6 +272,13 @@ async function setupPageRoutes(page) {
         body: JSON.stringify({ progress: null }),
       });
     }
+    if (url.includes('/api/stream')) {
+      return route.fulfill({
+        status: 200,
+        contentType: 'audio/wav',
+        body: silentWavBuffer,
+      });
+    }
     return route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -286,6 +322,11 @@ const screensToCapture = [
     route: '/reader/ch-1',
     action: async (page) => {
       await page.waitForSelector('footer[aria-label="Floating Audio Dock"]', { timeout: 5000 });
+      const modeBtn = await page.$('button[aria-label*="Playback engine"]');
+      if (modeBtn) {
+        await modeBtn.click();
+        await page.waitForTimeout(300);
+      }
     },
   },
   {
