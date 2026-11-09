@@ -98,6 +98,9 @@ async function request(endpoint, options = {}) {
       return data;
     } catch (networkError) {
       if (networkError instanceof ApiError) throw networkError;
+      if (networkError.name === 'AbortError' || config.signal?.aborted) {
+        throw networkError;
+      }
       lastError = new ApiError('Check your connection and try again.', 0, null);
       if (attempt < maxRetries) continue;
     }

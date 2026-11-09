@@ -32,12 +32,30 @@ export default function NovelCatalog({
   const { user, isAuthenticated } = useAuth();
   const isWriterOrAdmin = user && (user.role === 'writer' || user.role === 'admin');
 
-  const [novels, setNovels] = useState([]);
+  const [novels, setNovels] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('synctone_cached_novels');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (_) {}
+    return [];
+  });
   const [channel, setChannel] = useState('verified'); // 'verified' | 'community' | 'all'
   const [selectedGenre, setSelectedGenre] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 200);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('synctone_cached_novels');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return false;
+      }
+    } catch (_) {}
+    return true;
+  });
   const [error, setError] = useState(null);
   const [novelToDelete, setNovelToDelete] = useState(null);
   const [isDeletingNovel, setIsDeletingNovel] = useState(false);
@@ -87,15 +105,22 @@ export default function NovelCatalog({
 
   // Fetch novels by channel filter
   const fetchNovels = async (selectedChannel, signal) => {
-    setIsLoading(true);
+    // Keep showing cached/current novels while revalidating; only pulse skeleton if empty
+    setIsLoading((prev) => (novels.length === 0 ? true : prev));
     setError(null);
     try {
       const channelParam = selectedChannel === 'all' ? undefined : selectedChannel;
       const data = await api.novels.list(channelParam);
       if (signal && signal.aborted) return;
-      setNovels(data.novels || []);
+      const loadedNovels = data?.novels || [];
+      setNovels(loadedNovels);
+      if (Array.isArray(loadedNovels) && loadedNovels.length > 0) {
+        try {
+          sessionStorage.setItem('synctone_cached_novels', JSON.stringify(loadedNovels));
+        } catch (_) {}
+      }
     } catch (err) {
-      if (signal && signal.aborted) return;
+      if (err.name === 'AbortError' || (signal && signal.aborted)) return;
       const msg = err instanceof ApiError ? err.message : err.message || 'Failed to load novel catalog';
       setError(msg);
     } finally {
@@ -712,6 +737,26 @@ export default function NovelCatalog({
                 >
                   Clear Search
                 </button>
+              </div>
+            )}
+
+            {/* Empty Library Category State */}
+            {filteredNovels.length === 0 && !searchQuery && (
+              <div className="p-12 text-center rounded-2xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-3 shadow-sm">
+                <IconBook className="w-8 h-8 mx-auto text-[var(--text-muted)] opacity-60" />
+                <h4 className="text-base font-bold font-sans uppercase text-[var(--text-main)]">No novels available</h4>
+                <p className="text-xs text-[var(--text-muted)] font-mono max-w-sm mx-auto">
+                  No novels found in this library shelf. Upload a novel or switch channels to browse.
+                </p>
+                {isWriterOrAdmin && onOpenAddNovel && (
+                  <button
+                    onClick={onOpenAddNovel}
+                    className="boxed-btn-primary px-5 py-2.5 text-xs font-mono uppercase inline-flex items-center gap-2 cursor-pointer active:scale-95 transition-transform rounded-xl mt-2"
+                  >
+                    <IconPlus className="w-4 h-4" />
+                    <span>Upload First Novel</span>
+                  </button>
+                )}
               </div>
             )}
 
