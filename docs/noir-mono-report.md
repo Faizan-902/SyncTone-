@@ -123,9 +123,9 @@ Captured using Chrome DevTools Protocol (`Network.enable`, `Performance.enable`)
   - Icons: `/icon-192.svg`, `/icon-512.svg`, `/vite.svg`
 - **Offline Boot Resilience**:
   - Context switched to offline: `context.setOffline(true)`.
-  - Cold navigation to `http://localhost:5174/` while completely disconnected renders complete `46,954-byte` app shell with navigation header, brand mark, and cached catalog stage.
+  - Cold navigation to `http://localhost:5174/` while completely disconnected renders complete `47,833-byte` app shell with navigation header, brand mark, and cached catalog stage.
 - **Clean API Failure**:
-  - Offline request to `/api/novels` aborts and rejects cleanly in **2 ms** without freezing or hanging UI threads.
+  - Offline request to `/api/novels` aborts and rejects cleanly in **1 ms** without freezing or hanging UI threads.
 
 ---
 
@@ -135,7 +135,7 @@ Network throttled via CDP to simulated Fast 3G conditions (150 ms round-trip lat
 - **Home Catalog Route Load**: $\text{CLS} = \mathbf{0.0000}$
 - **Novel Detail Route Transition**: $\text{CLS} = \mathbf{0.0000}$
 - **Reader View Route Transition**: $\text{CLS} = \mathbf{0.0000}$
-- **Settings Modal Open & Close**: $\text{CLS} = \mathbf{0.0028}$ (well within the $\le 0.05$ budget threshold)
+- **Settings Modal Open & Close**: $\text{CLS} = \mathbf{0.0022}$ (well within the $\le 0.05$ budget threshold)
 
 ---
 
