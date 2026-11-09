@@ -6,12 +6,24 @@
   <title>Offline — SyncTone</title>
   <style>
     :root {
-      --bg: #1A120E;
-      --surface: #3A2418;
-      --border: #40362E;
-      --text: #D5C4AE;
-      --text-muted: #A88462;
-      --accent: #6B4A2E;
+      --bg: #0B0B0D;
+      --surface: #141416;
+      --border: #2E2E33;
+      --text: #F2F2F3;
+      --text-muted: #A9A9AF;
+      --accent: #F2F2F3;
+      --on-accent: #0B0B0D;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #EFEFF0;
+        --surface: #F7F7F8;
+        --border: #D0D0D4;
+        --text: #0B0B0D;
+        --text-muted: #4F4F56;
+        --accent: #0B0B0D;
+        --on-accent: #FFFFFF;
+      }
     }
     body {
       margin: 0;
@@ -29,18 +41,18 @@
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 20px;
+      border-radius: 2px;
       padding: 40px 32px;
       max-width: 420px;
       margin: 20px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
     .icon {
       width: 56px;
       height: 56px;
-      border-radius: 16px;
-      background: rgba(168, 132, 98, 0.15);
-      color: #A88462;
+      border-radius: 2px;
+      background: rgba(242, 242, 243, 0.08);
+      color: var(--text);
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -50,26 +62,39 @@
       font-size: 20px;
       margin: 0 0 8px;
       font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
     p {
       color: var(--text-muted);
       font-size: 14px;
-      line-height: 1.5;
+      line-height: 1.6;
       margin: 0 0 24px;
     }
     button {
       background: var(--accent);
-      color: #D5C4AE;
-      border: none;
-      border-radius: 12px;
+      color: var(--on-accent);
+      border: 1px solid var(--border);
+      border-radius: 2px;
       padding: 12px 24px;
+      min-height: 44px;
+      min-width: 120px;
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
       cursor: pointer;
-      transition: opacity 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.15s ease-out;
     }
     button:hover {
       opacity: 0.9;
+    }
+    button:focus-visible {
+      outline: 2px solid var(--text);
+      outline-offset: 2px;
     }
   </style>
 </head>
@@ -101,9 +126,13 @@
         .catch(function() {});
     }
 
-    // Auto-reconnect when connection recovers
-    setInterval(checkConnection, 2000);
-    window.addEventListener('online', checkConnection);
+    // Auto-reconnect when connection recovers or if loaded on local dev
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      setTimeout(cleanAndReload, 100);
+    } else {
+      setInterval(checkConnection, 2000);
+      window.addEventListener('online', checkConnection);
+    }
 
     function cleanAndReload() {
       if ('serviceWorker' in navigator) {

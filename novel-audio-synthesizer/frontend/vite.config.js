@@ -9,15 +9,15 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       devOptions: {
-        enabled: true,
+        enabled: false,
       },
       includeAssets: ['offline.html', 'icon-192.svg', 'icon-512.svg'],
       manifest: {
         name: 'SyncTone — AI Audio Novel Studio',
         short_name: 'SyncTone',
         description: 'Multi-voice neural audio novel synthesizer with synchronized text read-along',
-        theme_color: '#1A120E',
-        background_color: '#1A120E',
+        theme_color: '#0B0B0D',
+        background_color: '#0B0B0D',
         display: 'standalone',
         icons: [
           {
@@ -49,7 +49,7 @@ export default defineConfig({
           '**/stats.html',
           '**/stats.json',
         ],
-        navigateFallback: '/offline.html',
+        navigateFallback: 'index.html',
         navigateFallbackDenylist: [/^\/api/, /^\/static/],
         runtimeCaching: [
           {

@@ -149,13 +149,24 @@ export default function CharacterRoster({
             {characters.length} character{characters.length === 1 ? '' : 's'} detected in this chapter
           </p>
         </div>
-        <button
-          onClick={onClose}
-          className="text-[var(--text-muted)] hover:text-[var(--text-main)] p-1.5 rounded-[1px] hover:bg-[var(--bg-hover)] transition cursor-pointer"
-          aria-label="Close roster"
-        >
-          <IconX className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled
+            title="Character profiles are generated automatically from chapter manuscript parsing"
+            className="boxed-btn opacity-50 cursor-not-allowed text-[10px] font-mono px-2 py-1 flex items-center gap-1"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-current" />
+            <span>+ ADD CHARACTER</span>
+          </button>
+          <button
+            onClick={onClose}
+            className="text-[var(--text-muted)] hover:text-[var(--text-main)] p-1.5 rounded-[1px] hover:bg-[var(--bg-hover)] transition cursor-pointer"
+            aria-label="Close roster"
+          >
+            <IconX className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Alerts */}
@@ -220,8 +231,8 @@ export default function CharacterRoster({
                   </p>
                 )}
 
-                {/* Voice Selection / Read-Only View */}
-                <div className="pt-2 border-t border-[var(--border-subtle)]">
+                {/* Voice Selection & Character Traits (VOICE, PITCH, PACE, STATUS) */}
+                <div className="pt-2 border-t border-[var(--border-subtle)] space-y-2">
                   <div className="flex items-center justify-between gap-2">
                     <label className="text-[10px] font-mono font-bold text-[var(--text-muted)] uppercase tracking-wider">
                       VOICE:
@@ -264,8 +275,26 @@ export default function CharacterRoster({
                     )}
                   </div>
 
+                  <div className="flex items-center justify-between text-[11px] font-mono text-[var(--text-sub)]">
+                    <span className="text-[10px] text-[var(--text-muted)] font-bold">PITCH:</span>
+                    <span>+0.00 ST</span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] font-mono text-[var(--text-sub)]">
+                    <span className="text-[10px] text-[var(--text-muted)] font-bold">PACE:</span>
+                    <span>1.00×</span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] font-mono text-[var(--text-sub)]">
+                    <span className="text-[10px] text-[var(--text-muted)] font-bold">STATUS:</span>
+                    <span className="text-[var(--text-main)] font-semibold flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-main)]" />
+                      <span>ASSIGNED</span>
+                    </span>
+                  </div>
+
                   {!isWriterOrAdmin && (
-                    <p className="text-[10px] font-mono text-[var(--text-muted)] mt-1 text-right">
+                    <p className="text-[10px] font-mono text-[var(--text-muted)] pt-1 text-right">
                       Sign in as writer/admin to override voices.
                     </p>
                   )}
