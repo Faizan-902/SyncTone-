@@ -16,17 +16,11 @@ export function useBookFit(stageRef, opts = {}) {
   optsRef.current = opts;
 
   const [fitState, setFitState] = useState(() => {
-    if (isJsdom) {
-      const defaultW = typeof window !== 'undefined' ? (window.innerWidth || 1024) : 1024;
-      const defaultH = typeof window !== 'undefined' ? Math.max(400, (window.innerHeight || 768) - 128) : 640;
-      return {
-        ...fitBook({ w: defaultW, h: defaultH }, opts),
-        ready: true,
-      };
-    }
+    const defaultW = typeof window !== 'undefined' ? (window.innerWidth || 1024) : 1024;
+    const defaultH = typeof window !== 'undefined' ? Math.max(300, (window.innerHeight || 768) - 230) : 538;
     return {
-      ...fitBook({ w: 0, h: 0 }, opts),
-      ready: false,
+      ...fitBook({ w: defaultW, h: defaultH }, opts),
+      ready: true,
     };
   });
 
@@ -40,9 +34,9 @@ export function useBookFit(stageRef, opts = {}) {
     let h = el.clientHeight || 0;
 
     if (w <= 0 || h <= 0) {
-      if (isJsdom && typeof window !== 'undefined') {
+      if (typeof window !== 'undefined') {
         w = window.innerWidth || 1024;
-        h = Math.max(400, (window.innerHeight || 768) - 128);
+        h = Math.max(300, (window.innerHeight || 768) - 230);
       } else {
         return;
       }

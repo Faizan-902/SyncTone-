@@ -331,6 +331,16 @@ try {
 
       const pageCurlStage = await page.$('[class*="page-curl"], .perspective-1200 > div');
       check('OpenGL 3D book canvas container rendered', !!pageCurlStage);
+
+      const openglScroll = await page.evaluate(() => ({
+        scrollHeight: document.documentElement.scrollHeight,
+        innerHeight: window.innerHeight,
+        scrollWidth: document.documentElement.scrollWidth,
+        innerWidth: window.innerWidth,
+        noPageScroll: document.documentElement.scrollHeight <= window.innerHeight + 2,
+        noHorizScroll: document.documentElement.scrollWidth <= window.innerWidth + 2,
+      }));
+      check('OpenGL mode fits stage with zero page scroll', openglScroll.noPageScroll && openglScroll.noHorizScroll, `(scrollHeight: ${openglScroll.scrollHeight}, innerHeight: ${openglScroll.innerHeight})`);
     }
 
     await context.close();
@@ -475,10 +485,10 @@ try {
 
         // Verify current page/spread indicator has advanced past Page 1
         const counterText = await page.evaluate(() => {
-          const el = document.querySelector('.reader-toolbar-group .mono-xs');
-          return el ? el.textContent : '';
+          const el = document.querySelector('[data-testid="reader-page-counter"], .reader-page-counter');
+          return el ? el.textContent.trim() : '';
         });
-        check('Page turned to subsequent spread', counterText.length > 0, `counter: ${counterText}`);
+        check('Page turned to subsequent spread', counterText.length > 0 && !counterText.startsWith('1 / 1'), `counter: ${counterText}`);
 
         // Now trigger live resize to trigger re-pagination
         await page.setViewportSize({ width: 1280, height: 720 });
@@ -486,12 +496,12 @@ try {
 
         // Counter should retain reading position
         const counterAfterResize = await page.evaluate(() => {
-          const el = document.querySelector('.reader-toolbar-group .mono-xs');
-          return el ? el.textContent : '';
+          const el = document.querySelector('[data-testid="reader-page-counter"], .reader-page-counter');
+          return el ? el.textContent.trim() : '';
         });
         check(
           'Anchor preserved reading position across resize',
-          !counterAfterResize.startsWith('1 /') || counterAfterResize.includes('Page 2') || counterAfterResize.includes('Page 3') || counterAfterResize.includes('Page 4') || counterText === counterAfterResize,
+          counterAfterResize.length > 0 && !counterAfterResize.startsWith('1 / 1'),
           `counterAfter: ${counterAfterResize}`
         );
       }

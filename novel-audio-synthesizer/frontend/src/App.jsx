@@ -475,10 +475,10 @@ function AppContent() {
           />
 
           {/* Content Body Area */}
-          <main key={view} className="flex-1 w-full px-4 sm:px-8 py-6 motion-view-route">
+          <main key={view} className={`flex-1 w-full motion-view-route ${view === 'reader' ? 'p-0' : 'px-4 sm:px-8 py-6'}`}>
             {/* Playback Resume Toast */}
             {view === 'reader' && playbackProgress.resumedAtMs !== null && (
-              <div className="mb-4 p-3.5 rounded-2xl bg-[var(--accent)] text-[var(--on-accent)] shadow-xl flex items-center justify-between text-xs animate-slideDown">
+              <div className="mx-4 sm:mx-8 mb-4 p-3.5 rounded-2xl bg-[var(--accent)] text-[var(--on-accent)] shadow-xl flex items-center justify-between text-xs animate-slideDown">
                 <div className="flex items-center gap-2.5">
                   <IconClock className="w-4 h-4" />
                   <span>
@@ -552,9 +552,9 @@ function AppContent() {
 
             {/* VIEW 3: SYNCHRONIZED READER */}
             {view === 'reader' && (
-              <div className="space-y-6">
+              <div className="w-full">
                 {chapterError && (
-                  <div className="p-4 rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 text-[var(--danger)] text-xs">
+                  <div className="mx-4 my-2 p-4 rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 text-[var(--danger)] text-xs">
                     {chapterError}
                   </div>
                 )}

@@ -339,6 +339,7 @@ try {
           }
           localStorage.setItem('synctone_theme', th);
           localStorage.setItem('synctone-theme', th);
+          localStorage.setItem('synctone_reader_mode_seen', 'true');
         }, theme);
 
         await page.waitForTimeout(500);

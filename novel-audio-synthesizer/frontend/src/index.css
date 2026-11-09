@@ -1359,14 +1359,14 @@ body.focus-fullscreen-mode footer {
   background: var(--bg-surface);
   border-bottom: 1px solid var(--border-subtle);
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .reader-toolbar-group {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .reader-content-stage {
@@ -1410,6 +1410,7 @@ body.focus-fullscreen-mode footer {
   text-indent: 0;
 }
 
+.reader-opening-para::first-letter,
 .drop-cap {
   float: left;
   font-family: var(--font-serif, 'Newsreader Variable', serif);
@@ -1473,6 +1474,14 @@ body.focus-fullscreen-mode footer {
 }
 
 @media (max-width: 768px) {
+  .reader-floating-toolbar {
+    flex-wrap: wrap;
+    padding: 8px 12px;
+  }
+  .reader-toolbar-group {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
   .desktop-only-tag {
     display: none !important;
   }

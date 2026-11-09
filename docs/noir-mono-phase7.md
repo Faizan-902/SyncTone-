@@ -87,9 +87,10 @@ A dedicated automated test suite (`scripts/test-reader-fit-matrix.mjs`) was deve
 - **Reading Position via Anchor**: Verified spread navigation is retained across viewport resizing without resetting to Spread 0.
 - **Fullscreen and Focus Mode**: Verified focus mode overlay activation, exit, and fullscreen button handlers.
 - **Signal Dot (Section 9.4)**: Verified that paused audio displays neutral indicator dot, strictly preventing signal dot activation when inactive.
+- **Both Reading Modes & Zero Page Scroll**: Verified Normal vertical scroll reader with gutter chevrons and OpenGL 3D perspective spread stage with zero page scroll (`scrollHeight <= window.innerHeight + 2`).
 - **Both Themes**: Tested across Dark (`data-theme="dark"`) and Light (`data-theme="light"`).
 
-**Summary**: 94/94 Playwright checks passed.
+**Summary**: 95/95 Playwright checks passed.
 
 ---
 

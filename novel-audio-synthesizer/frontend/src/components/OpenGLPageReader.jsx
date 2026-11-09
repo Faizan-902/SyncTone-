@@ -171,6 +171,7 @@ export default function OpenGLPageReader({
   fontSize = 18,
   isFocusMode = false,
   onToggleFocusMode,
+  onPageChange,
 }) {
   const { isDark } = useTheme();
   const [currentSpreadIndex, setCurrentSpreadIndex] = useState(0);
@@ -239,6 +240,18 @@ export default function OpenGLPageReader({
       }
     }
   }, [currentSpreadIndex, pages, isSingleLayout]);
+
+  // Report page updates to parent Reader toolbar
+  useEffect(() => {
+    if (onPageChange) {
+      onPageChange({
+        current: leftPageNum,
+        total: totalPages,
+        spread: currentSpreadIndex,
+        totalSpreads,
+      });
+    }
+  }, [leftPageNum, totalPages, currentSpreadIndex, totalSpreads, onPageChange]);
 
   // Restore spread index from anchor after re-pagination (e.g. font scale A+/A- or live resize)
   useEffect(() => {
@@ -624,7 +637,7 @@ export default function OpenGLPageReader({
       className={
         isFocusMode
           ? 'fixed inset-0 z-50 bg-[#fcfaf6] dark:bg-[var(--bg-page,#1A120E)] flex flex-col justify-between px-3 sm:px-8 pt-3 pb-24 overflow-hidden animate-fade-in select-none w-screen h-screen'
-          : 'space-y-6 animate-fade-in select-none relative'
+          : 'w-full flex-1 flex flex-col justify-center animate-fade-in select-none relative overflow-hidden'
       }
     >
       {/* Floating Exit Focus Button */}
@@ -654,11 +667,16 @@ export default function OpenGLPageReader({
       {/* 3D Apple Books Two-Page Spread Stage */}
       <div
         ref={stageRef}
-        className={`relative w-full perspective-1200 flex flex-col justify-center items-center ${
-          isFocusMode ? 'flex-1 my-auto py-1' : 'py-2 sm:py-4'
+        className={`relative w-full perspective-1200 flex flex-col justify-center items-center flex-shrink-0 ${
+          isFocusMode ? 'flex-1 my-auto py-1' : 'my-auto py-1'
         }`}
         style={{
-          minHeight: isFocusMode ? 'calc(100vh - 140px)' : 'calc(100vh - 56px - var(--dock-safe-bottom, 72px))',
+          height: isFocusMode
+            ? 'calc(100vh - 140px)'
+            : 'calc(100vh - 230px)',
+          maxHeight: isFocusMode
+            ? 'calc(100vh - 140px)'
+            : 'calc(100vh - 230px)',
         }}
       >
         {/* Apple Books Hardcover Canvas Container */}
@@ -898,7 +916,7 @@ export default function OpenGLPageReader({
       </div>
 
       {/* Floating Apple Books Dock Controls */}
-      <div className="max-w-2xl mx-auto flex flex-wrap items-center justify-between gap-3 px-5 py-2.5 rounded-2xl glass-dock border theme-border shadow-lg">
+      <div className="max-w-2xl mx-auto flex flex-wrap items-center justify-between gap-2 px-4 py-1.5 rounded-xl glass-dock border theme-border shadow-md flex-shrink-0 text-xs my-1">
         {/* Prev / Next Page Buttons */}
         <div className="flex items-center gap-1.5">
           <button

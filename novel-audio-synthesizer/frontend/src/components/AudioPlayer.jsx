@@ -442,12 +442,12 @@ export default function AudioPlayer({
 
         {/* Right: Signal Dot, Engine Mode, TTS Dropdown, Speed & Volume Controls */}
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
-          {/* Signal Dot: Active strictly when isPlaying or TTS live synthesis */}
-          {(isPlaying || playbackMode === 'tts') && (
+          {/* Signal Dot: Active strictly when isPlaying per Section 9.4 */}
+          {isPlaying && (
             <span
               className="signal-dot"
               title="Active Audio Playback"
-              aria-label={isPlaying ? 'Audio playing visualizer' : 'Audio paused visualizer'}
+              aria-label="Audio playing visualizer"
             />
           )}
 

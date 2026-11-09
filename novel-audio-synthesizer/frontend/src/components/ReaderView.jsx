@@ -62,15 +62,8 @@ export default function ReaderView({
   // Reader mode: 'normal' (WTR-Lab scroll) vs 'opengl' (Moon+ Reader Pro 3D book)
   const [readerMode, setReaderMode] = useState('normal');
 
-  // Popup Modal for choosing experience when opening the reader (browser only)
-  const [showExperiencePopup, setShowExperiencePopup] = useState(() => {
-    if (!isBrowserEnv) return false;
-    try {
-      return !localStorage.getItem('synctone_reader_mode_seen');
-    } catch (_) {
-      return false;
-    }
-  });
+  // Experience modal available if triggered (defaults to closed for pristine reading surface)
+  const [showExperiencePopup, setShowExperiencePopup] = useState(false);
 
   const [isScrolledAway, setIsScrolledAway] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false);
@@ -106,12 +99,20 @@ export default function ReaderView({
     return idx >= 0 ? idx : 0;
   }, [activeSegmentId, effectiveSegments]);
 
+  const [openGlPageInfo, setOpenGlPageInfo] = useState({ current: 1, total: 1 });
+
   const pageCounterText = React.useMemo(() => {
+    if (readerMode === 'opengl') {
+      const cur = openGlPageInfo.current || 1;
+      const tot = openGlPageInfo.total || 1;
+      const pct = ((cur / tot) * 100).toFixed(1);
+      return `${cur} / ${tot} (${pct}%)`;
+    }
     const total = Math.max(1, effectiveSegments.length);
     const current = Math.min(total, activeSegmentIdx + 1);
     const pct = ((current / total) * 100).toFixed(1);
     return `${current} / ${total} (${pct}%)`;
-  }, [activeSegmentIdx, effectiveSegments.length]);
+  }, [readerMode, openGlPageInfo, activeSegmentIdx, effectiveSegments.length]);
 
   const handleGutterPrev = useCallback(() => {
     if (typeof window !== 'undefined') {
@@ -276,9 +277,10 @@ export default function ReaderView({
   }
 
   // WTR-Lab Intra-segment text renderer with word highlight and inline EPUB illustrations
-  const renderSegmentText = (seg, isActive) => {
+  const renderSegmentText = (seg, isActive, sIdx = -1) => {
     const { imgUrl, cleanText } = parseSegmentImage(seg);
     const isDialogue = seg.type === 'dialogue';
+    const isOpening = sIdx === 0 && !isDialogue;
     const displayText = isDialogue
       ? (cleanText ? `"${cleanText.replace(/^["“”]|["“”]$/g, '')}"` : '')
       : cleanText;
@@ -302,7 +304,7 @@ export default function ReaderView({
         <>
           {imageElement}
           {displayText && (
-            <p className={`relative z-10 leading-[1.85] text-justify hyphens-auto ${isDialogue ? 'italic theme-main font-serif' : 'theme-sub font-normal'}`}>
+            <p className={`relative z-10 leading-[1.85] text-justify hyphens-auto ${isOpening ? 'reader-opening-para' : ''} ${isDialogue ? 'italic theme-main font-serif' : 'theme-sub font-normal'}`}>
               {displayText}
             </p>
           )}
@@ -356,7 +358,7 @@ export default function ReaderView({
       <>
         {imageElement}
         {displayText && (
-          <p className={`relative z-10 leading-[1.85] text-justify hyphens-auto p-2 rounded-[1px] bg-[var(--accent-surface)] border-l-2 border-[var(--text-main)] ${
+          <p className={`relative z-10 leading-[1.85] text-justify hyphens-auto p-2 rounded-[1px] bg-[var(--accent-surface)] border-l-2 border-[var(--text-main)] ${isOpening ? 'reader-opening-para' : ''} ${
             isDialogue ? 'italic text-[var(--text-main)] font-serif font-medium' : 'text-[var(--text-main)] font-normal'
           }`}>
             {displayText}
@@ -367,7 +369,13 @@ export default function ReaderView({
   };
 
   return (
-    <div className={`reader-canvas-container pb-36 transition-opacity duration-300 ${isFocusMode ? 'focus-mode-active' : ''}`}>
+    <div
+      className={`reader-canvas-container ${
+        readerMode === 'normal'
+          ? 'pb-36 min-h-[calc(100vh-56px-var(--dock-safe-bottom,72px))]'
+          : 'h-[calc(100vh-56px-var(--dock-safe-bottom,72px))] max-h-[calc(100vh-56px-var(--dock-safe-bottom,72px))] overflow-hidden'
+      } transition-opacity duration-300 ${isFocusMode ? 'focus-mode-active' : ''}`}
+    >
       {/* Floating Focus Mode Banner */}
       {isFocusMode && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[var(--bg-surface)] text-[var(--text-main)] text-xs px-4 py-2 rounded-[1px] border border-[var(--border-strong)] shadow-2xl flex items-center gap-3 animate-fade-in font-mono">
@@ -658,7 +666,11 @@ export default function ReaderView({
           )}
 
           {/* Page Counter */}
-          <span className="mono-xs" style={{ color: 'var(--text-sub)' }}>
+          <span
+            data-testid="reader-page-counter"
+            className="mono-xs reader-page-counter"
+            style={{ color: 'var(--text-sub)' }}
+          >
             {pageCounterText}
           </span>
 
@@ -711,7 +723,7 @@ export default function ReaderView({
 
       {/* Render Mode 1: Moon+ Reader Pro 3D OpenGL Mode */}
       {readerMode === 'opengl' ? (
-        <div className="pt-6">
+        <div className="w-full flex-1 flex flex-col justify-center overflow-hidden">
           <OpenGLPageReader
             segments={effectiveSegments}
             activeSegmentId={activeSegmentId}
@@ -737,6 +749,7 @@ export default function ReaderView({
             fontSize={fontSize}
             isFocusMode={isFocusMode}
             onToggleFocusMode={() => setIsFocusMode((prev) => !prev)}
+            onPageChange={setOpenGlPageInfo}
           />
         </div>
       ) : (
@@ -847,7 +860,7 @@ export default function ReaderView({
                     </div>
 
                     {/* Prose Text with High-Contrast Highlight */}
-                    {renderSegmentText(seg, isActive)}
+                    {renderSegmentText(seg, isActive, sIdx)}
                   </div>
                 );
               })}
