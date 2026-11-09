@@ -15,6 +15,7 @@ export default function TopHeader({
   onNavigate,
   onOpenArchive,
   onOpenReader,
+  onOpenVoices,
   showRoster,
   onToggleRoster,
   onOpenSettings,
@@ -78,6 +79,8 @@ export default function TopHeader({
               onClick={() => {
                 if (view === 'reader' && onToggleRoster) {
                   onToggleRoster();
+                } else if (onOpenVoices) {
+                  onOpenVoices();
                 } else if (onOpenSettings) {
                   onOpenSettings();
                 }

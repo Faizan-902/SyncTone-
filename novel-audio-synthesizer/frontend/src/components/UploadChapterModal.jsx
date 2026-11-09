@@ -70,7 +70,7 @@ export default function UploadChapterModal({ isOpen, novel, onClose, onChapterUp
   return (
     <LazyMotion features={domAnimation}>
       <m.div
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm cursor-pointer"
         role="dialog"
         aria-modal="true"
         aria-labelledby="upload-chapter-modal-title"
@@ -79,14 +79,18 @@ export default function UploadChapterModal({ isOpen, novel, onClose, onChapterUp
         animate="visible"
         exit="hidden"
         transition={{ duration: 0.2 }}
+        onClick={(e) => {
+          if (e.target === e.currentTarget && !isUploading) onClose();
+        }}
       >
         <m.div
-          className="w-full max-w-xl bg-[var(--bg-card)] rounded-2xl shadow-2xl border border-[var(--border-strong)] overflow-hidden"
+          className="w-full max-w-xl bg-[var(--bg-card)] rounded-2xl shadow-2xl border border-[var(--border-strong)] overflow-hidden cursor-default"
           variants={panelVariants}
           initial="hidden"
           animate="visible"
           exit="hidden"
           transition={{ duration: 0.2, ease: 'easeOut' }}
+          onClick={(e) => e.stopPropagation()}
         >
         <div className="p-6 border-b border-[var(--border-subtle)] flex items-center justify-between">
           <div>

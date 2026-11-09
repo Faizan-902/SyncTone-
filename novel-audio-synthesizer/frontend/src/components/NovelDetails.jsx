@@ -37,10 +37,16 @@ const ARCHIVED_MODELS = [
   { id: 'Neural-Matron-Female', role: 'MATRON FEMALE', timbre: 'Warm maternal Victorian cadence', freq: '48kHz PCM // Latency: 44ms' },
 ];
 
-export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenUploadChapter, onNovelDeleted }) {
+export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenUploadChapter, onNovelDeleted, initialTab }) {
   const { isWriterOrAdmin } = useAuth();
   const [data, setData] = useState(null);
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'cast' | 'chapters' | 'details' | 'score'
+  const [activeTab, setActiveTab] = useState(() => {
+    try {
+      const q = new URLSearchParams(window.location.search).get('tab');
+      if (q && ['overview', 'cast', 'chapters', 'details', 'score'].includes(q)) return q;
+    } catch (_) {}
+    return initialTab || 'overview';
+  });
   const [studioTab, setStudioTab] = useState('cast'); // 'cast' | 'voices' | 'settings' | 'generate'
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -284,7 +290,13 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
           </button>
 
           <button
-            onClick={() => setActiveTab('cast')}
+            onClick={() => {
+              setActiveTab('cast');
+              setTimeout(() => {
+                const el = document.getElementById('details-tabs-section') || document.querySelector('[role="tablist"]');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }, 50);
+            }}
             className="btn btn-lg cursor-pointer active:scale-[0.96] hover:scale-[1.03] hover:-translate-y-0.5 transition-all duration-200 rounded-full shadow-xs hover:shadow-md"
             aria-label="Voice Studio"
           >

@@ -400,7 +400,7 @@ export default function AddNovelModal({
   return (
     <LazyMotion features={domAnimation}>
       <m.div
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm cursor-pointer"
         role="dialog"
         aria-modal="true"
         aria-labelledby="add-novel-modal-title"
@@ -409,14 +409,18 @@ export default function AddNovelModal({
         animate="visible"
         exit="hidden"
         transition={{ duration: 0.2 }}
+        onClick={(e) => {
+          if (e.target === e.currentTarget && !isCreating) onClose();
+        }}
       >
         <m.div
-          className="w-full max-w-xl theme-surface rounded-2xl shadow-2xl border overflow-hidden max-h-[90vh] flex flex-col"
+          className="w-full max-w-xl theme-surface rounded-2xl shadow-2xl border overflow-hidden max-h-[90vh] flex flex-col cursor-default"
           variants={panelVariants}
           initial="hidden"
           animate="visible"
           exit="hidden"
           transition={{ duration: 0.2, ease: 'easeOut' }}
+          onClick={(e) => e.stopPropagation()}
         >
         {/* Modal Header */}
         <div className="p-5 border-b theme-border flex items-center justify-between flex-shrink-0">

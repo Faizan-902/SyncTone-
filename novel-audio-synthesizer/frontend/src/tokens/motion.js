@@ -40,7 +40,11 @@ export function executeViewTransition(callback) {
     !prefersReducedMotion()
   ) {
     try {
-      return document.startViewTransition(callback);
+      const transition = document.startViewTransition(callback);
+      if (transition && typeof transition.finished?.catch === 'function') {
+        transition.finished.catch(() => {});
+      }
+      return transition;
     } catch (_) {
       // Fall through to immediate execution if startViewTransition throws or rejects
     }

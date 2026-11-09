@@ -266,6 +266,15 @@ export default function ReaderView({
               Try Again
             </Button>
           )}
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== 'undefined') window.location.href = '/';
+            }}
+            className="boxed-btn px-5 py-2.5 rounded-full text-xs font-mono uppercase cursor-pointer hover:scale-[1.03] active:scale-[0.96] transition-all"
+          >
+            Browse Library
+          </button>
           {onNextChapter && (
             <Button variant="ghost" size="md" onClick={onNextChapter}>
               Next Chapter →

@@ -259,10 +259,14 @@ function AppContent() {
 
   // Sync routeNovelId with selectedNovelId
   useEffect(() => {
-    if (view === 'details' && routeNovelId && routeNovelId !== selectedNovelId) {
-      setSelectedNovelId(routeNovelId);
+    if (view === 'details') {
+      if (routeNovelId && routeNovelId !== selectedNovelId) {
+        setSelectedNovelId(routeNovelId);
+      } else if (!routeNovelId && !selectedNovelId && !currentNovel?.id) {
+        navigate('/');
+      }
     }
-  }, [view, routeNovelId, selectedNovelId]);
+  }, [view, routeNovelId, selectedNovelId, currentNovel?.id, navigate]);
 
   // Load chapter helper (used for route navigation and deep links)
   const loadChapterById = useCallback(async (chapterId, novel = null) => {
@@ -377,11 +381,11 @@ function AppContent() {
   // Sync routeChapterId when navigating deep link to /reader/:chapterId
   useEffect(() => {
     if (view === 'reader' && routeChapterId) {
-      if (currentChapter?.id !== routeChapterId) {
+      if (currentChapter?.id !== routeChapterId || chapterSegments.length === 0) {
         loadChapterById(routeChapterId, currentNovel);
       }
     }
-  }, [view, routeChapterId, currentChapter?.id, currentNovel, loadChapterById]);
+  }, [view, routeChapterId, currentChapter?.id, currentNovel, chapterSegments.length, loadChapterById]);
 
   // Open novel details
   const handleSelectNovel = (novelId) => {
@@ -450,12 +454,13 @@ function AppContent() {
       handleNavigate('reader', currentChapter.id);
       return;
     }
-    if (currentNovel?.id) {
+    const targetNovelId = currentNovel?.id || selectedNovelId || routeNovelId;
+    if (targetNovelId) {
       try {
-        const nData = await api.novels.get(currentNovel.id);
+        const nData = await api.novels.get(targetNovelId);
         const ch1 = (nData.chapters || []).find((c) => c.chapter_number === 1) || nData.chapters?.[0];
         if (ch1) {
-          handleSelectChapter(currentNovel, ch1);
+          handleSelectChapter(nData.novel || currentNovel || { id: targetNovelId }, ch1);
           return;
         }
       } catch (_) {}
@@ -476,7 +481,39 @@ function AppContent() {
       }
     } catch (_) {}
     handleNavigate('catalog');
-  }, [currentChapter, currentNovel, handleNavigate, handleSelectChapter]);
+  }, [currentChapter, currentNovel, selectedNovelId, routeNovelId, handleNavigate, handleSelectChapter]);
+
+  // Seamless Voice Studio Launch: opens cast and voices tab
+  const handleOpenVoices = useCallback(async () => {
+    if (view === 'reader') {
+      setShowRoster((prev) => !prev);
+      return;
+    }
+    const targetId = currentNovel?.id || selectedNovelId;
+    if (targetId) {
+      setSelectedNovelId(targetId);
+      navigate(`/novel/${targetId}?tab=cast`);
+      setTimeout(() => {
+        const el = document.getElementById('details-tabs-section') || document.querySelector('[role="tablist"]');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 80);
+      return;
+    }
+    try {
+      const data = await api.novels.list();
+      const targetNovel = (data.novels || []).find((n) => n.chapter_count > 0) || data.novels?.[0];
+      if (targetNovel) {
+        setSelectedNovelId(targetNovel.id);
+        navigate(`/novel/${targetNovel.id}?tab=cast`);
+        setTimeout(() => {
+          const el = document.getElementById('details-tabs-section') || document.querySelector('[role="tablist"]');
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 80);
+        return;
+      }
+    } catch (_) {}
+    setShowSettings(true);
+  }, [view, currentNovel?.id, selectedNovelId, navigate]);
 
   const handleOpenAuth = (mode = 'login') => {
     setAuthMode(typeof mode === 'string' ? mode : 'login');
@@ -538,6 +575,7 @@ function AppContent() {
             onNavigate={handleNavigate}
             onOpenArchive={handleOpenArchive}
             onOpenReader={handleOpenReaderQuick}
+            onOpenVoices={handleOpenVoices}
             showRoster={showRoster}
             onToggleRoster={() => setShowRoster((prev) => !prev)}
             onOpenSettings={() => setShowSettings(true)}

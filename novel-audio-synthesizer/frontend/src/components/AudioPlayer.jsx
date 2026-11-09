@@ -353,7 +353,7 @@ export default function AudioPlayer({
       {/* Hidden audio element for audio sync engine */}
       <audio
         ref={audioRef}
-        src={audioUrl}
+        src={playbackMode === 'tts' ? undefined : audioUrl}
         preload="auto"
         onPlay={(e) => {
           setIsBufferingState(false);
@@ -381,7 +381,7 @@ export default function AudioPlayer({
         }}
         onError={(e) => {
           setIsBufferingState(false);
-          if (audioUrl) {
+          if (audioUrl && playbackMode !== 'tts') {
             setLocalError('Audio track unavailable');
           }
           onError?.(e);

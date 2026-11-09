@@ -97,17 +97,33 @@ export default function SettingsModal({
     }
   }, [onProbeStatus]);
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose?.();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   const kokoroAvailable = Boolean(modelStatus?.kokoro?.available || modelStatus?.tts?.model_exists);
   const paradeeAvailable = Boolean(modelStatus?.paradee?.model_exists || modelStatus?.paradee?.available || modelStatus?.tts?.paradee_ready);
 
   return (
     <div
-      className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 modal-scrim-enter"
+      className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 modal-scrim-enter cursor-pointer"
       role="dialog"
       aria-modal="true"
       aria-labelledby="settings-dialog-title"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose?.();
+      }}
     >
-      <div className="bg-[var(--bg-card)] rounded-2xl shadow-2xl border border-[var(--border-strong)] max-w-md w-full p-6 space-y-6 modal-panel-enter max-h-[90vh] overflow-y-auto">
+      <div
+        className="bg-[var(--bg-card)] rounded-2xl shadow-2xl border border-[var(--border-strong)] max-w-md w-full p-6 space-y-6 modal-panel-enter max-h-[90vh] overflow-y-auto cursor-default"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between pb-3 border-b border-[var(--border-subtle)]">
           <h2 id="settings-dialog-title" className="text-base font-bold theme-heading flex items-center gap-2">
             <IconSettings className="w-4 h-4 text-[var(--text-main)]" />

@@ -20,12 +20,22 @@ export default class ErrorBoundary extends React.Component {
           <p className="text-sm theme-muted max-w-xs">
             {this.props.friendlyMessage || "We hit a snag loading this section. Please try again."}
           </p>
-          <button
-            onClick={() => this.setState({ hasError: false, error: null })}
-            className="px-4 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] text-xs font-bold rounded-xl transition"
-          >
-            Try again
-          </button>
+          <div className="flex items-center justify-center gap-3 pt-2">
+            <button
+              onClick={() => this.setState({ hasError: false, error: null })}
+              className="px-6 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] text-xs font-mono uppercase font-bold rounded-full shadow-md hover:scale-[1.03] active:scale-[0.96] transition-all cursor-pointer"
+            >
+              Try again
+            </button>
+            <button
+              onClick={() => {
+                if (typeof window !== 'undefined') window.location.href = '/';
+              }}
+              className="px-5 py-2.5 border border-[var(--border-strong)] hover:border-[var(--text-main)] text-[var(--text-main)] text-xs font-mono uppercase rounded-full shadow-xs hover:scale-[1.03] active:scale-[0.96] transition-all cursor-pointer"
+            >
+              Return Home
+            </button>
+          </div>
         </div>
       );
     }
