@@ -514,7 +514,7 @@ export default function OpenGLPageReader({
             className={`leading-[1.85] tracking-[0.01em] text-justify indent-6 select-text ${
             isDialogue ? 'italic font-serif theme-main' : 'theme-sub'
           }`}>
-            <mark className="bg-[var(--accent-surface)] text-[var(--text-main)] rounded-[1px]">
+            <mark className="bg-[var(--accent-surface)] text-[var(--text-main)] rounded-sm">
               {tokens.map((token, idx) => {
                 if (idx === activeTokenIdx) {
                   return (
@@ -525,7 +525,7 @@ export default function OpenGLPageReader({
                         display: 'inline',
                         textIndent: '0px',
                       }}
-                      className="inline bg-yellow-400 text-stone-900 font-bold rounded-[1px] px-0.5 shadow-xs"
+                      className="inline bg-yellow-400 text-stone-900 font-bold rounded-sm px-0.5 shadow-xs"
                     >
                       {token}
                     </span>
@@ -546,7 +546,7 @@ export default function OpenGLPageReader({
             <mark
               data-active-word="true"
               style={{ display: 'inline', textIndent: '0px' }}
-              className="inline bg-[var(--accent-surface)] text-[var(--text-main)] rounded-[1px]"
+              className="inline bg-[var(--accent-surface)] text-[var(--text-main)] rounded-sm"
             >
               {rawText}
             </mark>
@@ -636,7 +636,7 @@ export default function OpenGLPageReader({
     <div
       className={
         isFocusMode
-          ? 'fixed inset-0 z-50 bg-[#fcfaf6] dark:bg-[var(--bg-page,#1A120E)] flex flex-col justify-between px-3 sm:px-8 pt-3 pb-24 overflow-hidden animate-fade-in select-none w-screen h-screen'
+          ? 'fixed inset-0 z-50 bg-[var(--bg-page)] flex flex-col justify-between px-3 sm:px-8 pt-3 pb-24 overflow-hidden animate-fade-in select-none w-screen h-screen'
           : 'w-full flex-1 flex flex-col justify-center animate-fade-in select-none relative overflow-hidden'
       }
     >
@@ -683,7 +683,7 @@ export default function OpenGLPageReader({
         <div
           ref={bookContainerRef}
           className={`
-            relative ${isFocusMode ? 'min-h-[calc(100vh-140px)]' : ''} rounded-[1px]
+            relative ${isFocusMode ? 'min-h-[calc(100vh-140px)]' : ''} rounded-2xl
             bg-[var(--bg-card)] text-[var(--text-main)] border border-[var(--border-subtle)]
             shadow-2xl overflow-hidden transition-all duration-300 flex flex-col justify-between
             ${isFlipping ? (flipDirection === 'next' ? 'page-curl-flip-next' : 'page-curl-flip-prev') : ''}
@@ -892,7 +892,15 @@ export default function OpenGLPageReader({
 
           {/* Corner Curl Click Targets for intuitive page turning */}
           <div
+            role="button"
+            tabIndex={isPrevDisabled ? -1 : 0}
             onClick={isPrevDisabled ? undefined : handlePrevPage}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                if (!isPrevDisabled) handlePrevPage();
+              }
+            }}
             className={`absolute top-0 left-0 w-16 h-16 z-30 group flex items-start justify-start p-2 ${
               isPrevDisabled ? 'opacity-0 pointer-events-none' : 'cursor-pointer'
             }`}
@@ -903,12 +911,20 @@ export default function OpenGLPageReader({
           </div>
 
           <div
+            role="button"
+            tabIndex={isNextDisabled ? -1 : 0}
             onClick={isNextDisabled ? undefined : handleNextPage}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                if (!isNextDisabled) handleNextPage();
+              }
+            }}
             className={`absolute top-0 right-0 w-16 h-16 z-30 group flex items-start justify-end p-2 ${
               isNextDisabled ? 'opacity-0 pointer-events-none' : 'cursor-pointer'
             }`}
             title={isOnFinalSpread && nextChapter ? nextSpreadTitle : "Turn to next spread"}
-            aria-label={isOnFinalSpread && nextChapter ? nextSpreadTitle : "Turn page forward"}
+            aria-label="Turn page forward"
           >
             <div className="w-6 h-6 border-t-2 border-r-2 border-[var(--brand-walnut,#6B4A2E)]/40 group-hover:border-[var(--brand-bronze,#A88462)] transition rounded-tr-lg" />
           </div>

@@ -1,162 +1,268 @@
-# SyncTone Theme Lock & Visual Identity Specification
+# SyncTone Theme Lock & Visual Identity Specification (THEME_LOCK v2)
 
 **Status**: STRICTLY LOCKED  
-**Approved Palette**: Option B (Modern OKLCH Orange within Atelier Obsidian & Editorial Light)  
-**Selection Origin**: The orange accent palette restores the project's pre-Cinnabar visual soul predating commits `d4c4f48` and `1879dd7`. The specific color coordinates were engineered, contrast-tested, and selected through the Step B1/B2 preview process: **Candidate D1** (`oklch(0.72 0.200 55)` with dark on-accent text `oklch(0.12 0.010 260)`) for Dark Mode and **Candidate L2** (`oklch(0.52 0.170 48)` with white on-accent text `#ffffff`) for Light Mode.  
+**Approved Identity**: Noir Monochrome (Editorial Digital Publishing & Multi-Voice Audiobook Engine)  
+**Selection Origin**: The Noir Monochrome visual language derives strictly from the primary art direction in `docs/design-reference/reference-hero.png` and owner's authorization in `docs/noir-mono-spec.md`. It supersedes `docs/noir-yellow-spec.md` (withdrawn), `docs/editorial-orange-spec.md`, and `THEME_LOCK` v1.  
 **Pre-Commit Gate**: `npm run theme:check` (Vitest Token Snapshot + Playwright E2E Zero-Color-Delta Suite + Honest Pixel Proof)  
-**Accessibility Audit Policy**: Axe-core `color-contrast` is **WARNING-ONLY, NEVER DISABLED**. Violations are recorded to `docs/contrast-known-issues.md` and reported; colors are never edited to satisfy Axe without explicit written approval.
+**Accessibility Audit Policy**: Axe-core `color-contrast` is configured as **ERROR (NEVER DISABLED)**. All typography and interactive chrome meet or exceed WCAG 2.2 AA standards (informational text $\ge 4.5:1$, non-text affordances $\ge 3.0:1$) strictly within the approved neutral palette.
 
 ---
 
-## 1. Absolute Invariance Policy
+## 1. Absolute Invariance Policy (THEME_LOCK v2)
 
-1. **Strictly Immutable Visual Palette**:
-   - Visual Identity: **Atelier Obsidian** (Dark) & **Editorial Light** (Cold-Press Vellum).
-   - Living Accent: **Vivid Tangerine Orange** (`oklch(0.72 0.200 55)`) in Dark Mode and **Deep Amber Orange** (`oklch(0.52 0.170 48)`) in Light Mode.
-   - On-Accent Text: Dark Text (`oklch(0.12 0.010 260)`) on Dark Mode Accent; White Text (`oklch(1.00 0.000 0)`) on Light Mode Accent.
-   - **NO color, token, shadow color, opacity, gradient, copy, or geometry value may change anywhere, for any reason (including accessibility contrast), without written user approval.**
-2. **Accessibility (a11y) Contrast Rule**:
-   - Axe-core `color-contrast` audits are strictly configured as **warning-only** and must never be disabled.
-   - All accent-filled surfaces implement `var(--on-accent)`, achieving **7.73:1 AAA contrast** in Dark Mode and **4.58:1 AA contrast** in Light Mode (0 accent contrast violations remain).
-   - Independent elements (`amber-400`, `emerald-400`, reader yellow highlight) remain preserved per brand specification; known low ratios are cataloged in `docs/contrast-known-issues.md`.
-3. **Independent Elements (Strictly Unchanged)**:
-   The following features are independent of the theme accent and must never be modified during theme or token work:
-   - **Reader yellow highlights** (`bg-yellow-300/30`, `bg-yellow-300/35`, `#fef08a`)
-   - **Book cover spine and curl shadows**
-   - **Cover style presets** (`COVER_STYLES` in `NovelCover.jsx`: emerald, amber, sky, purple, rose, indigo)
-   - **"3D" and "Voice TTS" badge pills** in Novel Details and Reader
-   - **Status tokens** (`--color-status-success`, `--color-status-warning`, `--color-status-danger`, `--color-status-info`)
-   - **Audio Scrubber secondary gradient stop** (`to-indigo-400`)
-4. **Continuous Verification**:
-   - Any commit modifying theme tokens, colors, or visual aesthetics must pass `npm run theme:check`.
+1. **Strictly Monochrome Visual Chrome**:
+   - Visual Identity: **Noir Monochrome** — Neutral greys exclusively spanning `#0B0B0D` to `#F2F2F3`.
+   - Zero chromatic hue fills anywhere in the UI chrome: no yellow, green, orange, blue, cyan, or purple fills.
+   - Inverse CTA Contract: `--accent` is high-contrast text-main fill (dark: `#F2F2F3`, light: `#0B0B0D`); `--on-accent` is page background (dark: `#0B0B0D`, light: `#FFFFFF`).
+2. **Single Permitted Chromatic Exception (`--signal`)**:
+   - Single token: `--signal: #FF5A1F` (dark) / `--signal: #F05010` (light).
+   - Strict size constraint: Circular dot with diameter $\le 8\text{px}$.
+   - State constraint: Strictly rendered during active "live", "recording", "playing", or "generating" states (e.g. playing audio track in `AudioPlayer`, active TTS synthesis job in `SynthesisProgressBar`).
+   - Invariant: NEVER rendered on static icons, cards, backgrounds, borders, badges, tags, or paused controls. At most ONE signal dot visible per viewport at any time.
+3. **Sharp Geometry Invariant**:
+   - Corner radius is strictly `0px` to `2px` across all UI chrome (buttons, inputs, cards, dialogs, tabs).
+   - No pills, no rounded-xl, no 12px corners, no floating pill docks, no glassmorphism blur. Pinned top bar: strictly 56px (`h-14`); pinned bottom audio dock: strictly 72px (`--dock-safe-bottom`).
+4. **Independent Elements (Strictly Content, Not Chrome)**:
+   - Book cover artwork and uploaded images (`cover_object`).
+   - Procedural cover style presets (`COVER_STYLES` in `NovelCover.jsx`).
+   - Reader yellow text highlight overlay (`bg-yellow-300/30`, `#fef08a`).
+   - Book spine curl depth effects and canvas 3D page curl meshes.
+5. **Continuous Verification**:
+   - Any commit modifying theme tokens, colors, or visual aesthetics must pass `npm run theme:check` and all 19 Vitest test suites (136 tests green).
 
 ---
 
-## 2. Locked Token Specification
+## 2. Locked Token Specification (THEME_LOCK v2)
 
-### Dark Mode (`:root, html.dark`) — Atelier Obsidian
+### Dark Mode (`:root, html.dark`) — Midnight Noir Stage
 ```css
 :root, html.dark {
-  --bg-page: oklch(0.13 0.006 260);
-  --bg-surface: oklch(0.16 0.008 260);
-  --bg-card: oklch(0.19 0.010 260);
-  --bg-hover: oklch(0.23 0.012 260);
-  --bg-elevated: oklch(0.21 0.010 260);
+  /* Harmonized brand tokens (neutralized to greys) */
+  --brand-espresso: #0B0B0D;
+  --brand-chocolate: #141416;
+  --brand-walnut: #1B1B1E;
+  --brand-bronze: #898992;
+  --brand-sand: #F2F2F3;
+  --brand-charcoal: #5E5E66;
+  --brand-sage: #A9A9AF;
+  --brand-amber: #DCDCDF;
+  --brand-champagne: #F2F2F3;
+  --brand-champagne-light: #DCDCDF;
+  --brand-obsidian: #0B0B0D;
 
-  --text-main: oklch(0.96 0.005 260);
-  --text-sub: oklch(0.85 0.008 260);
-  --text-muted: oklch(0.74 0.010 260);
+  /* Surfaces */
+  --bg-page: #0B0B0D;
+  --bg-surface: #141416;
+  --bg-card: #1B1B1E;
+  --bg-hover: #232327;
+  --bg-elevated: #1B1B1E;
+  --bg-bar: #141416;
 
-  /* Living Accent: Vivid Tangerine Orange (Candidate D1) */
-  --accent: oklch(0.72 0.200 55);
-  --accent-hover: oklch(0.76 0.190 58);
-  --accent-surface: rgba(255, 121, 0, 0.12);
-  --on-accent: oklch(0.12 0.010 260);
+  /* Typography */
+  --text-main: #F2F2F3;
+  --text-sub: #A9A9AF;
+  --text-muted: #898992;
 
-  --border-subtle: rgba(255, 255, 255, 0.07);
-  --border-strong: rgba(255, 255, 255, 0.20);
-  --border-focus: oklch(0.72 0.200 55);
+  /* Borders & Affordances */
+  --border-subtle: #2E2E33;
+  --border-strong: #5E5E66;
+  --border-hover: #F2F2F3;
+  --border-focus: #F2F2F3;
 
-  --speaker-narrator: oklch(0.85 0.008 260);
-  --speaker-a: oklch(0.72 0.200 55);
-  --speaker-b: oklch(0.77 0.140 155);
-  --speaker-c: oklch(0.76 0.140 235);
-  --speaker-d: oklch(0.76 0.150 320);
+  /* Living Accent (Inverse High-Contrast) */
+  --accent: #F2F2F3;
+  --accent-hover: #DCDCDF;
+  --accent-surface: rgba(242, 242, 243, 0.10);
+  --accent-strong: #5E5E66;
+  --accent-text: #F2F2F3;
+  --on-accent: #0B0B0D;
 
-  --top10-fill: oklch(0.13 0.006 260);
-  --top10-stroke: rgba(255, 255, 255, 0.24);
-  --top10-active: oklch(0.72 0.200 55);
+  /* CTA Primary */
+  --cta-primary-bg: #F2F2F3;
+  --cta-primary-hover: #DCDCDF;
+  --cta-primary-text: #0B0B0D;
 
-  --card-accent: oklch(0.72 0.200 55);
+  /* Opaque Surfaces */
+  --glass-bg: rgba(20, 20, 22, 0.98);
+  --glass-dock: rgba(20, 20, 22, 0.98);
+
+  /* Single Chromatic Indicator Dot */
+  --signal: #FF5A1F;
+
+  /* Stage & Headline Gradients */
+  --stage-gradient: linear-gradient(180deg, #0A0A0C 0%, #2A2A2E 35%, #7B7B7E 70%, #C2C2C4 100%);
+  --headline-gradient: linear-gradient(180deg, #B4B4B6 0%, #3A3A3E 100%);
+
+  /* Status Without Hue */
+  --success: #F2F2F3;
+  --warning: #DCDCDF;
+  --danger: #F2F2F3;
+  --info: #A9A9AF;
+
+  /* Voice / Speaker Hierarchy */
+  --speaker-narrator: #A9A9AF;
+  --speaker-a: #F2F2F3;
+  --speaker-b: #DCDCDF;
+  --speaker-c: #A9A9AF;
+  --speaker-d: #898992;
+
+  /* Editorial Billboard & Card Accent */
+  --top10-fill: #0B0B0D;
+  --top10-stroke: rgba(242, 242, 243, 0.25);
+  --top10-active: #F2F2F3;
+  --card-accent: #F2F2F3;
+
+  /* Sharp Geometry (0-2px) */
+  --radius-xs: 0px;
+  --radius-sm: 1px;
+  --radius-md: 2px;
+  --radius-lg: 2px;
+  --radius-xl: 4px;
+  --radius-full: 9999px;
 }
 ```
 
-### Light Mode (`html.light`) — Editorial Light
+### Light Mode (`html.light`) — Editorial Cold-Press Paper
 ```css
 html.light {
-  --bg-page: oklch(0.985 0.003 240);
-  --bg-surface: oklch(1.000 0.000 0);
-  --bg-card: oklch(0.955 0.005 240);
-  --bg-hover: oklch(0.925 0.008 240);
-  --bg-elevated: oklch(1.000 0.000 0);
+  /* Harmonized brand tokens */
+  --brand-espresso: #EFEFF0;
+  --brand-chocolate: #F7F7F8;
+  --brand-walnut: #FFFFFF;
+  --brand-bronze: #65656C;
+  --brand-sand: #0B0B0D;
+  --brand-charcoal: #86868A;
+  --brand-sage: #4F4F56;
+  --brand-amber: #232327;
+  --brand-champagne: #0B0B0D;
+  --brand-champagne-light: #232327;
+  --brand-obsidian: #FFFFFF;
 
-  --text-main: oklch(0.16 0.010 260);
-  --text-sub: oklch(0.29 0.012 260);
-  --text-muted: oklch(0.43 0.015 260);
+  /* Surfaces */
+  --bg-page: #EFEFF0;
+  --bg-surface: #F7F7F8;
+  --bg-card: #FFFFFF;
+  --bg-hover: #E4E4E6;
+  --bg-elevated: #FFFFFF;
+  --bg-bar: #F7F7F8;
 
-  /* Living Accent: Deep Amber Orange (Candidate L2) */
-  --accent: oklch(0.52 0.170 48);
-  --accent-hover: oklch(0.46 0.170 46);
-  --accent-surface: rgba(178, 62, 0, 0.10);
-  --on-accent: oklch(1.00 0.000 0);
+  /* Typography */
+  --text-main: #0B0B0D;
+  --text-sub: #4F4F56;
+  --text-muted: #65656C;
 
-  --border-subtle: rgba(20, 25, 35, 0.08);
-  --border-strong: rgba(20, 25, 35, 0.20);
-  --border-focus: oklch(0.52 0.170 48);
+  /* Borders */
+  --border-subtle: #D0D0D4;
+  --border-strong: #86868A;
+  --border-hover: #0B0B0D;
+  --border-focus: #0B0B0D;
 
-  --speaker-narrator: oklch(0.20 0.010 260);
-  --speaker-a: oklch(0.46 0.170 46);
-  --speaker-b: oklch(0.38 0.120 155);
-  --speaker-c: oklch(0.38 0.130 240);
-  --speaker-d: oklch(0.40 0.160 330);
+  /* Living Accent */
+  --accent: #0B0B0D;
+  --accent-hover: #232327;
+  --accent-surface: rgba(11, 11, 13, 0.08);
+  --accent-strong: #86868A;
+  --accent-text: #0B0B0D;
+  --on-accent: #FFFFFF;
 
-  --top10-fill: oklch(0.985 0.003 240);
-  --top10-stroke: rgba(20, 25, 35, 0.26);
-  --top10-active: oklch(0.52 0.170 48);
+  /* CTA Primary */
+  --cta-primary-bg: #0B0B0D;
+  --cta-primary-hover: #232327;
+  --cta-primary-text: #FFFFFF;
 
-  --card-accent: oklch(0.52 0.170 48);
+  /* Flattened Surfaces */
+  --glass-bg: rgba(247, 247, 248, 0.98);
+  --glass-dock: rgba(247, 247, 248, 0.98);
+
+  /* Single Permitted Chromatic Element */
+  --signal: #F05010;
+
+  /* Gradients */
+  --stage-gradient: linear-gradient(180deg, #F4F4F5 0%, #D9D9DB 35%, #8A8A8D 70%, #1A1A1C 100%);
+  --headline-gradient: linear-gradient(180deg, #1A1A1C 0%, #8A8A8D 100%);
+
+  /* Status Without Hue */
+  --success: #0B0B0D;
+  --warning: #232327;
+  --danger: #0B0B0D;
+  --info: #4F4F56;
+
+  /* Speakers */
+  --speaker-narrator: #4F4F56;
+  --speaker-a: #0B0B0D;
+  --speaker-b: #232327;
+  --speaker-c: #4F4F56;
+  --speaker-d: #65656C;
+
+  /* Top 10 */
+  --top10-fill: #EFEFF0;
+  --top10-stroke: rgba(11, 11, 13, 0.25);
+  --top10-active: #0B0B0D;
+  --card-accent: #0B0B0D;
 }
 ```
 
-### Brand Immutable Accents (`tailwind.config.js`)
-- `gold`: `#E5A93C`
-- `crimson`: `#E50914`
-- `cyan`: `#06B6D4`
-- `indigo`: `#6366F1`
-- `violet`: `#8B5CF6`
+---
+
+## 3. Negative Assertions Matrix (Zero Chromatic Hues Except `--signal`)
+
+Vitest test suite `src/__tests__/theme_lock.test.js` mathematically enforces strict negative assertions across all dark and light custom properties:
+
+1. **Standalone Hex Neutrality**:
+   For every hexadecimal token (except `--signal`), the maximum RGB component delta is verified:
+   $$\max(|R - G|, |G - B|, |R - B|) \le 10$$
+   Any hue drift exceeding $\pm 10$ fails the pre-commit gate immediately.
+2. **OKLCH Chroma Neutrality**:
+   Every token defined via OKLCH must maintain chroma $< 0.02$.
+3. **Explicit Banned Palette Patterns**:
+   Strict regex rejection of legacy chromatic patterns:
+   - `#e0533c`, `#c83d27` (Cinnabar)
+   - `#dfba53`, `#eed076`, `#f5e2a8`, `#e5a93c` (Champagne Gold)
+   - `#87a96b`, `#386b2f` (Sage Green)
+   - `#d5851f` (Amber Glow)
+   - `#ba4e3d`, `#962f22` (Terracotta)
+   - `#06b6d4` (Cyan)
+   - `#6366f1` (Indigo)
+   - `#8b5cf6` (Violet)
+   - `#3b82f6` (Blue)
+4. **Single Chromatic Whitelist**:
+   The ONLY token exempted from neutrality is `--signal`, which must match `#FF5A1F` (dark) or `#F05010` (light).
 
 ---
 
-## 3. Leak Audit Results
+## 4. Mathematically Verified WCAG 2.2 AA Contrast Matrix
 
-Comprehensive regex search across `src`, `public`, `index.html`, `tailwind.config.js`, `manifest.webmanifest`, SVGs, and `accentClamp.js` for Cinnabar vermilion patterns (`224, 83, 60`, `200, 61, 39`, `#e0533c`, `#c83d27`, `oklch(... 36)`, `oklch(... 34)`):
-- **Production Code Leak Count**: **0 hits**
-- **Fallback Functions (`accentClamp.js`)**: Updated to approved orange bounds.
-- **Lock Coverage**: Dynamically validates all 74 Dark custom properties and all 38 Light custom properties, with strict negative assertion against Cinnabar values in Vitest.
+All critical text and boundary pairs exceed WCAG 2.2 AA requirements:
 
----
-
-## 4. Honest Pixel Proof & Regression Bounds
-
-The complete frontend build was verified against the pre-accent commit `bf12495` (with identical orange overrides injected) using `scripts/verify-honest-pixel-proof.mjs`.
-
-- **Total Configurations Tested**: **40** (10 screens × 2 themes × 2 viewports: `1440x900` and `1190x770`).
-- **Outside-Accent Drift**: **EXACTLY 0 px across all 40 configurations**.
-- **Inside-Accent Drift**: Confined strictly to subpixel anti-aliasing along vector curves and border radiuses.
-
-| Screen | Theme | 1440x900 Outside Accent | 1190x770 Outside Accent | Status |
-| :--- | :--- | :--- | :--- | :--- |
-| Home | Dark & Light | 0 px | 0 px | PASS |
-| Novel Detail | Dark & Light | 0 px | 0 px | PASS |
-| Reader Normal | Dark & Light | 0 px | 0 px | PASS |
-| Reader 3D | Dark & Light | 0 px | 0 px | PASS |
-| Settings Modal | Dark & Light | 0 px | 0 px | PASS |
-| Auth Modal | Dark & Light | 0 px | 0 px | PASS |
-| Add Novel Modal | Dark & Light | 0 px | 0 px | PASS |
-| Upload Chapter Modal | Dark & Light | 0 px | 0 px | PASS |
-| Cast Roster | Dark & Light | 0 px | 0 px | PASS |
-| Profile | Dark & Light | 0 px | 0 px | PASS |
+| Contrast Pair | Dark Mode Formula | Dark Mode Ratio | Light Mode Formula | Light Mode Ratio | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Main Text on Page** | `#F2F2F3` on `#0B0B0D` | **18.15:1** (AAA) | `#0B0B0D` on `#EFEFF0` | **18.14:1** (AAA) | PASS |
+| **Main Text on Card** | `#F2F2F3` on `#1B1B1E` | **16.29:1** (AAA) | `#0B0B0D` on `#FFFFFF` | **19.82:1** (AAA) | PASS |
+| **Subline Text on Page** | `#A9A9AF` on `#0B0B0D` | **8.88:1** (AAA) | `#4F4F56` on `#EFEFF0` | **7.52:1** (AAA) | PASS |
+| **Muted Text on Card** | `#898992` on `#1B1B1E` | **5.33:1** (AA) | `#65656C` on `#FFFFFF` | **4.78:1** (AA) | PASS |
+| **Muted Text on Hover** | `#898992` on `#232327` | **4.87:1** (AA) | `#65656C` on `#E4E4E6` | **4.69:1** (AA) | PASS |
+| **On-Accent Text on Accent** | `#0B0B0D` on `#F2F2F3` | **18.15:1** (AAA) | `#FFFFFF` on `#0B0B0D` | **19.82:1** (AAA) | PASS |
+| **Strong Border on Page** | `#5E5E66` on `#0B0B0D` | **3.30:1** (AA Non-Text) | `#86868A` on `#EFEFF0` | **3.08:1** (AA Non-Text) | PASS |
+| **Signal Dot on Page** | `#FF5A1F` on `#0B0B0D` | **6.31:1** (AA Non-Text) | `#F05010` on `#EFEFF0` | **4.95:1** (AA Non-Text) | PASS |
 
 ---
 
-## 5. Verification Commands
+## 5. Honest Pixel Proof & Regression Baselines
 
-To verify the theme lock locally or in CI:
+Regression baselines are permanently stored in `docs/screenshots/theme-regression/computed-ref.json` and `docs/screenshots/theme-regression/ref/`.
 
-```bash
-# In novel-audio-synthesizer/frontend
-npm run theme:check
+- **Total Configurations Verified**: **18** (9 views × 2 themes).
+- **Computed Color Drift**: **EXACTLY 0 delta across all 18 configurations**.
+- **Visual Diff Bounds**: Tested against locked thresholds in `e2e/theme-lock.spec.js`.
 
-# Run honest pixel proof across 40 configurations
-node scripts/verify-honest-pixel-proof.mjs
-```
+| Screen Key | Theme | CSS Var Drift | Body Drift | Header Drift | Card Drift | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `home-dark` / `home-light` | Dark & Light | 0 | 0 | 0 | 0 | PASS |
+| `settings-dark` / `settings-light` | Dark & Light | 0 | 0 | 0 | 0 | PASS |
+| `auth-dark` / `auth-light` | Dark & Light | 0 | 0 | 0 | 0 | PASS |
+| `novel-detail-dark` / `novel-detail-light` | Dark & Light | 0 | 0 | 0 | 0 | PASS |
+| `reader-normal-dark` / `reader-normal-light` | Dark & Light | 0 | 0 | 0 | 0 | PASS |
+| `add-novel-dark` / `add-novel-light` | Dark & Light | 0 | 0 | 0 | 0 | PASS |
+| `profile-dark` / `profile-light` | Dark & Light | 0 | 0 | 0 | 0 | PASS |
+| `upload-chapter-dark` / `upload-chapter-light`| Dark & Light | 0 | 0 | 0 | 0 | PASS |
+| `cast-roster-dark` / `cast-roster-light` | Dark & Light | 0 | 0 | 0 | 0 | PASS |

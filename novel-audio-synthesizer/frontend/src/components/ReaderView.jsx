@@ -331,7 +331,7 @@ export default function ReaderView({
         <>
           {imageElement}
           {displayText && (
-            <p className={`relative z-10 leading-[1.85] text-justify hyphens-auto p-2.5 rounded-[1px] bg-[var(--accent-surface)] border-l-2 border-[var(--text-main)] transition-colors duration-100 ${
+            <p className={`relative z-10 leading-[1.85] text-justify hyphens-auto p-2.5 rounded-lg bg-[var(--accent-surface)] border-l-2 border-[var(--text-main)] transition-colors duration-100 ${
               isDialogue ? 'italic font-serif text-[var(--text-main)] font-medium' : 'text-[var(--text-main)]'
             }`}>
               {tokens.map((token, idx) => {
@@ -339,7 +339,7 @@ export default function ReaderView({
                   return (
                     <span
                       key={idx}
-                      className="bg-[var(--accent)] text-[var(--on-accent)] font-bold px-1 py-0.5 rounded-[1px] inline-block transition-transform duration-75"
+                      className="bg-[var(--accent)] text-[var(--on-accent)] font-bold px-1.5 py-0.5 rounded inline-block transition-transform duration-75"
                     >
                       {token}
                     </span>
@@ -358,7 +358,7 @@ export default function ReaderView({
       <>
         {imageElement}
         {displayText && (
-          <p className={`relative z-10 leading-[1.85] text-justify hyphens-auto p-2 rounded-[1px] bg-[var(--accent-surface)] border-l-2 border-[var(--text-main)] ${isOpening ? 'reader-opening-para' : ''} ${
+          <p className={`relative z-10 leading-[1.85] text-justify hyphens-auto p-2 rounded-lg bg-[var(--accent-surface)] border-l-2 border-[var(--text-main)] ${isOpening ? 'reader-opening-para' : ''} ${
             isDialogue ? 'italic text-[var(--text-main)] font-serif font-medium' : 'text-[var(--text-main)] font-normal'
           }`}>
             {displayText}
@@ -378,13 +378,13 @@ export default function ReaderView({
     >
       {/* Floating Focus Mode Banner */}
       {isFocusMode && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[var(--bg-surface)] text-[var(--text-main)] text-xs px-4 py-2 rounded-[1px] border border-[var(--border-strong)] shadow-2xl flex items-center gap-3 animate-fade-in font-mono">
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-[var(--bg-surface)] text-[var(--text-main)] text-xs px-5 py-2 rounded-full border border-[var(--border-strong)] shadow-2xl flex items-center gap-3 animate-fade-in font-mono">
           <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-main)]" />
           <span>Focus Mode Active • Press Esc to exit</span>
           <button
             type="button"
             onClick={() => setIsFocusMode(false)}
-            className="boxed-btn px-2 py-0.5 text-[10px] font-mono cursor-pointer transition"
+            className="boxed-btn px-2.5 py-0.5 rounded-full text-[10px] font-mono cursor-pointer transition"
           >
             Exit
           </button>
@@ -394,14 +394,14 @@ export default function ReaderView({
       {/* Choose Reading Experience Modal (Moon+ OpenGL 3D vs Normal WTR-Lab) */}
       {showExperiencePopup && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 modal-scrim-enter"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 modal-scrim-enter backdrop-blur-xs"
           role="dialog"
           aria-modal="true"
         >
-          <div className="w-full max-w-md bg-[var(--bg-surface)] rounded-[1px] shadow-2xl border border-[var(--border-strong)] p-4 sm:p-6 modal-panel-enter space-y-4 sm:space-y-5">
+          <div className="w-full max-w-md bg-[var(--bg-surface)] rounded-2xl shadow-2xl border border-[var(--border-strong)] p-4 sm:p-6 modal-panel-enter space-y-4 sm:space-y-5">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-[1px] bg-[var(--accent-surface)] text-[var(--text-main)] flex items-center justify-center font-bold border border-[var(--border-subtle)] flex-shrink-0">
+                <div className="w-8 h-8 rounded-xl bg-[var(--accent-surface)] text-[var(--text-main)] flex items-center justify-center font-bold border border-[var(--border-subtle)] flex-shrink-0">
                   <IconBookOpen className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
@@ -416,7 +416,7 @@ export default function ReaderView({
               <button
                 type="button"
                 onClick={() => handleChooseMode('normal')}
-                className="boxed-btn p-1.5 text-[var(--text-muted)] hover:text-[var(--text-main)] transition cursor-pointer flex-shrink-0"
+                className="boxed-btn p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] transition cursor-pointer flex-shrink-0"
                 aria-label="Dismiss experience popup"
               >
                 <IconX className="w-4 h-4" />
@@ -428,13 +428,13 @@ export default function ReaderView({
               <button
                 type="button"
                 onClick={() => handleChooseMode('normal')}
-                className={`p-4 rounded-[1px] border text-left transition-all cursor-pointer flex flex-col justify-between gap-3 group ${
+                className={`p-4 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-3 group shadow-xs ${
                   readerMode === 'normal'
-                    ? 'border-[var(--accent)] bg-[var(--accent-surface)]'
+                    ? 'border-[var(--accent)] bg-[var(--accent-surface)] shadow-md'
                     : 'bg-[var(--bg-card)] border-[var(--border-subtle)] hover:border-[var(--border-strong)]'
                 }`}
               >
-                <div className="w-8 h-8 rounded-[1px] bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-subtle)] flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-subtle)] flex items-center justify-center">
                   <IconBookOpen className="w-4 h-4" />
                 </div>
                 <div>
@@ -451,13 +451,13 @@ export default function ReaderView({
               <button
                 type="button"
                 onClick={() => handleChooseMode('opengl')}
-                className={`p-4 rounded-[1px] border text-left transition-all cursor-pointer flex flex-col justify-between gap-3 group ${
+                className={`p-4 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-3 group shadow-xs ${
                   readerMode === 'opengl'
-                    ? 'border-[var(--accent)] bg-[var(--accent-surface)]'
+                    ? 'border-[var(--accent)] bg-[var(--accent-surface)] shadow-md'
                     : 'bg-[var(--bg-card)] border-[var(--border-subtle)] hover:border-[var(--border-strong)]'
                 }`}
               >
-                <div className="w-8 h-8 rounded-[1px] bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-subtle)] flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-subtle)] flex items-center justify-center">
                   <IconBook className="w-4 h-4" />
                 </div>
                 <div>
@@ -488,16 +488,16 @@ export default function ReaderView({
 
           {/* Reading Mode Switcher: Normal vs OpenGL 3D */}
           <div
-            className="inline-flex border border-[var(--border-strong)] rounded-[1px] p-0.5 bg-[var(--bg-card)]"
+            className="inline-flex border border-[var(--border-strong)] rounded-xl p-0.5 bg-[var(--bg-card)] shadow-xs"
             role="group"
             aria-label="Reading mode selection"
           >
             <button
               type="button"
               onClick={() => setReaderMode('normal')}
-              className={`px-2 py-0.5 text-[11px] font-mono font-medium transition cursor-pointer flex items-center gap-1.5 rounded-[1px] ${
+              className={`px-2.5 py-1 text-[11px] font-mono font-medium transition cursor-pointer flex items-center gap-1.5 rounded-lg ${
                 readerMode === 'normal'
-                  ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold'
+                  ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold shadow-xs'
                   : 'text-[var(--text-sub)] hover:text-[var(--text-main)]'
               }`}
               title="Normal continuous vertical scroll mode (WTR-Lab)"
@@ -508,9 +508,9 @@ export default function ReaderView({
             <button
               type="button"
               onClick={() => setReaderMode('opengl')}
-              className={`px-2 py-0.5 text-[11px] font-mono font-medium transition cursor-pointer flex items-center gap-1.5 rounded-[1px] ${
+              className={`px-2.5 py-1 text-[11px] font-mono font-medium transition cursor-pointer flex items-center gap-1.5 rounded-lg ${
                 readerMode === 'opengl'
-                  ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold'
+                  ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold shadow-xs'
                   : 'text-[var(--text-sub)] hover:text-[var(--text-main)]'
               }`}
               title="Apple Books & Moon+ Reader Pro 3D OpenGL page-turn two-page spread mode"
@@ -819,7 +819,7 @@ export default function ReaderView({
                       isDialogue ? `${seg.speaker_name || 'Character'}: ` : 'Narrator: '
                     }${seg.text}`}
                     className={`
-                      group relative rounded-[1px] transition-all duration-120 cursor-pointer outline-none select-text mb-4
+                      group relative rounded-xl transition-all duration-120 cursor-pointer outline-none select-text mb-4
                       ${
                         isActive
                           ? 'reader-sync-active-para'
@@ -843,7 +843,7 @@ export default function ReaderView({
 
                       {/* Equalizer Playing Indicator */}
                       {isActive ? (
-                        <span className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold text-[var(--text-main)] bg-[var(--bg-card)] px-2 py-0.5 rounded-[1px] border border-[var(--border-strong)]">
+                        <span className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold text-[var(--text-main)] bg-[var(--bg-card)] px-2.5 py-0.5 rounded-full border border-[var(--border-strong)] shadow-xs">
                           {isPlaying ? (
                             <span className="signal-dot" />
                           ) : (

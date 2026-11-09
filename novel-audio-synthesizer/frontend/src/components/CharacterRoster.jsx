@@ -161,7 +161,7 @@ export default function CharacterRoster({
           </button>
           <button
             onClick={onClose}
-            className="text-[var(--text-muted)] hover:text-[var(--text-main)] p-1.5 rounded-[1px] hover:bg-[var(--bg-hover)] transition cursor-pointer"
+            className="text-[var(--text-muted)] hover:text-[var(--text-main)] p-1.5 rounded-lg hover:bg-[var(--bg-hover)] transition cursor-pointer"
             aria-label="Close roster"
           >
             <IconX className="w-4 h-4" />
@@ -171,7 +171,7 @@ export default function CharacterRoster({
 
       {/* Alerts */}
       {errorMessage && (
-        <div className="mx-4 mt-3 p-3 bg-[var(--bg-card)] border border-[var(--border-strong)] rounded-[1px] text-[var(--text-main)] text-xs font-mono flex items-center justify-between">
+        <div className="mx-4 mt-3 p-3 bg-[var(--bg-card)] border border-[var(--border-strong)] rounded-xl text-[var(--text-main)] text-xs font-mono flex items-center justify-between shadow-xs">
           <span>{errorMessage}</span>
           <button onClick={() => setErrorMessage(null)} className="text-[var(--text-main)] font-bold ml-2 cursor-pointer">
             <IconX className="w-3.5 h-3.5" />
@@ -180,7 +180,7 @@ export default function CharacterRoster({
       )}
 
       {successMessage && (
-        <div className="mx-4 mt-3 p-3 bg-[var(--bg-card)] border border-[var(--border-strong)] rounded-[1px] text-[var(--text-main)] text-xs font-mono flex items-center justify-between">
+        <div className="mx-4 mt-3 p-3 bg-[var(--bg-card)] border border-[var(--border-strong)] rounded-xl text-[var(--text-main)] text-xs font-mono flex items-center justify-between shadow-xs">
           <span className="flex items-center gap-1.5">
             <IconCheck className="w-3.5 h-3.5" />
             <span>{successMessage}</span>
@@ -206,7 +206,7 @@ export default function CharacterRoster({
             return (
               <div
                 key={char.id}
-                className="p-4 bg-[var(--bg-card)] rounded-[1px] border border-[var(--border-subtle)] space-y-3"
+                className="p-4 bg-[var(--bg-card)] rounded-xl border border-[var(--border-subtle)] space-y-3 shadow-xs"
               >
                 {/* Character Name & Dialogue count */}
                 <div className="flex items-center justify-between gap-2">
@@ -215,10 +215,10 @@ export default function CharacterRoster({
                     <span className="truncate">{char.name}</span>
                   </span>
                   <div className="flex items-center gap-1.5 flex-shrink-0">
-                    <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded-[1px] border ${tierBadge.color}`}>
+                    <span className={`text-[9px] font-mono px-2 py-0.5 rounded-full border ${tierBadge.color}`}>
                       {tierBadge.label}
                     </span>
-                    <span className="text-[10px] font-mono text-[var(--text-muted)] bg-[var(--bg-surface)] px-1.5 py-0.5 rounded-[1px] border border-[var(--border-subtle)]">
+                    <span className="text-[10px] font-mono text-[var(--text-muted)] bg-[var(--bg-surface)] px-2 py-0.5 rounded-full border border-[var(--border-subtle)]">
                       {char.segmentCount} line{char.segmentCount === 1 ? '' : 's'}
                     </span>
                   </div>
@@ -226,7 +226,7 @@ export default function CharacterRoster({
 
                 {/* Sample Quote */}
                 {char.sampleQuote && (
-                  <p className="text-xs text-[var(--text-sub)] italic bg-[var(--bg-surface)] p-2.5 rounded-[1px] border border-[var(--border-subtle)] line-clamp-2 font-serif">
+                  <p className="text-xs text-[var(--text-sub)] italic bg-[var(--bg-surface)] p-2.5 rounded-lg border border-[var(--border-subtle)] line-clamp-2 font-serif">
                     "{char.sampleQuote.replace(/^["“”]|["“”]$/g, '')}"
                   </p>
                 )}
@@ -243,7 +243,7 @@ export default function CharacterRoster({
                         value={char.voiceId}
                         disabled={isUpdating}
                         onChange={(e) => handleVoiceSelect(char.id, e.target.value)}
-                        className="text-xs px-2 py-1.5 bg-[var(--bg-surface)] border border-[var(--border-strong)] rounded-[1px] focus:outline-none focus:border-[var(--text-main)] transition font-mono text-[var(--text-main)] disabled:opacity-50 min-w-0 max-w-[210px] truncate"
+                        className="text-xs px-2.5 py-1.5 bg-[var(--bg-surface)] border border-[var(--border-strong)] rounded-lg focus:outline-none focus:border-[var(--text-main)] transition font-mono text-[var(--text-main)] disabled:opacity-50 min-w-0 max-w-[210px] truncate"
                       >
                         <optgroup label="Edge / Kokoro & Archetypes">
                           {Object.entries(availableVoices).map(([archetype, voiceId]) => (
@@ -268,7 +268,7 @@ export default function CharacterRoster({
                         </optgroup>
                       </select>
                     ) : (
-                      <span className="text-xs font-mono text-[var(--text-sub)] bg-[var(--bg-surface)] px-2 py-1 rounded-[1px] border border-[var(--border-subtle)] flex items-center gap-1">
+                      <span className="text-xs font-mono text-[var(--text-sub)] bg-[var(--bg-surface)] px-2.5 py-1 rounded-lg border border-[var(--border-subtle)] flex items-center gap-1">
                         <IconLock className="w-3 h-3 text-[var(--text-main)]" />
                         <span>{char.voiceId}</span>
                       </span>

@@ -81,7 +81,7 @@ export default function UploadChapterModal({ isOpen, novel, onClose, onChapterUp
         transition={{ duration: 0.2 }}
       >
         <m.div
-          className="w-full max-w-xl bg-[var(--bg-card)] rounded-[1px] shadow-2xl border border-[var(--border-strong)] overflow-hidden"
+          className="w-full max-w-xl bg-[var(--bg-card)] rounded-2xl shadow-2xl border border-[var(--border-strong)] overflow-hidden"
           variants={panelVariants}
           initial="hidden"
           animate="visible"
@@ -100,7 +100,7 @@ export default function UploadChapterModal({ isOpen, novel, onClose, onChapterUp
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-[1px] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition cursor-pointer"
+            className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)] transition cursor-pointer"
             aria-label="Close modal"
           >
             <IconX className="w-4 h-4" />
@@ -109,7 +109,7 @@ export default function UploadChapterModal({ isOpen, novel, onClose, onChapterUp
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4 font-mono">
           {error && (
-            <div className="p-3 bg-[var(--bg-surface)] text-[var(--text-main)] text-xs rounded-[1px] border border-[var(--border-strong)]">
+            <div className="p-3 bg-[var(--bg-surface)] text-[var(--text-main)] text-xs rounded-xl border border-[var(--border-strong)]">
               {error}
             </div>
           )}
@@ -124,7 +124,7 @@ export default function UploadChapterModal({ isOpen, novel, onClose, onChapterUp
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Chapter 1: The Boy Who Lived"
-                className="w-full px-3 py-2 text-xs bg-[var(--bg-surface)] border border-[var(--border-strong)] rounded-[1px] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--text-main)] transition text-[var(--text-main)]"
+                className="w-full px-3 py-2 text-xs bg-[var(--bg-surface)] border border-[var(--border-strong)] rounded-xl placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--text-main)] transition text-[var(--text-main)]"
               />
             </div>
             <div>
@@ -137,7 +137,7 @@ export default function UploadChapterModal({ isOpen, novel, onClose, onChapterUp
                 value={chapterNumber}
                 onChange={(e) => setChapterNumber(e.target.value)}
                 placeholder="Auto"
-                className="w-full px-3 py-2 text-xs bg-[var(--bg-surface)] border border-[var(--border-strong)] rounded-[1px] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--text-main)] transition text-[var(--text-main)]"
+                className="w-full px-3 py-2 text-xs bg-[var(--bg-surface)] border border-[var(--border-strong)] rounded-xl placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--text-main)] transition text-[var(--text-main)]"
               />
             </div>
           </div>
@@ -152,16 +152,16 @@ export default function UploadChapterModal({ isOpen, novel, onClose, onChapterUp
               onChange={(e) => setText(e.target.value)}
               placeholder="Paste raw prose text here. Quotes will be automatically detected and attributed to distinct character voices..."
               required
-              className="w-full px-3.5 py-2.5 text-xs bg-[var(--bg-surface)] border border-[var(--border-strong)] rounded-[1px] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--text-main)] transition font-serif leading-relaxed text-[var(--text-main)]"
+              className="w-full px-3.5 py-2.5 text-xs bg-[var(--bg-surface)] border border-[var(--border-strong)] rounded-xl placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--text-main)] transition font-serif leading-relaxed text-[var(--text-main)]"
             />
           </div>
 
           {/* TTS Sanitizer Toggle */}
-          <div className="p-3 rounded-[1px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex items-start justify-between gap-3">
+          <div className="p-3.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex items-start justify-between gap-3 shadow-xs">
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold font-sans uppercase text-[var(--text-main)]">TTS Prose Cleaner</span>
-                <span className="px-1.5 py-0.5 rounded-[1px] text-[9px] font-mono uppercase bg-[var(--bg-card)] text-[var(--text-sub)] border border-[var(--border-subtle)]">
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-mono uppercase bg-[var(--bg-card)] text-[var(--text-sub)] border border-[var(--border-subtle)]">
                   Opt-in
                 </span>
               </div>

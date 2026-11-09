@@ -451,15 +451,6 @@ function AppContent() {
   return (
     <ErrorBoundary friendlyMessage="Something unexpected happened. Please refresh the page.">
       <div className="min-h-screen bg-[var(--bg-page)] text-[var(--text-main)] flex flex-col font-sans transition-colors duration-200">
-        {/* Navigation Rail (Desktop) & Bottom Bar (Mobile) */}
-        <SidebarNav
-          currentView={view}
-          onNavigate={handleNavigate}
-          onOpenSettings={() => setShowSettings(true)}
-          onOpenAuth={handleOpenAuth}
-          onOpenAddNovel={() => setShowAddNovelModal(true)}
-        />
-
         {/* Main Viewport Container */}
         <div className="flex-1 flex flex-col min-h-screen">
           <TopHeader
@@ -469,6 +460,15 @@ function AppContent() {
             onNavigate={handleNavigate}
             showRoster={showRoster}
             onToggleRoster={() => setShowRoster((prev) => !prev)}
+            onOpenSettings={() => setShowSettings(true)}
+            onOpenAuth={handleOpenAuth}
+            onOpenAddNovel={() => setShowAddNovelModal(true)}
+          />
+
+          {/* Navigation Rail (Desktop) & Bottom Bar (Mobile) */}
+          <SidebarNav
+            currentView={view}
+            onNavigate={handleNavigate}
             onOpenSettings={() => setShowSettings(true)}
             onOpenAuth={handleOpenAuth}
             onOpenAddNovel={() => setShowAddNovelModal(true)}

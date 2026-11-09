@@ -8,7 +8,7 @@ export default function UploadView({ onOpenUploadModal, onOpenAuth }) {
   if (!isAuthenticated || !isWriterOrAdmin) {
     return (
       <div className="max-w-md mx-auto py-16 px-4 text-center">
-        <div className="w-14 h-14 mx-auto mb-4 rounded-[1px] bg-[var(--bg-surface)] border border-[var(--border-strong)] flex items-center justify-center text-[var(--text-main)]">
+        <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-strong)] flex items-center justify-center text-[var(--text-main)] shadow-sm">
           <IconUpload className="w-6 h-6" />
         </div>
         <h2 className="text-xl font-bold font-sans uppercase tracking-tight text-[var(--text-main)] mb-2">
@@ -19,7 +19,7 @@ export default function UploadView({ onOpenUploadModal, onOpenAuth }) {
         </p>
         <button
           onClick={() => onOpenAuth?.('login')}
-          className="boxed-btn-primary px-6 py-2.5 text-xs font-mono font-bold tracking-wider cursor-pointer"
+          className="boxed-btn-primary px-6 py-2.5 text-xs font-mono font-bold tracking-wider cursor-pointer rounded-xl shadow-md"
         >
           Sign In as Writer
         </button>
@@ -29,8 +29,8 @@ export default function UploadView({ onOpenUploadModal, onOpenAuth }) {
 
   return (
     <div className="max-w-3xl mx-auto py-8 px-4">
-      <div className="p-8 rounded-[1px] bg-[var(--bg-card)] border border-[var(--border-subtle)] text-center space-y-4">
-        <div className="w-14 h-14 mx-auto rounded-[1px] bg-[var(--bg-surface)] border border-[var(--border-strong)] flex items-center justify-center text-[var(--text-main)]">
+      <div className="p-8 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-subtle)] text-center space-y-4 shadow-xl">
+        <div className="w-14 h-14 mx-auto rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-strong)] flex items-center justify-center text-[var(--text-main)] shadow-sm">
           <IconUpload className="w-6 h-6" />
         </div>
         <h1 className="text-2xl font-bold font-sans uppercase tracking-tight text-[var(--text-main)]">
@@ -42,7 +42,7 @@ export default function UploadView({ onOpenUploadModal, onOpenAuth }) {
         <div className="pt-2">
           <button
             onClick={onOpenUploadModal}
-            className="boxed-btn-primary px-6 py-3 text-xs font-mono font-bold tracking-wider inline-flex items-center gap-2 cursor-pointer"
+            className="boxed-btn-primary px-6 py-3 text-xs font-mono font-bold tracking-wider inline-flex items-center gap-2 cursor-pointer rounded-xl shadow-md"
           >
             <IconUpload className="w-4 h-4" />
             <span>Open Novel Studio</span>

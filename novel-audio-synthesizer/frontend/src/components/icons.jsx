@@ -1,5 +1,33 @@
 import React from 'react';
 
+export function IconSyncToneLogo({ className = 'w-5 h-5', ...props }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+      {...props}
+    >
+      {/* Symmetrical Resonant Soundwave Harmonic Bars */}
+      <rect x="3" y="10" width="2" height="5" rx="1" />
+      <rect x="7" y="6" width="2" height="11" rx="1" />
+      <rect x="11" y="2.5" width="2" height="16" rx="1" />
+      <rect x="15" y="6" width="2" height="11" rx="1" />
+      <rect x="19" y="10" width="2" height="5" rx="1" />
+      {/* Open-Book Acoustic Shelf / Resonance Mark */}
+      <path
+        d="M2.5 19.5C5.5 18 8.5 18.2 11.25 19.8C11.72 20.07 12.28 20.07 12.75 19.8C15.5 18.2 18.5 18 21.5 19.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.85"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export function IconBook({ className = 'w-5 h-5', ...props }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} {...props}>

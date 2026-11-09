@@ -36,18 +36,18 @@ export default function SynthesisProgressBar({
 
   return (
     <div
-      className="synthesis-banner-box bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-[1px] p-4 space-y-3 animate-fadeIn"
+      className="synthesis-banner-box bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-2xl p-4 space-y-3 animate-fadeIn shadow-md"
       role="region"
       aria-label="Chapter Audio Progress"
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-8 h-8 rounded-[1px] bg-[var(--bg-surface)] border border-[var(--border-strong)] text-[var(--text-main)] flex items-center justify-center flex-shrink-0">
+          <div className="w-8 h-8 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-strong)] text-[var(--text-main)] flex items-center justify-center flex-shrink-0 shadow-xs">
             <StatusIcon className="w-4 h-4" />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-[1px] bg-[var(--bg-surface)] text-[var(--text-sub)] border border-[var(--border-subtle)]">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[var(--bg-surface)] text-[var(--text-sub)] border border-[var(--border-subtle)] shadow-xs">
                 {status}
               </span>
               {isConnected && !isComplete && !isFailed && (
@@ -75,7 +75,7 @@ export default function SynthesisProgressBar({
           {(isComplete || isFailed) && onDismiss && (
             <button
               onClick={onDismiss}
-              className="text-[var(--text-muted)] hover:text-[var(--text-main)] text-xs p-1 rounded-[1px] hover:bg-[var(--bg-hover)] transition cursor-pointer"
+              className="text-[var(--text-muted)] hover:text-[var(--text-main)] text-xs p-1.5 rounded-lg hover:bg-[var(--bg-hover)] transition cursor-pointer"
               aria-label="Dismiss progress"
             >
               <IconX className="w-4 h-4" />
@@ -86,14 +86,14 @@ export default function SynthesisProgressBar({
 
       {/* Progress Bar Container */}
       <div
-        className="w-full bg-[var(--bg-surface)] rounded-[1px] h-2 overflow-hidden border border-[var(--border-subtle)]"
+        className="w-full bg-[var(--bg-surface)] rounded-full h-2 overflow-hidden border border-[var(--border-subtle)] shadow-xs"
         role="progressbar"
         aria-valuenow={Math.round(percentComplete)}
         aria-valuemin={0}
         aria-valuemax={100}
       >
         <div
-          className="h-full rounded-[0px] transition-all duration-300 bg-[var(--text-main)]"
+          className="h-full rounded-full transition-all duration-300 bg-[var(--text-main)]"
           style={{ width: `${Math.max(3, Math.min(100, percentComplete))}%` }}
         />
       </div>

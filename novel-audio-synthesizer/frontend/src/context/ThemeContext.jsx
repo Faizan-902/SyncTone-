@@ -52,7 +52,7 @@ export function ThemeProvider({ children }) {
     root.classList.add(theme);
     const metaTheme = document.getElementById('meta-theme-color');
     if (metaTheme) {
-      metaTheme.setAttribute('content', theme === 'dark' ? '#1A120E' : '#FAF8F5');
+      metaTheme.setAttribute('content', theme === 'dark' ? '#0B0B0D' : '#EFEFF0');
     }
     try {
       localStorage.setItem(STORAGE_THEME_KEY, theme);

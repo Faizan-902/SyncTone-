@@ -82,7 +82,7 @@ export default function SidebarNav({
         <button
           onClick={cycleTheme}
           className="flex flex-col items-center gap-1 py-1 px-3 text-[10px] font-mono uppercase tracking-wider text-[var(--text-sub)] hover:text-[var(--text-main)] transition-all duration-100 ease-out active:scale-95 cursor-pointer"
-          aria-label="Switch theme"
+          aria-label={`Switch Theme (${theme})`}
           aria-pressed={theme === 'dark'}
           title={`Switch Theme (${themeLabel})`}
         >
@@ -105,7 +105,7 @@ export default function SidebarNav({
             className="flex flex-col items-center gap-1 py-1 px-3 text-[10px] font-mono uppercase tracking-wider text-[var(--text-sub)] hover:text-[var(--text-main)] transition-all duration-100 ease-out active:scale-95 cursor-pointer"
             aria-label="Sign Out"
           >
-            <span className="w-4 h-4 rounded-[1px] bg-[var(--accent)] text-[var(--on-accent)] text-[9px] font-mono flex items-center justify-center font-bold">
+            <span className="w-5 h-5 rounded-full bg-[var(--accent)] text-[var(--on-accent)] text-[9px] font-mono flex items-center justify-center font-bold shadow-xs">
               {user?.username?.[0] || 'U'}
             </span>
             <span>Sign Out</span>

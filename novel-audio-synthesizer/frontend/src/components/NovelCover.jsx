@@ -125,7 +125,7 @@ export default function NovelCover({
       style={{ boxShadow: `inset 4px 0 12px rgba(0,0,0,${light ? '0.2' : '0.7'}),0 8px 24px ${style.glow}` }}
       aria-hidden="true"
     >
-      <div className={`absolute inset-2 sm:inset-2.5 border ${light ? 'border-black/20' : 'border-white/10'} rounded-[1px] pointer-events-none`} />
+      <div className={`absolute inset-2 sm:inset-2.5 border ${light ? 'border-black/20' : 'border-white/10'} rounded-lg pointer-events-none`} />
       <div className={`absolute top-2.5 right-2.5 text-[8px] font-mono ${light ? 'text-black/50' : 'text-white/60'}`}>✦</div>
       <div className={`absolute bottom-2.5 left-2.5 text-[8px] font-mono ${light ? 'text-black/50' : 'text-white/60'}`}>✦</div>
 

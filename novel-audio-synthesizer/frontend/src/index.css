@@ -291,13 +291,13 @@ body {
 /* ========================================================================= */
 .architectural-portal {
   position: relative;
-  border-radius: 24px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
-  background: radial-gradient(circle at 80% 20%, #2E1D13 0%, #1A120E 60%, #0D0A08 100%);
+  background: var(--bg-card);
 }
 
 html.light .architectural-portal {
-  background: radial-gradient(circle at 75% 25%, #FFFFFF 0%, #FAF6F0 60%, #EAE3D9 100%);
+  background: var(--bg-card);
 }
 
 .fluted-timber {
@@ -347,24 +347,48 @@ html.light .architectural-portal {
 
 .boxed-btn {
   border: 1px solid var(--border-strong);
-  border-radius: 1px;
+  border-radius: 8px;
   font-family: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
   text-transform: uppercase;
   font-size: 11px;
-  letter-spacing: 0.08em;
-  transition: all 120ms ease;
+  letter-spacing: 0.06em;
+  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.boxed-btn:hover {
+  border-color: var(--text-main);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
+}
+
+.boxed-btn:active {
+  transform: scale(0.97);
 }
 
 .boxed-btn-primary {
   background-color: var(--accent);
   color: var(--on-accent);
   border: 1px solid var(--accent);
-  border-radius: 1px;
+  border-radius: 8px;
   font-family: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
   text-transform: uppercase;
   font-size: 11px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   font-weight: 700;
+  transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+.boxed-btn-primary:hover {
+  background-color: var(--accent-hover);
+  border-color: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+}
+
+.boxed-btn-primary:active {
+  transform: scale(0.97);
 }
 
 .tilted-cover-stage {
@@ -387,7 +411,7 @@ html.light .architectural-portal {
 
 /* Neutralized Legacy Aliases for Phased Migration */
 .botanical-pill {
-  border-radius: 1px;
+  border-radius: 9999px;
   background-color: var(--accent-surface);
   color: var(--text-main);
   border: 1px solid var(--border-subtle);
@@ -395,6 +419,11 @@ html.light .architectural-portal {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  transition: all 150ms ease;
+}
+
+.botanical-pill:hover {
+  border-color: var(--border-strong);
 }
 
 .tracked-overline {
@@ -411,16 +440,22 @@ html.light .architectural-portal {
 }
 
 .circular-action-cta {
-  border-radius: 1px;
+  border-radius: 9999px;
   background-color: var(--cta-primary-bg);
   color: var(--cta-primary-text);
   border: 1px solid var(--border-strong);
   transition: all var(--motion-duration-standard) var(--motion-ease-natural);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
 }
 
 .circular-action-cta:hover {
   background-color: var(--cta-primary-hover);
-  transform: translateY(-1px);
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.32);
+}
+
+.circular-action-cta:active {
+  transform: scale(0.96);
 }
 
 /* Accessible Focus Ring */
@@ -561,7 +596,7 @@ html.light .architectural-portal {
   height: 48px;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
-  border-radius: 1px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -570,6 +605,7 @@ html.light .architectural-portal {
   color: var(--text-muted);
   flex-shrink: 0;
   overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .audio-track-title {
@@ -598,6 +634,7 @@ html.light .architectural-portal {
   flex-grow: 1;
   height: 4px;
   background: var(--border-subtle);
+  border-radius: 9999px;
   position: relative;
   cursor: pointer;
 }
@@ -608,6 +645,7 @@ html.light .architectural-portal {
   top: 0;
   bottom: 0;
   background: var(--border-strong);
+  border-radius: 9999px;
 }
 
 .scrubber-played-fill {
@@ -616,17 +654,19 @@ html.light .architectural-portal {
   top: 0;
   bottom: 0;
   background: var(--text-main);
+  border-radius: 9999px;
 }
 
 .scrubber-thumb {
   position: absolute;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   background: var(--text-main);
-  border: 1px solid var(--bg-page);
-  border-radius: 0;
+  border: 2px solid var(--bg-page);
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
 /* ========================================================================= */
@@ -1182,6 +1222,7 @@ body.focus-fullscreen-mode footer {
 .detail-matrix-box {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
+  border-radius: 14px;
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -1202,9 +1243,11 @@ body.focus-fullscreen-mode footer {
 .tabs-bar {
   display: flex;
   align-items: stretch;
-  gap: 2px;
+  gap: 4px;
   border-bottom: 1px solid var(--border-subtle);
   background: var(--bg-surface);
+  border-radius: 12px 12px 0 0;
+  padding: 4px 6px 0;
   overflow-x: auto;
 }
 
@@ -1221,8 +1264,9 @@ body.focus-fullscreen-mode footer {
   color: var(--text-sub);
   border: none;
   border-bottom: 2px solid transparent;
+  border-radius: 8px 8px 0 0;
   background: transparent;
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   white-space: nowrap;
 }
 
@@ -1248,6 +1292,8 @@ body.focus-fullscreen-mode footer {
   flex-direction: column;
   border: 1px solid var(--border-subtle);
   background: var(--bg-card);
+  border-radius: 16px;
+  overflow: hidden;
 }
 
 .chapter-row-item {
@@ -1296,15 +1342,18 @@ body.focus-fullscreen-mode footer {
 .character-card {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
+  border-radius: 14px;
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  transition: border-color 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .character-card:hover {
   border-color: var(--border-strong);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.35);
 }
 
 .char-header-row {
@@ -1323,8 +1372,9 @@ body.focus-fullscreen-mode footer {
 .char-role-badge {
   font-family: var(--font-mono, 'JetBrains Mono Variable', 'JetBrains Mono', monospace);
   font-size: 10px;
-  padding: 2px 6px;
+  padding: 3px 8px;
   border: 1px solid var(--border-strong);
+  border-radius: 9999px;
   background: var(--bg-card);
   color: var(--text-main);
 }
@@ -1351,6 +1401,8 @@ body.focus-fullscreen-mode footer {
 .studio-card-container {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -1374,6 +1426,7 @@ body.focus-fullscreen-mode footer {
 .synthesis-banner-box {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
+  border-radius: 14px;
   padding: 16px 20px;
   display: flex;
   flex-direction: column;
@@ -1383,6 +1436,7 @@ body.focus-fullscreen-mode footer {
 .synthesis-progress-track {
   height: 6px;
   background: var(--border-subtle);
+  border-radius: 9999px;
   width: 100%;
   position: relative;
   overflow: hidden;
@@ -1394,6 +1448,7 @@ body.focus-fullscreen-mode footer {
   top: 0;
   bottom: 0;
   background: var(--text-main);
+  border-radius: 9999px;
   transition: width 0.3s ease;
 }
 
@@ -1431,11 +1486,11 @@ body.focus-fullscreen-mode footer {
   font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  border-radius: 0px;
+  border-radius: 8px;
   border: 1px solid var(--border-strong);
   background: transparent;
   color: var(--text-main);
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
   white-space: nowrap;
 }
@@ -1443,6 +1498,11 @@ body.focus-fullscreen-mode footer {
 .btn:hover {
   background: var(--bg-hover);
   border-color: var(--text-main);
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: scale(0.97);
 }
 
 .btn-primary {
@@ -1450,12 +1510,15 @@ body.focus-fullscreen-mode footer {
   color: var(--on-accent);
   border: 1px solid var(--accent);
   font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
 }
 
 .btn-primary:hover {
   background: var(--accent-hover);
   border-color: var(--accent-hover);
   color: var(--on-accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
 }
 
 .btn-sm {
@@ -1475,7 +1538,7 @@ body.focus-fullscreen-mode footer {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 3px 8px;
+  padding: 3px 10px;
   font-family: var(--font-mono, 'JetBrains Mono Variable', 'JetBrains Mono', monospace);
   font-size: 10px;
   font-weight: 500;
@@ -1484,7 +1547,8 @@ body.focus-fullscreen-mode footer {
   border: 1px solid var(--border-subtle);
   background: var(--bg-card);
   color: var(--text-sub);
-  border-radius: 0px;
+  border-radius: 9999px;
+  transition: all 0.15s ease;
 }
 
 .badge-active {
@@ -1618,7 +1682,7 @@ body.focus-fullscreen-mode footer {
   padding: 12px 18px;
   margin-left: -20px;
   margin-right: -20px;
-  border-radius: 0px;
+  border-radius: 8px;
 }
 
 /* Chevrons in outer gutters */
@@ -1633,20 +1697,23 @@ body.focus-fullscreen-mode footer {
   justify-content: center;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
+  border-radius: 12px;
   color: var(--text-sub);
   cursor: pointer;
   z-index: 25;
   font-family: var(--font-mono, monospace);
   font-size: 20px;
   font-weight: 700;
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .gutter-chevron:hover:not(:disabled) {
   background: var(--bg-hover);
   color: var(--text-main);
   border-color: var(--border-strong);
+  transform: translateY(-50%) scale(1.05);
 }
 
 .gutter-chevron:disabled {

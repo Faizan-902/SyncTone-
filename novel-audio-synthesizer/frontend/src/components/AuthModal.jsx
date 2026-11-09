@@ -3,6 +3,7 @@ import { LazyMotion, domAnimation, m, useReducedMotion } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
 import NovelCover from './NovelCover';
 import {
+  IconSyncToneLogo,
   IconSoundwave,
   IconX,
   IconUser,
@@ -158,7 +159,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-[var(--accent)] text-[var(--on-accent)] flex items-center justify-center font-bold shadow-sm">
-                  <IconSoundwave className="w-4 h-4" />
+                  <IconSyncToneLogo className="w-4 h-4" />
                 </div>
                 <div>
                   <h3 className="text-sm font-bold theme-heading font-display">SyncTone</h3>

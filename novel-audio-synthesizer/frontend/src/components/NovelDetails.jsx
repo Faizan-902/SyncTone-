@@ -142,18 +142,19 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
   if (isLoading) {
     return (
       <div className="detail-stage space-y-6 animate-pulse">
+        <h1 className="sr-only">Loading Novel Details</h1>
         <div className="detail-breadcrumb-bar">
-          <div className="h-4 w-48 bg-[var(--border-subtle)] rounded-[1px]" />
-          <div className="h-4 w-32 bg-[var(--border-subtle)] rounded-[1px]" />
+          <div className="h-4 w-48 bg-[var(--border-subtle)] rounded-md" />
+          <div className="h-4 w-32 bg-[var(--border-subtle)] rounded-md" />
         </div>
         <div className="detail-stage-header space-y-4">
-          <div className="h-6 w-56 bg-[var(--border-subtle)] rounded-[1px]" />
-          <div className="h-14 w-3/4 bg-[var(--border-subtle)] rounded-[1px]" />
-          <div className="h-4 w-1/2 bg-[var(--border-subtle)] rounded-[1px]" />
+          <div className="h-6 w-56 bg-[var(--border-subtle)] rounded-md" />
+          <div className="h-14 w-3/4 bg-[var(--border-subtle)] rounded-xl" />
+          <div className="h-4 w-1/2 bg-[var(--border-subtle)] rounded-md" />
           <div className="flex gap-3 pt-2">
-            <div className="h-10 w-28 bg-[var(--border-subtle)] rounded-[1px]" />
-            <div className="h-10 w-36 bg-[var(--border-subtle)] rounded-[1px]" />
-            <div className="h-10 w-36 bg-[var(--border-subtle)] rounded-[1px]" />
+            <div className="h-10 w-28 bg-[var(--border-subtle)] rounded-xl" />
+            <div className="h-10 w-36 bg-[var(--border-subtle)] rounded-xl" />
+            <div className="h-10 w-36 bg-[var(--border-subtle)] rounded-xl" />
           </div>
         </div>
       </div>
@@ -163,8 +164,8 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
   if (error || !data?.novel) {
     return (
       <div className="detail-stage">
-        <div className="rounded-[1px] bg-[var(--bg-card)] border border-[var(--border-subtle)] p-10 text-center space-y-4">
-          <div className="w-12 h-12 rounded-[1px] bg-[var(--bg-surface)] border border-[var(--border-strong)] text-[var(--text-main)] flex items-center justify-center mx-auto">
+        <div className="rounded-2xl bg-[var(--bg-card)] border border-[var(--border-subtle)] p-10 text-center space-y-4 shadow-xl">
+          <div className="w-12 h-12 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-strong)] text-[var(--text-main)] flex items-center justify-center mx-auto shadow-xs">
             <IconRefresh className="w-6 h-6" />
           </div>
           <h3 className="text-lg font-bold font-sans uppercase text-[var(--text-main)]">Error Loading Novel</h3>
@@ -851,11 +852,11 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
           data-testid="confirm-delete-novel-modal"
         >
           <div
-            className="w-full max-w-md bg-[var(--bg-card)] border border-[var(--border-strong)] rounded-[1px] shadow-2xl p-6 space-y-4"
+            className="w-full max-w-md bg-[var(--bg-card)] border border-[var(--border-strong)] rounded-2xl shadow-2xl p-6 space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-[1px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[var(--text-main)] flex-shrink-0">
+              <div className="p-2.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[var(--text-main)] flex-shrink-0 shadow-xs">
                 <IconTrash className="w-5 h-5" />
               </div>
               <div>
@@ -870,7 +871,7 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
             </p>
 
             {deleteError && (
-              <div className="p-2.5 rounded-[1px] bg-[var(--bg-surface)] border border-[var(--border-strong)] text-[var(--text-main)] text-xs font-mono">
+              <div className="p-3 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-strong)] text-[var(--text-main)] text-xs font-mono">
                 {deleteError}
               </div>
             )}

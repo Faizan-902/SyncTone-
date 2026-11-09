@@ -5,6 +5,7 @@ import { preloadAuthModal, preloadSettingsModal, preloadCharacterRoster } from '
 import {
   IconSettings,
   IconShield,
+  IconSyncToneLogo,
 } from './icons';
 
 export default function TopHeader({
@@ -22,18 +23,20 @@ export default function TopHeader({
   const { theme, cycleTheme } = useTheme();
 
   return (
-    <header className="sticky top-0 z-40 bg-[var(--bg-bar)] border-b border-[var(--border-subtle)] h-14">
+    <header className="sticky top-0 z-40 bg-[var(--bg-bar)] border-b border-[var(--border-subtle)] h-14 backdrop-blur-md bg-opacity-95">
       <div className="max-w-7xl mx-auto px-2 sm:px-8 h-full flex items-center justify-between gap-2 sm:gap-4">
         {/* Brand & Primary Navigation Links */}
         <div className="flex items-center gap-4 sm:gap-8 min-w-0">
           {/* Brand Logo */}
           <button
             onClick={() => onNavigate('catalog')}
-            className="flex items-center gap-2 group text-left outline-none flex-shrink-0 cursor-pointer active:scale-95 transition-transform"
+            className="flex items-center gap-2.5 group text-left outline-none flex-shrink-0 cursor-pointer active:scale-95 transition-all duration-200"
             aria-label="SyncTone Home"
           >
-            <span className="w-3.5 h-3.5 bg-[var(--text-main)] inline-block flex-shrink-0" />
-            <span className="text-xs font-mono font-bold tracking-[0.14em] uppercase text-[var(--text-main)]">
+            <div className="w-7 h-7 rounded-lg bg-[var(--text-main)] text-[var(--bg-page)] flex items-center justify-center shadow-xs group-hover:scale-105 group-hover:shadow-md transition-all duration-200">
+              <IconSyncToneLogo className="w-4 h-4" />
+            </div>
+            <span className="text-xs font-mono font-bold tracking-[0.16em] uppercase text-[var(--text-main)] group-hover:opacity-90 transition-opacity">
               SYNCTONE
             </span>
           </button>
@@ -130,8 +133,8 @@ export default function TopHeader({
           <button
             onClick={cycleTheme}
             className="boxed-btn px-2 sm:px-2.5 py-1 text-[10px] sm:text-[11px] font-mono uppercase text-[var(--text-sub)] hover:text-[var(--text-main)] bg-[var(--bg-card)] border-[var(--border-strong)] hover:border-[var(--text-main)] flex items-center gap-1 sm:gap-1.5 cursor-pointer active:scale-95"
-            title={`Switch theme (currently ${theme})`}
-            aria-label="Switch theme"
+            title={`Switch Theme (currently ${theme})`}
+            aria-label={`Switch Theme: ${theme.toUpperCase()}`}
             aria-pressed={theme === 'dark'}
           >
             <span className="w-1.5 h-1.5 rounded-full bg-current" />
@@ -154,7 +157,7 @@ export default function TopHeader({
           {/* User Session / Auth Trigger */}
           {isAuthenticated ? (
             <div className="flex items-center gap-2 pl-2 border-l border-[var(--border-subtle)]">
-              <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono uppercase bg-[var(--bg-card)] border border-[var(--border-subtle)] text-[var(--text-sub)]">
+              <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] font-mono uppercase bg-[var(--bg-card)] border border-[var(--border-subtle)] text-[var(--text-sub)] rounded-full">
                 <IconShield className="w-3 h-3 text-[var(--text-main)]" />
                 {role}
               </span>
