@@ -109,7 +109,7 @@ export default function NovelCover({
         <img
           src={coverUrl}
           alt={title}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="volume-cover-img w-full h-full object-cover"
           onError={() => setImgError(true)}
           loading="lazy"
         />
@@ -121,7 +121,7 @@ export default function NovelCover({
   const light = style.isLight;
   return (
     <div
-      className={`relative w-full h-full ${style.bg} border border-l-[6px] ${style.border} flex flex-col justify-between p-3.5 sm:p-5 select-none overflow-hidden ${className}`}
+      className={`volume-cover-img relative w-full h-full ${style.bg} border border-l-[6px] ${style.border} flex flex-col justify-between p-3.5 sm:p-5 select-none overflow-hidden ${className}`}
       style={{ boxShadow: `inset 4px 0 12px rgba(0,0,0,${light ? '0.2' : '0.7'}),0 8px 24px ${style.glow}` }}
       aria-hidden="true"
     >
