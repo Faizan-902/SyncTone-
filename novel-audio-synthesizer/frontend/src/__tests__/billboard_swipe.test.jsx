@@ -125,7 +125,7 @@ describe('Netflix & Amazon Prime Style 5-Second Billboard Swipe', () => {
     expect(within(billboard).getByText(/Alexandre Dumas|ALEXANDRE_DUMAS/i)).toBeInTheDocument();
   });
 
-  it('renders 5-second progress indicators for the active slide', async () => {
+  it('pauses timer ONLY when hovering directly on the book, not on background or other controls', async () => {
     render(
       <AuthProvider>
         <NovelCatalog onSelectNovel={vi.fn()} />
@@ -136,8 +136,19 @@ describe('Netflix & Amazon Prime Style 5-Second Billboard Swipe', () => {
       expect(screen.getByTestId('featured-novel-billboard')).toBeInTheDocument();
     });
 
-    // Progress element with billboard-progress-fill class is present for active slide
-    const progressFill = document.querySelector('.billboard-progress-fill');
-    expect(progressFill).toBeInTheDocument();
+    const billboard = screen.getByTestId('featured-novel-billboard');
+    const bookStage = screen.getByTestId('featured-book-stage');
+
+    // Hovering on the outer billboard does NOT pause the timer
+    fireEvent.mouseEnter(billboard);
+    expect(screen.queryByText('Paused')).not.toBeInTheDocument();
+
+    // Hovering directly on the book stage pauses the timer
+    fireEvent.mouseEnter(bookStage);
+    expect(screen.getByText('Paused')).toBeInTheDocument();
+
+    // Mouse leaving the book stage unpauses the timer
+    fireEvent.mouseLeave(bookStage);
+    expect(screen.queryByText('Paused')).not.toBeInTheDocument();
   });
 });

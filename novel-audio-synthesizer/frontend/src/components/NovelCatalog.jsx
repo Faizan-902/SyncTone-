@@ -369,8 +369,6 @@ export default function NovelCatalog({
               }}
               aria-label="Featured Novel Billboard"
               data-testid="featured-novel-billboard"
-              onMouseEnter={() => setIsBillboardPaused(true)}
-              onMouseLeave={() => setIsBillboardPaused(false)}
               onTouchStart={handleTouchStart}
               onTouchEnd={handleTouchEnd}
             >
@@ -447,8 +445,16 @@ export default function NovelCatalog({
                     </div>
                   </div>
 
-                  {/* Center Column: Genuine 3D Physical Book Showcase */}
-                  <div key={`stage-${featuredNovel.id || featuredIndex}`} className="hero-cover-crossfade flex justify-center items-center py-2 tilted-cover-stage">
+                  {/* Center Column: Genuine 3D Physical Book Showcase (Hover on book pauses timer) */}
+                  <div
+                    key={`stage-${featuredNovel.id || featuredIndex}`}
+                    data-testid="featured-book-stage"
+                    className="hero-cover-crossfade flex justify-center items-center py-2 tilted-cover-stage cursor-grab"
+                    onMouseEnter={() => setIsBillboardPaused(true)}
+                    onMouseLeave={() => setIsBillboardPaused(false)}
+                    onPointerEnter={() => setIsBillboardPaused(true)}
+                    onPointerLeave={() => setIsBillboardPaused(false)}
+                  >
                     <FeaturedBook3D
                       novel={featuredNovel}
                       volumeIndex={featuredIndex}
@@ -465,13 +471,7 @@ export default function NovelCatalog({
                     </p>
 
                     {/* Scrim box for high WCAG AA contrast compliance */}
-                    <div
-                      className="bg-[var(--bg-card)] border border-[var(--border-strong)] p-5 flex flex-col gap-3.5 rounded-2xl shadow-xl backdrop-blur-md"
-                      onMouseEnter={() => setIsBillboardPaused(true)}
-                      onMouseLeave={() => setIsBillboardPaused(false)}
-                      onFocus={() => setIsBillboardPaused(true)}
-                      onBlur={() => setIsBillboardPaused(false)}
-                    >
+                    <div className="bg-[var(--bg-card)] border border-[var(--border-strong)] p-5 flex flex-col gap-3.5 rounded-2xl shadow-xl backdrop-blur-md">
                       <div className="flex flex-col gap-2.5">
                         <button
                           onClick={(e) => handleStartListening(featuredNovel, e)}
