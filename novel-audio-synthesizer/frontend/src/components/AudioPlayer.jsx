@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import AudioVisualizer from './AudioVisualizer';
 import {
   IconPlay,
   IconPause,
@@ -92,6 +93,7 @@ export default function AudioPlayer({
   const scrubScaleStyle = {
     transform: `scaleX(${progressFraction})`,
     transformOrigin: 'left',
+    transition: isPlaying ? 'transform 120ms linear' : 'none',
   };
 
   const bufferedScaleStyle = {
@@ -332,6 +334,27 @@ export default function AudioPlayer({
     };
   }, [isPlaying, onToggle, currentNovel, currentChapter, audioRef, handleSkip]);
 
+  // Persist playback position to localStorage for Continue Listening (Section 12.B)
+  useEffect(() => {
+    if (!currentChapter?.id || !currentNovel) return;
+    const nObj = currentNovel?.novel || currentNovel;
+    if (!nObj?.id || currentTimeMs <= 0) return;
+    try {
+      const record = {
+        novelId: nObj.id,
+        novelTitle: nObj.title,
+        chapterId: currentChapter.id,
+        chapterTitle: currentChapter.title,
+        chapterNumber: currentChapter.chapter_number || 1,
+        currentTimeMs,
+        totalDurationMs,
+        updatedAt: Date.now(),
+      };
+      localStorage.setItem(`synctone_listening_${nObj.id}`, JSON.stringify(record));
+      localStorage.setItem('synctone_last_listening', JSON.stringify(record));
+    } catch (_) {}
+  }, [currentNovel, currentChapter, currentTimeMs, totalDurationMs]);
+
   const novelObj = currentNovel?.novel || currentNovel;
   const authorDisplay = novelObj?.author_username || novelObj?.author || '';
   const narratorDisplay =
@@ -420,11 +443,11 @@ export default function AudioPlayer({
       </div>
 
       {/* Main 3-zone container */}
-      <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-3 sm:gap-6">
+      <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-6">
         {/* Left: Track Information */}
-        <div className="audio-track-info flex items-center gap-3 min-w-0 max-w-[200px] sm:max-w-[240px] md:max-w-xs shrink-0">
-          {/* 48x48 Book Jacket Artwork */}
-          <div className="audio-track-art w-12 h-12 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-lg flex items-center justify-center font-mono text-[10px] text-[var(--text-sub)] shrink-0 overflow-hidden shadow-xs">
+        <div className="audio-track-info flex items-center gap-2 sm:gap-3 min-w-0 max-w-[130px] xs:max-w-[170px] sm:max-w-[240px] md:max-w-xs shrink-0">
+          {/* 40x40 on mobile, 48x48 on desktop Book Jacket Artwork */}
+          <div className="audio-track-art w-10 h-10 sm:w-12 sm:h-12 bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-lg flex items-center justify-center font-mono text-[10px] text-[var(--text-sub)] shrink-0 overflow-hidden shadow-xs">
             {novelObj?.cover_object ? (
               <img src={novelObj.cover_object} alt="" className="w-full h-full object-cover" />
             ) : (
@@ -435,14 +458,15 @@ export default function AudioPlayer({
           </div>
 
           <div className="audio-track-text min-w-0 flex flex-col justify-center">
-            <h4 className="audio-track-title text-[13px] font-semibold text-[var(--text-main)] truncate leading-tight font-sans">
+            <h4 className="audio-track-title text-[12px] sm:text-[13px] font-semibold text-[var(--text-main)] truncate leading-tight font-sans">
               {currentChapter?.title || 'Chapter Audio Track'}
             </h4>
             <p className="audio-track-sub text-[10px] text-[var(--text-sub)] font-mono truncate mt-0.5 hidden sm:block">
               {sublineText}
             </p>
-            <div className="audio-track-timecode text-[10px] font-mono text-[var(--text-muted)] tabular-nums mt-0.5 flex items-center gap-1.5">
-              <span>{formatTimecodeWithMs(currentTimeMs)} / {formatTimecodeWithMs(totalDurationMs)}</span>
+            <div className="audio-track-timecode text-[10px] font-mono text-[var(--text-muted)] tabular-nums mt-0.5 flex items-center gap-1.5 truncate">
+              <span className="hidden sm:inline">{formatTimecodeWithMs(currentTimeMs)} / {formatTimecodeWithMs(totalDurationMs)}</span>
+              <span className="sm:hidden">{formatTime(currentTimeMs)} / {formatTime(totalDurationMs)}</span>
               {isBuffering && (
                 <span className="text-[var(--text-main)] font-semibold tracking-wider animate-pulse">
                   [BUFFERING]
@@ -596,11 +620,11 @@ export default function AudioPlayer({
         </div>
 
         {/* Right: Signal Dot, Engine Mode, TTS Dropdown, Speed & Volume Controls */}
-        <div className="audio-right-cluster flex items-center gap-2 sm:gap-2.5 shrink-0">
+        <div className="audio-right-cluster flex items-center gap-1 sm:gap-2.5 shrink-0 min-w-0">
           {/* Mobile Play/Pause CTA (shown on narrow screens <640px) */}
           <button
             onClick={onToggle}
-            className="mobile-play-btn boxed-btn-primary px-3.5 py-1.5 text-[11px] font-mono sm:hidden cursor-pointer flex items-center gap-1.5 rounded-full shadow-md active:scale-90 transition-all"
+            className="mobile-play-btn boxed-btn-primary px-2.5 sm:px-3.5 py-1 sm:py-1.5 text-[10px] sm:text-[11px] font-mono sm:hidden cursor-pointer flex items-center gap-1 rounded-full shadow-md active:scale-90 transition-all shrink-0"
             aria-label={isBuffering ? 'Audio buffering' : isPlaying ? 'Pause audio' : 'Play audio'}
           >
             {isBuffering ? (
@@ -626,6 +650,17 @@ export default function AudioPlayer({
               aria-label="Audio playing visualizer"
             />
           )}
+
+          {/* Animated Audio Waveform Visualizer (Section 8) */}
+          <div className="hidden lg:flex items-center px-2 py-1 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
+            <AudioVisualizer
+              isPlaying={isPlaying}
+              isBuffering={isBuffering}
+              audioElement={audioRef?.current || null}
+              barCount={14}
+              height={14}
+            />
+          </div>
 
           {/* Follow Along / Live Sync Toggle */}
           <button
@@ -682,7 +717,7 @@ export default function AudioPlayer({
             <button
               type="button"
               onClick={() => onTogglePlaybackMode?.()}
-              className="boxed-btn px-2.5 sm:px-3 py-1 text-[11px] font-mono cursor-pointer flex items-center gap-1.5 rounded-full active:scale-95 transition-all"
+              className="boxed-btn px-2 sm:px-3 py-1 text-[10px] sm:text-[11px] font-mono cursor-pointer flex items-center gap-1 sm:gap-1.5 rounded-full active:scale-95 transition-all shrink-0"
               title={
                 playbackMode === 'tts'
                   ? 'Voice TTS: Playing live character TTS segment-by-segment. Click to switch to Studio Track.'
@@ -707,7 +742,7 @@ export default function AudioPlayer({
           {/* Playback Speed Button */}
           <button
             onClick={handleSpeedChange}
-            className="boxed-btn px-2.5 py-1 text-[11px] font-mono text-[var(--text-main)] hover:bg-[var(--bg-hover)] cursor-pointer rounded-full active:scale-95 transition-all"
+            className="boxed-btn px-1.5 sm:px-2.5 py-1 text-[10px] sm:text-[11px] font-mono text-[var(--text-main)] hover:bg-[var(--bg-hover)] cursor-pointer rounded-full active:scale-95 transition-all shrink-0"
             title="Cycle playback speed"
             aria-label={`Playback speed: ${speed}x`}
           >
