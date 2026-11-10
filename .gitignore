@@ -75,7 +75,11 @@ dev-dist/
 *.bin
 *.pth
 kokoro-v0_19.onnx
-voices.bin
+voices*.bin
+paradee*.json
+*.tmp
+caddy_data/
+caddy_config/
 
 # Audio Buffers, Raw PCM Caches & Synthesized Outputs
 output/
