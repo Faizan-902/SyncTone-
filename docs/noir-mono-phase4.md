@@ -64,3 +64,4 @@ Phase 5 will proceed to implement the core landing and catalog visuals:
 2. **Display Headline**: Giant Inter 800–900 uppercase headline filled with `--headline-gradient` and skewed italic fade (`skewX(-10deg) italic`) for "TOLD IN SOUND".
 3. **Hero Triad Grid & 3D Tilted Cover**: Monospace credits on left, CSS 3D perspective tilted novel jacket in center, concise sans blurb and boxed inverted CTAs on right.
 4. **Sharp Catalog Cards & Top 10 Billboard**: 0–2px monolithic novel jackets, mono metadata badges, and Top 10 rank billboard.
+

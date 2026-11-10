@@ -47,19 +47,12 @@ export function renderPageToCanvas(pageSegments = [], width = 450, height = 650,
 
   ctx.scale(dpr, dpr);
 
-  // 1. Draw Theme Background (Parchment in Light Mode, Obsidian Slate in Dark Mode)
+  // 1. Draw Theme Background (Noir Monochrome surfaces)
   if (isDark) {
-    ctx.fillStyle = '#1A120E';
+    ctx.fillStyle = '#0B0B0D';
     ctx.fillRect(0, 0, width, height);
   } else {
-    ctx.fillStyle = '#fcfaf6';
-    ctx.fillRect(0, 0, width, height);
-
-    // Subtle paper texture / gradient
-    const paperGrad = ctx.createLinearGradient(0, 0, width, height);
-    paperGrad.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
-    paperGrad.addColorStop(1, 'rgba(247, 241, 227, 0.3)');
-    ctx.fillStyle = paperGrad;
+    ctx.fillStyle = '#EFEFF0';
     ctx.fillRect(0, 0, width, height);
   }
 

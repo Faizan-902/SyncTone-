@@ -212,7 +212,10 @@ test.describe('SyncTone Hardening E2E Suite', () => {
 
     const goldenResults = await page.evaluate(async () => {
       let sanitizer = window.__sanitizeTextWithTtsDomCleaner;
-      if (!sanitizer) {
+      if (!sanitizer && typeof window.__loadTtsSanitizer === 'function') {
+        const mod = await window.__loadTtsSanitizer();
+        sanitizer = mod.sanitizeTextWithTtsDomCleaner;
+      } else if (!sanitizer) {
         const mod = await import('/src/utils/ttsSanitizer.js');
         sanitizer = mod.sanitizeTextWithTtsDomCleaner;
       }

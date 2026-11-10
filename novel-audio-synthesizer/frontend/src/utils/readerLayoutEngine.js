@@ -131,9 +131,10 @@ export function measureAndPaginateSegments(segments = [], options = {}) {
   } = options;
 
   // Maximum segments per page based on chapter length to guarantee interactive spreads
+  // and prevent half-empty pages
   const maxSegs =
     maxSegmentsPerPage ??
-    (segments.length <= 3 ? 1 : segments.length <= 6 ? 2 : 4);
+    (segments.length <= 3 ? 1 : segments.length <= 6 ? 2 : 6);
 
   // Available vertical pixel budget for body prose on a single page
   const usablePageHeight = Math.max(300, containerHeight - headerHeight - footerHeight);
@@ -272,6 +273,17 @@ export function measureAndPaginateSegments(segments = [], options = {}) {
       fallbackPages.push(segments.slice(i, i + step));
     }
     return fallbackPages;
+  }
+
+  // Eliminate orphan single-line trailing pages by rebalancing with penultimate page
+  if (pages.length >= 2) {
+    const lastPage = pages[pages.length - 1];
+    const penPage = pages[pages.length - 2];
+    if (lastPage.length === 1 && penPage.length >= 2) {
+      const movedSeg = penPage[penPage.length - 1];
+      pages[pages.length - 2] = penPage.slice(0, -1);
+      pages[pages.length - 1] = [movedSeg, ...lastPage];
+    }
   }
 
   return pages;

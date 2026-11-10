@@ -140,4 +140,41 @@ describe('Milestone 4 — Character Roster & Voice Overrides', () => {
       expect(harrySelect.value).toBe('en-GB-ThomasNeural');
     });
   });
+
+  it('dismisses when backdrop scrim is clicked', async () => {
+    const handleClose = vi.fn();
+    renderRosterWithAuth({ isWriterOrAdmin: false }, { onClose: handleClose });
+    await waitFor(() => {
+      expect(screen.getByText('Harry Potter')).toBeInTheDocument();
+    });
+    const scrim = screen.getByTestId('roster-scrim');
+    fireEvent.click(scrim);
+    expect(handleClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('dismisses when Escape key is pressed', async () => {
+    const handleClose = vi.fn();
+    renderRosterWithAuth({ isWriterOrAdmin: false }, { onClose: handleClose });
+    await waitFor(() => {
+      expect(screen.getByText('Harry Potter')).toBeInTheDocument();
+    });
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(handleClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('has topbar clearance and bottom dock spacing for reader viewport', async () => {
+    renderRosterWithAuth({ isWriterOrAdmin: false });
+    await waitFor(() => {
+      expect(screen.getByText('Harry Potter')).toBeInTheDocument();
+    });
+    const drawer = screen.getByRole('dialog', { name: /Character Roster/i });
+    expect(drawer).toHaveStyle({
+      top: 'var(--topbar-h, 3.5rem)',
+      bottom: 'var(--dock-safe-bottom, 4.5rem)',
+    });
+    const scrim = screen.getByTestId('roster-scrim');
+    expect(scrim).toHaveStyle({
+      top: 'var(--topbar-h, 3.5rem)',
+    });
+  });
 });

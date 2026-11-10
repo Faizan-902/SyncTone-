@@ -3,6 +3,7 @@ import { LazyMotion, domAnimation, m, useReducedMotion } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
 import NovelCover from './NovelCover';
 import {
+  IconSyncToneLogo,
   IconSoundwave,
   IconX,
   IconUser,
@@ -158,7 +159,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-[var(--accent)] text-[var(--on-accent)] flex items-center justify-center font-bold shadow-sm">
-                  <IconSoundwave className="w-4 h-4" />
+                  <IconSyncToneLogo className="w-4 h-4" />
                 </div>
                 <div>
                   <h3 className="text-sm font-bold theme-heading font-display">SyncTone</h3>
@@ -268,7 +269,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3 px-4 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] font-bold rounded-xl shadow-md text-xs transition min-h-[44px] cursor-pointer disabled:opacity-50 select-none"
+                className="w-full py-3 px-6 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] font-bold rounded-full shadow-md text-xs transition-all duration-200 hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.96] min-h-[44px] cursor-pointer disabled:opacity-50 select-none"
               >
                 {isSubmitting
                   ? 'Connecting...'

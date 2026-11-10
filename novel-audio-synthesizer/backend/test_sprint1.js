@@ -315,8 +315,8 @@ async function runTests() {
     console.log('  ✔ GET /api/novels/:id verified details and handled unknown ID with 404');
   }
 
-  // 4.5.1 DELETE /api/novels/:id (Local dev deletion & cascade verification)
-  console.log('  ▶ Testing DELETE /api/novels/:id (cascade deletion for local dev)...');
+  // 4.5.1 DELETE /api/novels/:id (Prohibited: permanent deletion disabled)
+  console.log('  ▶ Testing DELETE /api/novels/:id (permanent deletion prohibited)...');
   const tempNovelRes = await axios.post(
     `${BASE_URL}/novels`,
     {
@@ -341,30 +341,29 @@ async function runTests() {
   const mongoBefore = await Chapter.findOne({ pg_chapter_id: tempChapterId });
   if (!mongoBefore) throw new Error('Expected temp chapter in MongoDB before deletion');
 
-  // Perform DELETE
-  const deleteNovelRes = await axios.delete(`${BASE_URL}/novels/${tempNovelId}`);
-  if (deleteNovelRes.status !== 200 || deleteNovelRes.data.deleted_id !== tempNovelId) {
-    throw new Error('DELETE /api/novels/:id failed');
-  }
-
-  // Verify PostgreSQL cascading delete
-  const pgAfter = await pool.query('SELECT id FROM novels WHERE id = $1', [tempNovelId]);
-  if (pgAfter.rows.length !== 0) throw new Error('Novel was not deleted from PostgreSQL');
-  const chAfter = await pool.query('SELECT id FROM chapters WHERE id = $1', [tempChapterId]);
-  if (chAfter.rows.length !== 0) throw new Error('Chapters were not cascaded in PostgreSQL');
-
-  // Verify MongoDB purge
-  const mongoAfter = await Chapter.findOne({ pg_chapter_id: tempChapterId });
-  if (mongoAfter) throw new Error('Chapter was not purged from MongoDB');
-
-  // Verify 404 on deleting non-existent novel
+  // Attempt DELETE - must be rejected with 403 Forbidden
   try {
     await axios.delete(`${BASE_URL}/novels/${tempNovelId}`);
-    throw new Error('Expected second DELETE to return 404');
+    throw new Error('Expected DELETE /api/novels/:id to be rejected with 403 Forbidden');
   } catch (delErr) {
-    if (delErr.response?.status !== 404) throw new Error(`Expected 404, got ${delErr.response?.status}`);
+    if (delErr.response?.status !== 403) {
+      throw new Error(`Expected 403 Forbidden, got ${delErr.response?.status}`);
+    }
   }
-  console.log('  ✔ DELETE /api/novels/:id verified cascading deletion in PG, purge in Mongo, and 404 handling');
+
+  // Verify PostgreSQL record was NOT deleted
+  const pgAfter = await pool.query('SELECT id FROM novels WHERE id = $1', [tempNovelId]);
+  if (pgAfter.rows.length === 0) throw new Error('Novel was incorrectly deleted from PostgreSQL');
+
+  // Verify MongoDB document was NOT purged
+  const mongoAfter = await Chapter.findOne({ pg_chapter_id: tempChapterId });
+  if (!mongoAfter) throw new Error('Chapter document was incorrectly purged from MongoDB');
+
+  // Clean up fixture directly via SQL and Mongo
+  await pool.query('DELETE FROM novels WHERE id = $1', [tempNovelId]);
+  await Chapter.deleteMany({ novel_id: tempNovelId });
+
+  console.log('  ✔ DELETE /api/novels/:id verified permanent deletion is prohibited (403)');
 
   // 4.6 Atomic novel creation failure rollback test (Audit Fix 1)
   console.log('  ▶ Testing atomic novel creation transaction rollback on synthesis job failure...');

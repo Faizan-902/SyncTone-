@@ -1,5 +1,27 @@
 import React from 'react';
 
+export function IconSyncToneLogo({ className = 'w-5 h-5', ...props }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+      {...props}
+    >
+      {/* Precision Harmonic Acoustic Soundwave Spectrum */}
+      <rect x="2.5" y="9.5" width="2" height="5" rx="1" fill="currentColor" opacity="0.65" />
+      <rect x="6.5" y="6" width="2.2" height="12" rx="1.1" fill="currentColor" opacity="0.9" />
+      <rect x="10.8" y="2.5" width="2.4" height="19" rx="1.2" fill="currentColor" />
+      <rect x="15.2" y="6" width="2.2" height="12" rx="1.1" fill="currentColor" opacity="0.9" />
+      <rect x="19.5" y="9.5" width="2" height="5" rx="1" fill="currentColor" opacity="0.65" />
+      {/* Signature Resonance Signal Beacon */}
+      <circle cx="19.5" cy="4" r="1.5" fill="var(--signal, #FF5A1F)" />
+    </svg>
+  );
+}
+
 export function IconBook({ className = 'w-5 h-5', ...props }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} {...props}>

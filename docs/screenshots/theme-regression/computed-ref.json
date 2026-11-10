@@ -4,37 +4,37 @@
     "theme": "dark",
     "htmlClass": "dark",
     "cssVariables": {
-      "--bg-page": "#1A120E",
-      "--bg-surface": "#3A2418",
-      "--bg-card": "#281911",
-      "--bg-hover": "#3D261A",
-      "--text-main": "#D5C4AE",
-      "--text-sub": "#A88462",
-      "--text-muted": "#8A7A68",
-      "--accent": "#DFBA53",
-      "--accent-hover": "#EED076",
-      "--border-subtle": "#453224",
-      "--border-strong": "#634B38",
-      "--border-focus": "#DFBA53"
+      "--bg-page": "#0B0B0D",
+      "--bg-surface": "#141416",
+      "--bg-card": "#1B1B1E",
+      "--bg-hover": "#232327",
+      "--text-main": "#F2F2F3",
+      "--text-sub": "#A9A9AF",
+      "--text-muted": "#898992",
+      "--accent": "#F2F2F3",
+      "--accent-hover": "#DCDCDF",
+      "--border-subtle": "#2E2E33",
+      "--border-strong": "#5E5E66",
+      "--border-focus": "#F2F2F3"
     },
     "body": {
-      "background": "rgb(26, 18, 14)",
-      "color": "rgb(213, 196, 174)"
+      "background": "rgb(11, 11, 13)",
+      "color": "rgb(242, 242, 243)"
     },
     "header": {
-      "background": "rgba(26, 18, 14, 0.88)",
-      "borderColor": "rgb(69, 50, 36)",
-      "color": "rgb(213, 196, 174)"
+      "background": "rgb(20, 20, 22)",
+      "borderColor": "rgb(46, 46, 51)",
+      "color": "rgb(242, 242, 243)"
     },
     "card": {
-      "background": "rgb(40, 25, 17)",
-      "borderColor": "rgb(69, 50, 36)"
+      "background": "rgb(27, 27, 30)",
+      "borderColor": "rgb(46, 46, 51)"
     },
     "readerPage": null,
     "toolbarButton": {
-      "background": "rgb(135, 169, 107)",
+      "background": "rgba(0, 0, 0, 0)",
       "borderColor": "rgb(229, 231, 235)",
-      "color": "rgb(26, 18, 14)"
+      "color": "rgb(242, 242, 243)"
     },
     "player": null
   },
@@ -43,37 +43,37 @@
     "theme": "dark",
     "htmlClass": "dark",
     "cssVariables": {
-      "--bg-page": "#1A120E",
-      "--bg-surface": "#3A2418",
-      "--bg-card": "#281911",
-      "--bg-hover": "#3D261A",
-      "--text-main": "#D5C4AE",
-      "--text-sub": "#A88462",
-      "--text-muted": "#8A7A68",
-      "--accent": "#DFBA53",
-      "--accent-hover": "#EED076",
-      "--border-subtle": "#453224",
-      "--border-strong": "#634B38",
-      "--border-focus": "#DFBA53"
+      "--bg-page": "#0B0B0D",
+      "--bg-surface": "#141416",
+      "--bg-card": "#1B1B1E",
+      "--bg-hover": "#232327",
+      "--text-main": "#F2F2F3",
+      "--text-sub": "#A9A9AF",
+      "--text-muted": "#898992",
+      "--accent": "#F2F2F3",
+      "--accent-hover": "#DCDCDF",
+      "--border-subtle": "#2E2E33",
+      "--border-strong": "#5E5E66",
+      "--border-focus": "#F2F2F3"
     },
     "body": {
-      "background": "rgb(26, 18, 14)",
-      "color": "rgb(213, 196, 174)"
+      "background": "rgb(11, 11, 13)",
+      "color": "rgb(242, 242, 243)"
     },
     "header": {
-      "background": "rgba(26, 18, 14, 0.88)",
-      "borderColor": "rgb(69, 50, 36)",
-      "color": "rgb(213, 196, 174)"
+      "background": "rgb(20, 20, 22)",
+      "borderColor": "rgb(46, 46, 51)",
+      "color": "rgb(242, 242, 243)"
     },
     "card": {
-      "background": "rgb(40, 25, 17)",
-      "borderColor": "rgb(69, 50, 36)"
+      "background": "rgb(27, 27, 30)",
+      "borderColor": "rgb(46, 46, 51)"
     },
     "readerPage": null,
     "toolbarButton": {
-      "background": "rgb(135, 169, 107)",
+      "background": "rgba(0, 0, 0, 0)",
       "borderColor": "rgb(229, 231, 235)",
-      "color": "rgb(26, 18, 14)"
+      "color": "rgb(242, 242, 243)"
     },
     "player": null
   },
@@ -82,37 +82,37 @@
     "theme": "dark",
     "htmlClass": "dark",
     "cssVariables": {
-      "--bg-page": "#1A120E",
-      "--bg-surface": "#3A2418",
-      "--bg-card": "#281911",
-      "--bg-hover": "#3D261A",
-      "--text-main": "#D5C4AE",
-      "--text-sub": "#A88462",
-      "--text-muted": "#8A7A68",
-      "--accent": "#DFBA53",
-      "--accent-hover": "#EED076",
-      "--border-subtle": "#453224",
-      "--border-strong": "#634B38",
-      "--border-focus": "#DFBA53"
+      "--bg-page": "#0B0B0D",
+      "--bg-surface": "#141416",
+      "--bg-card": "#1B1B1E",
+      "--bg-hover": "#232327",
+      "--text-main": "#F2F2F3",
+      "--text-sub": "#A9A9AF",
+      "--text-muted": "#898992",
+      "--accent": "#F2F2F3",
+      "--accent-hover": "#DCDCDF",
+      "--border-subtle": "#2E2E33",
+      "--border-strong": "#5E5E66",
+      "--border-focus": "#F2F2F3"
     },
     "body": {
-      "background": "rgb(26, 18, 14)",
-      "color": "rgb(213, 196, 174)"
+      "background": "rgb(11, 11, 13)",
+      "color": "rgb(242, 242, 243)"
     },
     "header": {
-      "background": "rgba(26, 18, 14, 0.88)",
-      "borderColor": "rgb(69, 50, 36)",
-      "color": "rgb(213, 196, 174)"
+      "background": "rgb(20, 20, 22)",
+      "borderColor": "rgb(46, 46, 51)",
+      "color": "rgb(242, 242, 243)"
     },
     "card": {
-      "background": "rgb(40, 25, 17)",
-      "borderColor": "rgb(69, 50, 36)"
+      "background": "rgb(27, 27, 30)",
+      "borderColor": "rgb(46, 46, 51)"
     },
     "readerPage": null,
     "toolbarButton": {
-      "background": "rgb(135, 169, 107)",
+      "background": "rgba(0, 0, 0, 0)",
       "borderColor": "rgb(229, 231, 235)",
-      "color": "rgb(26, 18, 14)"
+      "color": "rgb(242, 242, 243)"
     },
     "player": null
   },
@@ -121,37 +121,34 @@
     "theme": "dark",
     "htmlClass": "dark",
     "cssVariables": {
-      "--bg-page": "#1A120E",
-      "--bg-surface": "#3A2418",
-      "--bg-card": "#281911",
-      "--bg-hover": "#3D261A",
-      "--text-main": "#D5C4AE",
-      "--text-sub": "#A88462",
-      "--text-muted": "#8A7A68",
-      "--accent": "#DFBA53",
-      "--accent-hover": "#EED076",
-      "--border-subtle": "#453224",
-      "--border-strong": "#634B38",
-      "--border-focus": "#DFBA53"
+      "--bg-page": "#0B0B0D",
+      "--bg-surface": "#141416",
+      "--bg-card": "#1B1B1E",
+      "--bg-hover": "#232327",
+      "--text-main": "#F2F2F3",
+      "--text-sub": "#A9A9AF",
+      "--text-muted": "#898992",
+      "--accent": "#F2F2F3",
+      "--accent-hover": "#DCDCDF",
+      "--border-subtle": "#2E2E33",
+      "--border-strong": "#5E5E66",
+      "--border-focus": "#F2F2F3"
     },
     "body": {
-      "background": "rgb(26, 18, 14)",
-      "color": "rgb(213, 196, 174)"
+      "background": "rgb(11, 11, 13)",
+      "color": "rgb(242, 242, 243)"
     },
     "header": {
-      "background": "rgba(26, 18, 14, 0.88)",
-      "borderColor": "rgb(69, 50, 36)",
-      "color": "rgb(213, 196, 174)"
+      "background": "rgb(20, 20, 22)",
+      "borderColor": "rgb(46, 46, 51)",
+      "color": "rgb(242, 242, 243)"
     },
-    "card": {
-      "background": "rgb(40, 25, 17)",
-      "borderColor": "rgb(69, 50, 36)"
-    },
+    "card": null,
     "readerPage": null,
     "toolbarButton": {
       "background": "rgba(0, 0, 0, 0)",
       "borderColor": "rgb(229, 231, 235)",
-      "color": "rgb(213, 196, 174)"
+      "color": "rgb(242, 242, 243)"
     },
     "player": null
   },
@@ -160,37 +157,34 @@
     "theme": "dark",
     "htmlClass": "dark",
     "cssVariables": {
-      "--bg-page": "#1A120E",
-      "--bg-surface": "#3A2418",
-      "--bg-card": "#281911",
-      "--bg-hover": "#3D261A",
-      "--text-main": "#D5C4AE",
-      "--text-sub": "#A88462",
-      "--text-muted": "#8A7A68",
-      "--accent": "#DFBA53",
-      "--accent-hover": "#EED076",
-      "--border-subtle": "#453224",
-      "--border-strong": "#634B38",
-      "--border-focus": "#DFBA53"
+      "--bg-page": "#0B0B0D",
+      "--bg-surface": "#141416",
+      "--bg-card": "#1B1B1E",
+      "--bg-hover": "#232327",
+      "--text-main": "#F2F2F3",
+      "--text-sub": "#A9A9AF",
+      "--text-muted": "#898992",
+      "--accent": "#F2F2F3",
+      "--accent-hover": "#DCDCDF",
+      "--border-subtle": "#2E2E33",
+      "--border-strong": "#5E5E66",
+      "--border-focus": "#F2F2F3"
     },
     "body": {
-      "background": "rgb(26, 18, 14)",
-      "color": "rgb(213, 196, 174)"
+      "background": "rgb(11, 11, 13)",
+      "color": "rgb(242, 242, 243)"
     },
     "header": {
-      "background": "rgba(26, 18, 14, 0.88)",
-      "borderColor": "rgb(69, 50, 36)",
-      "color": "rgb(213, 196, 174)"
+      "background": "rgb(20, 20, 22)",
+      "borderColor": "rgb(46, 46, 51)",
+      "color": "rgb(242, 242, 243)"
     },
-    "card": {
-      "background": "rgb(40, 25, 17)",
-      "borderColor": "rgb(69, 50, 36)"
-    },
+    "card": null,
     "readerPage": null,
     "toolbarButton": {
       "background": "rgba(0, 0, 0, 0)",
       "borderColor": "rgb(229, 231, 235)",
-      "color": "rgb(213, 196, 174)"
+      "color": "rgb(242, 242, 243)"
     },
     "player": null
   },
@@ -199,37 +193,34 @@
     "theme": "dark",
     "htmlClass": "dark",
     "cssVariables": {
-      "--bg-page": "#1A120E",
-      "--bg-surface": "#3A2418",
-      "--bg-card": "#281911",
-      "--bg-hover": "#3D261A",
-      "--text-main": "#D5C4AE",
-      "--text-sub": "#A88462",
-      "--text-muted": "#8A7A68",
-      "--accent": "#DFBA53",
-      "--accent-hover": "#EED076",
-      "--border-subtle": "#453224",
-      "--border-strong": "#634B38",
-      "--border-focus": "#DFBA53"
+      "--bg-page": "#0B0B0D",
+      "--bg-surface": "#141416",
+      "--bg-card": "#1B1B1E",
+      "--bg-hover": "#232327",
+      "--text-main": "#F2F2F3",
+      "--text-sub": "#A9A9AF",
+      "--text-muted": "#898992",
+      "--accent": "#F2F2F3",
+      "--accent-hover": "#DCDCDF",
+      "--border-subtle": "#2E2E33",
+      "--border-strong": "#5E5E66",
+      "--border-focus": "#F2F2F3"
     },
     "body": {
-      "background": "rgb(26, 18, 14)",
-      "color": "rgb(213, 196, 174)"
+      "background": "rgb(11, 11, 13)",
+      "color": "rgb(242, 242, 243)"
     },
     "header": {
-      "background": "rgba(26, 18, 14, 0.88)",
-      "borderColor": "rgb(69, 50, 36)",
-      "color": "rgb(213, 196, 174)"
+      "background": "rgb(20, 20, 22)",
+      "borderColor": "rgb(46, 46, 51)",
+      "color": "rgb(242, 242, 243)"
     },
-    "card": {
-      "background": "rgb(40, 25, 17)",
-      "borderColor": "rgb(69, 50, 36)"
-    },
+    "card": null,
     "readerPage": null,
     "toolbarButton": {
       "background": "rgba(0, 0, 0, 0)",
       "borderColor": "rgb(229, 231, 235)",
-      "color": "rgb(213, 196, 174)"
+      "color": "rgb(242, 242, 243)"
     },
     "player": null
   },
@@ -277,37 +268,34 @@
     "theme": "dark",
     "htmlClass": "dark",
     "cssVariables": {
-      "--bg-page": "#1A120E",
-      "--bg-surface": "#3A2418",
-      "--bg-card": "#281911",
-      "--bg-hover": "#3D261A",
-      "--text-main": "#D5C4AE",
-      "--text-sub": "#A88462",
-      "--text-muted": "#8A7A68",
-      "--accent": "#DFBA53",
-      "--accent-hover": "#EED076",
-      "--border-subtle": "#453224",
-      "--border-strong": "#634B38",
-      "--border-focus": "#DFBA53"
+      "--bg-page": "#0B0B0D",
+      "--bg-surface": "#141416",
+      "--bg-card": "#1B1B1E",
+      "--bg-hover": "#232327",
+      "--text-main": "#F2F2F3",
+      "--text-sub": "#A9A9AF",
+      "--text-muted": "#898992",
+      "--accent": "#F2F2F3",
+      "--accent-hover": "#DCDCDF",
+      "--border-subtle": "#2E2E33",
+      "--border-strong": "#5E5E66",
+      "--border-focus": "#F2F2F3"
     },
     "body": {
-      "background": "rgb(26, 18, 14)",
-      "color": "rgb(213, 196, 174)"
+      "background": "rgb(11, 11, 13)",
+      "color": "rgb(242, 242, 243)"
     },
     "header": {
-      "background": "rgba(26, 18, 14, 0.88)",
-      "borderColor": "rgb(69, 50, 36)",
-      "color": "rgb(213, 196, 174)"
+      "background": "rgb(20, 20, 22)",
+      "borderColor": "rgb(46, 46, 51)",
+      "color": "rgb(242, 242, 243)"
     },
-    "card": {
-      "background": "rgb(40, 25, 17)",
-      "borderColor": "rgb(69, 50, 36)"
-    },
+    "card": null,
     "readerPage": null,
     "toolbarButton": {
       "background": "rgba(0, 0, 0, 0)",
       "borderColor": "rgb(229, 231, 235)",
-      "color": "rgb(213, 196, 174)"
+      "color": "rgb(242, 242, 243)"
     },
     "player": null
   },
@@ -316,37 +304,37 @@
     "theme": "light",
     "htmlClass": "light",
     "cssVariables": {
-      "--bg-page": "#FAF8F5",
-      "--bg-surface": "#FAF6F0",
+      "--bg-page": "#EFEFF0",
+      "--bg-surface": "#F7F7F8",
       "--bg-card": "#FFFFFF",
-      "--bg-hover": "#F2EBE1",
-      "--text-main": "#1A120E",
-      "--text-sub": "#5A3E2B",
-      "--text-muted": "#8C7765",
-      "--accent": "#5A3E2B",
-      "--accent-hover": "#3A2418",
-      "--border-subtle": "#EAE3D9",
-      "--border-strong": "#D5C4AE",
-      "--border-focus": "#5A3E2B"
+      "--bg-hover": "#E4E4E6",
+      "--text-main": "#0B0B0D",
+      "--text-sub": "#4F4F56",
+      "--text-muted": "#65656C",
+      "--accent": "#0B0B0D",
+      "--accent-hover": "#232327",
+      "--border-subtle": "#D0D0D4",
+      "--border-strong": "#86868A",
+      "--border-focus": "#0B0B0D"
     },
     "body": {
-      "background": "rgb(250, 248, 245)",
-      "color": "rgb(26, 18, 14)"
+      "background": "rgb(239, 239, 240)",
+      "color": "rgb(11, 11, 13)"
     },
     "header": {
-      "background": "rgba(250, 248, 245, 0.92)",
-      "borderColor": "rgb(234, 227, 217)",
-      "color": "rgb(26, 18, 14)"
+      "background": "rgb(247, 247, 248)",
+      "borderColor": "rgb(208, 208, 212)",
+      "color": "rgb(11, 11, 13)"
     },
     "card": {
       "background": "rgb(255, 255, 255)",
-      "borderColor": "rgb(234, 227, 217)"
+      "borderColor": "rgb(208, 208, 212)"
     },
     "readerPage": null,
     "toolbarButton": {
-      "background": "rgb(135, 169, 107)",
+      "background": "rgba(0, 0, 0, 0)",
       "borderColor": "rgb(229, 231, 235)",
-      "color": "rgb(26, 18, 14)"
+      "color": "rgb(11, 11, 13)"
     },
     "player": null
   },
@@ -355,37 +343,37 @@
     "theme": "light",
     "htmlClass": "light",
     "cssVariables": {
-      "--bg-page": "#FAF8F5",
-      "--bg-surface": "#FAF6F0",
+      "--bg-page": "#EFEFF0",
+      "--bg-surface": "#F7F7F8",
       "--bg-card": "#FFFFFF",
-      "--bg-hover": "#F2EBE1",
-      "--text-main": "#1A120E",
-      "--text-sub": "#5A3E2B",
-      "--text-muted": "#8C7765",
-      "--accent": "#5A3E2B",
-      "--accent-hover": "#3A2418",
-      "--border-subtle": "#EAE3D9",
-      "--border-strong": "#D5C4AE",
-      "--border-focus": "#5A3E2B"
+      "--bg-hover": "#E4E4E6",
+      "--text-main": "#0B0B0D",
+      "--text-sub": "#4F4F56",
+      "--text-muted": "#65656C",
+      "--accent": "#0B0B0D",
+      "--accent-hover": "#232327",
+      "--border-subtle": "#D0D0D4",
+      "--border-strong": "#86868A",
+      "--border-focus": "#0B0B0D"
     },
     "body": {
-      "background": "rgb(250, 248, 245)",
-      "color": "rgb(26, 18, 14)"
+      "background": "rgb(239, 239, 240)",
+      "color": "rgb(11, 11, 13)"
     },
     "header": {
-      "background": "rgba(250, 248, 245, 0.92)",
-      "borderColor": "rgb(234, 227, 217)",
-      "color": "rgb(26, 18, 14)"
+      "background": "rgb(247, 247, 248)",
+      "borderColor": "rgb(208, 208, 212)",
+      "color": "rgb(11, 11, 13)"
     },
     "card": {
       "background": "rgb(255, 255, 255)",
-      "borderColor": "rgb(234, 227, 217)"
+      "borderColor": "rgb(208, 208, 212)"
     },
     "readerPage": null,
     "toolbarButton": {
-      "background": "rgb(135, 169, 107)",
+      "background": "rgba(0, 0, 0, 0)",
       "borderColor": "rgb(229, 231, 235)",
-      "color": "rgb(26, 18, 14)"
+      "color": "rgb(11, 11, 13)"
     },
     "player": null
   },
@@ -394,37 +382,37 @@
     "theme": "light",
     "htmlClass": "light",
     "cssVariables": {
-      "--bg-page": "#FAF8F5",
-      "--bg-surface": "#FAF6F0",
+      "--bg-page": "#EFEFF0",
+      "--bg-surface": "#F7F7F8",
       "--bg-card": "#FFFFFF",
-      "--bg-hover": "#F2EBE1",
-      "--text-main": "#1A120E",
-      "--text-sub": "#5A3E2B",
-      "--text-muted": "#8C7765",
-      "--accent": "#5A3E2B",
-      "--accent-hover": "#3A2418",
-      "--border-subtle": "#EAE3D9",
-      "--border-strong": "#D5C4AE",
-      "--border-focus": "#5A3E2B"
+      "--bg-hover": "#E4E4E6",
+      "--text-main": "#0B0B0D",
+      "--text-sub": "#4F4F56",
+      "--text-muted": "#65656C",
+      "--accent": "#0B0B0D",
+      "--accent-hover": "#232327",
+      "--border-subtle": "#D0D0D4",
+      "--border-strong": "#86868A",
+      "--border-focus": "#0B0B0D"
     },
     "body": {
-      "background": "rgb(250, 248, 245)",
-      "color": "rgb(26, 18, 14)"
+      "background": "rgb(239, 239, 240)",
+      "color": "rgb(11, 11, 13)"
     },
     "header": {
-      "background": "rgba(250, 248, 245, 0.92)",
-      "borderColor": "rgb(234, 227, 217)",
-      "color": "rgb(26, 18, 14)"
+      "background": "rgb(247, 247, 248)",
+      "borderColor": "rgb(208, 208, 212)",
+      "color": "rgb(11, 11, 13)"
     },
     "card": {
       "background": "rgb(255, 255, 255)",
-      "borderColor": "rgb(234, 227, 217)"
+      "borderColor": "rgb(208, 208, 212)"
     },
     "readerPage": null,
     "toolbarButton": {
-      "background": "rgb(135, 169, 107)",
+      "background": "rgba(0, 0, 0, 0)",
       "borderColor": "rgb(229, 231, 235)",
-      "color": "rgb(26, 18, 14)"
+      "color": "rgb(11, 11, 13)"
     },
     "player": null
   },
@@ -433,37 +421,34 @@
     "theme": "light",
     "htmlClass": "light",
     "cssVariables": {
-      "--bg-page": "#FAF8F5",
-      "--bg-surface": "#FAF6F0",
+      "--bg-page": "#EFEFF0",
+      "--bg-surface": "#F7F7F8",
       "--bg-card": "#FFFFFF",
-      "--bg-hover": "#F2EBE1",
-      "--text-main": "#1A120E",
-      "--text-sub": "#5A3E2B",
-      "--text-muted": "#8C7765",
-      "--accent": "#5A3E2B",
-      "--accent-hover": "#3A2418",
-      "--border-subtle": "#EAE3D9",
-      "--border-strong": "#D5C4AE",
-      "--border-focus": "#5A3E2B"
+      "--bg-hover": "#E4E4E6",
+      "--text-main": "#0B0B0D",
+      "--text-sub": "#4F4F56",
+      "--text-muted": "#65656C",
+      "--accent": "#0B0B0D",
+      "--accent-hover": "#232327",
+      "--border-subtle": "#D0D0D4",
+      "--border-strong": "#86868A",
+      "--border-focus": "#0B0B0D"
     },
     "body": {
-      "background": "rgb(250, 248, 245)",
-      "color": "rgb(26, 18, 14)"
+      "background": "rgb(239, 239, 240)",
+      "color": "rgb(11, 11, 13)"
     },
     "header": {
-      "background": "rgba(250, 248, 245, 0.92)",
-      "borderColor": "rgb(234, 227, 217)",
-      "color": "rgb(26, 18, 14)"
+      "background": "rgb(247, 247, 248)",
+      "borderColor": "rgb(208, 208, 212)",
+      "color": "rgb(11, 11, 13)"
     },
-    "card": {
-      "background": "rgb(255, 255, 255)",
-      "borderColor": "rgb(234, 227, 217)"
-    },
+    "card": null,
     "readerPage": null,
     "toolbarButton": {
       "background": "rgba(0, 0, 0, 0)",
       "borderColor": "rgb(229, 231, 235)",
-      "color": "rgb(26, 18, 14)"
+      "color": "rgb(11, 11, 13)"
     },
     "player": null
   },
@@ -472,37 +457,34 @@
     "theme": "light",
     "htmlClass": "light",
     "cssVariables": {
-      "--bg-page": "#FAF8F5",
-      "--bg-surface": "#FAF6F0",
+      "--bg-page": "#EFEFF0",
+      "--bg-surface": "#F7F7F8",
       "--bg-card": "#FFFFFF",
-      "--bg-hover": "#F2EBE1",
-      "--text-main": "#1A120E",
-      "--text-sub": "#5A3E2B",
-      "--text-muted": "#8C7765",
-      "--accent": "#5A3E2B",
-      "--accent-hover": "#3A2418",
-      "--border-subtle": "#EAE3D9",
-      "--border-strong": "#D5C4AE",
-      "--border-focus": "#5A3E2B"
+      "--bg-hover": "#E4E4E6",
+      "--text-main": "#0B0B0D",
+      "--text-sub": "#4F4F56",
+      "--text-muted": "#65656C",
+      "--accent": "#0B0B0D",
+      "--accent-hover": "#232327",
+      "--border-subtle": "#D0D0D4",
+      "--border-strong": "#86868A",
+      "--border-focus": "#0B0B0D"
     },
     "body": {
-      "background": "rgb(250, 248, 245)",
-      "color": "rgb(26, 18, 14)"
+      "background": "rgb(239, 239, 240)",
+      "color": "rgb(11, 11, 13)"
     },
     "header": {
-      "background": "rgba(250, 248, 245, 0.92)",
-      "borderColor": "rgb(234, 227, 217)",
-      "color": "rgb(26, 18, 14)"
+      "background": "rgb(247, 247, 248)",
+      "borderColor": "rgb(208, 208, 212)",
+      "color": "rgb(11, 11, 13)"
     },
-    "card": {
-      "background": "rgb(255, 255, 255)",
-      "borderColor": "rgb(234, 227, 217)"
-    },
+    "card": null,
     "readerPage": null,
     "toolbarButton": {
       "background": "rgba(0, 0, 0, 0)",
       "borderColor": "rgb(229, 231, 235)",
-      "color": "rgb(26, 18, 14)"
+      "color": "rgb(11, 11, 13)"
     },
     "player": null
   },
@@ -511,37 +493,34 @@
     "theme": "light",
     "htmlClass": "light",
     "cssVariables": {
-      "--bg-page": "#FAF8F5",
-      "--bg-surface": "#FAF6F0",
+      "--bg-page": "#EFEFF0",
+      "--bg-surface": "#F7F7F8",
       "--bg-card": "#FFFFFF",
-      "--bg-hover": "#F2EBE1",
-      "--text-main": "#1A120E",
-      "--text-sub": "#5A3E2B",
-      "--text-muted": "#8C7765",
-      "--accent": "#5A3E2B",
-      "--accent-hover": "#3A2418",
-      "--border-subtle": "#EAE3D9",
-      "--border-strong": "#D5C4AE",
-      "--border-focus": "#5A3E2B"
+      "--bg-hover": "#E4E4E6",
+      "--text-main": "#0B0B0D",
+      "--text-sub": "#4F4F56",
+      "--text-muted": "#65656C",
+      "--accent": "#0B0B0D",
+      "--accent-hover": "#232327",
+      "--border-subtle": "#D0D0D4",
+      "--border-strong": "#86868A",
+      "--border-focus": "#0B0B0D"
     },
     "body": {
-      "background": "rgb(250, 248, 245)",
-      "color": "rgb(26, 18, 14)"
+      "background": "rgb(239, 239, 240)",
+      "color": "rgb(11, 11, 13)"
     },
     "header": {
-      "background": "rgba(250, 248, 245, 0.92)",
-      "borderColor": "rgb(234, 227, 217)",
-      "color": "rgb(26, 18, 14)"
+      "background": "rgb(247, 247, 248)",
+      "borderColor": "rgb(208, 208, 212)",
+      "color": "rgb(11, 11, 13)"
     },
-    "card": {
-      "background": "rgb(255, 255, 255)",
-      "borderColor": "rgb(234, 227, 217)"
-    },
+    "card": null,
     "readerPage": null,
     "toolbarButton": {
       "background": "rgba(0, 0, 0, 0)",
       "borderColor": "rgb(229, 231, 235)",
-      "color": "rgb(26, 18, 14)"
+      "color": "rgb(11, 11, 13)"
     },
     "player": null
   },
@@ -589,37 +568,34 @@
     "theme": "light",
     "htmlClass": "light",
     "cssVariables": {
-      "--bg-page": "#FAF8F5",
-      "--bg-surface": "#FAF6F0",
+      "--bg-page": "#EFEFF0",
+      "--bg-surface": "#F7F7F8",
       "--bg-card": "#FFFFFF",
-      "--bg-hover": "#F2EBE1",
-      "--text-main": "#1A120E",
-      "--text-sub": "#5A3E2B",
-      "--text-muted": "#8C7765",
-      "--accent": "#5A3E2B",
-      "--accent-hover": "#3A2418",
-      "--border-subtle": "#EAE3D9",
-      "--border-strong": "#D5C4AE",
-      "--border-focus": "#5A3E2B"
+      "--bg-hover": "#E4E4E6",
+      "--text-main": "#0B0B0D",
+      "--text-sub": "#4F4F56",
+      "--text-muted": "#65656C",
+      "--accent": "#0B0B0D",
+      "--accent-hover": "#232327",
+      "--border-subtle": "#D0D0D4",
+      "--border-strong": "#86868A",
+      "--border-focus": "#0B0B0D"
     },
     "body": {
-      "background": "rgb(250, 248, 245)",
-      "color": "rgb(26, 18, 14)"
+      "background": "rgb(239, 239, 240)",
+      "color": "rgb(11, 11, 13)"
     },
     "header": {
-      "background": "rgba(250, 248, 245, 0.92)",
-      "borderColor": "rgb(234, 227, 217)",
-      "color": "rgb(26, 18, 14)"
+      "background": "rgb(247, 247, 248)",
+      "borderColor": "rgb(208, 208, 212)",
+      "color": "rgb(11, 11, 13)"
     },
-    "card": {
-      "background": "rgb(255, 255, 255)",
-      "borderColor": "rgb(234, 227, 217)"
-    },
+    "card": null,
     "readerPage": null,
     "toolbarButton": {
       "background": "rgba(0, 0, 0, 0)",
       "borderColor": "rgb(229, 231, 235)",
-      "color": "rgb(26, 18, 14)"
+      "color": "rgb(11, 11, 13)"
     },
     "player": null
   },
@@ -628,37 +604,34 @@
     "theme": "dark",
     "htmlClass": "dark",
     "cssVariables": {
-      "--bg-page": "#1A120E",
-      "--bg-surface": "#3A2418",
-      "--bg-card": "#281911",
-      "--bg-hover": "#3D261A",
-      "--text-main": "#D5C4AE",
-      "--text-sub": "#A88462",
-      "--text-muted": "#8A7A68",
-      "--accent": "#DFBA53",
-      "--accent-hover": "#EED076",
-      "--border-subtle": "#453224",
-      "--border-strong": "#634B38",
-      "--border-focus": "#DFBA53"
+      "--bg-page": "#0B0B0D",
+      "--bg-surface": "#141416",
+      "--bg-card": "#1B1B1E",
+      "--bg-hover": "#232327",
+      "--text-main": "#F2F2F3",
+      "--text-sub": "#A9A9AF",
+      "--text-muted": "#898992",
+      "--accent": "#F2F2F3",
+      "--accent-hover": "#DCDCDF",
+      "--border-subtle": "#2E2E33",
+      "--border-strong": "#5E5E66",
+      "--border-focus": "#F2F2F3"
     },
     "body": {
-      "background": "rgb(26, 18, 14)",
-      "color": "rgb(213, 196, 174)"
+      "background": "rgb(11, 11, 13)",
+      "color": "rgb(242, 242, 243)"
     },
     "header": {
-      "background": "rgba(26, 18, 14, 0.88)",
-      "borderColor": "rgb(69, 50, 36)",
-      "color": "rgb(213, 196, 174)"
+      "background": "rgb(20, 20, 22)",
+      "borderColor": "rgb(46, 46, 51)",
+      "color": "rgb(242, 242, 243)"
     },
-    "card": {
-      "background": "rgb(40, 25, 17)",
-      "borderColor": "rgb(69, 50, 36)"
-    },
+    "card": null,
     "readerPage": null,
     "toolbarButton": {
       "background": "rgba(0, 0, 0, 0)",
       "borderColor": "rgb(229, 231, 235)",
-      "color": "rgb(213, 196, 174)"
+      "color": "rgb(242, 242, 243)"
     },
     "player": null
   },
@@ -667,37 +640,34 @@
     "theme": "light",
     "htmlClass": "light",
     "cssVariables": {
-      "--bg-page": "#FAF8F5",
-      "--bg-surface": "#FAF6F0",
+      "--bg-page": "#EFEFF0",
+      "--bg-surface": "#F7F7F8",
       "--bg-card": "#FFFFFF",
-      "--bg-hover": "#F2EBE1",
-      "--text-main": "#1A120E",
-      "--text-sub": "#5A3E2B",
-      "--text-muted": "#8C7765",
-      "--accent": "#5A3E2B",
-      "--accent-hover": "#3A2418",
-      "--border-subtle": "#EAE3D9",
-      "--border-strong": "#D5C4AE",
-      "--border-focus": "#5A3E2B"
+      "--bg-hover": "#E4E4E6",
+      "--text-main": "#0B0B0D",
+      "--text-sub": "#4F4F56",
+      "--text-muted": "#65656C",
+      "--accent": "#0B0B0D",
+      "--accent-hover": "#232327",
+      "--border-subtle": "#D0D0D4",
+      "--border-strong": "#86868A",
+      "--border-focus": "#0B0B0D"
     },
     "body": {
-      "background": "rgb(250, 248, 245)",
-      "color": "rgb(26, 18, 14)"
+      "background": "rgb(239, 239, 240)",
+      "color": "rgb(11, 11, 13)"
     },
     "header": {
-      "background": "rgba(250, 248, 245, 0.92)",
-      "borderColor": "rgb(234, 227, 217)",
-      "color": "rgb(26, 18, 14)"
+      "background": "rgb(247, 247, 248)",
+      "borderColor": "rgb(208, 208, 212)",
+      "color": "rgb(11, 11, 13)"
     },
-    "card": {
-      "background": "rgb(255, 255, 255)",
-      "borderColor": "rgb(234, 227, 217)"
-    },
+    "card": null,
     "readerPage": null,
     "toolbarButton": {
       "background": "rgba(0, 0, 0, 0)",
       "borderColor": "rgb(229, 231, 235)",
-      "color": "rgb(26, 18, 14)"
+      "color": "rgb(11, 11, 13)"
     },
     "player": null
   },
@@ -706,37 +676,34 @@
     "theme": "dark",
     "htmlClass": "dark",
     "cssVariables": {
-      "--bg-page": "#1A120E",
-      "--bg-surface": "#3A2418",
-      "--bg-card": "#281911",
-      "--bg-hover": "#3D261A",
-      "--text-main": "#D5C4AE",
-      "--text-sub": "#A88462",
-      "--text-muted": "#8A7A68",
-      "--accent": "#DFBA53",
-      "--accent-hover": "#EED076",
-      "--border-subtle": "#453224",
-      "--border-strong": "#634B38",
-      "--border-focus": "#DFBA53"
+      "--bg-page": "#0B0B0D",
+      "--bg-surface": "#141416",
+      "--bg-card": "#1B1B1E",
+      "--bg-hover": "#232327",
+      "--text-main": "#F2F2F3",
+      "--text-sub": "#A9A9AF",
+      "--text-muted": "#898992",
+      "--accent": "#F2F2F3",
+      "--accent-hover": "#DCDCDF",
+      "--border-subtle": "#2E2E33",
+      "--border-strong": "#5E5E66",
+      "--border-focus": "#F2F2F3"
     },
     "body": {
-      "background": "rgb(26, 18, 14)",
-      "color": "rgb(213, 196, 174)"
+      "background": "rgb(11, 11, 13)",
+      "color": "rgb(242, 242, 243)"
     },
     "header": {
-      "background": "rgba(26, 18, 14, 0.88)",
-      "borderColor": "rgb(69, 50, 36)",
-      "color": "rgb(213, 196, 174)"
+      "background": "rgb(20, 20, 22)",
+      "borderColor": "rgb(46, 46, 51)",
+      "color": "rgb(242, 242, 243)"
     },
-    "card": {
-      "background": "rgb(40, 25, 17)",
-      "borderColor": "rgb(69, 50, 36)"
-    },
+    "card": null,
     "readerPage": null,
     "toolbarButton": {
-      "background": "rgb(135, 169, 107)",
+      "background": "rgba(0, 0, 0, 0)",
       "borderColor": "rgb(229, 231, 235)",
-      "color": "rgb(26, 18, 14)"
+      "color": "rgb(242, 242, 243)"
     },
     "player": null
   },
@@ -745,37 +712,34 @@
     "theme": "light",
     "htmlClass": "light",
     "cssVariables": {
-      "--bg-page": "#FAF8F5",
-      "--bg-surface": "#FAF6F0",
+      "--bg-page": "#EFEFF0",
+      "--bg-surface": "#F7F7F8",
       "--bg-card": "#FFFFFF",
-      "--bg-hover": "#F2EBE1",
-      "--text-main": "#1A120E",
-      "--text-sub": "#5A3E2B",
-      "--text-muted": "#8C7765",
-      "--accent": "#5A3E2B",
-      "--accent-hover": "#3A2418",
-      "--border-subtle": "#EAE3D9",
-      "--border-strong": "#D5C4AE",
-      "--border-focus": "#5A3E2B"
+      "--bg-hover": "#E4E4E6",
+      "--text-main": "#0B0B0D",
+      "--text-sub": "#4F4F56",
+      "--text-muted": "#65656C",
+      "--accent": "#0B0B0D",
+      "--accent-hover": "#232327",
+      "--border-subtle": "#D0D0D4",
+      "--border-strong": "#86868A",
+      "--border-focus": "#0B0B0D"
     },
     "body": {
-      "background": "rgb(250, 248, 245)",
-      "color": "rgb(26, 18, 14)"
+      "background": "rgb(239, 239, 240)",
+      "color": "rgb(11, 11, 13)"
     },
     "header": {
-      "background": "rgba(250, 248, 245, 0.92)",
-      "borderColor": "rgb(234, 227, 217)",
-      "color": "rgb(26, 18, 14)"
+      "background": "rgb(247, 247, 248)",
+      "borderColor": "rgb(208, 208, 212)",
+      "color": "rgb(11, 11, 13)"
     },
-    "card": {
-      "background": "rgb(255, 255, 255)",
-      "borderColor": "rgb(234, 227, 217)"
-    },
+    "card": null,
     "readerPage": null,
     "toolbarButton": {
-      "background": "rgb(135, 169, 107)",
+      "background": "rgba(0, 0, 0, 0)",
       "borderColor": "rgb(229, 231, 235)",
-      "color": "rgb(26, 18, 14)"
+      "color": "rgb(11, 11, 13)"
     },
     "player": null
   }

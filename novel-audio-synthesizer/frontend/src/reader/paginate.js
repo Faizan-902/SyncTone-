@@ -98,6 +98,16 @@ export function paginateSegments(segments = [], charsPerPage = 850) {
     return fallbackPages;
   }
 
+  if (pages.length >= 2) {
+    const lastPage = pages[pages.length - 1];
+    const penPage = pages[pages.length - 2];
+    if (lastPage.length === 1 && penPage.length >= 3) {
+      const movedSeg = penPage[penPage.length - 1];
+      pages[pages.length - 2] = penPage.slice(0, -1);
+      pages[pages.length - 1] = [movedSeg, ...lastPage];
+    }
+  }
+
   return pages;
 }
 
@@ -114,10 +124,15 @@ export function paginate({
   typography = { family: 'Newsreader', size: 18, lineHeight: 1.6 },
   measure = null,
 } = {}) {
-  // Agent B implements the full greedy offscreen measurement, sentence boundary
-  // splitting, widow/orphan rules, and async idle-scheduling.
-  // Stub returns pages using paginateSegments for contract parity:
-  const rawPages = paginateSegments(segments);
+  const w = contentBox?.w || 400;
+  const h = contentBox?.h || 600;
+  const size = typography?.size || 18;
+  const lh = typography?.lineHeight || 1.6;
+  const charsPerLine = Math.max(20, Math.floor(w / (size * 0.52)));
+  const linesPerPage = Math.max(10, Math.floor(h / (size * lh)));
+  const dynamicChars = Math.round(charsPerLine * linesPerPage * 0.85);
+
+  const rawPages = paginateSegments(segments, dynamicChars);
   return rawPages.map((pageSegs, pageIndex) => ({
     pageIndex,
     parts: pageSegs.map((seg, partIndex) => ({

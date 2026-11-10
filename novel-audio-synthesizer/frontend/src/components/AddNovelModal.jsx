@@ -400,7 +400,7 @@ export default function AddNovelModal({
   return (
     <LazyMotion features={domAnimation}>
       <m.div
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm cursor-pointer"
         role="dialog"
         aria-modal="true"
         aria-labelledby="add-novel-modal-title"
@@ -409,14 +409,18 @@ export default function AddNovelModal({
         animate="visible"
         exit="hidden"
         transition={{ duration: 0.2 }}
+        onClick={(e) => {
+          if (e.target === e.currentTarget && !isCreating) onClose();
+        }}
       >
         <m.div
-          className="w-full max-w-xl theme-surface rounded-2xl shadow-2xl border overflow-hidden max-h-[90vh] flex flex-col"
+          className="w-full max-w-xl theme-surface rounded-2xl shadow-2xl border overflow-hidden max-h-[90vh] flex flex-col cursor-default"
           variants={panelVariants}
           initial="hidden"
           animate="visible"
           exit="hidden"
           transition={{ duration: 0.2, ease: 'easeOut' }}
+          onClick={(e) => e.stopPropagation()}
         >
         {/* Modal Header */}
         <div className="p-5 border-b theme-border flex items-center justify-between flex-shrink-0">
@@ -687,6 +691,7 @@ export default function AddNovelModal({
               type="button"
               role="switch"
               data-testid="tts-sanitizer-toggle"
+              aria-label="Toggle TTS prose cleaning"
               aria-checked={useTtsSanitizer}
               onClick={() => setUseTtsSanitizer((prev) => !prev)}
               className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
@@ -718,10 +723,12 @@ export default function AddNovelModal({
 
           {/* Distribution Channel Selector */}
           <div>
-            <label className="block text-xs font-semibold theme-sub uppercase tracking-wider mb-1.5 font-mono">
+            <label htmlFor="novel-distribution-channel" className="block text-xs font-semibold theme-sub uppercase tracking-wider mb-1.5 font-mono">
               Distribution Channel
             </label>
             <select
+              id="novel-distribution-channel"
+              aria-label="Distribution Channel"
               value={channel}
               onChange={(e) => setChannel(e.target.value)}
               className="w-full px-3.5 py-2.5 text-xs theme-card border rounded-xl focus:outline-none focus:border-[var(--border-focus)] transition"
@@ -823,7 +830,7 @@ export default function AddNovelModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 theme-card border rounded-xl text-xs font-semibold theme-muted hover:text-[var(--text-main)] transition cursor-pointer"
+              className="px-5 py-2 theme-card border rounded-full text-xs font-semibold theme-muted hover:text-[var(--text-main)] transition-all cursor-pointer active:scale-[0.96] hover:scale-105"
             >
               Cancel
             </button>
@@ -834,7 +841,7 @@ export default function AddNovelModal({
                 type="button"
                 onClick={(e) => handleSubmit(e, true)}
                 disabled={isSubmitting || isParsingFile}
-                className="px-4 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] text-xs font-bold rounded-xl shadow-md transition disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+                className="px-5 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] text-xs font-bold rounded-full shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.03] active:scale-[0.96] disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
               >
                 <IconPlay className="w-3.5 h-3.5 fill-current" />
                 <span>{isSubmitting ? 'Creating & Ingesting...' : 'Create & Read Now'}</span>
@@ -844,7 +851,7 @@ export default function AddNovelModal({
             <button
               type="submit"
               disabled={isSubmitting || isParsingFile}
-              className="px-4 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] text-xs font-bold rounded-xl shadow-md transition disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+              className="px-5 py-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--on-accent)] text-xs font-bold rounded-full shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.03] active:scale-[0.96] disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
             >
               <IconPlus className="w-3.5 h-3.5" />
               <span>{isParsingFile ? 'Analyzing File...' : isSubmitting ? 'Creating...' : 'Create Novel'}</span>

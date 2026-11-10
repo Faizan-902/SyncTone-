@@ -80,7 +80,11 @@ async function runTests() {
   console.log('================================================================');
 }
 
-runTests().catch((err) => {
-  console.error('❌ TTS 3-ENGINE TEST FAILED:', err);
-  process.exit(1);
-});
+runTests()
+  .then(() => {
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error('❌ TTS 3-ENGINE TEST FAILED:', err);
+    process.exit(1);
+  });
