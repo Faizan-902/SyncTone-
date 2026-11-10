@@ -170,4 +170,27 @@ describe('TopHeader Navigation & Cast Roster Decoupling', () => {
     fireEvent.click(archiveButton);
     expect(handleOpenArchive).toHaveBeenCalledTimes(1);
   });
+
+  it('renders + UPLOAD STUDIO nav button and triggers navigation to upload view', () => {
+    const handleNavigate = vi.fn();
+    renderTopHeader({
+      view: 'catalog',
+      onNavigate: handleNavigate,
+    });
+
+    const uploadStudioButton = screen.getByRole('button', { name: '+ UPLOAD STUDIO' });
+    expect(uploadStudioButton).toBeInTheDocument();
+    fireEvent.click(uploadStudioButton);
+    expect(handleNavigate).toHaveBeenCalledWith('upload');
+  });
+
+  it('marks + UPLOAD STUDIO active with aria-current="page" when view is upload', () => {
+    renderTopHeader({
+      view: 'upload',
+    });
+
+    const uploadStudioButton = screen.getByRole('button', { name: '+ UPLOAD STUDIO' });
+    expect(uploadStudioButton).toHaveAttribute('aria-current', 'page');
+    expect(uploadStudioButton.className).toContain('bg-[var(--accent)]');
+  });
 });

@@ -198,7 +198,7 @@ function AppContent() {
     view = 'voices';
   } else if (pathname === '/archive' || pathname === '/community') {
     view = 'archive';
-  } else if (pathname === '/upload' || pathname === '/studio') {
+  } else if (pathname === '/upload' || pathname === '/studio' || pathname === '/upload-studio') {
     view = 'upload';
   } else if (pathname === '/profile') {
     view = 'profile';
@@ -247,7 +247,7 @@ function AppContent() {
         } else {
           navigate('/reader');
         }
-      } else if (targetView === 'upload' || targetView === 'studio') {
+      } else if (targetView === 'upload' || targetView === 'studio' || targetView === 'upload-studio') {
         navigate('/upload');
       } else if (targetView === 'profile') {
         navigate('/profile');

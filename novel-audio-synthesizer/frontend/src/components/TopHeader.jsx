@@ -115,7 +115,7 @@ export default function TopHeader({
               }`}
               title="Upload Studio"
             >
-              + STUDIO
+              + UPLOAD STUDIO
             </button>
           </nav>
         </div>

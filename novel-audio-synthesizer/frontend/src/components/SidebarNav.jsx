@@ -72,10 +72,10 @@ export default function SidebarNav({
           <button
             onClick={onOpenAddNovel}
             className="flex flex-col items-center gap-1 py-1 px-3 text-[10px] font-mono uppercase tracking-wider text-[var(--text-sub)] hover:text-[var(--text-main)] transition-all duration-100 ease-out active:scale-95 cursor-pointer"
-            aria-label="Add Novel"
+            aria-label="Upload Studio"
           >
             <Icon name="plus" className="w-4 h-4" />
-            <span>Studio</span>
+            <span>Upload Studio</span>
           </button>
         )}
 
