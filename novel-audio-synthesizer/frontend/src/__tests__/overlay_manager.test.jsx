@@ -176,3 +176,4 @@ describe('Overlay Manager Mutual Exclusion & Focus Management', () => {
     expect(screen.queryByRole('dialog', { name: /Character Roster/i })).not.toBeInTheDocument();
   });
 });
+
