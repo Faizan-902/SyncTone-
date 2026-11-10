@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { api, ApiError } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 import { getSpeakerColor } from '../utils/speakerColors';
@@ -131,13 +131,78 @@ export default function CharacterRoster({
     }
   };
 
+  const drawerRef = useRef(null);
+  const openerRef = useRef(null);
+
+  // Focus trap & return focus to opener on unmount
+  useEffect(() => {
+    openerRef.current = document.activeElement;
+    if (drawerRef.current) {
+      const focusables = drawerRef.current.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusables.length > 0) {
+        focusables[0].focus();
+      }
+    }
+
+    return () => {
+      if (openerRef.current && typeof openerRef.current.focus === 'function') {
+        openerRef.current.focus();
+      }
+    };
+  }, []);
+
+  // Close roster drawer on Escape key and trap Tab focus
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose?.();
+      } else if (e.key === 'Tab' && drawerRef.current) {
+        const focusables = drawerRef.current.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusables.length === 0) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   return (
-    <div
-      className="fixed inset-y-0 right-0 w-88 max-w-full bg-[var(--bg-surface)] shadow-2xl border-l border-[var(--border-subtle)] z-50 flex flex-col animate-slideLeft transition-colors duration-200"
-      role="dialog"
-      aria-label="Character Roster"
-      aria-modal="true"
-    >
+    <>
+      {/* Backdrop Scrim over Reader Content */}
+      <div
+        onClick={onClose}
+        aria-hidden="true"
+        data-testid="roster-scrim"
+        className="fixed inset-x-0 bottom-0 z-30 bg-black/40 backdrop-blur-[1px] cursor-pointer transition-opacity animate-fadeIn"
+        style={{ top: 'var(--topbar-h, 3.5rem)' }}
+      />
+
+      {/* Character Roster Drawer */}
+      <div
+        ref={drawerRef}
+        id="character-roster-drawer"
+        tabIndex="-1"
+        className="fixed right-0 w-full md:w-[clamp(320px,30vw,420px)] max-w-full top-[var(--topbar-h,3.5rem)] bottom-[var(--dock-safe-bottom,4.5rem)] bg-[var(--bg-surface)] shadow-2xl border-l border-b border-[var(--border-subtle)] z-40 flex flex-col animate-slideLeft transition-colors duration-200 outline-none"
+        style={{
+          top: 'var(--topbar-h, 3.5rem)',
+          bottom: 'var(--dock-safe-bottom, 4.5rem)',
+        }}
+        role="dialog"
+        aria-label="Character Roster"
+        aria-modal="true"
+      >
       {/* Header */}
       <div className="flex items-center justify-between p-5 border-b border-[var(--border-subtle)] bg-[var(--bg-card)]">
         <div>
@@ -305,5 +370,6 @@ export default function CharacterRoster({
         )}
       </div>
     </div>
+    </>
   );
 }

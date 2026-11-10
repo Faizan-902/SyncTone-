@@ -14,25 +14,39 @@ import { api } from './services/api';
 import SidebarNav from './components/SidebarNav';
 import TopHeader from './components/TopHeader';
 import NovelCatalog from './components/NovelCatalog';
+import UploadView from './components/UploadView';
+import VoicesView from './components/VoicesView';
 import ErrorBoundary from './components/ErrorBoundary';
 import { IconClock, IconX } from './components/icons';
 import { executeViewTransition } from './tokens/motion';
 
+// Resilient chunk loader with automatic 1-retry fallback
+function lazyWithRetry(componentImport) {
+  return React.lazy(async () => {
+    try {
+      return await componentImport();
+    } catch (error) {
+      console.warn('[SyncTone] Retrying chunk import...', error);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      return await componentImport();
+    }
+  });
+}
+
 // Lazy route-level views
-const NovelDetails = React.lazy(() => import('./components/NovelDetails'));
-const ReaderView = React.lazy(() => import('./components/ReaderView'));
-const UploadView = React.lazy(() => import('./components/UploadView'));
-const ProfileView = React.lazy(() => import('./components/ProfileView'));
-const AdminView = React.lazy(() => import('./components/AdminView'));
-const AudioPlayer = React.lazy(() => import('./components/AudioPlayer'));
-const SynthesisProgressBar = React.lazy(() => import('./components/SynthesisProgressBar'));
+const NovelDetails = lazyWithRetry(() => import('./components/NovelDetails'));
+const ReaderView = lazyWithRetry(() => import('./components/ReaderView'));
+const ProfileView = lazyWithRetry(() => import('./components/ProfileView'));
+const AdminView = lazyWithRetry(() => import('./components/AdminView'));
+const AudioPlayer = lazyWithRetry(() => import('./components/AudioPlayer'));
+const SynthesisProgressBar = lazyWithRetry(() => import('./components/SynthesisProgressBar'));
 
 // Lazy modals
-const AuthModal = React.lazy(() => import('./components/AuthModal'));
-const AddNovelModal = React.lazy(() => import('./components/AddNovelModal'));
-const UploadChapterModal = React.lazy(() => import('./components/UploadChapterModal'));
-const SettingsModal = React.lazy(() => import('./components/SettingsModal'));
-const CharacterRoster = React.lazy(() => import('./components/CharacterRoster'));
+const AuthModal = lazyWithRetry(() => import('./components/AuthModal'));
+const AddNovelModal = lazyWithRetry(() => import('./components/AddNovelModal'));
+const UploadChapterModal = lazyWithRetry(() => import('./components/UploadChapterModal'));
+const SettingsModal = lazyWithRetry(() => import('./components/SettingsModal'));
+const CharacterRoster = lazyWithRetry(() => import('./components/CharacterRoster'));
 
 // Route & modal preloader triggers for hover/focus/pointerdown
 export const preloadNovelDetails = () => import('./components/NovelDetails');
@@ -177,10 +191,14 @@ function AppContent() {
   if (pathname.startsWith('/novel/') || pathname.startsWith('/novels/')) {
     view = 'details';
     routeNovelId = pathname.replace(/^\/novels?\//, '').split('/')[0];
-  } else if (pathname.startsWith('/reader/')) {
+  } else if (pathname.startsWith('/reader/') || pathname === '/reader') {
     view = 'reader';
-    routeChapterId = pathname.replace('/reader/', '').split('/')[0];
-  } else if (pathname === '/upload') {
+    routeChapterId = pathname.startsWith('/reader/') ? pathname.replace('/reader/', '').split('/')[0] : null;
+  } else if (pathname === '/voices' || pathname === '/voice-studio') {
+    view = 'voices';
+  } else if (pathname === '/archive' || pathname === '/community') {
+    view = 'archive';
+  } else if (pathname === '/upload' || pathname === '/studio') {
     view = 'upload';
   } else if (pathname === '/profile') {
     view = 'profile';
@@ -207,9 +225,13 @@ function AppContent() {
       setShowRoster(false);
       safeScrollToTop('instant');
 
-      if (targetView === 'catalog') {
+      if (targetView === 'catalog' || targetView === 'library') {
         setSelectedNovelId(null);
         navigate('/');
+      } else if (targetView === 'archive') {
+        navigate('/archive');
+      } else if (targetView === 'voices') {
+        navigate('/voices');
       } else if (targetView === 'details') {
         const id = paramId || selectedNovelId || currentNovel?.id;
         if (id) {
@@ -222,8 +244,10 @@ function AppContent() {
         const chId = paramId || currentChapter?.id;
         if (chId) {
           navigate(`/reader/${chId}`);
+        } else {
+          navigate('/reader');
         }
-      } else if (targetView === 'upload') {
+      } else if (targetView === 'upload' || targetView === 'studio') {
         navigate('/upload');
       } else if (targetView === 'profile') {
         navigate('/profile');
@@ -256,6 +280,13 @@ function AppContent() {
       setShowRoster(true);
     }
   }, [pathname, location.search]);
+
+  // Auto-close character roster when navigating outside reader view
+  useEffect(() => {
+    if (view !== 'reader' && showRoster) {
+      setShowRoster(false);
+    }
+  }, [view, showRoster]);
 
   // Sync routeNovelId with selectedNovelId
   useEffect(() => {
@@ -394,7 +425,7 @@ function AppContent() {
   };
 
   // Open chapter in Reader
-  const handleSelectChapter = async (novel, chapter) => {
+  const handleSelectChapter = useCallback(async (novel, chapter) => {
     executeViewTransition(() => {
       setCurrentNovel(novel);
       if (novel?.id) {
@@ -405,7 +436,44 @@ function AppContent() {
       navigate(`/reader/${chapter.id}`);
     });
     loadChapterById(chapter.id, novel);
-  };
+  }, [loadChapterById, navigate]);
+
+  // Auto-resolve chapter when user navigates directly to /reader without chapter ID
+  useEffect(() => {
+    if (view === 'reader' && !routeChapterId && !isLoadingChapter) {
+      if (currentChapter?.id) {
+        navigate(`/reader/${currentChapter.id}`, { replace: true });
+        return;
+      }
+      let cancelled = false;
+      (async () => {
+        try {
+          const targetNovelId = currentNovel?.id || selectedNovelId;
+          if (targetNovelId) {
+            const nData = await api.novels.get(targetNovelId);
+            const ch1 = (nData.chapters || []).find((c) => c.chapter_number === 1) || nData.chapters?.[0];
+            if (ch1 && !cancelled) {
+              handleSelectChapter(nData.novel || currentNovel || { id: targetNovelId }, ch1);
+              return;
+            }
+          }
+          const list = await api.novels.list();
+          const candidate = (list.novels || []).find((n) => n.chapter_count > 0) || list.novels?.[0];
+          if (candidate && !cancelled) {
+            const nData = await api.novels.get(candidate.id);
+            const ch1 = (nData.chapters || []).find((c) => c.chapter_number === 1) || nData.chapters?.[0];
+            if (ch1 && !cancelled) {
+              handleSelectChapter(candidate, ch1);
+              return;
+            }
+          }
+        } catch (_) {}
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }
+  }, [view, routeChapterId, currentChapter, currentNovel, selectedNovelId, isLoadingChapter, navigate, handleSelectChapter]);
 
   // Auto-advance to next chapter when current chapter completes
   useEffect(() => {
@@ -485,52 +553,12 @@ function AppContent() {
 
   // Seamless Voice Studio Launch: opens cast and voices tab
   const handleOpenVoices = useCallback(async () => {
-    if (view === 'reader') {
-      setShowRoster((prev) => !prev);
-      return;
-    }
-    const targetId = currentNovel?.id || selectedNovelId;
-    if (targetId) {
-      setSelectedNovelId(targetId);
-      navigate(`/novel/${targetId}?tab=cast`);
-      setTimeout(() => {
-        const el = document.getElementById('details-tabs-section') || document.querySelector('[role="tablist"]');
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 80);
-      return;
-    }
-    try {
-      const data = await api.novels.list();
-      const targetNovel = (data.novels || []).find((n) => n.chapter_count > 0) || data.novels?.[0];
-      if (targetNovel) {
-        setSelectedNovelId(targetNovel.id);
-        navigate(`/novel/${targetNovel.id}?tab=cast`);
-        setTimeout(() => {
-          const el = document.getElementById('details-tabs-section') || document.querySelector('[role="tablist"]');
-          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 80);
-        return;
-      }
-    } catch (_) {}
-    setShowSettings(true);
-  }, [view, currentNovel?.id, selectedNovelId, navigate]);
+    handleNavigate('voices');
+  }, [handleNavigate]);
 
   const handleOpenAuth = (mode = 'login') => {
     setAuthMode(typeof mode === 'string' ? mode : 'login');
     setShowAuthModal(true);
-  };
-
-  const handleNovelDeleted = (deletedId) => {
-    if (selectedNovelId === deletedId) {
-      setSelectedNovelId(null);
-    }
-    if (currentNovel?.id === deletedId) {
-      setCurrentNovel(null);
-      setCurrentChapter(null);
-      setChapterSegments(EMPTY_ARRAY);
-      setChapterManifest(null);
-    }
-    handleNavigate('catalog');
   };
 
   // Trigger re-synthesis of chapter
@@ -564,24 +592,36 @@ function AppContent() {
   };
 
   return (
-    <ErrorBoundary friendlyMessage="Something unexpected happened. Please refresh the page.">
-      <div className="min-h-screen bg-[var(--bg-page)] text-[var(--text-main)] flex flex-col font-sans transition-colors duration-200">
-        {/* Main Viewport Container */}
-        <div className="flex-1 flex flex-col min-h-screen">
-          <TopHeader
-            view={view}
-            currentNovel={currentNovel}
-            currentChapter={currentChapter}
-            onNavigate={handleNavigate}
-            onOpenArchive={handleOpenArchive}
-            onOpenReader={handleOpenReaderQuick}
-            onOpenVoices={handleOpenVoices}
-            showRoster={showRoster}
-            onToggleRoster={() => setShowRoster((prev) => !prev)}
-            onOpenSettings={() => setShowSettings(true)}
-            onOpenAuth={handleOpenAuth}
-            onOpenAddNovel={() => setShowAddNovelModal(true)}
-          />
+    <div className="min-h-screen bg-[var(--bg-page)] text-[var(--text-main)] flex flex-col font-sans transition-colors duration-200">
+      {/* Main Viewport Container */}
+      <div className="flex-1 flex flex-col min-h-screen">
+        <TopHeader
+          view={view}
+          currentNovel={currentNovel}
+          currentChapter={currentChapter}
+          onNavigate={handleNavigate}
+          onOpenArchive={() => handleNavigate('archive')}
+          onOpenReader={handleOpenReaderQuick}
+          onOpenVoices={() => handleNavigate('voices')}
+          showRoster={showRoster}
+          onToggleRoster={() => {
+            setShowSettings(false);
+            setShowAuthModal(false);
+            setShowRoster((prev) => !prev);
+          }}
+          onOpenSettings={() => {
+            setShowRoster(false);
+            setShowSettings(true);
+          }}
+          onOpenAuth={(mode) => {
+            setShowRoster(false);
+            handleOpenAuth(mode);
+          }}
+          onOpenAddNovel={() => {
+            setShowRoster(false);
+            setShowAddNovelModal(true);
+          }}
+        />
 
           {/* Navigation Rail (Desktop) & Bottom Bar (Mobile) */}
           <SidebarNav
@@ -660,21 +700,47 @@ function AppContent() {
               </div>
             )}
 
-            {/* VIEW 1: NOVEL CATALOG (Home) */}
+            {/* VIEW 1: NOVEL CATALOG (Library - Verified Works) */}
             {view === 'catalog' && (
-              <NovelCatalog
-                onSelectNovel={handleSelectNovel}
-                onSelectChapter={handleSelectChapter}
-                onOpenAddNovel={() => setShowAddNovelModal(true)}
-                onOpenSettings={() => setShowSettings(true)}
-                onOpenAuth={handleOpenAuth}
-                onNovelDeleted={handleNovelDeleted}
-              />
+              <ErrorBoundary resetKey={pathname} friendlyMessage="Couldn't load library catalog.">
+                <NovelCatalog
+                  initialChannel="verified"
+                  onSelectNovel={handleSelectNovel}
+                  onSelectChapter={handleSelectChapter}
+                  onOpenAddNovel={() => setShowAddNovelModal(true)}
+                  onOpenSettings={() => setShowSettings(true)}
+                  onOpenAuth={handleOpenAuth}
+                />
+              </ErrorBoundary>
+            )}
+
+            {/* VIEW 1B: ARCHIVE CATALOG (Community & Public Domain) */}
+            {view === 'archive' && (
+              <ErrorBoundary resetKey={pathname} friendlyMessage="Couldn't load archive catalog.">
+                <NovelCatalog
+                  initialChannel="community"
+                  onSelectNovel={handleSelectNovel}
+                  onSelectChapter={handleSelectChapter}
+                  onOpenAddNovel={() => setShowAddNovelModal(true)}
+                  onOpenSettings={() => setShowSettings(true)}
+                  onOpenAuth={handleOpenAuth}
+                />
+              </ErrorBoundary>
+            )}
+
+            {/* VIEW 1C: VOICE SYNTHESIS STUDIO */}
+            {view === 'voices' && (
+              <ErrorBoundary resetKey={pathname} friendlyMessage="Couldn't load voice synthesis studio.">
+                <VoicesView
+                  onSelectNovel={handleSelectNovel}
+                  onOpenSettings={() => setShowSettings(true)}
+                />
+              </ErrorBoundary>
             )}
 
             {/* VIEW 2: NOVEL DETAILS */}
             {view === 'details' && (selectedNovelId || routeNovelId || currentNovel?.id) && (
-              <ErrorBoundary friendlyMessage="Couldn't load novel details.">
+              <ErrorBoundary resetKey={pathname} friendlyMessage="Couldn't load novel details.">
                 <Suspense fallback={<RouteSkeleton />}>
                   <NovelDetails
                     novelId={selectedNovelId || routeNovelId || currentNovel?.id}
@@ -684,7 +750,6 @@ function AppContent() {
                       setCurrentNovel(novel);
                       setShowUploadChapterModal(true);
                     }}
-                    onNovelDeleted={handleNovelDeleted}
                   />
                 </Suspense>
               </ErrorBoundary>
@@ -705,7 +770,7 @@ function AppContent() {
                     <p>Loading chapter prose and synchronized timeline...</p>
                   </div>
                 ) : (
-                  <ErrorBoundary friendlyMessage="Couldn't load the reader. Try opening the chapter again.">
+                  <ErrorBoundary resetKey={pathname} friendlyMessage="Couldn't load the reader. Try opening the chapter again.">
                     <Suspense fallback={<RouteSkeleton />}>
                       <ReaderView
                         segments={chapterSegments}
@@ -758,19 +823,26 @@ function AppContent() {
 
             {/* VIEW 4: UPLOAD VIEW */}
             {view === 'upload' && (
-              <ErrorBoundary friendlyMessage="Couldn't load upload studio.">
-                <Suspense fallback={<RouteSkeleton />}>
-                  <UploadView
-                    onOpenUploadModal={() => setShowAddNovelModal(true)}
-                    onOpenAuth={handleOpenAuth}
-                  />
-                </Suspense>
+              <ErrorBoundary resetKey={pathname} friendlyMessage="Couldn't load upload studio.">
+                <UploadView
+                  onOpenUploadModal={() => setShowAddNovelModal(true)}
+                  onOpenAuth={handleOpenAuth}
+                  onNavigate={handleNavigate}
+                  onSelectChapter={handleSelectChapter}
+                  onNovelCreated={(newNovel, firstChapter) => {
+                    if (firstChapter) {
+                      handleSelectChapter(newNovel, firstChapter);
+                    } else {
+                      handleNavigate('details', newNovel.id);
+                    }
+                  }}
+                />
               </ErrorBoundary>
             )}
 
             {/* VIEW 5: PROFILE VIEW */}
             {view === 'profile' && (
-              <ErrorBoundary friendlyMessage="Couldn't load profile.">
+              <ErrorBoundary resetKey={pathname} friendlyMessage="Couldn't load profile.">
                 <Suspense fallback={<RouteSkeleton />}>
                   <ProfileView
                     onOpenAuth={handleOpenAuth}
@@ -782,7 +854,7 @@ function AppContent() {
 
             {/* VIEW 6: ADMIN VIEW */}
             {view === 'admin' && (
-              <ErrorBoundary friendlyMessage="Couldn't load administration.">
+              <ErrorBoundary resetKey={pathname} friendlyMessage="Couldn't load administration.">
                 <Suspense fallback={<RouteSkeleton />}>
                   <AdminView
                     onNavigateHome={() => handleNavigate('catalog')}
@@ -935,7 +1007,6 @@ function AppContent() {
           )}
         </div>
       </div>
-    </ErrorBoundary>
   );
 }
 

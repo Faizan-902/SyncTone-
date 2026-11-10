@@ -19,6 +19,9 @@ const API_BASE = '/api';
 
 function getFriendlyError(status, data) {
   const serverMsg = data && typeof data === 'object' && (data.error || data.detail || data.message);
+  if (data?.code === 'PERMANENT_DELETION_DISABLED' && serverMsg) {
+    return serverMsg;
+  }
   if (status === 401) return 'Please sign in to continue.';
   if (status === 403) return "You don't have permission to do that.";
   if (status === 404) return "We couldn't find what you were looking for.";
@@ -114,7 +117,18 @@ export const api = {
   post: (endpoint, body, options) => request(endpoint, { method: 'POST', body, ...options }),
   put: (endpoint, body, options) => request(endpoint, { method: 'PUT', body, ...options }),
   patch: (endpoint, body, options) => request(endpoint, { method: 'PATCH', body, ...options }),
-  delete: (endpoint, options) => request(endpoint, { method: 'DELETE', ...options }),
+  delete: (endpoint, options) => {
+    if (typeof endpoint === 'string' && /^\/?(api\/)?novels(\/|$)/i.test(endpoint.trim())) {
+      return Promise.reject(
+        new ApiError(
+          'Permanent deletion of novels is prohibited. SyncTone preserves all literary works.',
+          403,
+          { code: 'PERMANENT_DELETION_DISABLED' }
+        )
+      );
+    }
+    return request(endpoint, { method: 'DELETE', ...options });
+  },
 
   // Auth Endpoints
   auth: {
@@ -134,7 +148,14 @@ export const api = {
     get: (id) => api.get(`/novels/${id}`),
     create: (novelData) => api.post('/novels', novelData),
     patch: (id, data) => api.patch(`/novels/${id}`, data),
-    delete: (id) => api.delete(`/novels/${id}`),
+    delete: (_id) =>
+      Promise.reject(
+        new ApiError(
+          'Permanent deletion of novels is prohibited. SyncTone preserves all literary works.',
+          403,
+          { code: 'PERMANENT_DELETION_DISABLED' }
+        )
+      ),
     uploadChapter: (novelId, chapterData) => api.post(`/novels/${novelId}/chapters`, chapterData),
     parseFile: (payload, parserEngine = 'heuristic') => {
       if (typeof FormData !== 'undefined' && payload instanceof FormData) {

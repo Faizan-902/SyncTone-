@@ -5,7 +5,6 @@ import { preloadUploadChapterModal, preloadReaderView } from '../App';
 import {
   IconPlay,
   IconRefresh,
-  IconTrash,
   IconUpload,
 } from './icons';
 
@@ -37,7 +36,7 @@ const ARCHIVED_MODELS = [
   { id: 'Neural-Matron-Female', role: 'MATRON FEMALE', timbre: 'Warm maternal Victorian cadence', freq: '48kHz PCM // Latency: 44ms' },
 ];
 
-export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenUploadChapter, onNovelDeleted, initialTab }) {
+export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenUploadChapter, initialTab }) {
   const { isWriterOrAdmin } = useAuth();
   const [data, setData] = useState(null);
   const [activeTab, setActiveTab] = useState(() => {
@@ -104,27 +103,6 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
       } catch (_) {}
       return next;
     });
-  };
-
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState(null);
-
-  const handleDeleteNovel = async () => {
-    setIsDeleting(true);
-    setDeleteError(null);
-    try {
-      await api.novels.delete(novelId);
-      setShowDeleteModal(false);
-      if (onNovelDeleted) {
-        onNovelDeleted(novelId);
-      } else {
-        onBack();
-      }
-    } catch (err) {
-      setDeleteError(err.message || 'Failed to delete novel');
-      setIsDeleting(false);
-    }
   };
 
   const fetchDetails = async () => {
@@ -327,18 +305,6 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
               <span>UPLOAD CHAPTER</span>
             </button>
           )}
-
-          <button
-            type="button"
-            onClick={() => setShowDeleteModal(true)}
-            className="btn btn-lg cursor-pointer active:scale-[0.96] hover:scale-[1.03] hover:-translate-y-0.5 transition-all duration-200 rounded-full shadow-xs hover:shadow-md ml-auto flex items-center gap-1.5"
-            title="Delete Novel (Local Dev)"
-            data-testid="delete-novel-btn"
-            aria-label="Delete Novel (Dev)"
-          >
-            <IconTrash className="w-3.5 h-3.5" />
-            <span>Delete Novel (Dev)</span>
-          </button>
         </div>
 
         {/* Hidden Cover Upload Input */}
@@ -865,72 +831,6 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
           </div>
         </section>
       </div>
-
-      {/* Delete Novel Confirmation Modal (Local Dev) */}
-      {showDeleteModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn"
-          onClick={() => !isDeleting && setShowDeleteModal(false)}
-          data-testid="confirm-delete-novel-modal"
-        >
-          <div
-            className="w-full max-w-md bg-[var(--bg-card)] border border-[var(--border-strong)] rounded-2xl shadow-2xl p-6 space-y-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[var(--text-main)] flex-shrink-0 shadow-xs">
-                <IconTrash className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold font-sans uppercase text-[var(--text-main)]">Delete Novel (Local Dev)</h3>
-                <p className="text-xs font-mono text-[var(--text-muted)]">Permanently remove this novel</p>
-              </div>
-            </div>
-
-            <p className="text-xs sm:text-sm font-sans text-[var(--text-sub)] leading-relaxed">
-              Are you sure you want to delete <strong className="text-[var(--text-main)]">&ldquo;{novel.title}&rdquo;</strong>?
-              This will permanently remove the novel, all {chapters.length} chapters, character voice portfolio, and audio cache from your local database.
-            </p>
-
-            {deleteError && (
-              <div className="p-3 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-strong)] text-[var(--text-main)] text-xs font-mono">
-                {deleteError}
-              </div>
-            )}
-
-            <div className="flex items-center justify-end gap-2.5 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowDeleteModal(false)}
-                disabled={isDeleting}
-                className="btn btn-sm cursor-pointer rounded-full active:scale-[0.96] hover:scale-105 transition-all"
-                data-testid="cancel-delete-novel-btn"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleDeleteNovel}
-                disabled={isDeleting}
-                className="btn btn-sm btn-primary flex items-center gap-1.5 cursor-pointer disabled:opacity-50 rounded-full shadow-md active:scale-[0.96] hover:scale-105 transition-all"
-                data-testid="confirm-delete-novel-btn"
-              >
-                {isDeleting ? (
-                  <>
-                    <div className="w-3.5 h-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" />
-                    <span>Deleting...</span>
-                  </>
-                ) : (
-                  <>
-                    <IconTrash className="w-3.5 h-3.5" />
-                    <span>Delete Novel</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

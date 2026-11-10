@@ -52,7 +52,8 @@ export default function TopHeader({
           {/* Monospace Editorial Nav Links */}
           <nav className="hidden sm:flex items-center gap-1.5 text-xs font-mono tracking-wider min-w-0" aria-label="Main Navigation">
             <button
-              onClick={() => onNavigate('catalog')}
+              onClick={() => onNavigate?.('catalog')}
+              aria-current={view === 'catalog' ? 'page' : undefined}
               className={`transition-all duration-200 px-3 py-1 rounded-full cursor-pointer uppercase ${
                 view === 'catalog'
                   ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold shadow-xs'
@@ -63,12 +64,12 @@ export default function TopHeader({
             </button>
             <button
               onClick={() => {
-                if (onOpenArchive) onOpenArchive();
-                else if (currentNovel?.id) onNavigate('details', currentNovel.id);
-                else onNavigate('catalog');
+                if (onNavigate) onNavigate('archive');
+                else if (onOpenArchive) onOpenArchive();
               }}
+              aria-current={view === 'archive' ? 'page' : undefined}
               className={`transition-all duration-200 px-3 py-1 rounded-full cursor-pointer uppercase ${
-                view === 'details'
+                view === 'archive'
                   ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold shadow-xs'
                   : 'text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
               }`}
@@ -77,16 +78,12 @@ export default function TopHeader({
             </button>
             <button
               onClick={() => {
-                if (view === 'reader' && onToggleRoster) {
-                  onToggleRoster();
-                } else if (onOpenVoices) {
-                  onOpenVoices();
-                } else if (onOpenSettings) {
-                  onOpenSettings();
-                }
+                if (onNavigate) onNavigate('voices');
+                else if (onOpenVoices) onOpenVoices();
               }}
+              aria-current={view === 'voices' ? 'page' : undefined}
               className={`transition-all duration-200 px-3 py-1 rounded-full cursor-pointer uppercase ${
-                showRoster
+                view === 'voices'
                   ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold shadow-xs'
                   : 'text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
               }`}
@@ -96,10 +93,10 @@ export default function TopHeader({
             <button
               onClick={() => {
                 if (onOpenReader) onOpenReader();
-                else if (currentChapter && onNavigate) onNavigate('reader');
-                else if (currentNovel && onNavigate) onNavigate('details', currentNovel.id);
-                else onNavigate('catalog');
+                else if (currentChapter?.id) onNavigate?.('reader', currentChapter.id);
+                else onNavigate?.('reader');
               }}
+              aria-current={view === 'reader' ? 'page' : undefined}
               className={`transition-all duration-200 px-3 py-1 rounded-full cursor-pointer uppercase ${
                 view === 'reader'
                   ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold shadow-xs'
@@ -108,26 +105,31 @@ export default function TopHeader({
             >
               + READER
             </button>
-            {isWriterOrAdmin && onOpenAddNovel && (
-              <button
-                onClick={onOpenAddNovel}
-                className="transition-all duration-200 px-3 py-1 rounded-full cursor-pointer uppercase text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]"
-                title="Create New Novel"
-              >
-                + STUDIO
-              </button>
-            )}
+            <button
+              onClick={() => onNavigate?.('upload')}
+              aria-current={view === 'upload' ? 'page' : undefined}
+              className={`transition-all duration-200 px-3 py-1 rounded-full cursor-pointer uppercase ${
+                view === 'upload'
+                  ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold shadow-xs'
+                  : 'text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
+              }`}
+              title="Upload Studio"
+            >
+              + STUDIO
+            </button>
           </nav>
         </div>
 
         {/* Right Action Controls: Cast Roster, Theme Toggle, Settings & Auth */}
         <div className="flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0">
-          {/* Cast Roster Toggle (active only in reader view) */}
+          {/* Cast Toggle (active only in reader view) */}
           {view === 'reader' && (
             <button
               onClick={onToggleRoster}
               onMouseEnter={preloadCharacterRoster}
               onFocus={preloadCharacterRoster}
+              aria-expanded={Boolean(showRoster)}
+              aria-controls="character-roster-drawer"
               className={`boxed-btn px-2.5 sm:px-3 py-1 text-[10px] sm:text-[11px] font-mono flex items-center gap-1 sm:gap-1.5 cursor-pointer rounded-full active:scale-95 transition-all ${
                 showRoster
                   ? 'bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)] font-bold'
@@ -136,8 +138,7 @@ export default function TopHeader({
               aria-label="Toggle Cast Roster"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-current" />
-              <span className="hidden sm:inline">Cast Roster</span>
-              <span className="sm:hidden">Cast</span>
+              <span>CAST</span>
             </button>
           )}
 

@@ -1,17 +1,18 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import NovelDetails from '../components/NovelDetails';
 import NovelCatalog from '../components/NovelCatalog';
 import { AuthProvider } from '../context/AuthContext';
-import { api } from '../services/api';
+import { api, ApiError } from '../services/api';
+import * as authHooks from '../hooks/useAuth';
 
-describe('Delete Novel Feature (Local Development)', () => {
+describe('Permanent Deletion Protection & Absence of Delete Novel UI', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
   });
 
-  describe('NovelDetails Delete Flow', () => {
+  describe('NovelDetails Page', () => {
     const mockNovelData = {
       novel: {
         id: '11111111-2222-3333-4444-555555555555',
@@ -28,7 +29,7 @@ describe('Delete Novel Feature (Local Development)', () => {
       ],
     };
 
-    it('renders the delete novel button and opens confirmation modal', async () => {
+    it('asserts delete novel button and delete confirmation modal are completely absent for anonymous readers', async () => {
       vi.spyOn(api.novels, 'get').mockResolvedValue(mockNovelData);
 
       render(
@@ -46,62 +47,60 @@ describe('Delete Novel Feature (Local Development)', () => {
         expect(screen.getByText('Adventures in Wonderland')).toBeInTheDocument();
       });
 
-      const deleteBtn = screen.getByTestId('delete-novel-btn');
-      expect(deleteBtn).toBeInTheDocument();
-      expect(screen.getByText(/Delete Novel \(Dev\)/i)).toBeInTheDocument();
+      // Assert delete button is completely absent from DOM
+      expect(screen.queryByTestId('delete-novel-btn')).not.toBeInTheDocument();
+      expect(screen.queryByText(/delete novel/i)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/delete novel/i)).not.toBeInTheDocument();
 
-      // Click delete button to open confirmation modal
-      fireEvent.click(deleteBtn);
-
-      expect(screen.getByTestId('confirm-delete-novel-modal')).toBeInTheDocument();
-      expect(screen.getByText(/Permanently remove this novel/i)).toBeInTheDocument();
-
-      // Test cancel button
-      const cancelBtn = screen.getByTestId('cancel-delete-novel-btn');
-      fireEvent.click(cancelBtn);
-
+      // Assert delete confirmation modal is completely absent from DOM
       expect(screen.queryByTestId('confirm-delete-novel-modal')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('cancel-delete-novel-btn')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('confirm-delete-novel-btn')).not.toBeInTheDocument();
+
+      // Assert primary actions remain intact
+      expect(screen.getByText('LISTEN')).toBeInTheDocument();
+      expect(screen.getByText('OPEN READER')).toBeInTheDocument();
+      expect(screen.getByText('VOICE STUDIO')).toBeInTheDocument();
+      expect(screen.getByText('+ ADD TO LIBRARY')).toBeInTheDocument();
     });
 
-    it('calls api.novels.delete and triggers onNovelDeleted on confirm', async () => {
+    it('asserts delete novel button is absent even for authenticated writers and administrators', async () => {
       vi.spyOn(api.novels, 'get').mockResolvedValue(mockNovelData);
-      const deleteSpy = vi.spyOn(api.novels, 'delete').mockResolvedValue({
-        message: 'Novel deleted successfully',
-        deleted_id: mockNovelData.novel.id,
+      vi.spyOn(authHooks, 'useAuth').mockReturnValue({
+        user: { id: 'admin-id', username: 'admin_user', role: 'admin' },
+        role: 'admin',
+        isAuthenticated: true,
+        isWriterOrAdmin: true,
+        login: vi.fn(),
+        register: vi.fn(),
+        logout: vi.fn(),
       });
-      const onNovelDeleted = vi.fn();
 
       render(
-        <AuthProvider>
-          <NovelDetails
-            novelId={mockNovelData.novel.id}
-            onBack={vi.fn()}
-            onSelectChapter={vi.fn()}
-            onOpenUploadChapter={vi.fn()}
-            onNovelDeleted={onNovelDeleted}
-          />
-        </AuthProvider>
+        <NovelDetails
+          novelId={mockNovelData.novel.id}
+          onBack={vi.fn()}
+          onSelectChapter={vi.fn()}
+          onOpenUploadChapter={vi.fn()}
+        />
       );
 
       await waitFor(() => {
         expect(screen.getByText('Adventures in Wonderland')).toBeInTheDocument();
       });
 
-      // Open confirmation modal
-      fireEvent.click(screen.getByTestId('delete-novel-btn'));
+      // Zero delete novel buttons or modals allowed for admins/writers
+      expect(screen.queryByTestId('delete-novel-btn')).not.toBeInTheDocument();
+      expect(screen.queryByText(/delete novel/i)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/delete novel/i)).not.toBeInTheDocument();
+      expect(screen.queryByTestId('confirm-delete-novel-modal')).not.toBeInTheDocument();
 
-      // Click confirm delete
-      const confirmBtn = screen.getByTestId('confirm-delete-novel-btn');
-      fireEvent.click(confirmBtn);
-
-      await waitFor(() => {
-        expect(deleteSpy).toHaveBeenCalledWith(mockNovelData.novel.id);
-        expect(onNovelDeleted).toHaveBeenCalledWith(mockNovelData.novel.id);
-      });
+      // Admin has access to upload chapter action
+      expect(screen.getByText('UPLOAD CHAPTER')).toBeInTheDocument();
     });
   });
 
-  describe('NovelCatalog Delete Flow', () => {
+  describe('NovelCatalog Page', () => {
     const mockNovels = [
       {
         id: 'aaaa1111-bbbb-2222-cccc-333344445555',
@@ -114,13 +113,8 @@ describe('Delete Novel Feature (Local Development)', () => {
       },
     ];
 
-    it('renders delete icon button on novel card and deletes upon confirmation', async () => {
-      const listSpy = vi.spyOn(api.novels, 'list').mockResolvedValue({ novels: mockNovels });
-      const deleteSpy = vi.spyOn(api.novels, 'delete').mockResolvedValue({
-        message: 'Novel deleted successfully',
-        deleted_id: mockNovels[0].id,
-      });
-      const onNovelDeleted = vi.fn();
+    it('asserts delete button and delete modal are completely absent from catalog', async () => {
+      vi.spyOn(api.novels, 'list').mockResolvedValue({ novels: mockNovels });
 
       render(
         <AuthProvider>
@@ -130,7 +124,6 @@ describe('Delete Novel Feature (Local Development)', () => {
             onOpenAddNovel={vi.fn()}
             onOpenSettings={vi.fn()}
             onOpenAuth={vi.fn()}
-            onNovelDeleted={onNovelDeleted}
           />
         </AuthProvider>
       );
@@ -139,22 +132,90 @@ describe('Delete Novel Feature (Local Development)', () => {
         expect(screen.getAllByText('Mysterious Manor').length).toBeGreaterThan(0);
       });
 
-      const cardDeleteBtn = screen.getByTestId(`delete-novel-${mockNovels[0].id}`);
-      expect(cardDeleteBtn).toBeInTheDocument();
+      // Assert delete button is completely absent from card and catalog
+      expect(screen.queryByTestId(`delete-novel-${mockNovels[0].id}`)).not.toBeInTheDocument();
+      expect(screen.queryByTestId('delete-novel-btn')).not.toBeInTheDocument();
+      expect(screen.queryByText(/delete novel/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/delete volume/i)).not.toBeInTheDocument();
 
-      // Open confirm modal from card
-      fireEvent.click(cardDeleteBtn);
+      // Assert delete confirmation modal is completely absent
+      expect(screen.queryByTestId('confirm-delete-novel-modal')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('cancel-delete-novel-btn')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('confirm-delete-novel-btn')).not.toBeInTheDocument();
 
-      expect(screen.getByTestId('confirm-delete-novel-modal')).toBeInTheDocument();
+      // Novel card preserves Play and Read buttons
+      expect(screen.getAllByText('Play').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Read').length).toBeGreaterThan(0);
+    });
 
-      // Confirm deletion
-      const confirmBtn = screen.getByTestId('confirm-delete-novel-btn');
-      fireEvent.click(confirmBtn);
+    it('asserts delete buttons remain absent in catalog for admin/writer roles', async () => {
+      vi.spyOn(api.novels, 'list').mockResolvedValue({ novels: mockNovels });
+      vi.spyOn(authHooks, 'useAuth').mockReturnValue({
+        user: { id: 'admin-id', username: 'admin_user', role: 'admin' },
+        role: 'admin',
+        isAuthenticated: true,
+        isWriterOrAdmin: true,
+        login: vi.fn(),
+        register: vi.fn(),
+        logout: vi.fn(),
+      });
+
+      render(
+        <NovelCatalog
+          onSelectNovel={vi.fn()}
+          onSelectChapter={vi.fn()}
+          onOpenAddNovel={vi.fn()}
+          onOpenSettings={vi.fn()}
+          onOpenAuth={vi.fn()}
+        />
+      );
 
       await waitFor(() => {
-        expect(deleteSpy).toHaveBeenCalledWith(mockNovels[0].id);
-        expect(onNovelDeleted).toHaveBeenCalledWith(mockNovels[0].id);
+        expect(screen.getAllByText('Mysterious Manor').length).toBeGreaterThan(0);
       });
+
+      expect(screen.queryByTestId('delete-novel-btn')).not.toBeInTheDocument();
+      expect(screen.queryByText(/delete novel/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/delete volume/i)).not.toBeInTheDocument();
+      expect(screen.queryByTestId('confirm-delete-novel-modal')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Permanent Deletion Disabled API Invariant', () => {
+    it('rejects api.novels.delete with 403 ApiError to prevent permanent data destruction', async () => {
+      let thrownError = null;
+      try {
+        await api.novels.delete('test-novel-uuid');
+      } catch (err) {
+        thrownError = err;
+      }
+
+      expect(thrownError).toBeInstanceOf(ApiError);
+      expect(thrownError.status).toBe(403);
+      expect(thrownError.data).toEqual({ code: 'PERMANENT_DELETION_DISABLED' });
+      expect(thrownError.message).toMatch(/Permanent deletion of novels is prohibited/i);
+    });
+
+    it('rejects raw api.delete endpoints targeting novels with 403 ApiError', async () => {
+      let thrown1 = null;
+      try {
+        await api.delete('/novels/some-novel-id');
+      } catch (err) {
+        thrown1 = err;
+      }
+      expect(thrown1).toBeInstanceOf(ApiError);
+      expect(thrown1.status).toBe(403);
+      expect(thrown1.data?.code).toBe('PERMANENT_DELETION_DISABLED');
+
+      let thrown2 = null;
+      try {
+        await api.delete('/api/novels');
+      } catch (err) {
+        thrown2 = err;
+      }
+      expect(thrown2).toBeInstanceOf(ApiError);
+      expect(thrown2.status).toBe(403);
+      expect(thrown2.data?.code).toBe('PERMANENT_DELETION_DISABLED');
     });
   });
 });

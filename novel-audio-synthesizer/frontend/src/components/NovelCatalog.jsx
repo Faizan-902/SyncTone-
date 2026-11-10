@@ -4,6 +4,10 @@ import { useAuth } from '../hooks/useAuth';
 import { useDebounce } from '../hooks/useDebounce';
 import { preloadNovelDetails, preloadReaderView } from '../App';
 import NovelCover from './NovelCover';
+import { getNovelCanonicalInfo } from '../data/canonicalNovels';
+import FeaturedBook3D from './3d/FeaturedBook3D';
+import Interactive3DCard from './3d/Interactive3DCard';
+import BookShelf3D from './3d/BookShelf3D';
 import {
   IconSyncToneLogo,
   IconSearch,
@@ -18,7 +22,6 @@ import {
   IconChevronLeft,
   IconChevronRight,
   IconSoundwave,
-  IconTrash,
 } from './icons';
 
 const SEED_NOVELS = [
@@ -40,12 +43,12 @@ const SEED_NOVELS = [
 ];
 
 export default function NovelCatalog({
+  initialChannel = 'verified',
   onSelectNovel,
   onSelectChapter,
   onOpenAddNovel,
   onOpenSettings,
   onOpenAuth,
-  onNovelDeleted,
 }) {
   const { user, isAuthenticated } = useAuth();
   const isWriterOrAdmin = user && (user.role === 'writer' || user.role === 'admin');
@@ -60,34 +63,18 @@ export default function NovelCatalog({
     } catch (_) {}
     return SEED_NOVELS;
   });
-  const [channel, setChannel] = useState('verified'); // 'verified' | 'community' | 'all'
+  const [channel, setChannel] = useState(initialChannel); // 'verified' | 'community' | 'all'
+
+  useEffect(() => {
+    if (initialChannel && initialChannel !== channel) {
+      setChannel(initialChannel);
+    }
+  }, [initialChannel]);
   const [selectedGenre, setSelectedGenre] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 200);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [novelToDelete, setNovelToDelete] = useState(null);
-  const [isDeletingNovel, setIsDeletingNovel] = useState(false);
-  const [deleteNovelError, setDeleteNovelError] = useState(null);
-
-  const handleConfirmDelete = async () => {
-    if (!novelToDelete) return;
-    setIsDeletingNovel(true);
-    setDeleteNovelError(null);
-    try {
-      await api.novels.delete(novelToDelete.id);
-      const deletedId = novelToDelete.id;
-      setNovelToDelete(null);
-      fetchNovels(channel);
-      if (onNovelDeleted) {
-        onNovelDeleted(deletedId);
-      }
-    } catch (err) {
-      setDeleteNovelError(err.message || 'Failed to delete novel');
-    } finally {
-      setIsDeletingNovel(false);
-    }
-  };
 
   const searchInputRef = useRef(null);
   const carouselRef = useRef(null);
@@ -195,11 +182,36 @@ export default function NovelCatalog({
   // Netflix-style automatic billboard rotation state
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const [isBillboardPaused, setIsBillboardPaused] = useState(false);
+  const [libraryViewMode, setLibraryViewMode] = useState('grid'); // 'grid' | 'shelf'
+  const [lastReadingSession, setLastReadingSession] = useState(null);
+
+  // Load persistent reading progress (Section 12.A)
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('synctone_last_reading');
+      if (stored) {
+        setLastReadingSession(JSON.parse(stored));
+      }
+    } catch (_) {}
+  }, []);
 
   // Reset rotation index when channel filter changes
   useEffect(() => {
     setFeaturedIndex(0);
   }, [channel]);
+
+  // Pause automatic billboard rotation when document is hidden (visibilitychange)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setIsBillboardPaused(true);
+      } else {
+        setIsBillboardPaused(false);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
 
   // Netflix-style automatic rotation timer (every 6000ms when not paused or searching)
   useEffect(() => {
@@ -213,13 +225,17 @@ export default function NovelCatalog({
     }, 6000);
 
     return () => clearInterval(timer);
-  }, [debouncedSearch, isBillboardPaused, novels.length]);
+  }, [debouncedSearch, isBillboardPaused, novels.length, featuredIndex]);
 
   // Featured Hero Novel (cycles automatically through novels)
   const featuredNovel = useMemo(() => {
     if (novels.length === 0) return null;
     return novels[featuredIndex % novels.length] || novels[0];
   }, [novels, featuredIndex]);
+
+  const featuredInfo = useMemo(() => {
+    return getNovelCanonicalInfo(featuredNovel?.title);
+  }, [featuredNovel]);
 
   // Top 10 Ranked List (up to 10 novels)
   const top10Novels = useMemo(() => {
@@ -277,15 +293,15 @@ export default function NovelCatalog({
           </div>
 
           {/* Grid Skeletons */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="rounded-2xl theme-card border overflow-hidden flex flex-col">
-                <div className="aspect-[3/4] bg-[var(--border-subtle)]" />
-                <div className="p-4 space-y-3 flex-1">
-                  <div className="h-3 w-24 bg-[var(--border-subtle)] rounded" />
-                  <div className="h-5 w-full bg-[var(--border-subtle)] rounded" />
-                  <div className="h-3 w-28 bg-[var(--border-subtle)] rounded" />
-                  <div className="h-10 w-full bg-[var(--border-subtle)] rounded mt-3" />
+          <div className="novel-catalog-grid">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
+              <div key={i} className="rounded-2xl theme-card border border-[var(--border-subtle)] overflow-hidden flex flex-col p-3">
+                <div className="aspect-[2/3] bg-[var(--border-subtle)] rounded-xl" />
+                <div className="pt-3 space-y-2 flex-1">
+                  <div className="h-3 w-16 bg-[var(--border-subtle)] rounded-full" />
+                  <div className="h-4 w-full bg-[var(--border-subtle)] rounded" />
+                  <div className="h-3 w-20 bg-[var(--border-subtle)] rounded" />
+                  <div className="h-8 w-full bg-[var(--border-subtle)] rounded-full mt-2" />
                 </div>
               </div>
             ))}
@@ -337,21 +353,33 @@ export default function NovelCatalog({
                 {/* Hero Triad Grid: Left Credits, Center 3D Book, Right Sans Blurb */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 items-center w-full mb-8">
                   {/* Left Column: Mono Metadata Credits ("AT A GLANCE") */}
-                  <div className="border-l border-[var(--border-strong)] pl-5 flex flex-col gap-3.5 font-mono">
+                  <div key={`credits-${featuredNovel.id || featuredIndex}`} className="hero-content-crossfade border-l border-[var(--border-strong)] pl-5 flex flex-col gap-3 font-mono">
                     <div className="flex flex-col gap-0.5">
                       <span className="text-[11px] text-[var(--text-sub)] tracking-wider">FEATURED TITLE</span>
                       <span
                         onClick={() => onSelectNovel(featuredNovel.id)}
-                        className="text-xs font-bold text-[var(--text-main)] truncate cursor-pointer hover:underline"
+                        className="text-xs font-bold text-[var(--text-main)] truncate cursor-pointer hover:underline uppercase"
                         title={featuredNovel.title}
                       >
-                        {featuredNovel.title.toUpperCase()}
+                        {featuredNovel.title}
                       </span>
                     </div>
                     <div className="flex flex-col gap-0.5">
                       <span className="text-[11px] text-[var(--text-sub)] tracking-wider">AUTHOR</span>
                       <span className="text-xs font-bold text-[var(--text-main)]">
                         {(featuredNovel.author_username || 'SYNCTONE AUTHOR').toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[11px] text-[var(--text-sub)] tracking-wider">PUBLISHED</span>
+                      <span className="text-xs font-bold text-[var(--text-main)]">
+                        {featuredInfo?.year || 'CLASSIC'}
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[11px] text-[var(--text-sub)] tracking-wider">GENRE</span>
+                      <span className="text-xs font-bold text-[var(--text-main)] truncate max-w-[220px]" title={featuredInfo?.genre || featuredNovel.global_tone}>
+                        {(featuredInfo?.genre || featuredNovel.global_tone || 'FICTION').toUpperCase()}
                       </span>
                     </div>
                     <div className="flex flex-col gap-0.5">
@@ -366,55 +394,20 @@ export default function NovelCatalog({
                         {featuredNovel.chapter_count || 1} CHAPTERS
                       </span>
                     </div>
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-[11px] text-[var(--text-sub)] tracking-wider">FORMAT</span>
-                      <span className="text-xs font-bold text-[var(--text-main)]">
-                        {(featuredNovel.global_tone || 'SYNCHRONIZED MULTI-VOICE').toUpperCase()}
-                      </span>
-                    </div>
                   </div>
 
-                  {/* Center Column: 3D Tilted Novel Showcase */}
-                  <div className="flex justify-center items-center py-4 tilted-cover-stage">
-                    <div
-                      onClick={() => onSelectNovel(featuredNovel.id)}
-                      className="relative w-52 sm:w-60 lg:w-64 aspect-[2/3] tilted-cover cursor-pointer group rounded-xl overflow-hidden"
-                      style={{
-                        boxShadow: '-22px 26px 45px rgba(0, 0, 0, 0.85), -6px 8px 15px rgba(0, 0, 0, 0.65)',
-                      }}
-                      title={featuredNovel.title}
-                    >
-                      <div className="w-full h-full bg-[#111114] border border-white/20 rounded-xl overflow-hidden flex flex-col justify-between p-5 sm:p-6 text-[#F2F2F3] relative select-none">
-                        {/* Spine highlight */}
-                        <div className="absolute top-0 left-0 bottom-0 w-2.5 bg-gradient-to-r from-white/20 to-black/80 border-r border-black/80 pointer-events-none" />
-
-                        <div className="flex justify-between items-center text-[10px] font-mono tracking-wider pl-1">
-                          <span className="border border-white/30 px-2 py-0.5 rounded-full">VOL. {String(featuredIndex + 1).padStart(2, '0')}</span>
-                          <span>SYNCTONE</span>
-                        </div>
-
-                        <div className="flex flex-col items-center text-center my-auto px-2">
-                          <div className="w-14 h-14 border border-white/30 rounded-2xl flex items-center justify-center mb-3 bg-white/5 backdrop-blur-xs shadow-md">
-                            <IconSyncToneLogo className="w-7 h-7 text-[#F2F2F3]" />
-                          </div>
-                          <h2 className="font-sans font-black text-base sm:text-lg uppercase leading-tight line-clamp-2">
-                            {featuredNovel.title}
-                          </h2>
-                          <span className="text-[10px] font-mono tracking-widest text-[#A9A9AF] mt-2 uppercase">
-                            {featuredNovel.author_username || 'AUTHOR'}
-                          </span>
-                        </div>
-
-                        <div className="flex justify-between text-[11px] font-mono text-[#A9A9AF] border-t border-white/15 pt-2 pl-1">
-                          <span>SYNCTONE AUDIO</span>
-                          <span>STUDIO CAST</span>
-                        </div>
-                      </div>
-                    </div>
+                  {/* Center Column: Genuine 3D Physical Book Showcase */}
+                  <div key={`stage-${featuredNovel.id || featuredIndex}`} className="hero-cover-crossfade flex justify-center items-center py-2 tilted-cover-stage">
+                    <FeaturedBook3D
+                      novel={featuredNovel}
+                      volumeIndex={featuredIndex}
+                      onSelectNovel={onSelectNovel}
+                      isPaused={isBillboardPaused}
+                    />
                   </div>
 
                   {/* Right Column: Editorial Sans Blurb & CTA Scrim Box */}
-                  <div className="flex flex-col gap-4">
+                  <div key={`blurb-${featuredNovel.id || featuredIndex}`} className="hero-content-crossfade flex flex-col gap-4">
                     <p className="font-sans text-sm sm:text-base leading-relaxed text-[var(--text-main)]">
                       {featuredNovel.synopsis ||
                         'SyncTone re-engineers classic literature into neural multi-speaker drama. Every sentence is dynamically assigned to character voices, scored with generative ambient soundscapes, and synchronized to the reading canvas in real time.'}
@@ -432,10 +425,14 @@ export default function NovelCatalog({
                         </button>
                         <button
                           onClick={() => onSelectNovel(featuredNovel.id)}
-                          className="boxed-btn py-2.5 px-5 text-xs font-mono uppercase flex items-center justify-center gap-2 text-[var(--text-main)] hover:border-[var(--text-main)] cursor-pointer rounded-full bg-[var(--bg-surface)] hover:scale-[1.03] active:scale-[0.96] transition-all duration-200"
+                          className="w-full boxed-btn py-2.5 px-3 text-[11px] font-mono uppercase flex items-center justify-center gap-1.5 text-[var(--text-main)] hover:border-[var(--text-main)] cursor-pointer rounded-full bg-[var(--bg-surface)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
                         >
-                          <span className="w-2 h-2 rounded-full bg-current" />
-                          <span>PLAY SAMPLE & READ</span>
+                          <IconBook className="w-3.5 h-3.5" />
+                          <span>
+                            {lastReadingSession?.novelId === featuredNovel.id
+                              ? `Resume (${lastReadingSession.progressPercent}%)`
+                              : 'Read Novel'}
+                          </span>
                         </button>
                       </div>
 
@@ -501,7 +498,7 @@ export default function NovelCatalog({
           {/* 3. SECTION 1: TOP 10 NUMBERED CAROUSEL (<ol> List with Controls)  */}
           {/* ================================================================= */}
           {top10Novels.length > 0 && !searchQuery.trim() && (
-            <section className="space-y-4 pt-2" aria-label="Top 10 Audiobooks">
+            <section className="space-y-4 pt-2 w-full max-w-full overflow-hidden" aria-label="Top 10 Audiobooks">
               <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-3">
                 <div className="flex flex-col gap-0.5">
                   <span className="text-[11px] font-mono text-[var(--text-sub)] uppercase tracking-wider">
@@ -599,7 +596,7 @@ export default function NovelCatalog({
           {/* ================================================================= */}
           {/* 4. SECTION 2: VERIFIED & COMMUNITY VOLUMES GRID                   */}
           {/* ================================================================= */}
-          <section id="archive-catalog" className="space-y-6 pt-4 scroll-mt-20" aria-label="Novel Catalog Grid">
+          <section id="archive-catalog" className="max-w-[1720px] mx-auto w-full space-y-6 pt-4 scroll-mt-20" aria-label="Novel Catalog Grid">
             <div className="border-b border-[var(--border-subtle)] pb-5 space-y-4">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div className="flex flex-col gap-1">
@@ -672,17 +669,49 @@ export default function NovelCatalog({
                     + All Novels
                   </button>
                 </div>
+
+                {/* Library View Mode Switcher: Grid View vs 3D Bookshelf */}
+                <div
+                  className="inline-flex p-1 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] gap-1 shadow-xs self-start md:self-auto"
+                  role="group"
+                  aria-label="Library View Mode"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setLibraryViewMode('grid')}
+                    className={`px-3 py-1.5 text-[11px] font-mono uppercase tracking-wider rounded-full transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${
+                      libraryViewMode === 'grid'
+                        ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold shadow-xs'
+                        : 'text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
+                    }`}
+                    title="Responsive Compact Grid View"
+                  >
+                    <span>⊞ Grid View</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLibraryViewMode('shelf')}
+                    className={`px-3 py-1.5 text-[11px] font-mono uppercase tracking-wider rounded-full transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${
+                      libraryViewMode === 'shelf'
+                        ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold shadow-xs'
+                        : 'text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
+                    }`}
+                    title="Interactive Physical 3D Bookshelf Experience"
+                  >
+                    <span>☱ 3D Bookshelf</span>
+                  </button>
+                </div>
               </div>
 
               {/* Instant Search Bar & Genre Filter Chips */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
+              <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 pt-1 w-full min-w-0">
                 {/* Monospace Genre Filter Chips */}
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 flex-shrink-0">
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 min-w-0 flex-1 scrollbar-none">
                   {availableGenres.map((g) => (
                     <button
                       key={g}
                       onClick={() => setSelectedGenre(g)}
-                      className={`px-3 py-1 text-[10px] font-mono tracking-wider uppercase rounded-full border cursor-pointer transition-all duration-200 ${
+                      className={`px-3 py-1 text-[10px] font-mono tracking-wider uppercase rounded-full border cursor-pointer transition-all duration-200 flex-shrink-0 ${
                         selectedGenre === g
                           ? 'bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)] font-bold shadow-xs'
                           : 'border-[var(--border-subtle)] text-[var(--text-sub)] hover:text-[var(--text-main)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-hover)]'
@@ -694,8 +723,8 @@ export default function NovelCatalog({
                 </div>
 
                 {/* Search Box & Controls */}
-                <div className="flex items-center gap-2 flex-1 max-w-md sm:ml-auto">
-                  <div className="relative w-full">
+                <div className="flex items-center gap-2 flex-shrink-0 w-full lg:w-auto lg:max-w-md">
+                  <div className="relative flex-1 lg:w-80">
                     <span className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none text-[var(--text-muted)]">
                       <IconSearch className="w-3.5 h-3.5" />
                     </span>
@@ -734,7 +763,7 @@ export default function NovelCatalog({
 
             {/* Empty Search Results State */}
             {filteredNovels.length === 0 && searchQuery && (
-              <div className="p-12 text-center rounded-2xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-3 shadow-sm">
+              <div className="p-12 text-center rounded-2xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-3 shadow-sm animate-fade-in">
                 <IconSearch className="w-8 h-8 mx-auto text-[var(--text-muted)] opacity-60" />
                 <h4 className="text-base font-bold font-sans uppercase text-[var(--text-main)]">No novels found</h4>
                 <p className="text-xs text-[var(--text-muted)] font-mono max-w-sm mx-auto">
@@ -751,7 +780,7 @@ export default function NovelCatalog({
 
             {/* Empty Library Category State */}
             {filteredNovels.length === 0 && !searchQuery && (
-              <div className="p-12 text-center rounded-2xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-3 shadow-sm">
+              <div className="p-12 text-center rounded-2xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-3 shadow-sm animate-fade-in">
                 <IconBook className="w-8 h-8 mx-auto text-[var(--text-muted)] opacity-60" />
                 <h4 className="text-base font-bold font-sans uppercase text-[var(--text-main)]">No novels available</h4>
                 <p className="text-xs text-[var(--text-muted)] font-mono max-w-sm mx-auto">
@@ -769,18 +798,28 @@ export default function NovelCatalog({
               </div>
             )}
 
-            {/* Responsive Volume Cards Grid */}
-            {filteredNovels.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {/* 3D Physical Bookshelf Experience */}
+            {filteredNovels.length > 0 && libraryViewMode === 'shelf' && (
+              <BookShelf3D
+                novels={filteredNovels}
+                onSelectNovel={onSelectNovel}
+                onStartListening={handleStartListening}
+              />
+            )}
+
+            {/* Responsive Compact Volume Cards Grid */}
+            {filteredNovels.length > 0 && libraryViewMode === 'grid' && (
+              <div className="novel-catalog-grid">
                 {filteredNovels.map((novel, index) => (
-                  <article
+                  <Interactive3DCard
                     key={novel.id}
                     onClick={() => onSelectNovel(novel.id)}
                     onMouseEnter={preloadNovelDetails}
                     onFocus={preloadNovelDetails}
                     onPointerDown={preloadNovelDetails}
-                    className="volume-card novel-card-hybrid group cursor-pointer p-4 flex flex-col justify-between rounded-2xl bg-[var(--bg-card)] border border-[var(--border-subtle)] hover:border-[var(--border-strong)] hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
-                    aria-label={novel.title}
+                    style={{ animationDelay: `${Math.min(index, 11) * 50}ms` }}
+                    className="volume-card catalog-card-animate novel-card-hybrid group cursor-pointer p-3 sm:p-3.5 flex flex-col justify-between rounded-2xl bg-[var(--bg-card)] border border-[var(--border-subtle)] hover:border-[var(--border-strong)] hover:shadow-xl transition-all duration-300 h-full min-w-0"
+                    ariaLabel={novel.title}
                     onKeyDown={(e) => {
                       if (e.target !== e.currentTarget && e.target.closest('button, a, input, select')) {
                         return;
@@ -792,66 +831,59 @@ export default function NovelCatalog({
                     }}
                   >
                     <div className="flex flex-col min-w-0">
-                      {/* Physical Book Cover Wrapper */}
-                      <div className="relative aspect-[3/4] w-full rounded-xl overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-surface)] flex-shrink-0 shadow-sm">
+                      {/* Physical Book Cover Wrapper (Aspect 2:3 Compact) */}
+                      <div className="relative aspect-[2/3] w-full rounded-xl overflow-hidden border border-[var(--border-subtle)] bg-[var(--bg-surface)] flex-shrink-0 shadow-sm">
                         <NovelCover
                           title={novel.title}
                           author={novel.author_username}
                           coverUrl={novel.cover_object}
                           id={novel.id}
                           index={index}
-                          className="w-full h-full"
+                          className="w-full h-full object-cover"
                         />
                         <div className="absolute top-2 left-2 z-20">
-                          <span className="px-2 py-0.5 text-[9px] font-mono uppercase bg-[var(--bg-card)] border border-[var(--border-subtle)] text-[var(--text-sub)] rounded-full shadow-xs">
+                          <span className="px-2 py-0.5 text-[9px] font-mono uppercase bg-[var(--bg-card)]/90 backdrop-blur-xs border border-[var(--border-subtle)] text-[var(--text-sub)] rounded-full shadow-xs">
                             VOL. {String(index + 1).padStart(2, '0')}
                           </span>
                         </div>
                       </div>
 
                       {/* Volume Metadata */}
-                      <div className="mt-3.5 flex-1 flex flex-col justify-between min-w-0">
+                      <div className="mt-2.5 flex-1 flex flex-col justify-between min-w-0">
                         <div className="min-w-0">
-                          <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
-                            <span className="text-[10px] font-mono uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-sub)]">
+                          <div className="flex items-center gap-1.5 mb-1.5">
+                            <span
+                              className="text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-sub)] truncate max-w-[150px] inline-block"
+                              title={novel.global_tone || (novel.channel === 'verified' ? 'VERIFIED' : 'COMMUNITY')}
+                            >
                               + {novel.global_tone || (novel.channel === 'verified' ? 'VERIFIED' : 'COMMUNITY')}
-                            </span>
-                            <span className="text-[10px] font-mono uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-sub)]">
-                              + {novel.chapter_count || 1} CH
                             </span>
                           </div>
 
                           <h4
-                            className="font-sans text-sm sm:text-base font-bold uppercase tracking-tight text-[var(--text-main)] line-clamp-1 group-hover:text-[var(--accent)] transition-colors"
+                            className="font-sans text-xs sm:text-sm font-bold uppercase tracking-tight text-[var(--text-main)] line-clamp-2 leading-snug group-hover:text-[var(--accent)] transition-colors min-h-[2.4rem] flex items-start"
                             title={novel.title}
                           >
                             {novel.title}
                           </h4>
 
-                          <div className="flex items-center justify-between text-xs font-mono text-[var(--text-sub)] mt-1 gap-2">
-                            <span className="truncate">
-                              By {novel.author_username || 'SyncTone Author'}
-                            </span>
-                            {novel.narrator_name && (
-                              <span className="text-[11px] truncate max-w-[100px]" title={`Narrator: ${novel.narrator_name}`}>
-                                {novel.narrator_name}
-                              </span>
-                            )}
+                          <div className="text-[11px] font-mono text-[var(--text-sub)] mt-1 truncate">
+                            By {novel.author_username || 'SyncTone Author'}
                           </div>
                         </div>
                       </div>
                     </div>
 
                     {/* Action Row */}
-                    <div className="pt-3 mt-3 border-t border-[var(--border-subtle)] flex items-center justify-between gap-2">
+                    <div className="pt-2.5 mt-2.5 border-t border-[var(--border-subtle)] flex items-center justify-between gap-2">
                       <button
                         onClick={(e) => handleStartListening(novel, e)}
                         onMouseEnter={preloadReaderView}
                         onFocus={preloadReaderView}
                         onPointerDown={preloadReaderView}
-                        className="boxed-btn-primary flex-1 py-1.5 px-4 text-xs flex items-center justify-center gap-1.5 cursor-pointer rounded-full active:scale-95 transition-all hover:scale-[1.03]"
+                        className="boxed-btn-primary flex-1 py-1.5 px-3 text-[11px] flex items-center justify-center gap-1.5 cursor-pointer rounded-full active:scale-95 transition-all hover:scale-[1.03]"
                       >
-                        <IconPlay className="w-3.5 h-3.5 fill-current" />
+                        <IconPlay className="w-3 h-3 fill-current" />
                         <span>Play</span>
                       </button>
                       <button
@@ -862,33 +894,23 @@ export default function NovelCatalog({
                         onMouseEnter={preloadNovelDetails}
                         onFocus={preloadNovelDetails}
                         onPointerDown={preloadNovelDetails}
-                        className="boxed-btn p-2 text-[var(--text-sub)] hover:text-[var(--text-main)] cursor-pointer rounded-full active:scale-95 min-w-[34px] min-h-[34px] flex items-center justify-center transition-all hover:scale-105"
+                        className="boxed-btn py-1.5 px-3 text-[11px] text-[var(--text-sub)] hover:text-[var(--text-main)] cursor-pointer rounded-full active:scale-95 flex items-center justify-center gap-1.5 transition-all hover:scale-105"
                         title="View Novel Details"
                         aria-label="View Novel Details"
                       >
-                        <IconBook className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setNovelToDelete(novel);
-                        }}
-                        className="boxed-btn p-2 text-[var(--text-sub)] hover:text-[var(--text-main)] cursor-pointer rounded-full active:scale-95 min-w-[34px] min-h-[34px] flex items-center justify-center transition-all hover:scale-105"
-                        title="Delete Novel (Local Dev)"
-                        aria-label={`Delete ${novel.title}`}
-                        data-testid={`delete-novel-${novel.id}`}
-                      >
-                        <IconTrash className="w-4 h-4" />
+                        <IconBook className="w-3.5 h-3.5" />
+                        <span>Read</span>
                       </button>
                     </div>
-                  </article>
+                  </Interactive3DCard>
                 ))}
 
                 {/* Upload Placeholder Card */}
                 {onOpenAddNovel && (
                   <div
                     onClick={onOpenAddNovel}
-                    className="group cursor-pointer border border-dashed border-[var(--border-strong)] hover:border-[var(--text-main)] flex flex-col items-center justify-center p-8 text-center transition-all bg-[var(--bg-card)]/40 hover:bg-[var(--bg-card)] h-full min-h-[420px] rounded-2xl shadow-xs hover:shadow-xl hover:-translate-y-1"
+                    style={{ animationDelay: `${Math.min(filteredNovels.length, 11) * 50}ms` }}
+                    className="volume-card upload-novel-card catalog-card-animate group cursor-pointer border-2 border-dashed border-[var(--border-strong)] hover:border-[var(--text-main)] flex flex-col justify-between p-3 sm:p-3.5 text-center transition-all bg-[var(--bg-card)]/40 hover:bg-[var(--bg-card)] rounded-2xl shadow-xs hover:shadow-xl h-full min-w-0"
                     tabIndex={0}
                     role="button"
                     aria-label="Upload Novel"
@@ -899,18 +921,50 @@ export default function NovelCatalog({
                       }
                     }}
                   >
-                    <div className="w-12 h-12 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[var(--text-main)] flex items-center justify-center mb-4 transition-transform group-hover:scale-105 shadow-xs">
-                      <IconPlus className="w-6 h-6" />
+                    <div className="flex flex-col min-w-0">
+                      {/* Upper area matching Cover 2:3 aspect container */}
+                      <div className="relative aspect-[2/3] w-full rounded-xl border border-dashed border-[var(--border-subtle)] bg-[var(--bg-surface)]/60 flex flex-col items-center justify-center p-4 transition-colors group-hover:bg-[var(--bg-surface)] flex-shrink-0">
+                        <div className="w-12 h-12 rounded-full bg-[var(--bg-card)] border border-[var(--border-strong)] text-[var(--text-main)] flex items-center justify-center mb-3 transition-transform group-hover:scale-110 shadow-sm">
+                          <IconPlus className="w-5 h-5" />
+                        </div>
+                        <span className="text-[11px] font-mono uppercase font-bold text-[var(--text-main)] tracking-wider">
+                          Upload Novel
+                        </span>
+                        <span className="text-[9px] text-[var(--text-sub)] mt-1 font-mono tracking-tight text-center px-1">
+                          EPUB • TXT • PDF
+                        </span>
+                        <div className="absolute top-2 left-2 z-20">
+                          <span className="px-2 py-0.5 text-[9px] font-mono uppercase bg-[var(--bg-card)]/90 backdrop-blur-xs border border-[var(--border-subtle)] text-[var(--text-sub)] rounded-full shadow-xs">
+                            STUDIO
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Metadata area matching regular card info */}
+                      <div className="mt-2.5 flex-1 flex flex-col justify-between min-w-0">
+                        <div className="min-w-0">
+                          <div className="flex items-center justify-center gap-1.5 mb-1.5">
+                            <span className="text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-sub)] truncate max-w-[150px] inline-block">
+                              + VOICE SYNTHESIS
+                            </span>
+                          </div>
+                          <h4 className="font-sans text-xs sm:text-sm font-bold uppercase tracking-tight text-[var(--text-main)] line-clamp-2 leading-snug group-hover:text-[var(--accent)] transition-colors min-h-[2.4rem] flex items-center justify-center">
+                            Publish Volume
+                          </h4>
+                          <div className="text-[11px] font-mono text-[var(--text-sub)] mt-1 truncate text-center">
+                            Multi-Voice Engine
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <span className="text-sm font-mono uppercase font-bold text-[var(--text-main)]">
-                      Upload Novel
-                    </span>
-                    <span className="text-[11px] text-[var(--text-sub)] mt-1 font-mono">
-                      Multi-Voice Audio Synthesis
-                    </span>
-                    <span className="boxed-btn mt-4 px-3 py-1 text-[11px] font-mono uppercase text-[var(--text-main)] rounded-lg">
-                      + Add New Volume
-                    </span>
+
+                    {/* Action Row matching regular card buttons */}
+                    <div className="pt-2.5 mt-2.5 border-t border-[var(--border-subtle)] flex items-center justify-center">
+                      <span className="boxed-btn-primary w-full py-1.5 px-3 text-[11px] font-mono uppercase font-semibold rounded-full flex items-center justify-center gap-1.5 transition-all group-hover:scale-[1.02]">
+                        <IconPlus className="w-3.5 h-3.5" />
+                        <span>Add Novel</span>
+                      </span>
+                    </div>
                   </div>
                 )}
               </div>
@@ -996,71 +1050,6 @@ export default function NovelCatalog({
         </>
       )}
 
-      {/* Delete Novel Confirmation Modal (Local Dev) */}
-      {novelToDelete && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn"
-          onClick={() => !isDeletingNovel && setNovelToDelete(null)}
-          data-testid="confirm-delete-novel-modal"
-        >
-          <div
-            className="w-full max-w-md bg-[var(--bg-card)] border border-[var(--border-strong)] rounded-2xl shadow-2xl p-6 space-y-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[var(--text-main)] flex-shrink-0 shadow-xs">
-                <IconTrash className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold font-sans uppercase text-[var(--text-main)]">Delete Novel (Local Dev)</h3>
-                <p className="text-xs font-mono text-[var(--text-muted)]">Permanently remove this volume</p>
-              </div>
-            </div>
-
-            <p className="text-xs sm:text-sm font-sans text-[var(--text-sub)] leading-relaxed">
-              Are you sure you want to delete <strong className="text-[var(--text-main)]">&ldquo;{novelToDelete.title}&rdquo;</strong>?
-              All chapters, character voices, and audio references will be permanently removed from your local database.
-            </p>
-
-            {deleteNovelError && (
-              <div className="p-3 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-strong)] text-[var(--text-main)] text-xs font-mono">
-                {deleteNovelError}
-              </div>
-            )}
-
-            <div className="flex items-center justify-end gap-2.5 pt-2">
-              <button
-                type="button"
-                onClick={() => setNovelToDelete(null)}
-                disabled={isDeletingNovel}
-                className="boxed-btn px-4 py-2 text-xs font-mono uppercase text-[var(--text-sub)] hover:text-[var(--text-main)] cursor-pointer rounded-full active:scale-95 transition-all hover:scale-105"
-                data-testid="cancel-delete-novel-btn"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmDelete}
-                disabled={isDeletingNovel}
-                className="boxed-btn-primary px-5 py-2 text-xs font-mono uppercase flex items-center gap-1.5 cursor-pointer disabled:opacity-50 rounded-full active:scale-95 transition-all hover:scale-105"
-                data-testid="confirm-delete-novel-btn"
-              >
-                {isDeletingNovel ? (
-                  <>
-                    <div className="w-3.5 h-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" />
-                    <span>Deleting...</span>
-                  </>
-                ) : (
-                  <>
-                    <IconTrash className="w-3.5 h-3.5" />
-                    <span>Delete Volume</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
