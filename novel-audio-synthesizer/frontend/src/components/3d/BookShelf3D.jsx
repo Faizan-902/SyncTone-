@@ -46,6 +46,18 @@ export default function BookShelf3D({
     }
   };
 
+  // Keyboard shortcut: Press Escape to close pulled-forward book inspector
+  useEffect(() => {
+    if (!selectedNovelId) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setSelectedNovelId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedNovelId]);
+
   return (
     <div className="w-full relative flex flex-col space-y-6 animate-fade-in select-none">
       {/* Shelf Header Banner */}
@@ -131,6 +143,12 @@ export default function BookShelf3D({
                 role="button"
                 tabIndex={0}
                 aria-label={`Physical Book Spine: ${novel.title} by ${novel.author_username || 'Author'}`}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleBookClick(novel);
+                  }
+                }}
               >
                 {/* 3D Physical Spine Body */}
                 <div
