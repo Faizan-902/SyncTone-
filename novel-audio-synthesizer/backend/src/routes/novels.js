@@ -351,7 +351,7 @@ router.post('/novels', optionalAuth, async (req, res) => {
           const chTitle = ch.title && typeof ch.title === 'string' && ch.title.trim()
             ? ch.title.trim()
             : `Chapter ${chNum}`;
-          const rawText = ch.raw_text || ch.text || '';
+          const rawText = ch.raw_text || ch.text || ch.content || '';
 
           // Parse chapter text into attributed segments (or preserve pre-attributed AI segments from Gemini)
           const preAttributedSegments =

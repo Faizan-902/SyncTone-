@@ -90,11 +90,16 @@ export default function UploadView({ onNovelCreated, onSelectChapter, onOpenAuth
         extractedData = {
           title: selectedFile.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '),
           author: user?.username || 'SyncTone Author',
-          chapters: rawChapters.map((ch, idx) => ({
-            chapter_number: idx + 1,
-            title: `Chapter ${idx + 1}`,
-            content: ch.trim() || 'Chapter text preview.',
-          })),
+          chapters: rawChapters.map((ch, idx) => {
+            const body = ch.trim() || 'Chapter text preview.';
+            return {
+              chapter_number: idx + 1,
+              title: `Chapter ${idx + 1}`,
+              raw_text: body,
+              text: body,
+              content: body,
+            };
+          }),
         };
       }
 
@@ -106,7 +111,7 @@ export default function UploadView({ onNovelCreated, onSelectChapter, onOpenAuth
           setParsedChapters(extractedData.chapters);
         } else {
           setParsedChapters([
-            { chapter_number: 1, title: 'Chapter 1', content: 'Extracted chapter prose.' },
+            { chapter_number: 1, title: 'Chapter 1', raw_text: 'Extracted chapter prose.', text: 'Extracted chapter prose.', content: 'Extracted chapter prose.' },
           ]);
         }
       }
@@ -117,7 +122,7 @@ export default function UploadView({ onNovelCreated, onSelectChapter, onOpenAuth
       if (!title) setTitle(selectedFile.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '));
       if (parsedChapters.length === 0) {
         setParsedChapters([
-          { chapter_number: 1, title: 'Chapter 1', content: 'Manual manuscript upload.' },
+          { chapter_number: 1, title: 'Chapter 1', raw_text: 'Manual manuscript upload.', text: 'Manual manuscript upload.', content: 'Manual manuscript upload.' },
         ]);
       }
     } finally {
@@ -148,6 +153,17 @@ export default function UploadView({ onNovelCreated, onSelectChapter, onOpenAuth
       return;
     }
 
+    if (!isAuthenticated) {
+      setSubmitError('Authentication required. Please sign in or click "Quick Demo Writer" to publish manuscripts.');
+      if (onOpenAuth) onOpenAuth('login');
+      return;
+    }
+
+    if (user?.role === 'reader') {
+      setSubmitError("Your account has role 'reader'. Only writers and admins can publish manuscripts.");
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitError(null);
     setSubmitSuccess(null);
@@ -160,11 +176,27 @@ export default function UploadView({ onNovelCreated, onSelectChapter, onOpenAuth
         channel,
         portfolio_source: 'manual',
         cover_object: coverUrl || null,
-        chapters: parsedChapters.map((c, i) => ({
-          chapter_number: c.chapter_number || i + 1,
-          title: c.title || `Chapter ${i + 1}`,
-          content: c.content || 'Chapter text.',
-        })),
+        chapters: (parsedChapters.length > 0
+          ? parsedChapters
+          : [
+              {
+                chapter_number: 1,
+                title: 'Chapter 1',
+                raw_text: synopsis.trim() || 'Initial manuscript prose.',
+                text: synopsis.trim() || 'Initial manuscript prose.',
+                content: synopsis.trim() || 'Initial manuscript prose.',
+              },
+            ]
+        ).map((c, i) => {
+          const body = c.raw_text || c.text || c.content || 'Chapter text.';
+          return {
+            chapter_number: c.chapter_number || i + 1,
+            title: c.title || `Chapter ${i + 1}`,
+            raw_text: body,
+            text: body,
+            content: body,
+          };
+        }),
       };
 
       const res = await api.novels.create(payload);
@@ -418,6 +450,7 @@ export default function UploadView({ onNovelCreated, onSelectChapter, onOpenAuth
         <div className="pt-4 border-t border-[var(--border-subtle)] flex items-center justify-end gap-3">
           <button
             type="submit"
+            onClick={handleSubmit}
             disabled={isSubmitting || !title.trim()}
             className="boxed-btn-primary px-7 py-3 text-xs font-mono uppercase font-bold tracking-wider inline-flex items-center gap-2 cursor-pointer rounded-full shadow-md hover:scale-[1.03] active:scale-[0.96] transition-all disabled:opacity-50"
           >
