@@ -179,11 +179,56 @@ export default function NovelCatalog({
     });
   }, [novels, debouncedSearch, selectedGenre]);
 
-  // Netflix-style automatic billboard rotation state
+  // Netflix & Amazon Prime style automatic billboard rotation state
   const [featuredIndex, setFeaturedIndex] = useState(0);
+  const [slideDirection, setSlideDirection] = useState('forward');
   const [isBillboardPaused, setIsBillboardPaused] = useState(false);
   const [libraryViewMode, setLibraryViewMode] = useState('grid'); // 'grid' | 'shelf'
   const [lastReadingSession, setLastReadingSession] = useState(null);
+
+  // Slide navigation handlers with direction awareness
+  const handleNextSlide = useCallback(() => {
+    setSlideDirection('forward');
+    setFeaturedIndex((prev) => (prev + 1) % (novels.length || 1));
+  }, [novels.length]);
+
+  const handlePrevSlide = useCallback(() => {
+    setSlideDirection('backward');
+    setFeaturedIndex((prev) => (prev - 1 + novels.length) % (novels.length || 1));
+  }, [novels.length]);
+
+  const handleJumpToSlide = useCallback((targetIndex) => {
+    setSlideDirection(targetIndex >= featuredIndex ? 'forward' : 'backward');
+    setFeaturedIndex(targetIndex);
+  }, [featuredIndex]);
+
+  // Touch gesture support for mobile/trackpad swiping
+  const touchStartXRef = useRef(null);
+  const touchStartYRef = useRef(null);
+
+  const handleTouchStart = (e) => {
+    if (e.touches && e.touches[0]) {
+      touchStartXRef.current = e.touches[0].clientX;
+      touchStartYRef.current = e.touches[0].clientY;
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    if (touchStartXRef.current === null || !e.changedTouches || !e.changedTouches[0]) return;
+    const deltaX = e.changedTouches[0].clientX - touchStartXRef.current;
+    const deltaY = e.changedTouches[0].clientY - touchStartYRef.current;
+    touchStartXRef.current = null;
+    touchStartYRef.current = null;
+
+    // Detect horizontal swipe gesture
+    if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
+      if (deltaX < 0) {
+        handleNextSlide();
+      } else {
+        handlePrevSlide();
+      }
+    }
+  };
 
   // Load persistent reading progress (Section 12.A)
   useEffect(() => {
@@ -213,7 +258,7 @@ export default function NovelCatalog({
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
-  // Netflix-style automatic rotation timer (every 6000ms when not paused or searching)
+  // Netflix & Amazon Prime style 5-second automatic rotation timer (swipes every 5000ms)
   useEffect(() => {
     if (debouncedSearch || isBillboardPaused || novels.length <= 1) return;
 
@@ -221,8 +266,9 @@ export default function NovelCatalog({
     if (prefersReduced) return;
 
     const timer = setInterval(() => {
+      setSlideDirection('forward');
       setFeaturedIndex((prev) => (prev + 1) % novels.length);
-    }, 6000);
+    }, 5000);
 
     return () => clearInterval(timer);
   }, [debouncedSearch, isBillboardPaused, novels.length, featuredIndex]);
@@ -325,8 +371,8 @@ export default function NovelCatalog({
               data-testid="featured-novel-billboard"
               onMouseEnter={() => setIsBillboardPaused(true)}
               onMouseLeave={() => setIsBillboardPaused(false)}
-              onFocus={() => setIsBillboardPaused(true)}
-              onBlur={() => setIsBillboardPaused(false)}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
             >
               <div className="max-w-7xl mx-auto w-full flex flex-col justify-between">
                 {/* Eyebrow Real-Data Tag */}
@@ -351,7 +397,12 @@ export default function NovelCatalog({
                 </div>
 
                 {/* Hero Triad Grid: Left Credits, Center 3D Book, Right Sans Blurb */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 items-center w-full mb-8">
+                <div
+                  key={`hero-stage-${featuredNovel.id || featuredIndex}`}
+                  className={`grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 items-center w-full mb-8 ${
+                    slideDirection === 'backward' ? 'hero-swipe-backward' : 'hero-swipe-forward'
+                  }`}
+                >
                   {/* Left Column: Mono Metadata Credits ("AT A GLANCE") */}
                   <div key={`credits-${featuredNovel.id || featuredIndex}`} className="hero-content-crossfade border-l border-[var(--border-strong)] pl-5 flex flex-col gap-3 font-mono">
                     <div className="flex flex-col gap-0.5">
@@ -414,7 +465,13 @@ export default function NovelCatalog({
                     </p>
 
                     {/* Scrim box for high WCAG AA contrast compliance */}
-                    <div className="bg-[var(--bg-card)] border border-[var(--border-strong)] p-5 flex flex-col gap-3.5 rounded-2xl shadow-xl backdrop-blur-md">
+                    <div
+                      className="bg-[var(--bg-card)] border border-[var(--border-strong)] p-5 flex flex-col gap-3.5 rounded-2xl shadow-xl backdrop-blur-md"
+                      onMouseEnter={() => setIsBillboardPaused(true)}
+                      onMouseLeave={() => setIsBillboardPaused(false)}
+                      onFocus={() => setIsBillboardPaused(true)}
+                      onBlur={() => setIsBillboardPaused(false)}
+                    >
                       <div className="flex flex-col gap-2.5">
                         <button
                           onClick={(e) => handleStartListening(featuredNovel, e)}
@@ -444,10 +501,10 @@ export default function NovelCatalog({
                   </div>
                 </div>
 
-                {/* Minimal Numbered Counters & Arrows */}
+                {/* Minimal Numbered Counters & Arrows with 5s Netflix/Prime Progress Bars */}
                 {novels.length > 1 && (
                   <div className="flex items-center justify-between pt-4 border-t border-[var(--border-subtle)] font-mono text-xs">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 sm:gap-4 overflow-x-auto py-1">
                       {novels.slice(0, 5).map((novelItem, idx) => {
                         const isActive = idx === (featuredIndex % Math.min(novels.length, 5));
                         const numStr = String(idx + 1).padStart(2, '0');
@@ -455,25 +512,36 @@ export default function NovelCatalog({
                           <button
                             key={novelItem.id || idx}
                             type="button"
-                            onClick={() => setFeaturedIndex(idx)}
+                            onClick={() => handleJumpToSlide(idx)}
                             aria-label={`Jump to slide ${idx + 1}: ${novelItem.title}`}
-                            className={`flex items-center gap-2 cursor-pointer transition-colors ${
+                            className={`flex items-center gap-2 cursor-pointer transition-colors group ${
                               isActive
                                 ? 'text-[var(--text-main)] font-bold'
                                 : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
                             }`}
                           >
                             <span>{numStr}</span>
-                            {isActive && <span className="w-8 h-[1px] bg-[var(--text-main)] inline-block" />}
+                            <div className="w-8 sm:w-12 h-0.5 sm:h-1 bg-[var(--border-strong)] rounded-full overflow-hidden relative">
+                              {isActive ? (
+                                <div
+                                  key={`progress-${featuredIndex}`}
+                                  className={`h-full bg-[var(--text-main)] rounded-full billboard-progress-fill ${
+                                    isBillboardPaused ? 'paused' : ''
+                                  }`}
+                                />
+                              ) : (
+                                <div className="h-full w-0 bg-[var(--text-main)]" />
+                              )}
+                            </div>
                           </button>
                         );
                       })}
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       <button
                         type="button"
-                        onClick={() => setFeaturedIndex((prev) => (prev - 1 + novels.length) % novels.length)}
+                        onClick={handlePrevSlide}
                         aria-label="Previous featured novel"
                         className="boxed-btn p-2 rounded-full text-[var(--text-sub)] hover:text-[var(--text-main)] active:scale-95 hover:scale-105 transition-all duration-200 shadow-xs cursor-pointer"
                       >
@@ -481,7 +549,7 @@ export default function NovelCatalog({
                       </button>
                       <button
                         type="button"
-                        onClick={() => setFeaturedIndex((prev) => (prev + 1) % novels.length)}
+                        onClick={handleNextSlide}
                         aria-label="Next featured novel"
                         className="boxed-btn p-2 rounded-full text-[var(--text-sub)] hover:text-[var(--text-main)] active:scale-95 hover:scale-105 transition-all duration-200 shadow-xs cursor-pointer"
                       >
