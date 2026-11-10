@@ -637,7 +637,7 @@ export default function OpenGLPageReader({
       className={
         isFocusMode
           ? 'fixed inset-0 z-50 bg-[var(--bg-page)] flex flex-col justify-between px-3 sm:px-8 pt-3 pb-24 overflow-hidden animate-fade-in select-none w-screen h-screen'
-          : 'w-full flex-1 flex flex-col justify-center animate-fade-in select-none relative overflow-hidden'
+          : 'w-full flex-1 flex flex-col justify-between items-center animate-fade-in select-none relative overflow-hidden py-2 min-h-0'
       }
     >
       {/* Floating Exit Focus Button */}
@@ -667,17 +667,9 @@ export default function OpenGLPageReader({
       {/* 3D Apple Books Two-Page Spread Stage */}
       <div
         ref={stageRef}
-        className={`relative w-full perspective-1200 flex flex-col justify-center items-center flex-shrink-0 ${
-          isFocusMode ? 'flex-1 my-auto py-1' : 'my-auto py-1'
+        className={`relative w-full perspective-1200 flex flex-col justify-center items-center ${
+          isFocusMode ? 'flex-1 min-h-0 py-1' : 'flex-1 min-h-0 py-1 my-1'
         }`}
-        style={{
-          height: isFocusMode
-            ? 'calc(100vh - 140px)'
-            : 'calc(100vh - 230px)',
-          maxHeight: isFocusMode
-            ? 'calc(100vh - 140px)'
-            : 'calc(100vh - 230px)',
-        }}
       >
         {/* Apple Books Hardcover Canvas Container */}
         <div
@@ -690,7 +682,7 @@ export default function OpenGLPageReader({
           `}
           style={{
             width: fit.book?.w ? `${fit.book.w}px` : (typeof window !== 'undefined' && window.innerWidth < 640 ? '100%' : '900px'),
-            height: fit.book?.h ? `${fit.book.h}px` : (typeof window !== 'undefined' && window.innerHeight < 640 ? '440px' : '630px'),
+            height: fit.book?.h ? `${fit.book.h}px` : (typeof window !== 'undefined' && window.innerHeight < 640 ? '440px' : '580px'),
             maxWidth: '100%',
             maxHeight: '100%',
             margin: '0 auto',
@@ -706,18 +698,18 @@ export default function OpenGLPageReader({
           />
 
           {/* Two-Page Side-by-Side Spread or Single-Page Mobile Surface */}
-          <div className={`relative z-10 flex-1 grid ${isSingleLayout ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2 lg:divide-x lg:divide-[var(--border-subtle)]'}`}>
+          <div className={`relative z-10 flex-1 h-full min-h-0 grid ${isSingleLayout ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2 lg:divide-x lg:divide-[var(--border-subtle)]'}`}>
             {/* ========================================================================= */}
             {/* LEFT PAGE: (Page 2k) or Single Page on Mobile                             */}
             {/* ========================================================================= */}
             <div
               className={`
-                flex flex-col justify-between p-6 sm:p-10 lg:p-12 ${isFocusMode ? 'min-h-[calc(100vh-220px)]' : ''}
+                flex flex-col justify-between h-full min-h-0 p-5 sm:p-7 lg:p-8
                 ${fontFamily === 'serif' ? 'font-serif' : 'font-sans'}
               `}
             >
               {/* Left Page Running Head */}
-              <div className="text-[11px] font-mono tracking-widest uppercase opacity-60 dark:opacity-40 select-none pb-3 border-b border-stone-200 dark:border-white/5 flex items-center justify-between text-stone-600 dark:text-stone-300">
+              <div className="text-[11px] font-mono tracking-widest uppercase opacity-60 dark:opacity-40 select-none pb-2 sm:pb-3 border-b border-stone-200 dark:border-white/5 flex items-center justify-between text-stone-600 dark:text-stone-300 flex-shrink-0">
                 <span className="truncate max-w-[200px]">
                   {currentNovel?.title || 'SyncTone Edition'}
                 </span>
@@ -728,7 +720,7 @@ export default function OpenGLPageReader({
               </div>
 
               {/* Left Page Content */}
-              <div className="flex-1 py-4 space-y-4 overflow-y-auto">
+              <div className="flex-1 min-h-0 py-2 sm:py-3 space-y-3 sm:space-y-4 overflow-y-auto">
                 {/* On Spread 0, render Chapter Opening Header */}
                 {isSpreadZero && (
                   <div className="text-center space-y-2 mb-4 animate-fade-in">
@@ -775,7 +767,7 @@ export default function OpenGLPageReader({
               </div>
 
               {/* Left Page Footer: Page Number (Screenshot 1 & 2) */}
-              <div className="pt-3 border-t border-stone-200 dark:border-white/5 flex items-center justify-center text-xs font-mono opacity-60 dark:opacity-50 select-none text-stone-600 dark:text-stone-300">
+              <div className="pt-2 sm:pt-3 border-t border-stone-200 dark:border-white/5 flex items-center justify-center text-xs font-mono opacity-60 dark:opacity-50 select-none text-stone-600 dark:text-stone-300 flex-shrink-0">
                 <span>Page {leftPageNum} of {totalPages}</span>
               </div>
             </div>
@@ -786,12 +778,12 @@ export default function OpenGLPageReader({
             {!isSingleLayout && (
             <div
               className={`
-                flex flex-col justify-between p-6 sm:p-10 lg:p-12 ${isFocusMode ? 'min-h-[calc(100vh-220px)]' : ''}
+                flex flex-col justify-between h-full min-h-0 p-5 sm:p-7 lg:p-8
                 ${fontFamily === 'serif' ? 'font-serif' : 'font-sans'}
               `}
             >
               {/* Right Page Running Head */}
-              <div className="text-[11px] font-mono tracking-widest uppercase opacity-60 dark:opacity-40 select-none pb-3 border-b border-stone-200 dark:border-white/5 flex items-center justify-between text-stone-600 dark:text-stone-300">
+              <div className="text-[11px] font-mono tracking-widest uppercase opacity-60 dark:opacity-40 select-none pb-2 sm:pb-3 border-b border-stone-200 dark:border-white/5 flex items-center justify-between text-stone-600 dark:text-stone-300 flex-shrink-0">
                 <span className="truncate max-w-[200px]">
                   {isCoverActiveOnSpreadZero
                     ? 'Deluxe Illustrated Edition'
@@ -801,7 +793,7 @@ export default function OpenGLPageReader({
               </div>
 
               {/* Right Page Content */}
-              <div className="flex-1 py-4 space-y-4 overflow-y-auto">
+              <div className="flex-1 min-h-0 py-2 sm:py-3 space-y-3 sm:space-y-4 overflow-y-auto">
                 {isCoverActiveOnSpreadZero ? (
                   /* Cover Showcase Panel (Matching Screenshot 1) */
                   <div className="flex-1 flex flex-col items-center justify-center py-4 px-2 text-center animate-fade-in">
@@ -865,7 +857,7 @@ export default function OpenGLPageReader({
               </div>
 
               {/* Right Page Footer: Page Number (Screenshot 1 & 2) */}
-              <div className="pt-3 border-t border-stone-200 dark:border-white/5 flex items-center justify-center text-xs font-mono opacity-60 dark:opacity-50 select-none text-stone-600 dark:text-stone-300">
+              <div className="pt-2 sm:pt-3 border-t border-stone-200 dark:border-white/5 flex items-center justify-center text-xs font-mono opacity-60 dark:opacity-50 select-none text-stone-600 dark:text-stone-300 flex-shrink-0">
                 <span>
                   {isCoverActiveOnSpreadZero
                     ? 'Cover Plate • Illustrated Showcase'
@@ -879,16 +871,21 @@ export default function OpenGLPageReader({
           </div>
 
           {/* Bottom Left Apple Books Jump-Back Pill (Matching Screenshot 1 ↩ 50) */}
-          <div className="absolute bottom-3 left-4 sm:left-8 z-30">
-            <button
-              onClick={handleJumpBack}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-stone-900/5 hover:bg-stone-900/10 dark:bg-white/10 dark:hover:bg-white/20 text-stone-700 dark:text-white/80 text-xs backdrop-blur-md border border-stone-300/80 dark:border-white/15 transition-all shadow-md cursor-pointer"
-              title="Return to previous spread (Apple Books jump-back)"
-            >
-              <span className="text-[11px]">↩</span>
-              <span className="font-mono text-[11px] font-bold">{lastJumpPage}</span>
-            </button>
-          </div>
+          {lastJumpPage > 0 &&
+            lastJumpPage !== leftPageNum &&
+            lastJumpPage !== rightPageNum && (
+            <div className="absolute bottom-3 left-4 sm:left-8 z-30 animate-fade-in">
+              <button
+                type="button"
+                onClick={handleJumpBack}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-stone-900/5 hover:bg-stone-900/10 dark:bg-white/10 dark:hover:bg-white/20 text-stone-700 dark:text-white/80 text-xs backdrop-blur-md border border-stone-300/80 dark:border-white/15 transition-all shadow-md cursor-pointer"
+                title="Return to previous spread (Apple Books jump-back)"
+              >
+                <span className="text-[11px]">↩</span>
+                <span className="font-mono text-[11px] font-bold">{lastJumpPage}</span>
+              </button>
+            </div>
+          )}
 
           {/* Corner Curl Click Targets for intuitive page turning */}
           <div
@@ -932,9 +929,9 @@ export default function OpenGLPageReader({
       </div>
 
       {/* Floating Apple Books Dock Controls */}
-      <div className="max-w-2xl mx-auto flex flex-wrap items-center justify-between gap-2 px-4 py-1.5 rounded-xl glass-dock border theme-border shadow-md flex-shrink-0 text-xs my-1">
+      <div className="w-full max-w-3xl sm:max-w-4xl mx-auto flex flex-nowrap items-center justify-between gap-2 sm:gap-3 px-3 sm:px-4 py-1.5 rounded-xl glass-dock border theme-border shadow-md flex-shrink-0 text-xs my-1 overflow-x-auto">
         {/* Prev / Next Page Buttons */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 flex-shrink-0">
           <button
             type="button"
             onClick={handlePrevPage}
@@ -958,8 +955,8 @@ export default function OpenGLPageReader({
         </div>
 
         {/* Spread Scrubber Slider */}
-        <div className="flex-1 flex items-center gap-3 min-w-[180px]">
-          <span className="text-xs font-mono font-bold theme-muted w-14 text-right">
+        <div className="flex-1 flex items-center gap-2 sm:gap-3 min-w-[140px] sm:min-w-[180px]">
+          <span className="text-xs font-mono font-bold theme-muted w-14 text-right flex-shrink-0">
             Spread {currentSpreadIndex + 1}
           </span>
           <input
@@ -980,7 +977,7 @@ export default function OpenGLPageReader({
             className="flex-1 h-1.5 accent-[var(--accent)] cursor-pointer"
             aria-label="Book spread slider"
           />
-          <span className="text-xs font-mono font-bold theme-muted w-12">
+          <span className="text-xs font-mono font-bold theme-muted w-10 sm:w-12 flex-shrink-0">
             / {totalSpreads}
           </span>
         </div>
@@ -990,7 +987,7 @@ export default function OpenGLPageReader({
           <button
             type="button"
             onClick={() => setShowCoverSpread((prev) => !prev)}
-            className="px-2.5 py-1.5 rounded-xl theme-card border hover:border-[var(--accent)] text-xs font-semibold text-[var(--accent-text)] transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+            className="px-2.5 py-1.5 rounded-xl theme-card border hover:border-[var(--accent)] text-xs font-semibold text-[var(--accent-text)] transition flex items-center gap-1.5 cursor-pointer shadow-xs flex-shrink-0"
             title="Toggle between full Cover Artwork and continuous two-page Prose"
           >
             <IconBook className="w-3.5 h-3.5" />
@@ -1003,7 +1000,7 @@ export default function OpenGLPageReader({
           <button
             type="button"
             onClick={onSwitchToNormal}
-            className="px-3 py-1.5 rounded-xl theme-card border hover:border-[var(--accent)] text-xs font-semibold theme-sub transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+            className="px-3 py-1.5 rounded-xl theme-card border hover:border-[var(--accent)] text-xs font-semibold theme-sub transition flex items-center gap-1.5 cursor-pointer shadow-xs flex-shrink-0"
           >
             <IconBookOpen className="w-3.5 h-3.5" />
             <span>Normal View</span>

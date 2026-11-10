@@ -279,7 +279,7 @@ export function measureAndPaginateSegments(segments = [], options = {}) {
   if (pages.length >= 2) {
     const lastPage = pages[pages.length - 1];
     const penPage = pages[pages.length - 2];
-    if (lastPage.length === 1 && penPage.length >= 3) {
+    if (lastPage.length === 1 && penPage.length >= 2) {
       const movedSeg = penPage[penPage.length - 1];
       pages[pages.length - 2] = penPage.slice(0, -1);
       pages[pages.length - 1] = [movedSeg, ...lastPage];

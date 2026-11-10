@@ -114,6 +114,36 @@ export default function ReaderView({
     return `${current} / ${total} (${pct}%)`;
   }, [readerMode, openGlPageInfo, activeSegmentIdx, effectiveSegments.length]);
 
+  // Persist reading position to localStorage for Continue Reading (Section 12.A)
+  useEffect(() => {
+    const novelObj = currentNovel?.novel || currentNovel;
+    if (!novelObj?.id || !currentChapter?.id) return;
+    try {
+      const record = {
+        novelId: novelObj.id,
+        novelTitle: novelObj.title,
+        chapterId: currentChapter.id,
+        chapterTitle: currentChapter.title,
+        chapterNumber: currentChapter.chapter_number || 1,
+        activeSegmentIdx,
+        totalSegments: effectiveSegments.length,
+        progressPercent: effectiveSegments.length
+          ? Math.round(((activeSegmentIdx + 1) / effectiveSegments.length) * 100)
+          : 0,
+        updatedAt: Date.now(),
+      };
+      localStorage.setItem(`synctone_reading_${novelObj.id}`, JSON.stringify(record));
+      localStorage.setItem('synctone_last_reading', JSON.stringify(record));
+    } catch (_) {}
+  }, [currentNovel, currentChapter, activeSegmentIdx, effectiveSegments.length]);
+
+  // When switching to OpenGL 3D mode, ensure viewport is at top so book is never offset
+  useEffect(() => {
+    if (readerMode === 'opengl' && typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    }
+  }, [readerMode]);
+
   const handleGutterPrev = useCallback(() => {
     if (typeof window !== 'undefined') {
       if (window.scrollY <= 50 && prevChapter && onSelectChapter) {
@@ -382,7 +412,7 @@ export default function ReaderView({
       className={`reader-canvas-container ${
         readerMode === 'normal'
           ? 'pb-36 min-h-[calc(100vh-56px-var(--dock-safe-bottom,72px))]'
-          : 'h-[calc(100vh-56px-var(--dock-safe-bottom,72px))] max-h-[calc(100vh-56px-var(--dock-safe-bottom,72px))] overflow-hidden'
+          : 'h-[calc(100vh-56px-var(--dock-safe-bottom,72px))] max-h-[calc(100vh-56px-var(--dock-safe-bottom,72px))] overflow-hidden reader-mode-opengl'
       } transition-opacity duration-300 ${isFocusMode ? 'focus-mode-active' : ''}`}
     >
       {/* Floating Focus Mode Banner */}
@@ -732,7 +762,7 @@ export default function ReaderView({
 
       {/* Render Mode 1: Moon+ Reader Pro 3D OpenGL Mode */}
       {readerMode === 'opengl' ? (
-        <div className="w-full flex-1 flex flex-col justify-center overflow-hidden">
+        <div className="w-full flex-1 flex flex-col justify-between overflow-hidden min-h-0">
           <OpenGLPageReader
             segments={effectiveSegments}
             activeSegmentId={activeSegmentId}
@@ -828,16 +858,16 @@ export default function ReaderView({
                       isDialogue ? `${seg.speaker_name || 'Character'}: ` : 'Narrator: '
                     }${seg.text}`}
                     className={`
-                      group relative rounded-xl transition-all duration-120 cursor-pointer outline-none select-text mb-4
+                      group relative rounded-xl transition-all duration-120 cursor-pointer outline-none select-text mb-2 sm:mb-2.5
                       ${
                         isActive
                           ? 'reader-sync-active-para'
-                          : 'p-3 hover:bg-[var(--bg-hover)]'
+                          : 'p-2 sm:p-2.5 hover:bg-[var(--bg-hover)]'
                       }
                     `}
                   >
                     {/* Dynamic Speaker Header Row */}
-                    <div className="relative z-10 flex items-center justify-between mb-2 text-xs font-mono">
+                    <div className="relative z-10 flex items-center justify-between mb-1 text-xs font-mono">
                       {isDialogue ? (
                         <span className="font-bold text-[var(--text-main)] font-mono text-[11px] uppercase tracking-wider flex items-center gap-1.5">
                           <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-main)]" />
