@@ -27,10 +27,10 @@ import {
  * High-fidelity Hogwarts Heraldic Crest Ornament matching Apple Books Screenshot 2
  * features 4 house quarters (Lion, Eagle, Serpent, Badger), central 'H', and Latin motto banner.
  */
-function HogwartsCrest({ className = 'w-44 h-44 sm:w-48 sm:h-48' }) {
+function HogwartsCrest({ className = 'w-32 h-32 sm:w-36 sm:h-36' }) {
   return (
-    <div className="flex flex-col items-center justify-center my-3 select-none">
-      <div className="relative p-3.5 rounded-2xl bg-[var(--accent-surface)] border border-[var(--border-subtle)] shadow-sm dark:shadow-md">
+    <div className="flex flex-col items-center justify-center my-2 select-none">
+      <div className="relative p-2.5 rounded-2xl bg-[var(--accent-surface)] border border-[var(--border-subtle)] shadow-sm dark:shadow-md">
         <svg
           viewBox="0 0 240 240"
           className={className}
@@ -208,6 +208,14 @@ export default function OpenGLPageReader({
     return currentChapter?.image_url || null;
   }, [segments, currentChapter]);
 
+  const firstPageExtraReservePx = useMemo(() => {
+    const firstHasImg = Boolean(segments?.[0] && parseSegmentImage(segments[0]).imgUrl);
+    if (!firstHasImg && (isHarryPotter || Boolean(chapterOpeningImg))) {
+      return 240;
+    }
+    return 150;
+  }, [segments, isHarryPotter, chapterOpeningImg]);
+
   // Paginate prose into book pages using fit engine contentBox
   const pages = useMemo(() => {
     return measureAndPaginateSegments(segments, {
@@ -215,8 +223,9 @@ export default function OpenGLPageReader({
       containerHeight: fit.contentBox?.h || (isFocusMode ? 750 : 640),
       fontSize,
       lineHeight: 1.85,
+      firstPageExtraReservePx,
     });
-  }, [segments, fit.contentBox?.w, fit.contentBox?.h, fontSize, isFocusMode]);
+  }, [segments, fit.contentBox?.w, fit.contentBox?.h, fontSize, isFocusMode, firstPageExtraReservePx]);
 
   const totalPages = Math.max(1, pages.length);
   const isSingleLayout = fit.layout === 'single';
@@ -720,10 +729,10 @@ export default function OpenGLPageReader({
               </div>
 
               {/* Left Page Content */}
-              <div className="flex-1 min-h-0 py-2 sm:py-3 space-y-3 sm:space-y-4 overflow-y-auto">
+              <div className="flex-1 min-h-0 py-2 sm:py-3 space-y-3 sm:space-y-4 overflow-hidden">
                 {/* On Spread 0, render Chapter Opening Header */}
                 {isSpreadZero && (
-                  <div className="text-center space-y-2 mb-4 animate-fade-in">
+                  <div className="text-center space-y-1.5 mb-3 animate-fade-in">
                     <h1 className="text-sm sm:text-base font-serif font-bold tracking-widest uppercase text-[var(--accent-text)]">
                       {currentNovel?.title || 'Chapter Opening'}
                     </h1>
@@ -733,18 +742,18 @@ export default function OpenGLPageReader({
                     {!leftHasImage && isHarryPotter ? (
                       <HogwartsCrest />
                     ) : !leftHasImage && chapterOpeningImg ? (
-                      <div className="my-3 flex justify-center">
+                      <div className="my-2 flex justify-center">
                         <img
                           src={chapterOpeningImg}
                           alt="Chapter opening illustration"
-                          className="max-h-48 sm:max-h-56 rounded-xl border border-stone-200 dark:border-white/15 shadow-lg object-contain"
+                          className="max-h-36 sm:max-h-40 rounded-xl border border-stone-200 dark:border-white/15 shadow-lg object-contain"
                           onError={(e) => {
                             e.currentTarget.style.display = 'none';
                           }}
                         />
                       </div>
                     ) : (
-                      <div className="flex items-center justify-center gap-3 my-4 opacity-60 dark:opacity-50 select-none">
+                      <div className="flex items-center justify-center gap-3 my-3 opacity-60 dark:opacity-50 select-none">
                         <span className="h-px w-12 bg-gradient-to-r from-transparent to-[var(--brand-bronze,#A88462)]/50" />
                         <span className="text-[var(--accent-text)] text-xs">❦</span>
                         <span className="h-px w-12 bg-gradient-to-l from-transparent to-[var(--brand-bronze,#A88462)]/50" />
@@ -793,11 +802,11 @@ export default function OpenGLPageReader({
               </div>
 
               {/* Right Page Content */}
-              <div className="flex-1 min-h-0 py-2 sm:py-3 space-y-3 sm:space-y-4 overflow-y-auto">
+              <div className="flex-1 min-h-0 py-2 sm:py-3 space-y-3 sm:space-y-4 overflow-hidden">
                 {isCoverActiveOnSpreadZero ? (
                   /* Cover Showcase Panel (Matching Screenshot 1) */
-                  <div className="flex-1 flex flex-col items-center justify-center py-4 px-2 text-center animate-fade-in">
-                    <div className="relative group max-w-[340px] sm:max-w-[380px] w-full aspect-[2/3] max-h-[480px] rounded-2xl overflow-hidden shadow-2xl ring-2 ring-[var(--brand-bronze,#A88462)]/30 transition-transform duration-300 hover:scale-[1.01]">
+                  <div className="h-full flex flex-col items-center justify-center py-2 px-2 text-center animate-fade-in">
+                    <div className="relative group w-auto h-full max-h-[320px] sm:max-h-[400px] aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl ring-2 ring-[var(--brand-bronze,#A88462)]/30 transition-transform duration-300 hover:scale-[1.01]">
                       {/* MinaLima Ornate Gold Border Frame */}
                       <div className="absolute inset-0 border-4 border-[var(--brand-bronze,#A88462)]/40 rounded-2xl pointer-events-none z-10" />
                       {currentNovel?.cover_object ? (
@@ -929,7 +938,7 @@ export default function OpenGLPageReader({
       </div>
 
       {/* Floating Apple Books Dock Controls */}
-      <div className="w-full max-w-3xl sm:max-w-4xl mx-auto flex flex-nowrap items-center justify-between gap-2 sm:gap-3 px-3 sm:px-4 py-1.5 rounded-xl glass-dock border theme-border shadow-md flex-shrink-0 text-xs my-1 overflow-x-auto">
+      <div className="w-full max-w-5xl mx-auto flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sm:gap-3 px-3 sm:px-4 py-1.5 rounded-xl glass-dock border theme-border shadow-md flex-shrink-0 text-xs my-1 overflow-x-hidden">
         {/* Prev / Next Page Buttons */}
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <button

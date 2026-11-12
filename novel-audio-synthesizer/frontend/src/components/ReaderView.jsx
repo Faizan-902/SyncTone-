@@ -518,9 +518,13 @@ export default function ReaderView({
       )}
 
       {/* Floating Monospace Noir Reader Toolbar */}
-      <div className="reader-floating-toolbar" role="toolbar" aria-label="Reader Controls">
+      <div
+        className="reader-floating-toolbar flex-wrap overflow-x-hidden"
+        role="toolbar"
+        aria-label="Reader Controls"
+      >
         {/* Left Toolbar Group */}
-        <div className="reader-toolbar-group">
+        <div className="reader-toolbar-group flex-wrap min-w-0">
           <span className="mono-xs desktop-only-tag" style={{ color: 'var(--text-muted)' }}>
             // READER CONTROL
           </span>
@@ -658,7 +662,7 @@ export default function ReaderView({
         </div>
 
         {/* Right Toolbar Group */}
-        <div className="reader-toolbar-group">
+        <div className="reader-toolbar-group flex-wrap min-w-0">
           {/* Chapter Selector Dropdown */}
           {chapters && chapters.length > 1 && (
             <div className="inline-flex items-center gap-1">

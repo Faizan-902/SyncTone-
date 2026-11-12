@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { api } from '../services/api';
 import {
   IconSoundwave,
@@ -90,18 +90,95 @@ export const NEURAL_VOICES = [
   },
 ];
 
-export default function VoicesView({ onSelectNovel, onOpenSettings }) {
+const AUDITION_ENGINES = [
+  { id: 'msedge-tts', label: 'Edge TTS Neural' },
+  { id: 'kokoro-tts', label: 'Kokoro v1.0 ONNX' },
+  { id: 'paradee-tts', label: 'Paradee-8M ONNX' },
+  { id: 'paradee-mixed', label: 'Paradee + Machine Mixed' },
+  { id: 'machine-tts', label: 'macOS Machine TTS' },
+];
+
+export default function VoicesView({
+  onSelectNovel,
+  onOpenSettings,
+  ttsEngine: propTtsEngine,
+  onSelectTtsEngine,
+}) {
   const [activeTab, setActiveTab] = useState('voices'); // 'voices' | 'cast' | 'timbre' | 'engines'
   const [playingVoiceId, setPlayingVoiceId] = useState(null);
+  const [loadingVoiceId, setLoadingVoiceId] = useState(null);
+  const [sampleError, setSampleError] = useState(null);
   const [novels, setNovels] = useState([]);
   const [isLoadingNovels, setIsLoadingNovels] = useState(false);
   const [modelsStatus, setModelsStatus] = useState(null);
+  const [localEngine, setLocalEngine] = useState(() => {
+    try {
+      return (typeof localStorage !== 'undefined' && localStorage.getItem('synctone_tts_engine')) || 'msedge-tts';
+    } catch (_) {
+      return 'msedge-tts';
+    }
+  });
+
+  const activeEngine = propTtsEngine || localEngine;
+
+  const audioRef = useRef(null);
+  const objectUrlRef = useRef(null);
+  const abortRef = useRef(null);
+  const mountedRef = useRef(true);
 
   // Timbre sliders state
   const [emotionalRange, setEmotionalRange] = useState(78);
   const [breathRate, setBreathRate] = useState(42);
   const [pitchOffset, setPitchOffset] = useState(0);
   const [cadenceRate, setCadenceRate] = useState(1.0);
+
+  const stopActivePreview = useCallback(() => {
+    if (abortRef.current) {
+      try {
+        abortRef.current.abort();
+      } catch (_) {}
+      abortRef.current = null;
+    }
+    if (audioRef.current) {
+      try {
+        const audio = audioRef.current;
+        audio.onended = null;
+        audio.onerror = null;
+        audio.pause();
+        audio.src = '';
+      } catch (_) {}
+      audioRef.current = null;
+    }
+    if (objectUrlRef.current && typeof URL !== 'undefined' && typeof URL.revokeObjectURL === 'function') {
+      try {
+        URL.revokeObjectURL(objectUrlRef.current);
+      } catch (_) {}
+      objectUrlRef.current = null;
+    }
+    if (mountedRef.current) {
+      setPlayingVoiceId(null);
+      setLoadingVoiceId(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      stopActivePreview();
+    };
+  }, [stopActivePreview]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const onStorage = (e) => {
+      if (e.key === 'synctone_tts_engine' && e.newValue) {
+        setLocalEngine(e.newValue);
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -128,16 +205,100 @@ export default function VoicesView({ onSelectNovel, onOpenSettings }) {
     };
   }, []);
 
-  // Simulated preview speech toggle
-  const togglePlaySample = (voiceId) => {
-    if (playingVoiceId === voiceId) {
-      setPlayingVoiceId(null);
-    } else {
-      setPlayingVoiceId(voiceId);
-      // Automatically stop after 6 seconds preview
-      setTimeout(() => {
-        setPlayingVoiceId((curr) => (curr === voiceId ? null : curr));
-      }, 6000);
+  const handleEngineSelect = (nextEngine) => {
+    setLocalEngine(nextEngine);
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('synctone_tts_engine', nextEngine);
+      }
+    } catch (_) {}
+    onSelectTtsEngine?.(nextEngine);
+    stopActivePreview();
+  };
+
+  // Real audio audition using /api/voices/speak + Audio + blob/object URL
+  const togglePlaySample = async (voiceOrId) => {
+    const voice =
+      typeof voiceOrId === 'string'
+        ? NEURAL_VOICES.find((v) => v.id === voiceOrId)
+        : voiceOrId;
+    if (!voice) return;
+
+    if (playingVoiceId === voice.id || loadingVoiceId === voice.id) {
+      stopActivePreview();
+      return;
+    }
+
+    stopActivePreview();
+    setSampleError(null);
+    setLoadingVoiceId(voice.id);
+
+    const engine = activeEngine || 'msedge-tts';
+    const sampleText = voice.sampleQuote || `Testing voice profile ${voice.name}.`;
+    const isNarrator = voice.id === 'en-GB-RyanNeural';
+    const gender = String(voice.gender || '').toLowerCase();
+    const speakUrl = `/api/voices/speak?text=${encodeURIComponent(sampleText)}&voice_id=${encodeURIComponent(voice.id)}&engine=${encodeURIComponent(engine)}&character_id=${encodeURIComponent(voice.id)}&speaker_name=${encodeURIComponent(voice.name)}&is_narrator=${isNarrator}&gender=${encodeURIComponent(gender)}`;
+
+    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    abortRef.current = controller;
+
+    try {
+      let audioSrc = speakUrl;
+
+      if (typeof fetch === 'function') {
+        const response = await fetch(speakUrl, {
+          credentials: 'include',
+          ...(controller ? { signal: controller.signal } : {}),
+        });
+        if (!response.ok) {
+          throw new Error(`Sample request failed (${response.status})`);
+        }
+        if (!mountedRef.current || abortRef.current !== controller) return;
+
+        if (
+          typeof response.blob === 'function' &&
+          typeof URL !== 'undefined' &&
+          typeof URL.createObjectURL === 'function'
+        ) {
+          const blob = await response.blob();
+          if (!mountedRef.current || abortRef.current !== controller) return;
+          const objectUrl = URL.createObjectURL(blob);
+          objectUrlRef.current = objectUrl;
+          audioSrc = objectUrl;
+        }
+      }
+
+      if (typeof Audio === 'undefined') {
+        throw new Error('Audio playback is unavailable in this environment.');
+      }
+
+      const audio = new Audio(audioSrc);
+      audioRef.current = audio;
+
+      audio.onended = () => {
+        if (audioRef.current === audio) {
+          stopActivePreview();
+        }
+      };
+
+      audio.onerror = () => {
+        if (audioRef.current === audio) {
+          stopActivePreview();
+          if (mountedRef.current) {
+            setSampleError(`Unable to play audio sample for ${voice.name}.`);
+          }
+        }
+      };
+
+      setLoadingVoiceId(null);
+      setPlayingVoiceId(voice.id);
+      await audio.play();
+    } catch (err) {
+      if (err?.name === 'AbortError') return;
+      stopActivePreview();
+      if (mountedRef.current) {
+        setSampleError(err?.message || `Failed to audition ${voice.name}.`);
+      }
     }
   };
 
@@ -163,7 +324,19 @@ export default function VoicesView({ onSelectNovel, onOpenSettings }) {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <select
+              aria-label="Audition TTS Engine"
+              value={activeEngine}
+              onChange={(e) => handleEngineSelect(e.target.value)}
+              className="px-3 py-2 text-xs font-mono rounded-full bg-[var(--bg-surface)] text-[var(--text-main)] border border-[var(--border-subtle)] cursor-pointer focus:outline-none focus:border-[var(--border-strong)]"
+            >
+              {AUDITION_ENGINES.map((eng) => (
+                <option key={eng.id} value={eng.id}>
+                  {eng.label}
+                </option>
+              ))}
+            </select>
             {onOpenSettings && (
               <button
                 type="button"
@@ -237,14 +410,31 @@ export default function VoicesView({ onSelectNovel, onOpenSettings }) {
       {/* 2. TAB 1: NEURAL VOICES */}
       {activeTab === 'voices' && (
         <section className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <span className="mono-xs text-[var(--text-muted)]">// NEURAL VOICE MATRIX</span>
-            <span className="mono-xs text-[var(--text-sub)]">48KHZ STUDIO PCM</span>
+            <span className="mono-xs text-[var(--text-sub)]">48KHZ STUDIO PCM • {activeEngine.toUpperCase()}</span>
           </div>
+
+          {sampleError && (
+            <div
+              role="alert"
+              className="p-3 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-strong)] text-xs font-mono text-[var(--text-main)] flex items-center justify-between gap-2"
+            >
+              <span>{sampleError}</span>
+              <button
+                type="button"
+                onClick={() => setSampleError(null)}
+                className="text-[10px] uppercase text-[var(--text-sub)] hover:text-[var(--text-main)] cursor-pointer"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {NEURAL_VOICES.map((v) => {
               const isPlaying = playingVoiceId === v.id;
+              const isLoading = loadingVoiceId === v.id;
               return (
                 <div
                   key={v.id}
@@ -280,11 +470,16 @@ export default function VoicesView({ onSelectNovel, onOpenSettings }) {
                     </span>
                     <button
                       type="button"
-                      onClick={() => togglePlaySample(v.id)}
+                      onClick={() => togglePlaySample(v)}
                       className="boxed-btn px-3 py-1.5 text-[11px] font-mono uppercase inline-flex items-center gap-1.5 cursor-pointer rounded-full active:scale-95 transition-all shadow-xs hover:scale-105"
                       aria-label={`Audition sample for ${v.name}`}
                     >
-                      {isPlaying ? (
+                      {isLoading ? (
+                        <>
+                          <IconRefresh className="w-3 h-3 animate-spin" />
+                          <span>Loading</span>
+                        </>
+                      ) : isPlaying ? (
                         <>
                           <IconPause className="w-3 h-3 fill-current" />
                           <span>Stop</span>

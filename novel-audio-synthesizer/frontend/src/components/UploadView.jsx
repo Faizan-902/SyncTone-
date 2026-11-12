@@ -13,7 +13,44 @@ import {
   IconPlay,
 } from './icons';
 
-export default function UploadView({ onNovelCreated, onSelectChapter, onOpenAuth, onNavigate }) {
+const PARSER_ENGINE_OPTIONS = [
+  { id: 'heuristic', label: 'Heuristic (Fast Local Rules)' },
+  { id: 'gemini', label: 'Gemini AI (Cloud Dialogue LLM)' },
+  { id: 'ollama', label: 'Ollama (Local LLM Attribution)' },
+  { id: 'unlimited-ocr', label: 'Vision OCR (Scanned PDF / vLLM)' },
+];
+
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result || '');
+      const base64 = result.includes(',') ? result.split(',')[1] : result;
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function readStoredParserConfig() {
+  try {
+    if (typeof localStorage === 'undefined') return null;
+    const raw = localStorage.getItem('synctone_parser_config');
+    return raw ? JSON.parse(raw) : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+export default function UploadView({
+  onNovelCreated,
+  onSelectChapter,
+  onOpenAuth,
+  onNavigate,
+  defaultParserEngine: propParserEngine,
+  onSelectParserEngine,
+}) {
   const { user, isAuthenticated, isWriterOrAdmin, login } = useAuth();
 
   const [dragActive, setDragActive] = useState(false);
@@ -21,6 +58,16 @@ export default function UploadView({ onNovelCreated, onSelectChapter, onOpenAuth
   const [isParsing, setIsParsing] = useState(false);
   const [parseProgress, setParseProgress] = useState('');
   const [parseError, setParseError] = useState(null);
+
+  const [localParserEngine, setLocalParserEngine] = useState(() => {
+    try {
+      return (typeof localStorage !== 'undefined' && localStorage.getItem('synctone_parser_engine')) || 'heuristic';
+    } catch (_) {
+      return 'heuristic';
+    }
+  });
+  const parserEngine = propParserEngine || localParserEngine;
+  const [parserConfig, setParserConfig] = useState(readStoredParserConfig);
 
   // Form Fields
   const [title, setTitle] = useState('');
@@ -37,6 +84,40 @@ export default function UploadView({ onNovelCreated, onSelectChapter, onOpenAuth
   const [quickLoginLoading, setQuickLoginLoading] = useState(false);
 
   const fileInputRef = useRef(null);
+  const parserEngineRef = useRef(parserEngine);
+  const parserConfigRef = useRef(parserConfig);
+  parserEngineRef.current = parserEngine;
+  parserConfigRef.current = parserConfig;
+
+  React.useEffect(() => {
+    let cancelled = false;
+    const maybePromise = api.status?.getParserConfig?.();
+    if (maybePromise && typeof maybePromise.then === 'function') {
+      maybePromise
+        .then((res) => {
+          if (cancelled || !res) return;
+          const nextCfg = res.config && typeof res.config === 'object' ? res.config : res;
+          setParserConfig(nextCfg);
+          try {
+            localStorage.setItem('synctone_parser_config', JSON.stringify(nextCfg));
+          } catch (_) {}
+        })
+        .catch(() => {});
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleParserEngineChange = (nextEngine) => {
+    setLocalParserEngine(nextEngine);
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('synctone_parser_engine', nextEngine);
+      }
+    } catch (_) {}
+    onSelectParserEngine?.(nextEngine);
+  };
 
   // Quick 1-click Demo Writer Login for testing/guest access
   const handleQuickDemoLogin = async () => {
@@ -74,33 +155,67 @@ export default function UploadView({ onNovelCreated, onSelectChapter, onOpenAuth
 
     try {
       const ext = selectedFile.name.split('.').pop().toLowerCase();
+      const activeParserEngine = parserEngineRef.current || 'heuristic';
+      const activeParserConfig = parserConfigRef.current || readStoredParserConfig();
       let extractedData = null;
 
-      if (ext === 'pdf') {
-        setParseProgress('Extracting text chapters via PDF.js...');
-        extractedData = await parsePdfWithPdfJs(selectedFile, api.novels.uploadAsset);
-      } else if (['epub', 'mobi', 'azw3', 'fb2'].includes(ext)) {
-        setParseProgress('Extracting book structure via Foliate parser...');
-        extractedData = await parseEbookWithFoliate(selectedFile, api.novels.uploadAsset);
-      } else {
-        // Plain text / markdown fallback
-        setParseProgress('Parsing plain text chapters...');
-        const text = await selectedFile.text();
-        const rawChapters = text.split(/(?=^Chapter\s+\d+|^PART\s+\d+|^BOOK\s+\d+)/gmi);
-        extractedData = {
-          title: selectedFile.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '),
-          author: user?.username || 'SyncTone Author',
-          chapters: rawChapters.map((ch, idx) => {
-            const body = ch.trim() || 'Chapter text preview.';
-            return {
-              chapter_number: idx + 1,
-              title: `Chapter ${idx + 1}`,
-              raw_text: body,
-              text: body,
-              content: body,
-            };
-          }),
-        };
+      // When a non-heuristic parser is selected (Gemini / Ollama / Vision OCR), run backend parser first
+      if (activeParserEngine !== 'heuristic' && typeof api.novels?.parseFile === 'function') {
+        setParseProgress(`Extracting & attributing manuscript via ${activeParserEngine}...`);
+        try {
+          const formData = new FormData();
+          formData.append('file', selectedFile);
+          formData.append('parser_engine', activeParserEngine);
+          if (activeParserConfig) {
+            formData.append('parser_config', JSON.stringify(activeParserConfig));
+          }
+          extractedData = await api.novels.parseFile(formData, activeParserEngine, activeParserConfig);
+        } catch (uploadErr) {
+          if (selectedFile.size < 50 * 1024 * 1024) {
+            try {
+              const base64 = await readFileAsBase64(selectedFile);
+              extractedData = await api.novels.parseFile(
+                {
+                  file_name: selectedFile.name,
+                  file_base64: base64,
+                  parser_engine: activeParserEngine,
+                  ...(activeParserConfig ? { parser_config: activeParserConfig } : {}),
+                },
+                activeParserEngine,
+                activeParserConfig
+              );
+            } catch (_) {}
+          }
+        }
+      }
+
+      if (!extractedData || !Array.isArray(extractedData.chapters) || extractedData.chapters.length === 0) {
+        if (ext === 'pdf') {
+          setParseProgress('Extracting text chapters via PDF.js...');
+          extractedData = await parsePdfWithPdfJs(selectedFile, api.novels.uploadAsset);
+        } else if (['epub', 'mobi', 'azw3', 'fb2'].includes(ext)) {
+          setParseProgress('Extracting book structure via Foliate parser...');
+          extractedData = await parseEbookWithFoliate(selectedFile, api.novels.uploadAsset);
+        } else {
+          // Plain text / markdown fallback
+          setParseProgress('Parsing plain text chapters...');
+          const text = await selectedFile.text();
+          const rawChapters = text.split(/(?=^Chapter\s+\d+|^PART\s+\d+|^BOOK\s+\d+)/gmi);
+          extractedData = {
+            title: selectedFile.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '),
+            author: user?.username || 'SyncTone Author',
+            chapters: rawChapters.map((ch, idx) => {
+              const body = ch.trim() || 'Chapter text preview.';
+              return {
+                chapter_number: idx + 1,
+                title: `Chapter ${idx + 1}`,
+                raw_text: body,
+                text: body,
+                content: body,
+              };
+            }),
+          };
+        }
       }
 
       if (extractedData) {
@@ -169,6 +284,7 @@ export default function UploadView({ onNovelCreated, onSelectChapter, onOpenAuth
     setSubmitSuccess(null);
 
     try {
+      const activeParserConfig = parserConfigRef.current || readStoredParserConfig();
       const payload = {
         title: title.trim(),
         synopsis: synopsis.trim() || 'Dramatic multi-voice audio adaptation.',
@@ -176,6 +292,8 @@ export default function UploadView({ onNovelCreated, onSelectChapter, onOpenAuth
         channel,
         portfolio_source: 'manual',
         cover_object: coverUrl || null,
+        parser_engine: parserEngine,
+        ...(activeParserConfig ? { parser_config: activeParserConfig } : {}),
         chapters: (parsedChapters.length > 0
           ? parsedChapters
           : [
@@ -420,7 +538,7 @@ export default function UploadView({ onNovelCreated, onSelectChapter, onOpenAuth
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <div className="space-y-1.5">
             <label className="text-xs font-mono uppercase text-[var(--text-sub)]">
               Catalog Channel
@@ -432,6 +550,28 @@ export default function UploadView({ onNovelCreated, onSelectChapter, onOpenAuth
             >
               <option value="community">Community Archive (Open Access)</option>
               <option value="verified">Verified Repertory (Curated Classics)</option>
+            </select>
+          </div>
+
+          <div className="space-y-1.5">
+            <label
+              htmlFor="upload-parser-engine"
+              className="text-xs font-mono uppercase text-[var(--text-sub)]"
+            >
+              AI Manuscript Parser
+            </label>
+            <select
+              id="upload-parser-engine"
+              aria-label="AI Manuscript Parser"
+              value={parserEngine}
+              onChange={(e) => handleParserEngineChange(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-sm text-[var(--text-main)] focus:outline-none focus:border-[var(--text-main)] font-mono"
+            >
+              {PARSER_ENGINE_OPTIONS.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {opt.label}
+                </option>
+              ))}
             </select>
           </div>
 

@@ -86,6 +86,7 @@ function AppContent() {
   // Chapter prose and manifest data
   const [chapterSegments, setChapterSegments] = useState(EMPTY_ARRAY);
   const [chapterManifest, setChapterManifest] = useState(null);
+  const [novelCharacters, setNovelCharacters] = useState(EMPTY_ARRAY);
   const [hasStudioAudio, setHasStudioAudio] = useState(false);
   const [novelChapters, setNovelChapters] = useState(EMPTY_ARRAY);
   const [isLoadingChapter, setIsLoadingChapter] = useState(false);
@@ -154,7 +155,12 @@ function AppContent() {
     onChapterEndedRef.current?.();
   }, []);
 
-  const audioSync = useAudioSync(effectiveTimeline, { onChapterEnded: handleChapterEnded });
+  const audioSync = useAudioSync(effectiveTimeline, {
+    onChapterEnded: handleChapterEnded,
+    novelId: currentNovel?.id || selectedNovelId,
+    chapterId: currentChapter?.id,
+    characters: novelCharacters,
+  });
 
   // Playback Progress Hook (auto-resume & throttled persistence)
   const playbackProgress = usePlaybackProgress({
@@ -299,6 +305,73 @@ function AppContent() {
     }
   }, [view, routeNovelId, selectedNovelId, currentNovel?.id, navigate]);
 
+  const matchesCharacterTarget = useCallback((item, targetCharId) => {
+    if (!item || !targetCharId) return false;
+    const normTarget = String(targetCharId).trim().toLowerCase();
+    const candidates = [
+      item.character_id,
+      item.speaker_id,
+      item.id,
+      item.name,
+      item.speaker_name,
+    ]
+      .filter(Boolean)
+      .map((val) => String(val).trim().toLowerCase());
+    return candidates.includes(normTarget);
+  }, []);
+
+  const buildChapterManifestState = useCallback((chapterId, details, segments, manifest) => {
+    if (manifest) {
+      const streamUrl =
+        manifest.audio_url ||
+        manifest.audio_stream_url ||
+        `/api/stream/${chapterId}`;
+      const enrichedTimeline = (manifest.timeline || []).map((t, idx) => {
+        const seg =
+          segments.find(
+            (s) =>
+              (s.segment_id !== undefined ? s.segment_id : s.order) ===
+              (t.segment_id !== undefined ? t.segment_id : t.order)
+          ) || segments[idx];
+        return {
+          ...t,
+          text: t.text || seg?.text || '',
+          speaker_name: t.speaker_name || seg?.speaker_name || '',
+          voice_id: t.voice_id || seg?.voice_id || seg?.assigned_voice_id || 'en-GB-RyanNeural',
+          assigned_voice_id: t.assigned_voice_id || seg?.assigned_voice_id || t.voice_id || seg?.voice_id,
+          character_id: t.character_id || seg?.character_id || seg?.speaker_id || 'narrator',
+          type: t.type || seg?.type || 'narration',
+          gender: t.gender || seg?.gender,
+          cast_slot: t.cast_slot ?? seg?.cast_slot ?? seg?.slot,
+        };
+      });
+      return {
+        ...manifest,
+        audio_stream_url: streamUrl,
+        timeline: enrichedTimeline,
+      };
+    }
+
+    return {
+      audio_stream_url: `/api/stream/${chapterId}`,
+      total_duration_ms: details?.total_duration_ms || 0,
+      timeline: (segments || []).map((s, idx) => ({
+        order: s.order || idx + 1,
+        segment_id: s.segment_id !== undefined ? s.segment_id : idx + 1,
+        start_ms: s.start_ms || 0,
+        end_ms: s.end_ms || 0,
+        character_id: s.character_id || s.speaker_id || 'narrator',
+        voice_id: s.voice_id || s.assigned_voice_id || 'en-GB-RyanNeural',
+        assigned_voice_id: s.assigned_voice_id || s.voice_id,
+        text: s.text || '',
+        speaker_name: s.speaker_name || '',
+        type: s.type || 'narration',
+        gender: s.gender,
+        cast_slot: s.cast_slot ?? s.slot,
+      })),
+    };
+  }, []);
+
   // Load chapter helper (used for route navigation and deep links)
   const loadChapterById = useCallback(async (chapterId, novel = null) => {
     setIsLoadingChapter(true);
@@ -307,6 +380,8 @@ function AppContent() {
     setChapterManifest(null);
 
     try {
+      let resolvedCharacters = Array.isArray(novel?.characters) ? novel.characters : null;
+
       // 0. Fetch novel chapter list for Next Chapter navigation
       if (novel?.id) {
         api.novels
@@ -314,6 +389,9 @@ function AppContent() {
           .then((nData) => {
             if (Array.isArray(nData?.chapters)) {
               setNovelChapters(nData.chapters);
+            }
+            if (Array.isArray(nData?.characters)) {
+              setNovelCharacters((prev) => (prev.length > 0 ? prev : nData.characters));
             }
           })
           .catch(() => {});
@@ -327,6 +405,10 @@ function AppContent() {
         audioSync.togglePlaybackMode('tts');
       }
 
+      if (Array.isArray(details?.characters)) {
+        resolvedCharacters = details.characters;
+      }
+
       if (!novel && details.novel_id) {
         try {
           const fetchedNovel = await api.novels.get(details.novel_id);
@@ -335,10 +417,19 @@ function AppContent() {
           if (Array.isArray(fetchedNovel?.chapters)) {
             setNovelChapters(fetchedNovel.chapters);
           }
+          if (!resolvedCharacters && Array.isArray(fetchedNovel?.characters)) {
+            resolvedCharacters = fetchedNovel.characters;
+          }
         } catch (_) {}
       } else if (novel) {
         setCurrentNovel(novel);
         setSelectedNovelId(novel.id);
+      }
+
+      if (resolvedCharacters) {
+        setNovelCharacters(resolvedCharacters);
+      } else {
+        setNovelCharacters(EMPTY_ARRAY);
       }
 
       let segments = details.segments || [];
@@ -347,6 +438,9 @@ function AppContent() {
           const parsedRes = await api.chapters.parse(chapterId);
           if (parsedRes?.segments) {
             segments = parsedRes.segments;
+          }
+          if (Array.isArray(parsedRes?.characters)) {
+            setNovelCharacters(parsedRes.characters);
           }
         } catch (_) {}
       }
@@ -359,55 +453,79 @@ function AppContent() {
         } catch (_) {}
       }
 
-      if (manifest) {
-        const streamUrl =
-          manifest.audio_url ||
-          manifest.audio_stream_url ||
-          `/api/stream/${chapterId}`;
-        const enrichedTimeline = (manifest.timeline || []).map((t, idx) => {
-          const seg =
-            segments.find(
-              (s) =>
-                (s.segment_id !== undefined ? s.segment_id : s.order) ===
-                (t.segment_id !== undefined ? t.segment_id : t.order)
-            ) || segments[idx];
-          return {
-            ...t,
-            text: t.text || seg?.text || '',
-            speaker_name: t.speaker_name || seg?.speaker_name || '',
-            voice_id: t.voice_id || seg?.voice_id || 'en-GB-RyanNeural',
-            character_id: t.character_id || seg?.character_id || 'narrator',
-            type: t.type || seg?.type || 'narration',
-          };
-        });
-        setChapterManifest({
-          ...manifest,
-          audio_stream_url: streamUrl,
-          timeline: enrichedTimeline,
-        });
-      } else {
-        setChapterManifest({
-          audio_stream_url: `/api/stream/${chapterId}`,
-          total_duration_ms: details.total_duration_ms || 0,
-          timeline: segments.map((s, idx) => ({
-            order: s.order || idx + 1,
-            segment_id: s.segment_id !== undefined ? s.segment_id : idx + 1,
-            start_ms: s.start_ms || 0,
-            end_ms: s.end_ms || 0,
-            character_id: s.character_id,
-            voice_id: s.voice_id || 'en-GB-RyanNeural',
-            text: s.text || '',
-            speaker_name: s.speaker_name || '',
-            type: s.type || 'narration',
-          })),
-        });
-      }
+      setChapterManifest(buildChapterManifestState(chapterId, details, segments, manifest));
     } catch (err) {
       setChapterError(err.message || 'Failed to load chapter audio and segments.');
     } finally {
       setIsLoadingChapter(false);
     }
-  }, []);
+  }, [buildChapterManifestState]);
+
+  const handleReparseCurrentChapter = useCallback(
+    async (parserEngine = defaultParserEngine, parserConfig = null) => {
+      const targetChapterId = currentChapter?.id;
+      if (!targetChapterId) return null;
+
+      const parsedRes = await api.chapters.parse(targetChapterId, parserEngine, parserConfig);
+      let refreshedDetails = null;
+      try {
+        refreshedDetails = await api.chapters.get(targetChapterId);
+      } catch (_) {}
+
+      const nextSegments =
+        Array.isArray(refreshedDetails?.segments) && refreshedDetails.segments.length > 0
+          ? refreshedDetails.segments
+          : Array.isArray(parsedRes?.segments)
+            ? parsedRes.segments
+            : [];
+      const nextManifest = refreshedDetails?.manifest || parsedRes?.manifest || null;
+      const nextCharacters =
+        (Array.isArray(refreshedDetails?.characters) && refreshedDetails.characters) ||
+        (Array.isArray(parsedRes?.characters) && parsedRes.characters) ||
+        null;
+
+      setChapterSegments(nextSegments);
+      setChapterManifest(
+        buildChapterManifestState(
+          targetChapterId,
+          refreshedDetails || parsedRes || currentChapter,
+          nextSegments,
+          nextManifest
+        )
+      );
+
+      if (nextCharacters) {
+        setNovelCharacters(nextCharacters);
+      } else if (nextSegments.length > 0) {
+        const derivedMap = new Map();
+        nextSegments.forEach((seg) => {
+          const charId = seg.character_id || seg.speaker_id;
+          if (!charId) return;
+          if (!derivedMap.has(charId)) {
+            derivedMap.set(charId, {
+              id: charId,
+              character_id: charId,
+              name: seg.speaker_name || charId,
+              voice_id: seg.assigned_voice_id || seg.voice_id || 'en-GB-RyanNeural',
+              gender: seg.gender || null,
+            });
+          }
+        });
+        setNovelCharacters(Array.from(derivedMap.values()));
+      }
+
+      if (refreshedDetails) {
+        setCurrentChapter((prev) => ({ ...(prev || {}), ...refreshedDetails }));
+      }
+
+      return {
+        segments: nextSegments,
+        characters: nextCharacters || [],
+        manifest: nextManifest,
+      };
+    },
+    [currentChapter, defaultParserEngine, buildChapterManifestState]
+  );
 
   // Sync routeChapterId when navigating deep link to /reader/:chapterId
   useEffect(() => {
@@ -734,6 +852,8 @@ function AppContent() {
                 <VoicesView
                   onSelectNovel={handleSelectNovel}
                   onOpenSettings={() => setShowSettings(true)}
+                  ttsEngine={audioSync.ttsEngine}
+                  onSelectTtsEngine={audioSync.setTtsEngine}
                 />
               </ErrorBoundary>
             )}
@@ -829,6 +949,8 @@ function AppContent() {
                   onOpenAuth={handleOpenAuth}
                   onNavigate={handleNavigate}
                   onSelectChapter={handleSelectChapter}
+                  defaultParserEngine={defaultParserEngine}
+                  onSelectParserEngine={handleSelectParserEngine}
                   onNovelCreated={(newNovel, firstChapter) => {
                     if (firstChapter) {
                       handleSelectChapter(newNovel, firstChapter);
@@ -926,10 +1048,41 @@ function AppContent() {
                 onVoiceChange={(charId, newVoiceId) => {
                   setChapterSegments((prev) =>
                     prev.map((s) =>
-                      s.character_id === charId || s.speaker_id === charId
+                      matchesCharacterTarget(s, charId)
                         ? { ...s, assigned_voice_id: newVoiceId, voice_id: newVoiceId }
                         : s
                     )
+                  );
+                  setChapterManifest((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          timeline: (prev.timeline || []).map((t) =>
+                            matchesCharacterTarget(t, charId)
+                              ? { ...t, assigned_voice_id: newVoiceId, voice_id: newVoiceId }
+                              : t
+                          ),
+                        }
+                      : prev
+                  );
+                  setNovelCharacters((prev) =>
+                    prev.map((c) =>
+                      matchesCharacterTarget(c, charId)
+                        ? { ...c, assigned_voice_id: newVoiceId, voice_id: newVoiceId }
+                        : c
+                    )
+                  );
+                  setCurrentNovel((prev) =>
+                    prev && Array.isArray(prev.characters)
+                      ? {
+                          ...prev,
+                          characters: prev.characters.map((c) =>
+                            matchesCharacterTarget(c, charId)
+                              ? { ...c, assigned_voice_id: newVoiceId, voice_id: newVoiceId }
+                              : c
+                          ),
+                        }
+                      : prev
                   );
                 }}
               />
@@ -998,6 +1151,8 @@ function AppContent() {
                 defaultParserEngine={defaultParserEngine}
                 onSelectParserEngine={handleSelectParserEngine}
                 onProbeStatus={handleProbeStatus}
+                currentChapterId={currentChapter?.id || null}
+                onReparseChapter={handleReparseCurrentChapter}
                 onClose={() => {
                   setShowSettings(false);
                   if (pathname === '/settings') navigate('/');
