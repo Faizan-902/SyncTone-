@@ -599,38 +599,74 @@ class TTSEngine {
 
   async synthesizeWithEdgeNode(text, voiceId, options = {}) {
     return new Promise(async (resolve, reject) => {
+      let settled = false;
+      let tts = null;
+      const timeout = setTimeout(() => {
+        if (!settled) {
+          settled = true;
+          try {
+            if (tts && typeof tts.close === 'function') {
+              tts.close();
+            }
+          } catch (_) {}
+          reject(new Error('Edge-TTS timed out after 8000ms'));
+        }
+      }, 8000);
+
+      const finishResolve = (val) => {
+        if (!settled) {
+          settled = true;
+          clearTimeout(timeout);
+          resolve(val);
+        }
+      };
+
+      const finishReject = (err) => {
+        if (!settled) {
+          settled = true;
+          clearTimeout(timeout);
+          try {
+            if (tts && typeof tts.close === 'function') {
+              tts.close();
+            }
+          } catch (_) {}
+          reject(err);
+        }
+      };
+
       try {
         const { MsEdgeTTS, OUTPUT_FORMAT } = require('msedge-tts');
-        const tts = new MsEdgeTTS();
+        tts = new MsEdgeTTS();
         const pitchStr = options.prosody?.pitch || '+0Hz';
         const rateStr = options.prosody?.rate || '+0%';
         await tts.setMetadata(voiceId || 'en-GB-RyanNeural', OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
+        if (settled) return;
         const streamResult = tts.toStream(text, {
           pitch: pitchStr,
           rate: rateStr,
         });
         const audioStream = streamResult?.audioStream || streamResult;
         if (!audioStream || typeof audioStream.on !== 'function') {
-          return reject(new Error('MsEdgeTTS toStream did not return a readable audioStream'));
+          return finishReject(new Error('MsEdgeTTS toStream did not return a readable audioStream'));
         }
         const chunks = [];
         audioStream.on('data', (chunk) => chunks.push(chunk));
         audioStream.on('end', () => {
           const buffer = Buffer.concat(chunks);
           if (buffer.length === 0) {
-            return reject(new Error('MsEdgeTTS returned empty audio stream'));
+            return finishReject(new Error('MsEdgeTTS returned empty audio stream'));
           }
           const durationMs = Math.round((buffer.length / this.bytesPerSec) * 1000);
-          resolve({
+          finishResolve({
             audio_buffer: buffer,
             duration_ms: durationMs,
             format: 'mp3',
             engine: 'msedge-tts',
           });
         });
-        audioStream.on('error', (err) => reject(err));
+        audioStream.on('error', (err) => finishReject(err));
       } catch (err) {
-        reject(err);
+        finishReject(err);
       }
     });
   }
@@ -895,7 +931,10 @@ class TTSEngine {
       }
     }
 
-    // Fallback when Paradee ONNX is unavailable: delegate to Machine TTS
+    // Fallback when Paradee ONNX is unavailable: fail honestly if requested, else delegate to Machine TTS
+    if (mixContext.failHonestly) {
+      throw new Error(`Paradee-TTS model weights not available or synthesis failed for voice '${voiceId}'`);
+    }
     const fallbackRes = await this.synthesizeWithMachine(trimmed, paradeeVoice, effectiveSpeed, {
       ...mixContext,
       skipCharacterRateJitter: true,
@@ -961,6 +1000,16 @@ class TTSEngine {
         audio_buffer: Buffer.alloc(0),
         duration_ms: 0,
         format: 'mp3',
+        engine: preferredEngine === 'auto' ? 'msedge-tts' : preferredEngine,
+      };
+    }
+
+    if (!/[a-zA-Z0-9]/.test(trimmed)) {
+      const sampleCount = Math.floor(this.sampleRate * 0.2);
+      return {
+        audio_buffer: Buffer.alloc(sampleCount * 2),
+        duration_ms: 200,
+        format: 'pcm',
         engine: preferredEngine === 'auto' ? 'msedge-tts' : preferredEngine,
       };
     }
@@ -1109,24 +1158,18 @@ class TTSEngine {
       return await this.synthesizeWithKokoro(trimmed, kokoroVoice, effectiveSpeed, { failHonestly: true });
     }
 
-    // 5. 'msedge-tts' or 'auto' (Fallback Chain: msedge-tts -> kokoro-tts -> machine-tts)
+    // 5. 'msedge-tts' or 'auto' (Fallback Chain: msedge-tts -> kokoro-tts -> paradee-tts -> machine-tts)
     if (speed && speed !== 1.0) {
       const speedPct = Math.round((speed - 1.0) * 100);
       const totalRate = baseRatePct + speedPct;
       prosody.rate = `${totalRate >= 0 ? '+' : ''}${totalRate}%`;
     }
 
-    // If explicit msedge-tts was chosen
-    if (engineChoice === 'msedge-tts') {
-      return await this.synthesizeWithEdge(trimmed, edgeVoice, { prosody });
-    }
-
-    // Fallback chain for 'auto'
     try {
       return await this.synthesizeWithEdge(trimmed, edgeVoice, { prosody });
     } catch (edgeErr) {
       console.warn(
-        `[TTSEngine] Primary Edge TTS failed for voice '${edgeVoice}' (${edgeErr.message}). Activating Kokoro-TTS fallback.`
+        `[TTSEngine] Edge TTS failed for voice '${edgeVoice}' (${edgeErr.message}). Activating Kokoro-TTS fallback.`
       );
       try {
         const fallbackKokoroVoice =
@@ -1136,9 +1179,19 @@ class TTSEngine {
         return await this.synthesizeWithKokoro(trimmed, fallbackKokoroVoice, effectiveSpeed, { failHonestly: true });
       } catch (kokoroErr) {
         console.warn(
-          `[TTSEngine] Kokoro-TTS failed (${kokoroErr.message}). Activating Machine-TTS fallback.`
+          `[TTSEngine] Kokoro-TTS failed (${kokoroErr.message}). Activating Paradee-TTS fallback.`
         );
-        return await this.synthesizeWithMachine(trimmed, edgeVoice || voiceId, effectiveSpeed, mixContext);
+        try {
+          return await this.synthesizeWithParadee(trimmed, voiceId, effectiveSpeed, {
+            ...mixContext,
+            failHonestly: true,
+          });
+        } catch (paradeeErr) {
+          console.warn(
+            `[TTSEngine] Paradee-TTS failed (${paradeeErr.message}). Activating Machine-TTS fallback.`
+          );
+          return await this.synthesizeWithMachine(trimmed, edgeVoice || voiceId, effectiveSpeed, mixContext);
+        }
       }
     }
   }

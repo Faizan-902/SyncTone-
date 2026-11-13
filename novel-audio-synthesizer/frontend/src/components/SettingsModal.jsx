@@ -27,7 +27,7 @@ const DEFAULT_PARSER_CONFIG = {
 };
 
 const KNOWN_OLLAMA_MODELS = ['mistral', 'llama3:8b', 'qwen2.5'];
-const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash'];
+const GEMINI_MODELS = ['gemini-3.8-flash', 'gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash'];
 
 function normalizeParserConfig(raw = {}) {
   const src = raw && typeof raw === 'object' ? (raw.config && typeof raw.config === 'object' ? raw.config : raw) : {};

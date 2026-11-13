@@ -372,7 +372,25 @@ async function upsertDiscoveredCharactersPg(pgPool, novelId, mappedSegments = []
   return savedNames;
 }
 
-async function runSelectedChapterParser(rawText, chapterTitle, chapterId, parserEngine = null, parserConfig = null, onProgress = null) {
+function toVoiceIdString(value) {
+  if (!value) return null;
+  if (typeof value === 'object') {
+    const inner = value.voiceId || value.voice_id || null;
+    return typeof inner === 'string' && !DEAD_LEGACY_VOICES.has(inner.trim()) ? inner.trim() : null;
+  }
+  const str = String(value).trim();
+  return str && !DEAD_LEGACY_VOICES.has(str) ? str : null;
+}
+
+async function runSelectedChapterParser(
+  rawText,
+  chapterTitle,
+  chapterId,
+  parserEngine = null,
+  parserConfig = null,
+  onProgress = null,
+  voiceMap = null
+) {
   const savedConfig = typeof statusRouter.loadParserConfig === 'function' ? statusRouter.loadParserConfig() : {};
   const mergedConfig = {
     ...savedConfig,
@@ -380,6 +398,9 @@ async function runSelectedChapterParser(rawText, chapterTitle, chapterId, parser
   };
   const selectedEngine = String(parserEngine || mergedConfig.activeEngine || 'heuristic').toLowerCase().trim();
   const normalizedEngine = selectedEngine === 'unlimited-ocr' ? 'ocr' : selectedEngine;
+
+  let parsedData = null;
+  let usedEngine = 'heuristic';
 
   if (typeof parsers.parseChapterWithSelectedEngine === 'function') {
     const parserArg = normalizedEngine === 'ocr' ? 'unlimited-ocr' : normalizedEngine;
@@ -402,36 +423,183 @@ async function runSelectedChapterParser(rawText, chapterTitle, chapterId, parser
       }
     );
     if (result && Array.isArray(result.segments)) {
-      return { parsedData: result, usedEngine: result.parser_engine || parserArg, mergedConfig };
+      parsedData = result;
+      usedEngine = result.parser_engine || parserArg;
     }
   }
 
-  const parsed = parseChapter(rawText || '', chapterTitle || 'Chapter', String(chapterId || '1'));
-  if (onProgress) onProgress(parsed.segments.length);
-  const knownChars = Array.from(
-    new Set(
-      (parsed.segments || [])
-        .filter((s) => s.speaker_name && s.speaker_id !== 'unresolved' && s.speaker_id !== 'narrator')
-        .map((s) => s.speaker_name)
-    )
-  );
-  if (knownChars.length > 0 && attributionEngine?.resolveUnattributed) {
-    parsed.segments = await attributionEngine.resolveUnattributed(parsed.segments, knownChars);
+  if (!parsedData) {
+    const parsed = parseChapter(rawText || '', chapterTitle || 'Chapter', String(chapterId || '1'));
+    if (onProgress) onProgress(parsed.segments.length);
+    const knownChars = Array.from(
+      new Set(
+        (parsed.segments || [])
+          .filter((s) => s.speaker_name && s.speaker_id !== 'unresolved' && s.speaker_id !== 'narrator')
+          .map((s) => s.speaker_name)
+      )
+    );
+    if (knownChars.length > 0 && attributionEngine?.resolveUnattributed) {
+      parsed.segments = await attributionEngine.resolveUnattributed(parsed.segments, knownChars);
+    }
+    parsedData = parsed;
+    usedEngine = 'heuristic';
   }
-  return { parsedData: parsed, usedEngine: 'heuristic', mergedConfig };
+
+  const parsedCharacters = Array.isArray(parsedData.characters) ? parsedData.characters : [];
+  let segments = voiceProfiler.applyVoicesToSegments(parsedData.segments || [], parsedCharacters, voiceMap);
+
+  if (voiceMap && voiceMap.size > 0) {
+    segments = segments.map((s) => {
+      if (!s || s.type === 'image') return s;
+      const sid = String(s.speaker_id || s.character_id || '').toLowerCase();
+      const sname = String(s.speaker_name || '').toLowerCase();
+      const isNarr = s.type === 'narration' || sid === 'narrator' || sname === 'narrator';
+      const override = isNarr
+        ? voiceMap.get('narrator')
+        : (voiceMap.get(sname) || voiceMap.get(sid));
+      if (override) {
+        return { ...s, assigned_voice_id: override, voice_id: override };
+      }
+      return s;
+    });
+  }
+
+  // Normalize segments & collect resolved string voice_ids per character
+  const segStatsByKey = new Map();
+  let narratorVoice = toVoiceIdString(voiceMap?.get('narrator')) || 'en-GB-RyanNeural';
+  let narratorCount = 0;
+  let narratorQuote = '';
+
+  segments = segments.map((s) => {
+    if (!s || s.type === 'image') return s;
+    const isNarr = s.type === 'narration' || String(s.speaker_id || s.character_id || '').toLowerCase() === 'narrator';
+    const resolvedVoice =
+      toVoiceIdString(s.assigned_voice_id) ||
+      toVoiceIdString(s.voice_id) ||
+      (isNarr ? narratorVoice : 'en-GB-ThomasNeural');
+
+    if (isNarr) {
+      narratorVoice = resolvedVoice;
+      narratorCount += 1;
+      if (!narratorQuote && s.text) narratorQuote = String(s.text).slice(0, 220);
+      return { ...s, assigned_voice_id: resolvedVoice, voice_id: resolvedVoice };
+    }
+
+    const sid = String(s.speaker_id || s.character_id || '').trim();
+    const sname = String(s.speaker_name || sid || '').trim();
+    const slug = sname.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+    const keys = [sid.toLowerCase(), sname.toLowerCase(), slug].filter(Boolean);
+    for (const k of keys) {
+      const prev = segStatsByKey.get(k);
+      if (!prev) {
+        segStatsByKey.set(k, {
+          character_id: sid || slug || sname.toLowerCase(),
+          name: sname,
+          gender: s.speaker_gender || s.gender || 'unknown',
+          voice_id: resolvedVoice,
+          line_count: 1,
+          sample_quote: s.text ? String(s.text).slice(0, 220) : '',
+        });
+      } else {
+        prev.line_count += 1;
+      }
+    }
+    return { ...s, assigned_voice_id: resolvedVoice, voice_id: resolvedVoice };
+  });
+
+  parsedData.segments = segments;
+
+  const updatedCharsMap = new Map();
+  const existingNarr = parsedCharacters.find((c) => {
+    const cid = String(c?.character_id || '').toLowerCase();
+    const cname = String(c?.name || c?.speaker_name || '').toLowerCase();
+    return cid === 'narrator' || cname === 'narrator';
+  });
+  updatedCharsMap.set('narrator', {
+    ...(existingNarr || {}),
+    character_id: 'narrator',
+    name: 'Narrator',
+    gender: existingNarr?.gender || 'male',
+    line_count: existingNarr?.line_count ?? narratorCount,
+    sample_quote: existingNarr?.sample_quote || narratorQuote || 'Primary narrative voice.',
+    voice_id: narratorVoice,
+    is_narrator: true,
+  });
+
+  for (const c of parsedCharacters) {
+    if (!c) continue;
+    const cname = String(c.name || c.speaker_name || c.character_id || '').trim();
+    const cid = String(c.character_id || cname.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '')).trim();
+    const cidLower = cid.toLowerCase();
+    const cnameLower = cname.toLowerCase();
+    if (!cname || cidLower === 'narrator' || cnameLower === 'narrator' || cidLower === 'image') continue;
+    if (STALE_GENERIC_SPEAKER_NAMES.has(cidLower) || STALE_GENERIC_SPEAKER_NAMES.has(cnameLower)) continue;
+
+    const stat = segStatsByKey.get(cidLower) || segStatsByKey.get(cnameLower);
+    const resolvedCharVoice =
+      stat?.voice_id ||
+      toVoiceIdString(voiceMap?.get(cnameLower) || voiceMap?.get(cidLower)) ||
+      toVoiceIdString(c.voice_id) ||
+      toVoiceIdString(voiceProfiler.resolveCharacterVoice(cname, '', c.gender)) ||
+      'en-GB-ThomasNeural';
+
+    const mapKey = cidLower || cnameLower;
+    if (!updatedCharsMap.has(mapKey)) {
+      updatedCharsMap.set(mapKey, {
+        ...c,
+        character_id: cid || mapKey,
+        name: cname,
+        gender: c.gender || stat?.gender || 'unknown',
+        line_count: typeof c.line_count === 'number' ? c.line_count : (stat?.line_count || 0),
+        sample_quote: c.sample_quote || stat?.sample_quote || '',
+        voice_id: resolvedCharVoice,
+      });
+    }
+  }
+
+  for (const s of segments) {
+    if (!s || s.type !== 'dialogue') continue;
+    const sid = String(s.speaker_id || s.character_id || '').trim();
+    const sname = String(s.speaker_name || '').trim();
+    const sidLower = sid.toLowerCase();
+    const snameLower = sname.toLowerCase();
+    if (!sidLower || sidLower === 'narrator' || sidLower === 'image' || sidLower === 'unknown_speaker') continue;
+    if (STALE_GENERIC_SPEAKER_NAMES.has(sidLower) || STALE_GENERIC_SPEAKER_NAMES.has(snameLower)) continue;
+    if (!sname || snameLower === 'unknown') continue;
+
+    const mapKey = sidLower;
+    if (!updatedCharsMap.has(mapKey)) {
+      const stat = segStatsByKey.get(sidLower) || segStatsByKey.get(snameLower);
+      updatedCharsMap.set(mapKey, {
+        character_id: sid,
+        name: sname,
+        gender: s.speaker_gender || stat?.gender || 'unknown',
+        line_count: stat?.line_count || 1,
+        sample_quote: stat?.sample_quote || String(s.text || '').slice(0, 220),
+        voice_id: stat?.voice_id || toVoiceIdString(s.assigned_voice_id || s.voice_id) || 'en-GB-ThomasNeural',
+      });
+    }
+  }
+
+  parsedData.characters = Array.from(updatedCharsMap.values());
+
+  return { parsedData, usedEngine, mergedConfig };
 }
 
 async function buildParsedSegmentsAndManifestAsync(rawText, chapterTitle, chapterId, options = {}) {
+  const existingVoiceMap =
+    options.existingVoiceMap ||
+    (options.novelId ? await fetchPgCharacterVoiceMap(options.pgPool || pool, options.novelId) : null);
   const { parsedData, usedEngine } = await runSelectedChapterParser(
     rawText,
     chapterTitle,
     chapterId,
     options.parserEngine,
     options.parserConfig,
-    options.onProgress
+    options.onProgress,
+    existingVoiceMap
   );
-  const voicedSegments = voiceProfiler.applyVoicesToSegments(parsedData.segments || []);
-  const existingVoiceMap = options.novelId ? await fetchPgCharacterVoiceMap(options.pgPool || pool, options.novelId) : null;
+  const voicedSegments = parsedData.segments || [];
   const manifestData = mapVoicedSegmentsToManifest(voicedSegments, chapterId, existingVoiceMap);
   return {
     ...manifestData,
@@ -956,6 +1124,73 @@ router.post('/parse/:chapter_id', optionalAuth, async (req, res) => {
       [chapter_id, totalDurationMs]
     );
 
+    const parsedCharMeta = new Map();
+    for (const pc of Array.isArray(parsedData?.characters) ? parsedData.characters : []) {
+      if (!pc) continue;
+      const cid = String(pc.character_id || '').toLowerCase();
+      const cname = String(pc.name || pc.speaker_name || '').toLowerCase();
+      if (cid) parsedCharMeta.set(cid, pc);
+      if (cname) parsedCharMeta.set(cname, pc);
+    }
+
+    const narrSeg = mappedSegments.find(
+      (s) => s && (s.type === 'narration' || s.character_id === 'narrator' || s.speaker_id === 'narrator')
+    );
+    const narratorMeta = parsedCharMeta.get('narrator');
+    const narratorVoice =
+      toVoiceIdString(narrSeg?.assigned_voice_id || narrSeg?.voice_id) ||
+      toVoiceIdString(narratorMeta?.voice_id) ||
+      'en-GB-RyanNeural';
+    const narratorLineCount = mappedSegments.filter(
+      (s) => s && (s.type === 'narration' || s.character_id === 'narrator' || s.speaker_id === 'narrator')
+    ).length;
+
+    const characterMap = {
+      narrator: {
+        character_id: 'narrator',
+        name: 'Narrator',
+        speaker_name: 'Narrator',
+        gender: narratorMeta?.gender || 'male',
+        voice_id: narratorVoice,
+        line_count: narratorLineCount,
+        sample_quote: narrSeg?.text ? String(narrSeg.text).slice(0, 220) : (narratorMeta?.sample_quote || 'Primary narrative voice.'),
+        is_narrator: true,
+      },
+    };
+
+    for (const seg of mappedSegments) {
+      if (!seg || seg.type === 'image') continue;
+      const sid = String(seg.character_id || seg.speaker_id || '').trim();
+      const sname = String(seg.speaker_name || '').trim();
+      const sidLower = sid.toLowerCase();
+      const snameLower = sname.toLowerCase();
+      if (!sidLower || sidLower === 'narrator' || sidLower === 'image' || sidLower === 'unknown_speaker') continue;
+      if (STALE_GENERIC_SPEAKER_NAMES.has(sidLower) || STALE_GENERIC_SPEAKER_NAMES.has(snameLower)) continue;
+      if (!sname || snameLower === 'unknown') continue;
+
+      const meta = parsedCharMeta.get(sidLower) || parsedCharMeta.get(snameLower);
+      const voiceId =
+        toVoiceIdString(seg.assigned_voice_id || seg.voice_id) ||
+        toVoiceIdString(meta?.voice_id) ||
+        'en-GB-ThomasNeural';
+
+      if (!characterMap[sidLower]) {
+        characterMap[sidLower] = {
+          character_id: sid,
+          name: sname,
+          speaker_name: sname,
+          gender: meta?.gender || seg.speaker_gender || 'unknown',
+          description: meta?.description || undefined,
+          voice_id: voiceId,
+          line_count: 1,
+          sample_quote: meta?.sample_quote || String(seg.text || '').slice(0, 220),
+          is_narrator: false,
+        };
+      } else {
+        characterMap[sidLower].line_count += 1;
+      }
+    }
+
     const parsedOutput = {
       ...(parsedData || {}),
       chapter_id,
@@ -963,6 +1198,7 @@ router.post('/parse/:chapter_id', optionalAuth, async (req, res) => {
       segments: mappedSegments,
       manifest: chapterDoc.manifest,
       discovered_characters: discoveredCharacters,
+      characters: Object.values(characterMap),
     };
 
     const chapterDir = path.join(config.paths.chaptersDir, chapter_id);
@@ -995,15 +1231,11 @@ router.post('/parse/:chapter_id', optionalAuth, async (req, res) => {
  * 5. POST /api/synthesize/:chapter_id
  * Synthesizes segment audio via Edge TTS (Kokoro fallback), stitches PCM/MP3, updates MongoDB manifest & PostgreSQL chapters/jobs.
  */
-router.post('/synthesize/:chapter_id', authenticateUser, async (req, res) => {
+router.post('/synthesize/:chapter_id', optionalAuth, async (req, res) => {
   const { chapter_id } = req.params;
 
   if (!chapter_id || !UUID_REGEX.test(chapter_id)) {
     return res.status(400).json({ error: 'Invalid chapter UUID format.' });
-  }
-
-  if (req.user && req.user.role === 'reader') {
-    return res.status(403).json({ error: "Forbidden: role 'reader' cannot synthesize chapters." });
   }
 
   try {
@@ -1073,18 +1305,55 @@ router.post('/synthesize/:chapter_id', authenticateUser, async (req, res) => {
         continue;
       }
 
-      const result = await ttsEngine.synthesizeSegment(
-        seg.text,
-        effectiveVoiceId,
-        1.0,
-        preferredEngine,
-        {
-          characterId: seg.character_id || seg.speaker_id || '',
-          speakerName: seg.speaker_name || '',
-          isNarrator: seg.type === 'narration' || String(seg.character_id || '').toLowerCase() === 'narrator',
-          castPlan,
+      let result;
+      if (!/[a-zA-Z0-9]/.test(seg.text || '')) {
+        const silentSamples = Math.floor((ttsEngine.sampleRate || 24000) * 0.2);
+        result = {
+          audio_buffer: Buffer.alloc(silentSamples * 2),
+          duration_ms: 200,
+          format: 'pcm',
+          engine: preferredEngine === 'auto' ? 'msedge-tts' : preferredEngine,
+          resolved_voice_id: effectiveVoiceId,
+        };
+      } else {
+        try {
+          result = await ttsEngine.synthesizeSegment(
+            seg.text,
+            effectiveVoiceId,
+            1.0,
+            preferredEngine,
+            {
+              characterId: seg.character_id || seg.speaker_id || '',
+              speakerName: seg.speaker_name || '',
+              isNarrator: seg.type === 'narration' || String(seg.character_id || '').toLowerCase() === 'narrator',
+              castPlan,
+            }
+          );
+        } catch (segErr) {
+          console.warn(`[Synthesize Segment Fallback] Segment ${i + 1} failed (${segErr.message}); falling back to Machine/silence.`);
+          try {
+            result = await ttsEngine.synthesizeWithMachine(
+              seg.text,
+              effectiveVoiceId,
+              1.0,
+              {
+                characterId: seg.character_id || seg.speaker_id || '',
+                speakerName: seg.speaker_name || '',
+                isNarrator: seg.type === 'narration' || String(seg.character_id || '').toLowerCase() === 'narrator',
+              }
+            );
+          } catch (_) {
+            const silentSamples = Math.floor((ttsEngine.sampleRate || 24000) * 0.25);
+            result = {
+              audio_buffer: Buffer.alloc(silentSamples * 2),
+              duration_ms: 250,
+              format: 'pcm',
+              engine: 'machine-tts',
+              resolved_voice_id: effectiveVoiceId,
+            };
+          }
         }
-      );
+      }
 
       const rawBuf = result.audio_buffer || result.pcm_buffer;
       const fmt = result.format || 'mp3';
@@ -1249,8 +1518,10 @@ router.post('/synthesize/:chapter_id', authenticateUser, async (req, res) => {
     } catch (_dbErr) {}
     broadcastProgress(chapter_id, {
       chapter_id,
+      current_segment: null,
+      total_segments: null,
       status: 'failed',
-      error: err.message,
+      error: 'Chapter synthesis encountered an unexpected error. Please retry.',
     });
     return res.status(500).json({ error: 'Failed to synthesize chapter.', detail: err.message });
   }

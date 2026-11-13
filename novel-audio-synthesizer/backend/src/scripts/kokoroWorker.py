@@ -100,7 +100,7 @@ class KokoroSynthesizer:
 
     def synthesize(self, text: str, voice: str = "bm_george", speed: float = 1.0, lang: str = "") -> np.ndarray:
         cleaned = (text or "").strip()
-        if not cleaned:
+        if not cleaned or not re.search(r"[A-Za-z0-9]", cleaned):
             return np.zeros(int(self.sample_rate * 0.15), dtype=np.float32)
 
         v, l = self.resolve_voice_and_lang(voice, lang)
@@ -125,9 +125,14 @@ class KokoroSynthesizer:
 
         all_samples = []
         for c in chunks:
-            samples, _ = self.kokoro.create(c, voice=v, speed=effective_speed, lang=l)
-            if len(samples) > 0:
-                all_samples.append(samples)
+            if not re.search(r"[A-Za-z0-9]", c):
+                continue
+            try:
+                samples, _ = self.kokoro.create(c, voice=v, speed=effective_speed, lang=l)
+                if len(samples) > 0:
+                    all_samples.append(samples)
+            except Exception:
+                continue
 
         if not all_samples:
             return np.zeros(int(self.sample_rate * 0.2), dtype=np.float32)

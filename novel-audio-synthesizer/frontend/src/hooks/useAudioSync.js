@@ -200,6 +200,9 @@ export function useAudioSync(timeline = [], onSegmentChangeOrOptions = null, may
   const audioRef = useRef(null);
   const secondaryAudioRef = useRef(null);
   const rafRef = useRef(0);
+  const ttsRafRef = useRef(0);
+  const speechFallbackTimerRef = useRef(null);
+  const playbackRateRef = useRef(1.0);
   const lastActiveSegIdRef = useRef(-1);
   const lastClockUpdateRef = useRef(0);
   const speechCancelledRef = useRef(false);
@@ -282,6 +285,14 @@ export function useAudioSync(timeline = [], onSegmentChangeOrOptions = null, may
   const stopSpeech = useCallback(() => {
     speechGenRef.current += 1;
     speechCancelledRef.current = true;
+    if (ttsRafRef.current) {
+      cancelAnimationFrame(ttsRafRef.current);
+      ttsRafRef.current = 0;
+    }
+    if (speechFallbackTimerRef.current) {
+      clearInterval(speechFallbackTimerRef.current);
+      speechFallbackTimerRef.current = null;
+    }
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       try {
         window.speechSynthesis.cancel();
@@ -293,6 +304,8 @@ export function useAudioSync(timeline = [], onSegmentChangeOrOptions = null, may
         sec.onended = null;
         sec.onerror = null;
         sec.ontimeupdate = null;
+        sec.onplay = null;
+        sec.onpause = null;
         sec.pause();
         sec.currentTime = 0;
       } catch (_) {}
@@ -303,6 +316,19 @@ export function useAudioSync(timeline = [], onSegmentChangeOrOptions = null, may
       } catch (_) {}
     }
     activeUtteranceRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (ttsRafRef.current) {
+        cancelAnimationFrame(ttsRafRef.current);
+        ttsRafRef.current = 0;
+      }
+      if (speechFallbackTimerRef.current) {
+        clearInterval(speechFallbackTimerRef.current);
+        speechFallbackTimerRef.current = null;
+      }
+    };
   }, []);
 
   // Forward declaration for speaking segment
@@ -407,23 +433,38 @@ export function useAudioSync(timeline = [], onSegmentChangeOrOptions = null, may
       }
 
       // Assign character pitch & rate
+      const globalRate = playbackRateRef.current || 1.0;
       if (typeof entry._pitch === 'number') {
         utterance.pitch = entry._pitch;
-        utterance.rate = typeof entry._rate === 'number' ? entry._rate : 1.0;
+        utterance.rate = (typeof entry._rate === 'number' ? entry._rate : 1.0) * globalRate;
       } else if (speakerName.includes('narrator')) {
         utterance.pitch = 1.0;
-        utterance.rate = 1.0;
+        utterance.rate = 1.0 * globalRate;
       } else {
         const hash = speakerName.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
         utterance.pitch = 0.85 + (hash % 7) * 0.06;
-        utterance.rate = 1.0;
+        utterance.rate = 1.0 * globalRate;
       }
+
+      const effectiveRate = Math.max(0.25, utterance.rate || 1.0);
+      const estDurationSec = Math.max(1.2, cleanText.length / (14 * effectiveRate));
+      const startTimeMs = Date.now();
+      let lastBoundaryAtMs = startTimeMs;
+
+      const clearFallbackTimer = () => {
+        if (speechFallbackTimerRef.current) {
+          clearInterval(speechFallbackTimerRef.current);
+          speechFallbackTimerRef.current = null;
+        }
+      };
 
       // Intra-segment word progress tracking via boundary events
       utterance.onboundary = (e) => {
         if (myGen !== speechGenRef.current || speechCancelledRef.current) return;
-        if (typeof e.charIndex === 'number' && rawText.length > 0) {
-          const prog = Math.min(1, Math.max(0, e.charIndex / rawText.length));
+        lastBoundaryAtMs = Date.now();
+        const denom = cleanText.length || rawText.length;
+        if (typeof e.charIndex === 'number' && denom > 0) {
+          const prog = Math.min(1, Math.max(0, e.charIndex / denom));
           setSegmentProgress(prog);
           const segDuration = Math.max(200, (entry.end_ms || 0) - (entry.start_ms || 0));
           const estMs = Math.round((entry.start_ms || 0) + prog * segDuration);
@@ -431,7 +472,30 @@ export function useAudioSync(timeline = [], onSegmentChangeOrOptions = null, may
         }
       };
 
+      // 50ms fallback timer whenever onboundary has not fired in the last 400ms
+      clearFallbackTimer();
+      const timerId = setInterval(() => {
+        if (myGen !== speechGenRef.current || speechCancelledRef.current) {
+          clearInterval(timerId);
+          if (speechFallbackTimerRef.current === timerId) {
+            speechFallbackTimerRef.current = null;
+          }
+          return;
+        }
+        const now = Date.now();
+        if (now - lastBoundaryAtMs > 400) {
+          const elapsedSec = (now - startTimeMs) / 1000;
+          const prog = Math.min(0.98, Math.max(0, elapsedSec / estDurationSec));
+          setSegmentProgress(prog);
+          const segDuration = Math.max(200, (entry.end_ms || 0) - (entry.start_ms || 0));
+          const estMs = Math.round((entry.start_ms || 0) + prog * segDuration);
+          setCurrentTimeMs(estMs);
+        }
+      }, 50);
+      speechFallbackTimerRef.current = timerId;
+
       utterance.onend = () => {
+        clearFallbackTimer();
         if (myGen !== speechGenRef.current || speechCancelledRef.current) return;
         setSegmentProgress(1.0);
         setCurrentTimeMs(entry.end_ms || entry.start_ms || 0);
@@ -439,6 +503,7 @@ export function useAudioSync(timeline = [], onSegmentChangeOrOptions = null, may
       };
 
       utterance.onerror = () => {
+        clearFallbackTimer();
         if (myGen !== speechGenRef.current || speechCancelledRef.current) return;
         advanceToNextSegment(targetSegId);
       };
@@ -563,8 +628,58 @@ export function useAudioSync(timeline = [], onSegmentChangeOrOptions = null, may
 
         const secAudio = secondaryAudioRef.current;
         secAudio.src = speakUrl;
+        secAudio.playbackRate = playbackRateRef.current || 1.0;
+
+        let secRafActive = false;
+        const cancelSecRaf = () => {
+          secRafActive = false;
+          if (ttsRafRef.current) {
+            cancelAnimationFrame(ttsRafRef.current);
+            ttsRafRef.current = 0;
+          }
+        };
+
+        const tickSecProgress = () => {
+          if (
+            !secRafActive ||
+            myGen !== speechGenRef.current ||
+            speechCancelledRef.current ||
+            playbackModeRef.current !== 'tts'
+          ) {
+            cancelSecRaf();
+            return;
+          }
+          if (secAudio.ended) {
+            cancelSecRaf();
+            return;
+          }
+          if (secAudio.duration > 0 && !Number.isNaN(secAudio.duration)) {
+            const prog = Math.min(1, Math.max(0, secAudio.currentTime / secAudio.duration));
+            setSegmentProgress(prog);
+            const segDuration = Math.max(200, (entry.end_ms || 0) - (entry.start_ms || 0));
+            const estMs = Math.round((entry.start_ms || 0) + prog * segDuration);
+            setCurrentTimeMs(estMs);
+          }
+          ttsRafRef.current = requestAnimationFrame(tickSecProgress);
+        };
+
+        const startSecRaf = () => {
+          if (secRafActive || myGen !== speechGenRef.current || speechCancelledRef.current) return;
+          if (typeof requestAnimationFrame !== 'function') return;
+          secRafActive = true;
+          ttsRafRef.current = requestAnimationFrame(tickSecProgress);
+        };
+
+        secAudio.onplay = () => {
+          startSecRaf();
+        };
+
+        secAudio.onpause = () => {
+          cancelSecRaf();
+        };
 
         secAudio.onerror = () => {
+          cancelSecRaf();
           if (myGen !== speechGenRef.current || speechCancelledRef.current) return;
           // Fallback to client synthesis for this utterance as a true offline fallback
           speakWithSpeechSynthesis(effectiveEntry, targetSegId, myGen);
@@ -582,15 +697,26 @@ export function useAudioSync(timeline = [], onSegmentChangeOrOptions = null, may
         };
 
         secAudio.onended = () => {
+          cancelSecRaf();
           if (myGen !== speechGenRef.current || speechCancelledRef.current) return;
           setSegmentProgress(1.0);
           advanceToNextSegment(targetSegId);
         };
 
-        secAudio.play().catch((err) => {
-          if (myGen !== speechGenRef.current || speechCancelledRef.current) return;
-          speakWithSpeechSynthesis(effectiveEntry, targetSegId, myGen);
-        });
+        const playPromise = secAudio.play();
+        if (playPromise && typeof playPromise.then === 'function') {
+          playPromise
+            .then(() => {
+              startSecRaf();
+            })
+            .catch(() => {
+              cancelSecRaf();
+              if (myGen !== speechGenRef.current || speechCancelledRef.current) return;
+              speakWithSpeechSynthesis(effectiveEntry, targetSegId, myGen);
+            });
+        } else {
+          startSecRaf();
+        }
       } else {
         speakWithSpeechSynthesis(effectiveEntry, targetSegId, myGen);
       }
@@ -899,6 +1025,7 @@ export function useAudioSync(timeline = [], onSegmentChangeOrOptions = null, may
   }, [isPlaying, play, pause]);
 
   const setPlaybackRate = useCallback((rate) => {
+    playbackRateRef.current = rate || 1.0;
     if (audioRef.current) {
       audioRef.current.playbackRate = rate;
     }

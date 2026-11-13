@@ -101,6 +101,7 @@ function AppContent() {
   const [showSettings, setShowSettings] = useState(false);
   const [modelStatus, setModelStatus] = useState(null);
   const [useTtsSanitizer, setUseTtsSanitizer] = useState(false);
+  const [isFollowingAlong, setIsFollowingAlong] = useState(true);
   const [defaultParserEngine, setDefaultParserEngine] = useState(() => {
     try {
       return localStorage.getItem('synctone_parser_engine') || 'heuristic';
@@ -320,6 +321,97 @@ function AppContent() {
     return candidates.includes(normTarget);
   }, []);
 
+  const mergeNovelCharacters = useCallback((existingList = [], incomingList = []) => {
+    const existingArr = Array.isArray(existingList) ? existingList : [];
+    const incomingArr = Array.isArray(incomingList) ? incomingList : [];
+
+    const existingMap = new Map();
+    existingArr.forEach((c) => {
+      if (!c || typeof c !== 'object') return;
+      [c.character_id, c.speaker_id, c.id, c.name, c.speaker_name]
+        .filter(Boolean)
+        .forEach((k) => {
+          existingMap.set(String(k).trim().toLowerCase(), c);
+        });
+    });
+
+    const merged = [];
+    const seenKeys = new Set();
+    const registerKeys = (c) => {
+      [c.character_id, c.speaker_id, c.id, c.name, c.speaker_name]
+        .filter(Boolean)
+        .forEach((k) => seenKeys.add(String(k).trim().toLowerCase()));
+    };
+
+    incomingArr.forEach((char) => {
+      if (!char || typeof char !== 'object') return;
+      const keys = [char.character_id, char.speaker_id, char.id, char.name, char.speaker_name]
+        .filter(Boolean)
+        .map((k) => String(k).trim().toLowerCase());
+      let match = null;
+      for (const k of keys) {
+        if (existingMap.has(k)) {
+          match = existingMap.get(k);
+          break;
+        }
+      }
+
+      const incomingVoice =
+        char.voice_id && String(char.voice_id).trim() !== ''
+          ? char.voice_id
+          : char.assigned_voice_id && String(char.assigned_voice_id).trim() !== ''
+            ? char.assigned_voice_id
+            : null;
+      const existingVoice =
+        match?.voice_id && String(match.voice_id).trim() !== ''
+          ? match.voice_id
+          : match?.assigned_voice_id && String(match.assigned_voice_id).trim() !== ''
+            ? match.assigned_voice_id
+            : null;
+      const resolvedVoiceId =
+        incomingVoice || existingVoice || (keys.includes('narrator') ? 'en-GB-RyanNeural' : null);
+      const resolvedAssignedVoice =
+        (char.assigned_voice_id && String(char.assigned_voice_id).trim() !== ''
+          ? char.assigned_voice_id
+          : null) ||
+        (match?.assigned_voice_id && String(match.assigned_voice_id).trim() !== ''
+          ? match.assigned_voice_id
+          : null) ||
+        resolvedVoiceId;
+
+      const entry = {
+        ...(match || {}),
+        ...char,
+        voice_id: resolvedVoiceId,
+        ...(resolvedAssignedVoice ? { assigned_voice_id: resolvedAssignedVoice } : {}),
+      };
+      registerKeys(entry);
+      merged.push(entry);
+    });
+
+    if (!seenKeys.has('narrator')) {
+      const existingNarrator = existingMap.get('narrator');
+      const narratorVoice =
+        (existingNarrator?.voice_id && String(existingNarrator.voice_id).trim() !== ''
+          ? existingNarrator.voice_id
+          : null) ||
+        (existingNarrator?.assigned_voice_id && String(existingNarrator.assigned_voice_id).trim() !== ''
+          ? existingNarrator.assigned_voice_id
+          : null) ||
+        'en-GB-RyanNeural';
+      merged.unshift({
+        ...(existingNarrator || {}),
+        id: existingNarrator?.id || 'narrator',
+        character_id: existingNarrator?.character_id || 'narrator',
+        name: existingNarrator?.name || 'Narrator',
+        voice_id: narratorVoice,
+        assigned_voice_id: existingNarrator?.assigned_voice_id || narratorVoice,
+      });
+    }
+
+    return merged;
+  }, []);
+
   const buildChapterManifestState = useCallback((chapterId, details, segments, manifest) => {
     if (manifest) {
       const streamUrl =
@@ -427,7 +519,7 @@ function AppContent() {
       }
 
       if (resolvedCharacters) {
-        setNovelCharacters(resolvedCharacters);
+        setNovelCharacters((prev) => mergeNovelCharacters(prev, resolvedCharacters));
       } else {
         setNovelCharacters(EMPTY_ARRAY);
       }
@@ -440,7 +532,7 @@ function AppContent() {
             segments = parsedRes.segments;
           }
           if (Array.isArray(parsedRes?.characters)) {
-            setNovelCharacters(parsedRes.characters);
+            setNovelCharacters((prev) => mergeNovelCharacters(prev, parsedRes.characters));
           }
         } catch (_) {}
       }
@@ -459,7 +551,7 @@ function AppContent() {
     } finally {
       setIsLoadingChapter(false);
     }
-  }, [buildChapterManifestState]);
+  }, [buildChapterManifestState, mergeNovelCharacters]);
 
   const handleReparseCurrentChapter = useCallback(
     async (parserEngine = defaultParserEngine, parserConfig = null) => {
@@ -495,7 +587,7 @@ function AppContent() {
       );
 
       if (nextCharacters) {
-        setNovelCharacters(nextCharacters);
+        setNovelCharacters((prev) => mergeNovelCharacters(prev, nextCharacters));
       } else if (nextSegments.length > 0) {
         const derivedMap = new Map();
         nextSegments.forEach((seg) => {
@@ -506,12 +598,12 @@ function AppContent() {
               id: charId,
               character_id: charId,
               name: seg.speaker_name || charId,
-              voice_id: seg.assigned_voice_id || seg.voice_id || 'en-GB-RyanNeural',
+              voice_id: seg.assigned_voice_id || seg.voice_id || null,
               gender: seg.gender || null,
             });
           }
         });
-        setNovelCharacters(Array.from(derivedMap.values()));
+        setNovelCharacters((prev) => mergeNovelCharacters(prev, Array.from(derivedMap.values())));
       }
 
       if (refreshedDetails) {
@@ -524,7 +616,7 @@ function AppContent() {
         manifest: nextManifest,
       };
     },
-    [currentChapter, defaultParserEngine, buildChapterManifestState]
+    [currentChapter, defaultParserEngine, buildChapterManifestState, mergeNovelCharacters]
   );
 
   // Sync routeChapterId when navigating deep link to /reader/:chapterId
@@ -911,6 +1003,10 @@ function AppContent() {
                         }}
                         useTtsSanitizer={useTtsSanitizer}
                         onToggleTtsSanitizer={() => setUseTtsSanitizer((prev) => !prev)}
+                        isFollowingAlong={isFollowingAlong}
+                        onToggleFollowAlong={(nextVal) =>
+                          setIsFollowingAlong((prev) => (typeof nextVal === 'boolean' ? nextVal : !prev))
+                        }
                         onRetry={() => {
                           if (currentChapter) {
                             handleSelectChapter(currentNovel, currentChapter);
@@ -1023,6 +1119,8 @@ function AppContent() {
                   }}
                   ttsEngine={audioSync.ttsEngine}
                   onChangeTtsEngine={audioSync.setTtsEngine}
+                  isFollowingAlong={isFollowingAlong}
+                  onToggleFollowAlong={() => setIsFollowingAlong((prev) => !prev)}
                   onSeekSegment={(dir) => {
                     const currentIdx = chapterSegments.findIndex(
                       (s) => (s.segment_id ?? s.order) === audioSync.activeSegmentId

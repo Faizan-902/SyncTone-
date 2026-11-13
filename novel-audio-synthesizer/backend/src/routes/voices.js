@@ -160,8 +160,10 @@ function sendAudioBuffer(req, res, buffer, mimeType, engine, voice) {
 // Handler for on-demand segment speech preview
 async function handleSpeak(req, res) {
   let clientDisconnected = false;
-  req.on('close', () => {
-    clientDisconnected = true;
+  res.on('close', () => {
+    if (!res.writableEnded) {
+      clientDisconnected = true;
+    }
   });
 
   try {
@@ -187,7 +189,7 @@ async function handleSpeak(req, res) {
 
     const cacheKey = `${engine}:${voice_id}:${characterId}:${speakerName}:${isNarrator}:${castSlot ?? ''}:${speed}:${cleanText}`;
     if (speakCache.has(cacheKey)) {
-      if (clientDisconnected || req.destroyed || res.writableEnded) {
+      if (clientDisconnected || res.writableEnded || res.destroyed) {
         return;
       }
       const cached = speakCache.get(cacheKey);
@@ -200,7 +202,7 @@ async function handleSpeak(req, res) {
       castPlan = await getOrBuildCastPlan(novel_id, chapter_id);
     }
 
-    if (clientDisconnected || req.destroyed || res.writableEnded) {
+    if (clientDisconnected || res.writableEnded || res.destroyed) {
       return;
     }
 
@@ -217,7 +219,7 @@ async function handleSpeak(req, res) {
       chapterId: chapter_id,
     });
 
-    if (clientDisconnected || req.destroyed || res.writableEnded) {
+    if (clientDisconnected || res.writableEnded || res.destroyed) {
       return;
     }
 
@@ -245,7 +247,7 @@ async function handleSpeak(req, res) {
 
     return sendAudioBuffer(req, res, finalBuffer, mimeType, result.engine || 'msedge-tts', resolvedVoice);
   } catch (err) {
-    if (clientDisconnected || req.destroyed || res.writableEnded) {
+    if (clientDisconnected || res.writableEnded || res.destroyed) {
       return;
     }
     console.error('[Voices Speak Error]:', err.message);

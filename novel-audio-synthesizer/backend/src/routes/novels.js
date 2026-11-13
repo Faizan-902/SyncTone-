@@ -255,6 +255,7 @@ router.post('/novels', optionalAuth, async (req, res) => {
       global_tone = null,
       cover_object = null,
       chapters: rawChapters = [],
+      characters: rawCharacters = [],
     } = req.body;
 
     if (!title || typeof title !== 'string' || title.trim().length === 0) {
@@ -352,13 +353,69 @@ router.post('/novels', optionalAuth, async (req, res) => {
 
       // Auto-Chapter Ingestion: If chapters array provided, insert chapters into PG & MongoDB
       const createdChapters = [];
+      const preAssignedVoiceMap = new Map();
+      const preAssignedGenderMap = new Map();
       const detectedCast = new Map();
-      detectedCast.set('Narrator', {
+      const toSlug = (str) =>
+        String(str || '')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '_')
+          .replace(/^_+|_+$/g, '');
+      const toValidVoiceStr = (val) => {
+        if (!val) return null;
+        if (typeof val === 'object') {
+          const inner = val.voiceId || val.voice_id || null;
+          return typeof inner === 'string' && inner.trim() ? inner.trim() : null;
+        }
+        const s = String(val).trim();
+        return s || null;
+      };
+      const normalizeGender = (val) => {
+        const g = String(val || '').toLowerCase().trim();
+        return g === 'male' || g === 'female' ? g : 'unknown';
+      };
+
+      detectedCast.set('narrator', {
         name: 'Narrator',
         voiceId: 'en-GB-RyanNeural',
+        gender: 'male',
         isNarrator: true,
         sampleQuote: 'Primary narrative voice.',
       });
+
+      const incomingCharacters = Array.isArray(rawCharacters) ? rawCharacters : [];
+      for (const c of incomingCharacters) {
+        if (!c || typeof c !== 'object') continue;
+        const charName = String(c.name || c.speaker_name || c.character_id || '').trim();
+        const cid = String(c.character_id || '').trim();
+        const lowerName = charName.toLowerCase();
+        const lowerCid = cid.toLowerCase();
+        const slug = toSlug(charName || cid);
+        const isNarr = c.is_narrator === true || lowerCid === 'narrator' || lowerName === 'narrator';
+        const voiceId = toValidVoiceStr(c.voice_id);
+        const gender = normalizeGender(c.gender);
+
+        for (const k of [lowerName, lowerCid, slug]) {
+          if (!k) continue;
+          if (voiceId) preAssignedVoiceMap.set(k, voiceId);
+          if (gender !== 'unknown') preAssignedGenderMap.set(k, gender);
+        }
+
+        if (isNarr) {
+          const narrEntry = detectedCast.get('narrator');
+          if (voiceId) narrEntry.voiceId = voiceId;
+          if (gender !== 'unknown') narrEntry.gender = gender;
+          if (c.sample_quote) narrEntry.sampleQuote = String(c.sample_quote).slice(0, 220);
+        } else if (charName && !['unknown', 'unresolved', 'speaker_a', 'speaker_b', 'dialogue_speaker', 'dialogue_turn_even', 'dialogue_turn_odd', 'image'].includes(slug)) {
+          detectedCast.set(lowerName, {
+            name: charName,
+            voiceId: voiceId || 'en-GB-ThomasNeural',
+            gender,
+            isNarrator: false,
+            sampleQuote: String(c.sample_quote || '').slice(0, 220),
+          });
+        }
+      }
 
       if (Array.isArray(rawChapters) && rawChapters.length > 0) {
         const chaptersToIngest = rawChapters.slice(0, 500);
@@ -374,7 +431,7 @@ router.post('/novels', optionalAuth, async (req, res) => {
             : `Chapter ${chNum}`;
           const rawText = ch.raw_text || ch.text || ch.content || '';
 
-          // Parse chapter text into attributed segments (or preserve pre-attributed AI segments from Gemini)
+          // Parse chapter text into attributed segments (or preserve pre-attributed/pre-segmented ch.segments)
           const preAttributedSegments =
             Array.isArray(ch.segments) && ch.segments.length > 0 ? ch.segments : null;
           let mappedSegments;
@@ -382,9 +439,11 @@ router.post('/novels', optionalAuth, async (req, res) => {
           let timeline;
 
           if (preAttributedSegments) {
+            const origSegments = preAttributedSegments.map((s) => ({ ...s }));
             const voicedSegments = voiceProfiler.applyVoicesToSegments(preAttributedSegments);
             let currentMs = 0;
             mappedSegments = voicedSegments.map((s, segIdx) => {
+              const orig = origSegments[segIdx] || {};
               const isImage = s.type === 'image' || (s.text && s.text.startsWith('[IMAGE:'));
               const words = (s.text || '').trim().split(/\s+/).filter(Boolean).length;
               const durationMs = isImage ? 1000 : Math.max(800, Math.round((words / 2.8) * 1000));
@@ -392,25 +451,50 @@ router.post('/novels', optionalAuth, async (req, res) => {
               const end_ms = start_ms + durationMs;
               currentMs = end_ms + 250;
 
-              const voiceId = s.assigned_voice_id || (s.type === 'narration' ? 'en-GB-RyanNeural' : 'en-GB-ThomasNeural');
-              const speakerName = isImage ? 'Illustration' : (s.speaker_name || (s.type === 'narration' ? 'Narrator' : 'Unknown'));
-              const speakerId = isImage ? 'image' : (s.speaker_id || s.character_id || (s.type === 'narration' ? 'narrator' : 'unknown'));
+              const speakerId = isImage
+                ? 'image'
+                : (orig.speaker_id || orig.character_id || s.speaker_id || s.character_id || (s.type === 'narration' ? 'narrator' : 'unknown'));
+              const isNarr = !isImage && (s.type === 'narration' || String(speakerId).toLowerCase() === 'narrator');
+              const speakerName = isImage
+                ? 'Illustration'
+                : (orig.speaker_name || s.speaker_name || (isNarr ? 'Narrator' : 'Unknown'));
+              const lowerName = String(speakerName).toLowerCase();
+              const lowerId = String(speakerId).toLowerCase();
+              const slug = toSlug(speakerName);
+
+              const preVoice = isImage
+                ? 'image'
+                : isNarr
+                  ? preAssignedVoiceMap.get('narrator')
+                  : (preAssignedVoiceMap.get(lowerName) || preAssignedVoiceMap.get(lowerId) || preAssignedVoiceMap.get(slug));
+              const origVoice = toValidVoiceStr(orig.voice_id || orig.assigned_voice_id);
+              const profiledVoice = toValidVoiceStr(s.assigned_voice_id || s.voice_id);
+              const voiceId = isImage
+                ? 'image'
+                : (preVoice || origVoice || profiledVoice || (isNarr ? 'en-GB-RyanNeural' : 'en-GB-ThomasNeural'));
+
+              const gender =
+                preAssignedGenderMap.get(lowerName) ||
+                preAssignedGenderMap.get(lowerId) ||
+                preAssignedGenderMap.get(slug) ||
+                normalizeGender(orig.speaker_gender || s.speaker_gender);
 
               return {
                 order: segIdx + 1,
                 segment_id: segIdx + 1,
-                type: isImage ? 'image' : (s.type === 'narration' || speakerId === 'narrator' ? 'narration' : 'dialogue'),
+                type: isImage ? 'image' : (isNarr ? 'narration' : 'dialogue'),
                 text: s.text,
                 image_url: s.image_url || (isImage && s.text ? (s.text.match(/\[IMAGE:([^\]]+)\]/) || [])[1] : null),
                 character_id: speakerId,
                 speaker_id: speakerId,
                 speaker_name: speakerName,
+                speaker_gender: gender,
                 voice_id: voiceId,
                 assigned_voice_id: voiceId,
                 start_ms,
                 end_ms,
                 confidence: s.attribution_confidence !== undefined ? s.attribution_confidence : (s.confidence !== undefined ? s.confidence : 1.0),
-                source: chaptersRouter.sanitizeSegmentSource(s.attribution_source || s.source, isImage, speakerId === 'narrator', speakerId),
+                source: chaptersRouter.sanitizeSegmentSource(s.attribution_source || s.source, isImage, isNarr, speakerId),
               };
             });
             totalDurationMs = mappedSegments.length > 0 ? mappedSegments[mappedSegments.length - 1].end_ms : 0;
@@ -430,7 +514,11 @@ router.post('/novels', optionalAuth, async (req, res) => {
               rawText,
               chTitle,
               String(chNum),
-              { parserEngine: reqParserEngine, parserConfig: reqParserConfig }
+              {
+                parserEngine: reqParserEngine,
+                parserConfig: reqParserConfig,
+                existingVoiceMap: preAssignedVoiceMap.size > 0 ? preAssignedVoiceMap : null,
+              }
             );
             mappedSegments = built.mappedSegments;
             totalDurationMs = built.totalDurationMs;
@@ -451,13 +539,28 @@ router.post('/novels', optionalAuth, async (req, res) => {
               seg.speaker_name &&
               seg.speaker_name !== 'Unknown'
             ) {
-              if (!detectedCast.has(seg.speaker_name)) {
-                detectedCast.set(seg.speaker_name, {
+              const castKey = String(seg.speaker_name).toLowerCase();
+              const preVoice =
+                preAssignedVoiceMap.get(castKey) ||
+                preAssignedVoiceMap.get(String(seg.speaker_id || '').toLowerCase()) ||
+                preAssignedVoiceMap.get(toSlug(seg.speaker_name));
+              const preGender =
+                preAssignedGenderMap.get(castKey) ||
+                preAssignedGenderMap.get(String(seg.speaker_id || '').toLowerCase()) ||
+                preAssignedGenderMap.get(toSlug(seg.speaker_name));
+              if (!detectedCast.has(castKey)) {
+                detectedCast.set(castKey, {
                   name: seg.speaker_name,
-                  voiceId: seg.voice_id,
+                  voiceId: preVoice || seg.voice_id,
+                  gender: preGender || normalizeGender(seg.speaker_gender),
                   isNarrator: false,
                   sampleQuote: (seg.text || '').slice(0, 220),
                 });
+              } else {
+                const existingEntry = detectedCast.get(castKey);
+                if (!existingEntry.sampleQuote && seg.text) {
+                  existingEntry.sampleQuote = String(seg.text).slice(0, 220);
+                }
               }
             }
           }
@@ -496,24 +599,33 @@ router.post('/novels', optionalAuth, async (req, res) => {
 
           createdChapters.push(pgChapter);
         }
+      }
 
-        // Populate PostgreSQL characters portfolio for the uploaded novel
+      // Populate PostgreSQL characters portfolio whenever chapters or pre-assigned characters were provided
+      if ((Array.isArray(rawChapters) && rawChapters.length > 0) || incomingCharacters.length > 0) {
         await client.query('SAVEPOINT sp_novel_characters');
         try {
           for (const charEntry of detectedCast.values()) {
+            const voiceGender =
+              charEntry.gender === 'male' || charEntry.gender === 'female' ? charEntry.gender : 'other';
+            const charGender =
+              charEntry.gender === 'male' || charEntry.gender === 'female' ? charEntry.gender : 'unknown';
             await client.query(
               `INSERT INTO voices (id, label, gender, age_band, language, reserved_narrator)
-               VALUES ($1, $2, 'other', 'adult', 'en-us', $3)
+               VALUES ($1, $2, $3, 'adult', 'en-us', $4)
                ON CONFLICT (id) DO NOTHING`,
-              [charEntry.voiceId, charEntry.voiceId, Boolean(charEntry.isNarrator)]
+              [charEntry.voiceId, charEntry.voiceId, voiceGender, Boolean(charEntry.isNarrator)]
             );
             await client.query(
               `
               INSERT INTO characters (novel_id, canonical_name, gender, age_band, temperament, sample_quote, voice_id, speed_multiplier, is_narrator, source)
-              VALUES ($1, $2, 'unknown', 'adult', 'calm', $3, $4, 1.0, $5, 'manual')
-              ON CONFLICT (novel_id, canonical_name) DO NOTHING;
+              VALUES ($1, $2, $3, 'adult', 'calm', $4, $5, 1.0, $6, 'manual')
+              ON CONFLICT (novel_id, canonical_name) DO UPDATE SET
+                voice_id = EXCLUDED.voice_id,
+                gender = CASE WHEN EXCLUDED.gender <> 'unknown' THEN EXCLUDED.gender ELSE characters.gender END,
+                updated_at = now();
               `,
-              [createdNovel.id, charEntry.name, charEntry.sampleQuote || '', charEntry.voiceId, charEntry.isNarrator]
+              [createdNovel.id, charEntry.name, charGender, charEntry.sampleQuote || '', charEntry.voiceId, charEntry.isNarrator]
             );
           }
           await client.query('RELEASE SAVEPOINT sp_novel_characters');

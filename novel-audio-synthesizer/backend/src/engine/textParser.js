@@ -112,8 +112,10 @@ const BANNED_ANY_WORD = new Set([
   'here', 'there', 'then', 'now', 'soon', 'still', 'yet', 'already',
   'often', 'always', 'never', 'seldom', 'rarely', 'sometimes', 'usually', 'frequently',
   'suddenly', 'finally', 'eventually', 'presently', 'immediately', 'slowly', 'quickly',
-  'chapter', 'section', 'page', 'book', 'volume', 'part',
-  'voice', 'dialogue', 'character', 'speaker', 'narrator', 'unresolved', 'unknown', 'illustration', 'image',
+  'chapter', 'section', 'page', 'book', 'volume', 'part', 'figure',
+  'voice', 'dialogue', 'character', 'speaker', 'narrator', 'unresolved', 'unknown', 'illustration', 'illustrations', 'image',
+  'hold', 'let', 'look', 'wait', 'listen', 'come', 'go', 'stop', 'pray',
+  'indeed', 'yes', 'no', 'well', 'oh', 'ah', 'alas',
   'speaker_a', 'speaker_b', 'dialogue_speaker',
   'and', 'or', 'but', 'nor', 'so', 'for', 'if', 'unless', 'until', 'till', 'while', 'because', 'although', 'though',
 ]);
@@ -1200,20 +1202,20 @@ function parseChapter(rawText, title = 'Untitled Chapter', chapterId = 'ch-1', o
       // 2. Same-paragraph interrupted/follow-up quote ("...", said Holmes, "...")
       else if (qIdx > 0 && !q.explicitTag && q.interruptedFromPrev && paragraphFirstSpeaker) {
         speakerName = paragraphFirstSpeaker;
-        attributionSource = quotes[0].explicitTag ? 'regex_rule' : 'context_continuation';
+        attributionSource = quotes[0].explicitTag ? 'regex' : 'context_continuation';
         confidence = quotes[0].explicitTag ? 0.93 : 0.85;
       }
       // 3. Explicit named speaker tag
       else if (q.explicitTag && q.explicitTag.kind === 'name') {
         speakerName = canonicalize(q.explicitTag.name);
-        attributionSource = 'regex_rule';
+        attributionSource = 'regex';
         confidence = 0.95;
       }
       // 4. Explicit pronoun tag ("cried I", "he remarked", "she asked")
       else if (q.explicitTag && q.explicitTag.kind === 'pronoun') {
         if (q.explicitTag.pronounType === 'first_person') {
           speakerName = firstPersonSpeaker || firstPersonIdentity;
-          attributionSource = 'regex_rule';
+          attributionSource = 'regex';
           confidence = 0.90;
           resolvedViaFirstPerson = true;
         } else if (q.explicitTag.pronounType === 'male') {
@@ -1295,7 +1297,7 @@ function parseChapter(rawText, title = 'Untitled Chapter', chapterId = 'ch-1', o
           } else {
             speakerName = newer;
           }
-          attributionSource = 'context_alternation';
+          attributionSource = 'alternation';
           confidence = 0.76;
         } else if (recentSpeakers.length === 1) {
           const active = recentSpeakers[0];
@@ -1307,7 +1309,7 @@ function parseChapter(rawText, title = 'Untitled Chapter', chapterId = 'ch-1', o
           } else {
             speakerName = active === 'Speaker B' ? 'Speaker A' : 'Speaker B';
           }
-          attributionSource = 'context_alternation';
+          attributionSource = 'alternation';
           confidence = 0.72;
         } else {
           // Dialogue starts before explicit names are tagged: scan up to 2 turns/paragraphs ahead
@@ -1318,7 +1320,7 @@ function parseChapter(rawText, title = 'Untitled Chapter', chapterId = 'ch-1', o
           } else {
             speakerName = 'Speaker A';
           }
-          attributionSource = 'context_alternation';
+          attributionSource = 'alternation';
           confidence = 0.68;
         }
       }
@@ -1364,15 +1366,500 @@ function parseChapter(rawText, title = 'Untitled Chapter', chapterId = 'ch-1', o
     }
   }
 
+  const unified = unifyCharacterEntities(segments, []);
+
   return {
     chapter_id: chapterId,
     title,
-    segments,
+    segments: unified.segments,
+    characters: unified.characters,
+  };
+}
+
+const UNIFY_COURTESY_TITLES = new Set(['mr', 'mrs', 'ms', 'miss']);
+
+const UNIFY_TITLE_KEY_MAP = {
+  mr: 'mr',
+  mrs: 'mrs',
+  ms: 'ms',
+  miss: 'miss',
+  dr: 'dr',
+  doctor: 'dr',
+  sir: 'sir',
+  lord: 'lord',
+  lady: 'lady',
+  professor: 'prof',
+  prof: 'prof',
+  captain: 'capt',
+  capt: 'capt',
+  inspector: 'inspector',
+  insp: 'inspector',
+  detective: 'detective',
+  st: 'st',
+  saint: 'st',
+  father: 'father',
+  mother: 'mother',
+  aunt: 'aunt',
+  uncle: 'uncle',
+  general: 'general',
+  gen: 'general',
+  colonel: 'colonel',
+  col: 'colonel',
+  major: 'major',
+  maj: 'major',
+  rev: 'rev',
+  reverend: 'rev',
+  sgt: 'sgt',
+  sergeant: 'sgt',
+  lt: 'lt',
+  lieutenant: 'lt',
+  supt: 'supt',
+  superintendent: 'supt',
+};
+
+const UNIFY_NON_ENTITY_IDS = new Set([
+  '',
+  'narrator',
+  'unresolved',
+  'unknown',
+  'unknown_speaker',
+  'speaker_a',
+  'speaker_b',
+  'dialogue_turn_even',
+  'dialogue_turn_odd',
+  'dialogue_speaker',
+  'image',
+  'illustration',
+  'speaker',
+  'character',
+]);
+
+function parseEntitySurface(rawName) {
+  const raw = String(rawName || '').trim();
+  const tokens = raw.split(/\s+/).filter(Boolean);
+  let titlePrefix = '';
+  let titleKey = '';
+  let coreStart = 0;
+
+  if (tokens.length >= 2) {
+    const firstBare = tokens[0].replace(/\.+$/, '').toLowerCase();
+    if (UNIFY_TITLE_KEY_MAP[firstBare]) {
+      titlePrefix = tokens[0];
+      titleKey = UNIFY_TITLE_KEY_MAP[firstBare];
+      coreStart = 1;
+    }
+  }
+
+  const coreTokens = tokens.slice(coreStart);
+  const coreLower = coreTokens.map((t) => t.replace(/\.+$/, '').toLowerCase()).filter(Boolean);
+  const surname = coreLower.length > 0 ? coreLower[coreLower.length - 1] : '';
+  const isCourtesy = UNIFY_COURTESY_TITLES.has(titleKey);
+  const gender = inferSpeakerGender(raw);
+
+  return {
+    raw,
+    titlePrefix,
+    titleKey,
+    isCourtesy,
+    coreTokens,
+    coreLower,
+    surname,
+    gender,
+  };
+}
+
+function gendersConflict(gA, gB) {
+  return gA && gB && gA !== 'unknown' && gB !== 'unknown' && gA !== gB;
+}
+
+function titlesConflict(tA, tB) {
+  return Boolean(tA && tB && tA !== tB);
+}
+
+/**
+ * Unify surface mentions referring to the same character entity across segments and characters[]
+ * (e.g. "Mr. Sherlock Holmes", "Sherlock Holmes", "Mr. Holmes", "Holmes" -> "Sherlock Holmes",
+ * "Dr. John Watson", "Dr. Watson", "Watson" -> "Dr. John Watson") while keeping distinct family
+ * members with conflicting titles or given names separate (e.g. "Mr. Dursley" vs "Mrs. Dursley").
+ *
+ * @param {Array<object>} segments
+ * @param {Array<object>} [characters=[]]
+ * @returns {{ segments: Array<object>, characters: Array<object> }}
+ */
+function unifyCharacterEntities(segments = [], characters = []) {
+  const segList = Array.isArray(segments) ? segments : [];
+  const charList = Array.isArray(characters) ? characters : [];
+
+  const surfaceRecords = new Map(); // rawLower -> { surface, gender, descriptions, quotes, voiceIds, inputLineCount }
+
+  const registerSurface = (rawName, meta = {}) => {
+    const clean = String(rawName || '').trim();
+    if (!clean) return;
+    const slug = slugifySpeakerId(clean);
+    if (UNIFY_NON_ENTITY_IDS.has(slug)) return;
+    const key = clean.toLowerCase();
+    if (!surfaceRecords.has(key)) {
+      surfaceRecords.set(key, {
+        surface: parseEntitySurface(clean),
+        gender: meta.gender === 'male' || meta.gender === 'female' ? meta.gender : 'unknown',
+        description: meta.description ? String(meta.description).trim() : '',
+        sampleQuote: meta.sample_quote ? String(meta.sample_quote).trim() : '',
+        voiceId: typeof meta.voice_id === 'string' && meta.voice_id ? meta.voice_id : null,
+        inputLineCount: Number(meta.line_count) || 0,
+      });
+    } else {
+      const rec = surfaceRecords.get(key);
+      if (rec.gender === 'unknown' && (meta.gender === 'male' || meta.gender === 'female')) {
+        rec.gender = meta.gender;
+      }
+      if (!rec.description && meta.description) rec.description = String(meta.description).trim();
+      if (!rec.sampleQuote && meta.sample_quote) rec.sampleQuote = String(meta.sample_quote).trim();
+      if (!rec.voiceId && typeof meta.voice_id === 'string' && meta.voice_id) rec.voiceId = meta.voice_id;
+      if (meta.line_count) rec.inputLineCount += Number(meta.line_count) || 0;
+    }
+  };
+
+  let inputNarratorMeta = null;
+  for (const c of charList) {
+    if (!c || typeof c !== 'object') continue;
+    const cname = String(c.name || c.speaker_name || c.canonical_name || '').trim();
+    const cid = slugifySpeakerId(c.character_id || cname);
+    if (cid === 'narrator') {
+      inputNarratorMeta = c;
+      continue;
+    }
+    if (cname) {
+      registerSurface(cname, {
+        gender: c.gender,
+        description: c.description,
+        sample_quote: c.sample_quote,
+        voice_id: typeof c.voice_id === 'string' ? c.voice_id : null,
+        line_count: c.line_count,
+      });
+    }
+  }
+
+  for (const seg of segList) {
+    if (!seg || seg.type !== 'dialogue') continue;
+    const sname = String(seg.speaker_name || '').trim();
+    const sid = slugifySpeakerId(seg.speaker_id || sname);
+    if (UNIFY_NON_ENTITY_IDS.has(sid)) continue;
+    registerSurface(sname || sid, {
+      gender: seg.speaker_gender || seg.gender,
+      voice_id: typeof seg.assigned_voice_id === 'string'
+        ? seg.assigned_voice_id
+        : (typeof seg.voice_id === 'string' ? seg.voice_id : null),
+    });
+  }
+
+  // Build clusters from distinct surface records
+  // Process longer/titled core forms first, then untitled/shorter forms
+  const records = Array.from(surfaceRecords.values());
+  records.sort((a, b) => {
+    const lenDiff = b.surface.coreLower.length - a.surface.coreLower.length;
+    if (lenDiff !== 0) return lenDiff;
+    const titleDiff = (b.surface.titleKey ? 1 : 0) - (a.surface.titleKey ? 1 : 0);
+    if (titleDiff !== 0) return titleDiff;
+    return b.surface.raw.length - a.surface.raw.length;
+  });
+
+  const clusters = [];
+
+  const getClusterGender = (cluster) => {
+    for (const r of cluster.records) {
+      if (r.gender === 'male' || r.gender === 'female') return r.gender;
+      if (r.surface.gender === 'male' || r.surface.gender === 'female') return r.surface.gender;
+    }
+    return 'unknown';
+  };
+
+  const getClusterTitles = (cluster) =>
+    new Set(cluster.records.map((r) => r.surface.titleKey).filter(Boolean));
+
+  const isClusterCompatibleWithRecord = (cluster, rec) => {
+    const cGender = getClusterGender(cluster);
+    const rGender = rec.gender !== 'unknown' ? rec.gender : rec.surface.gender;
+    if (gendersConflict(cGender, rGender)) return false;
+
+    const cTitles = getClusterTitles(cluster);
+    if (rec.surface.titleKey) {
+      for (const ct of cTitles) {
+        if (titlesConflict(ct, rec.surface.titleKey)) return false;
+      }
+    }
+    return true;
+  };
+
+  // Pass 1: Exact coreLower clustering (first titled/multi-token, then untitled)
+  const untitledExactPending = [];
+  for (const rec of records) {
+    if (rec.surface.coreLower.length === 0) continue;
+    const coreKey = rec.surface.coreLower.join(' ');
+    if (!rec.surface.titleKey) {
+      untitledExactPending.push({ rec, coreKey });
+      continue;
+    }
+    const match = clusters.find(
+      (cl) => cl.coreKey === coreKey && isClusterCompatibleWithRecord(cl, rec)
+    );
+    if (match) {
+      match.records.push(rec);
+    } else {
+      clusters.push({
+        coreKey,
+        coreLower: rec.surface.coreLower,
+        surname: rec.surface.surname,
+        records: [rec],
+      });
+    }
+  }
+
+  for (const { rec, coreKey } of untitledExactPending) {
+    const exactMatches = clusters.filter((cl) => cl.coreKey === coreKey);
+    const compatMatches = exactMatches.filter((cl) => isClusterCompatibleWithRecord(cl, rec));
+    // Only merge untitled mention into exact-core cluster if unambiguous (no conflicting siblings like Mr. vs Mrs. Dursley)
+    if (compatMatches.length === 1 && exactMatches.length === 1) {
+      compatMatches[0].records.push(rec);
+    } else if (compatMatches.length === 0 && exactMatches.length === 0) {
+      clusters.push({
+        coreKey,
+        coreLower: rec.surface.coreLower,
+        surname: rec.surface.surname,
+        records: [rec],
+      });
+    } else {
+      // Ambiguous untitled exact match (e.g. bare "Dursley" when both "Mr. Dursley" & "Mrs. Dursley" exist) -> keep separate
+      clusters.push({
+        coreKey,
+        coreLower: rec.surface.coreLower,
+        surname: rec.surface.surname,
+        records: [rec],
+      });
+    }
+  }
+
+  // Pass 2: Merge single-token clusters into unambiguous multi-token full-name clusters
+  const isClusterCompatibleWithCluster = (target, src) => {
+    const tGender = getClusterGender(target);
+    const sGender = getClusterGender(src);
+    if (gendersConflict(tGender, sGender)) return false;
+
+    const tTitles = getClusterTitles(target);
+    const sTitles = getClusterTitles(src);
+    for (const st of sTitles) {
+      for (const tt of tTitles) {
+        if (titlesConflict(tt, st)) return false;
+      }
+    }
+    return true;
+  };
+
+  const singleClusters = clusters.filter((cl) => cl.coreLower.length === 1);
+  const multiClusters = clusters.filter((cl) => cl.coreLower.length >= 2);
+  const mergedAway = new Set();
+
+  for (const sCl of singleClusters) {
+    const tok = sCl.coreLower[0];
+    if (!tok) continue;
+    const sTitles = getClusterTitles(sCl);
+
+    // 2a. Surname match against multi-token full-name clusters
+    const surnameAll = multiClusters.filter((mCl) => mCl.surname === tok);
+    if (surnameAll.length > 0) {
+      const surnameCompat = surnameAll.filter((mCl) => isClusterCompatibleWithCluster(mCl, sCl));
+      const conflictingSingleSiblings = singleClusters.filter(
+        (other) => other !== sCl && other.surname === tok && !isClusterCompatibleWithCluster(other, sCl)
+      );
+      if (
+        surnameCompat.length === 1 &&
+        (sTitles.size > 0 || (surnameAll.length === 1 && conflictingSingleSiblings.length === 0))
+      ) {
+        surnameCompat[0].records.push(...sCl.records);
+        mergedAway.add(sCl);
+        continue;
+      }
+    }
+
+    // 2b. Given-name match for untitled single-token mentions (e.g. "Harry" -> "Harry Potter")
+    if (sTitles.size === 0 && surnameAll.length === 0) {
+      const givenAll = multiClusters.filter((mCl) => mCl.coreLower[0] === tok);
+      const givenCompat = givenAll.filter((mCl) => isClusterCompatibleWithCluster(mCl, sCl));
+      if (givenCompat.length === 1 && givenAll.length === 1) {
+        givenCompat[0].records.push(...sCl.records);
+        mergedAway.add(sCl);
+      }
+    }
+  }
+
+  const finalClusters = clusters.filter((cl) => !mergedAway.has(cl));
+
+  // Choose canonical display name & character_id for each cluster
+  const surfaceToCanonical = new Map();
+  const canonicalEntities = new Map(); // canonicalId -> entity meta
+
+  for (const cl of finalClusters) {
+    const maxCoreLen = Math.max(...cl.records.map((r) => r.surface.coreTokens.length));
+    const longestRecords = cl.records.filter((r) => r.surface.coreTokens.length === maxCoreLen);
+
+    // Prefer non-courtesy title (Dr., Professor, Lord, Lady, Inspector, etc.) if any member carries one
+    const nonCourtesyTitled = cl.records.filter(
+      (r) => r.surface.titlePrefix && !r.surface.isCourtesy
+    );
+    const courtesyTitled = cl.records.filter(
+      (r) => r.surface.titlePrefix && r.surface.isCourtesy
+    );
+
+    const bestCoreTokens = longestRecords[0].surface.coreTokens;
+    let canonicalName = bestCoreTokens.join(' ');
+
+    if (nonCourtesyTitled.length > 0) {
+      // Prefer longest member with non-courtesy title, or prefer standard abbreviated 'Dr.' over 'Doctor'
+      const preferred =
+        nonCourtesyTitled.find((r) => r.surface.coreTokens.length === maxCoreLen && r.surface.titlePrefix === 'Dr.') ||
+        nonCourtesyTitled.find((r) => r.surface.coreTokens.length === maxCoreLen) ||
+        nonCourtesyTitled.find((r) => r.surface.titlePrefix === 'Dr.') ||
+        nonCourtesyTitled[0];
+      canonicalName = `${preferred.surface.titlePrefix} ${bestCoreTokens.join(' ')}`.trim();
+    } else if (maxCoreLen >= 2) {
+      // Full given + surname known: drop generic courtesy prefix ("Mr. Sherlock Holmes" -> "Sherlock Holmes")
+      const untitledLongest = longestRecords.find((r) => !r.surface.titlePrefix);
+      canonicalName = (untitledLongest ? untitledLongest.surface.coreTokens : bestCoreTokens).join(' ');
+    } else if (courtesyTitled.length > 0) {
+      // Surname-only entity with courtesy title (e.g. "Mr. Dursley", "Mrs. Dursley", "Mrs. Hudson")
+      canonicalName = `${courtesyTitled[0].surface.titlePrefix} ${bestCoreTokens.join(' ')}`.trim();
+    }
+
+    const canonicalId = slugifySpeakerId(canonicalName);
+    const resolvedGender = getClusterGender(cl);
+
+    let description = '';
+    let sampleQuote = '';
+    let voiceId = null;
+    let inputLineCount = 0;
+    for (const r of cl.records) {
+      if (!description && r.description) description = r.description;
+      if (!sampleQuote && r.sampleQuote) sampleQuote = r.sampleQuote;
+      if (!voiceId && typeof r.voiceId === 'string' && r.voiceId) voiceId = r.voiceId;
+      inputLineCount += r.inputLineCount || 0;
+      surfaceToCanonical.set(r.surface.raw.toLowerCase(), {
+        character_id: canonicalId,
+        name: canonicalName,
+        gender: resolvedGender,
+      });
+    }
+
+    if (!canonicalEntities.has(canonicalId)) {
+      canonicalEntities.set(canonicalId, {
+        character_id: canonicalId,
+        name: canonicalName,
+        speaker_name: canonicalName,
+        gender: resolvedGender,
+        description,
+        line_count: 0,
+        input_line_count: inputLineCount,
+        sample_quote: sampleQuote,
+        voice_id: voiceId,
+      });
+    } else {
+      const existing = canonicalEntities.get(canonicalId);
+      if (existing.gender === 'unknown' && resolvedGender !== 'unknown') existing.gender = resolvedGender;
+      if (!existing.description && description) existing.description = description;
+      if (!existing.sample_quote && sampleQuote) existing.sample_quote = sampleQuote;
+      if (!existing.voice_id && voiceId) existing.voice_id = voiceId;
+      existing.input_line_count += inputLineCount;
+    }
+  }
+
+  let narrationCount = 0;
+  let narratorSample = '';
+
+  const rewrittenSegments = segList.map((seg) => {
+    if (!seg) return seg;
+    if (seg.type === 'narration' || seg.speaker_id === 'narrator') {
+      narrationCount += 1;
+      if (!narratorSample && seg.text) narratorSample = String(seg.text).trim().slice(0, 220);
+      return seg;
+    }
+    if (seg.type !== 'dialogue') return seg;
+
+    const rawName = String(seg.speaker_name || '').trim();
+    const rawId = slugifySpeakerId(seg.speaker_id || rawName);
+    if (UNIFY_NON_ENTITY_IDS.has(rawId)) return seg;
+
+    const mapped = surfaceToCanonical.get((rawName || rawId).toLowerCase());
+    if (!mapped) return seg;
+
+    const ent = canonicalEntities.get(mapped.character_id);
+    if (ent) {
+      ent.line_count += 1;
+      if (!ent.sample_quote && seg.text) {
+        ent.sample_quote = String(seg.text).trim().slice(0, 220);
+      }
+      if (!ent.voice_id) {
+        const segVoice =
+          typeof seg.assigned_voice_id === 'string' && seg.assigned_voice_id
+            ? seg.assigned_voice_id
+            : (typeof seg.voice_id === 'string' && seg.voice_id ? seg.voice_id : null);
+        if (segVoice) ent.voice_id = segVoice;
+      }
+    }
+
+    const segGender =
+      seg.speaker_gender === 'male' || seg.speaker_gender === 'female'
+        ? seg.speaker_gender
+        : (seg.gender === 'male' || seg.gender === 'female' ? seg.gender : mapped.gender);
+
+    const updatedSeg = {
+      ...seg,
+      speaker_id: mapped.character_id,
+      speaker_name: mapped.name,
+      speaker_gender: segGender,
+    };
+    if ('character_id' in seg) {
+      updatedSeg.character_id = mapped.character_id;
+    }
+    if ('gender' in seg) {
+      updatedSeg.gender = segGender;
+    }
+    return updatedSeg;
+  });
+
+  const mergedCharacters = [];
+  if (inputNarratorMeta) {
+    mergedCharacters.push({
+      character_id: 'narrator',
+      name: 'Narrator',
+      speaker_name: 'Narrator',
+      gender: inputNarratorMeta.gender || 'male',
+      description: inputNarratorMeta.description || 'Primary narrative voice',
+      line_count: narrationCount > 0 ? narrationCount : (Number(inputNarratorMeta.line_count) || 0),
+      sample_quote: inputNarratorMeta.sample_quote || narratorSample || 'Primary narrative voice.',
+      voice_id: typeof inputNarratorMeta.voice_id === 'string' ? inputNarratorMeta.voice_id : 'en-GB-RyanNeural',
+    });
+  }
+
+  for (const ent of canonicalEntities.values()) {
+    mergedCharacters.push({
+      character_id: ent.character_id,
+      name: ent.name,
+      speaker_name: ent.name,
+      gender: ent.gender,
+      description: ent.description || '',
+      line_count: ent.line_count > 0 ? ent.line_count : ent.input_line_count,
+      sample_quote: ent.sample_quote || '',
+      voice_id: ent.voice_id || null,
+    });
+  }
+
+  return {
+    segments: rewrittenSegments,
+    characters: mergedCharacters,
   };
 }
 
 module.exports = {
   parseChapter,
+  unifyCharacterEntities,
   cleanSpeakerName,
   extractTagAfter,
   extractTagBefore,
