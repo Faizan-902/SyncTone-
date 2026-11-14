@@ -24,49 +24,39 @@ import {
   IconSoundwave,
 } from './icons';
 
-const SEED_NOVELS = [
-  {
-    id: '14ee0456-ad37-4867-9190-938b0e7d14ad',
-    title: 'A Study in Scarlet',
-    synopsis: 'The landmark debut of Sherlock Holmes and Dr. John Watson.',
-    channel: 'verified',
-    status: 'draft',
-    portfolio_source: 'ai',
-    cover_object: null,
-    added_by: 'a9da22c3-d45d-4997-ba10-7e5a235334f1',
-    author_username: 'writer_1792437336846',
-    narrator_name: 'Dr. John Watson',
-    narrator_voice_id: 'bm_george',
-    narrator_voice_label: 'George (British Received)',
-    chapter_count: 1,
-  },
-];
+const getCachedNovelsForChannel = (ch) => {
+  try {
+    const cached = sessionStorage.getItem(`synctone_cached_novels_${ch}`);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (_) {}
+  return null;
+};
 
 export default function NovelCatalog({
   initialChannel = 'verified',
+  onChannelChange,
   onSelectNovel,
   onSelectChapter,
+  onStartListening,
   onOpenAddNovel,
   onOpenSettings,
   onOpenAuth,
+  onNavigate,
 }) {
   const { user, isAuthenticated } = useAuth();
   const isWriterOrAdmin = user && (user.role === 'writer' || user.role === 'admin');
 
-  const [novels, setNovels] = useState(() => {
-    try {
-      const cached = sessionStorage.getItem('synctone_cached_novels');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch (_) {}
-    return SEED_NOVELS;
-  });
   const [channel, setChannel] = useState(initialChannel); // 'verified' | 'community' | 'all'
+  const [novels, setNovels] = useState(() => getCachedNovelsForChannel(initialChannel) || []);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(() => Boolean(getCachedNovelsForChannel(initialChannel)?.length));
 
   useEffect(() => {
     if (initialChannel && initialChannel !== channel) {
+      const cached = getCachedNovelsForChannel(initialChannel);
+      setNovels(cached || []);
       setChannel(initialChannel);
     }
   }, [initialChannel]);
@@ -80,6 +70,16 @@ export default function NovelCatalog({
   const carouselRef = useRef(null);
   const tabRefs = useRef([]);
   const CHANNELS = ['verified', 'community', 'all'];
+
+  const handleSelectChannel = useCallback((nextChannel) => {
+    if (!nextChannel) return;
+    if (nextChannel !== channel) {
+      const cached = getCachedNovelsForChannel(nextChannel);
+      setNovels(cached || []);
+      setChannel(nextChannel);
+    }
+    onChannelChange?.(nextChannel);
+  }, [channel, onChannelChange]);
 
   const handleTabKeyDown = (e, idx) => {
     let nextIdx = idx;
@@ -95,7 +95,7 @@ export default function NovelCatalog({
       return;
     }
     e.preventDefault();
-    setChannel(CHANNELS[nextIdx]);
+    handleSelectChannel(CHANNELS[nextIdx]);
     tabRefs.current[nextIdx]?.focus();
   };
 
@@ -109,9 +109,14 @@ export default function NovelCatalog({
       if (signal && signal.aborted) return;
       const loadedNovels = data?.novels || [];
       setNovels(loadedNovels);
+      setHasLoadedOnce(true);
       if (Array.isArray(loadedNovels) && loadedNovels.length > 0) {
         try {
-          sessionStorage.setItem('synctone_cached_novels', JSON.stringify(loadedNovels));
+          sessionStorage.setItem(`synctone_cached_novels_${selectedChannel}`, JSON.stringify(loadedNovels));
+        } catch (_) {}
+      } else {
+        try {
+          sessionStorage.removeItem(`synctone_cached_novels_${selectedChannel}`);
         } catch (_) {}
       }
     } catch (err) {
@@ -179,12 +184,38 @@ export default function NovelCatalog({
     });
   }, [novels, debouncedSearch, selectedGenre]);
 
+  // Auto-reset invalid genre filter across channels
+  useEffect(() => {
+    if (
+      selectedGenre !== 'ALL' &&
+      novels.length > 0 &&
+      !novels.some((n) => (n.global_tone || '').toUpperCase() === selectedGenre)
+    ) {
+      setSelectedGenre('ALL');
+    }
+  }, [novels, channel, selectedGenre]);
+
   // Netflix & Amazon Prime style automatic billboard rotation state
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const [slideDirection, setSlideDirection] = useState('forward');
   const [isBillboardPaused, setIsBillboardPaused] = useState(false);
-  const [libraryViewMode, setLibraryViewMode] = useState('grid'); // 'grid' | 'shelf'
+  const [libraryViewMode, setLibraryViewMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem('synctone_library_view_mode');
+      return saved === 'grid' || saved === 'shelf' ? saved : 'grid';
+    } catch (_) {
+      return 'grid';
+    }
+  });
   const [lastReadingSession, setLastReadingSession] = useState(null);
+
+  const handleViewModeChange = (mode) => {
+    if (mode !== 'grid' && mode !== 'shelf') return;
+    setLibraryViewMode(mode);
+    try {
+      localStorage.setItem('synctone_library_view_mode', mode);
+    } catch (_) {}
+  };
 
   // Slide navigation handlers with direction awareness
   const handleNextSlide = useCallback(() => {
@@ -291,6 +322,10 @@ export default function NovelCatalog({
   const handleStartListening = async (novel, e) => {
     if (e) e.stopPropagation();
     if (!novel) return;
+    if (typeof onStartListening === 'function') {
+      onStartListening(novel, e);
+      return;
+    }
     try {
       const data = await api.novels.get(novel.id);
       const ch1 = (data.chapters || []).find((c) => c.chapter_number === 1) || data.chapters?.[0];
@@ -308,6 +343,8 @@ export default function NovelCatalog({
     }
   };
 
+  const showFullPageSkeleton = isLoading && !hasLoadedOnce && novels.length === 0;
+
   return (
     <div className="space-y-10 pb-20">
       {/* Error State with Retry Button */}
@@ -324,8 +361,8 @@ export default function NovelCatalog({
         </div>
       )}
 
-      {/* Loading Skeletons */}
-      {isLoading && !error && (
+      {/* Initial Full-Page Loading Skeleton (first uncached load only) */}
+      {showFullPageSkeleton && !error && (
         <div className="space-y-10 animate-pulse">
           {/* Hero Billboard Skeleton */}
           <div className="w-full h-[480px] rounded-3xl theme-card border p-8 sm:p-12 flex flex-col justify-end space-y-4">
@@ -355,8 +392,8 @@ export default function NovelCatalog({
         </div>
       )}
 
-      {/* Main Content when Loaded */}
-      {!isLoading && !error && (
+      {/* Main Content (stays mounted during channel switches) */}
+      {!showFullPageSkeleton && !error && (
         <>
           {/* ================================================================= */}
           {/* 2. NOIR MONOCHROME HERO STAGE (Tall Stage Gradient & 3D Cover)    */}
@@ -666,15 +703,25 @@ export default function NovelCatalog({
           {/* ================================================================= */}
           <section id="archive-catalog" className="max-w-[1720px] mx-auto w-full space-y-6 pt-4 scroll-mt-20" aria-label="Novel Catalog Grid">
             <div className="border-b border-[var(--border-subtle)] pb-5 space-y-4">
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-col gap-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-[11px] font-mono text-[var(--text-sub)] uppercase tracking-wider">
                       // ARCHIVE CATALOG —
                     </span>
                     <h2 className="text-[11px] font-mono font-bold uppercase tracking-wider text-[var(--text-main)]">
                       Novel Library
                     </h2>
+                    {isLoading && (
+                      <span
+                        className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[var(--text-sub)]"
+                        role="status"
+                        aria-live="polite"
+                      >
+                        <IconRefresh className="w-3 h-3 animate-spin" />
+                        <span>Loading...</span>
+                      </span>
+                    )}
                   </div>
                   <h3 className="text-base sm:text-xl font-bold font-sans uppercase tracking-tight text-[var(--text-main)]">
                     {channel === 'verified'
@@ -685,94 +732,96 @@ export default function NovelCatalog({
                   </h3>
                 </div>
 
-                {/* Channel Filter Tabs (Accessible & Keyboard Navigable) */}
-                <div
-                  className="inline-flex p-1 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] gap-1 flex-wrap self-start md:self-auto shadow-xs"
-                  role="tablist"
-                  aria-label="Channel selection"
-                >
-                  <button
-                    ref={(el) => (tabRefs.current[0] = el)}
-                    role="tab"
-                    aria-selected={channel === 'verified'}
-                    tabIndex={channel === 'verified' ? 0 : -1}
-                    onClick={() => setChannel('verified')}
-                    onKeyDown={(e) => handleTabKeyDown(e, 0)}
-                    className={`px-3.5 py-1.5 text-[11px] font-mono uppercase tracking-wider rounded-full transition-all duration-200 cursor-pointer ${
-                      channel === 'verified'
-                        ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold shadow-xs'
-                        : 'text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
-                    }`}
+                <div className="flex flex-wrap items-center gap-3">
+                  {/* Channel Filter Tabs (Accessible & Keyboard Navigable) */}
+                  <div
+                    className="inline-flex p-1 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] gap-1 flex-wrap shadow-xs"
+                    role="tablist"
+                    aria-label="Channel selection"
                   >
-                    + Verified Originals
-                  </button>
-                  <button
-                    ref={(el) => (tabRefs.current[1] = el)}
-                    role="tab"
-                    aria-selected={channel === 'community'}
-                    tabIndex={channel === 'community' ? 0 : -1}
-                    onClick={() => setChannel('community')}
-                    onKeyDown={(e) => handleTabKeyDown(e, 1)}
-                    className={`px-3.5 py-1.5 text-[11px] font-mono uppercase tracking-wider rounded-full transition-all duration-200 cursor-pointer ${
-                      channel === 'community'
-                        ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold shadow-xs'
-                        : 'text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
-                    }`}
-                  >
-                    + Community Novels
-                  </button>
-                  <button
-                    ref={(el) => (tabRefs.current[2] = el)}
-                    role="tab"
-                    aria-selected={channel === 'all'}
-                    tabIndex={channel === 'all' ? 0 : -1}
-                    onClick={() => setChannel('all')}
-                    onKeyDown={(e) => handleTabKeyDown(e, 2)}
-                    className={`px-3.5 py-1.5 text-[11px] font-mono uppercase tracking-wider rounded-full transition-all duration-200 cursor-pointer ${
-                      channel === 'all'
-                        ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold shadow-xs'
-                        : 'text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
-                    }`}
-                  >
-                    + All Novels
-                  </button>
-                </div>
+                    <button
+                      ref={(el) => (tabRefs.current[0] = el)}
+                      role="tab"
+                      aria-selected={channel === 'verified'}
+                      tabIndex={channel === 'verified' ? 0 : -1}
+                      onClick={() => handleSelectChannel('verified')}
+                      onKeyDown={(e) => handleTabKeyDown(e, 0)}
+                      className={`px-3.5 py-1.5 text-[11px] font-mono uppercase tracking-wider rounded-full transition-all duration-200 cursor-pointer whitespace-nowrap ${
+                        channel === 'verified'
+                          ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold shadow-xs'
+                          : 'text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
+                      }`}
+                    >
+                      + Verified Originals
+                    </button>
+                    <button
+                      ref={(el) => (tabRefs.current[1] = el)}
+                      role="tab"
+                      aria-selected={channel === 'community'}
+                      tabIndex={channel === 'community' ? 0 : -1}
+                      onClick={() => handleSelectChannel('community')}
+                      onKeyDown={(e) => handleTabKeyDown(e, 1)}
+                      className={`px-3.5 py-1.5 text-[11px] font-mono uppercase tracking-wider rounded-full transition-all duration-200 cursor-pointer whitespace-nowrap ${
+                        channel === 'community'
+                          ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold shadow-xs'
+                          : 'text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
+                      }`}
+                    >
+                      + Community Novels
+                    </button>
+                    <button
+                      ref={(el) => (tabRefs.current[2] = el)}
+                      role="tab"
+                      aria-selected={channel === 'all'}
+                      tabIndex={channel === 'all' ? 0 : -1}
+                      onClick={() => handleSelectChannel('all')}
+                      onKeyDown={(e) => handleTabKeyDown(e, 2)}
+                      className={`px-3.5 py-1.5 text-[11px] font-mono uppercase tracking-wider rounded-full transition-all duration-200 cursor-pointer whitespace-nowrap ${
+                        channel === 'all'
+                          ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold shadow-xs'
+                          : 'text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
+                      }`}
+                    >
+                      + All Novels
+                    </button>
+                  </div>
 
-                {/* Library View Mode Switcher: Grid View vs 3D Bookshelf */}
-                <div
-                  className="inline-flex p-1 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] gap-1 shadow-xs self-start md:self-auto"
-                  role="group"
-                  aria-label="Library View Mode"
-                >
-                  <button
-                    type="button"
-                    onClick={() => setLibraryViewMode('grid')}
-                    className={`px-3 py-1.5 text-[11px] font-mono uppercase tracking-wider rounded-full transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${
-                      libraryViewMode === 'grid'
-                        ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold shadow-xs'
-                        : 'text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
-                    }`}
-                    title="Responsive Compact Grid View"
+                  {/* Library View Mode Switcher: Grid View vs 3D Bookshelf */}
+                  <div
+                    className="inline-flex p-1 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] gap-1 shadow-xs"
+                    role="group"
+                    aria-label="Library View Mode"
                   >
-                    <span>⊞ Grid View</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setLibraryViewMode('shelf')}
-                    className={`px-3 py-1.5 text-[11px] font-mono uppercase tracking-wider rounded-full transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${
-                      libraryViewMode === 'shelf'
-                        ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold shadow-xs'
-                        : 'text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
-                    }`}
-                    title="Interactive Physical 3D Bookshelf Experience"
-                  >
-                    <span>☱ 3D Bookshelf</span>
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => handleViewModeChange('grid')}
+                      className={`px-3 py-1.5 text-[11px] font-mono uppercase tracking-wider rounded-full transition-all duration-200 cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+                        libraryViewMode === 'grid'
+                          ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold shadow-xs'
+                          : 'text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
+                      }`}
+                      title="Responsive Compact Grid View"
+                    >
+                      <span>⊞ Grid View</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleViewModeChange('shelf')}
+                      className={`px-3 py-1.5 text-[11px] font-mono uppercase tracking-wider rounded-full transition-all duration-200 cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+                        libraryViewMode === 'shelf'
+                          ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold shadow-xs'
+                          : 'text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
+                      }`}
+                      title="Interactive Physical 3D Bookshelf Experience"
+                    >
+                      <span>☱ 3D Bookshelf</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
               {/* Instant Search Bar & Genre Filter Chips */}
-              <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 pt-1 w-full min-w-0">
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-1 w-full min-w-0">
                 {/* Monospace Genre Filter Chips */}
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 min-w-0 flex-1 scrollbar-none">
                   {availableGenres.map((g) => (
@@ -829,40 +878,63 @@ export default function NovelCatalog({
               </div>
             </div>
 
-            {/* Empty Search Results State */}
-            {filteredNovels.length === 0 && searchQuery && (
-              <div className="p-12 text-center rounded-2xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-3 shadow-sm animate-fade-in">
-                <IconSearch className="w-8 h-8 mx-auto text-[var(--text-muted)] opacity-60" />
-                <h4 className="text-base font-bold font-sans uppercase text-[var(--text-main)]">No novels found</h4>
-                <p className="text-xs text-[var(--text-muted)] font-mono max-w-sm mx-auto">
-                  No novels match &ldquo;{searchQuery}&rdquo;. Try adjusting your search query.
-                </p>
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="boxed-btn px-4 py-2 text-xs font-mono uppercase cursor-pointer rounded-full active:scale-95 transition-all hover:scale-105"
-                >
-                  Clear Search
-                </button>
+            {/* Inline Grid Skeleton during channel switch when no cached novels */}
+            {isLoading && novels.length === 0 && (
+              <div className="novel-catalog-grid animate-pulse" aria-label="Loading channel novels">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="rounded-2xl theme-card border border-[var(--border-subtle)] overflow-hidden flex flex-col p-3">
+                    <div className="aspect-[2/3] bg-[var(--border-subtle)] rounded-xl" />
+                    <div className="pt-3 space-y-2 flex-1">
+                      <div className="h-3 w-16 bg-[var(--border-subtle)] rounded-full" />
+                      <div className="h-4 w-full bg-[var(--border-subtle)] rounded" />
+                      <div className="h-3 w-20 bg-[var(--border-subtle)] rounded" />
+                      <div className="h-8 w-full bg-[var(--border-subtle)] rounded-full mt-2" />
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
 
-            {/* Empty Library Category State */}
-            {filteredNovels.length === 0 && !searchQuery && (
+            {/* Empty State (Search / Genre Filter / Empty Channel) */}
+            {!isLoading && filteredNovels.length === 0 && (
               <div className="p-12 text-center rounded-2xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-3 shadow-sm animate-fade-in">
-                <IconBook className="w-8 h-8 mx-auto text-[var(--text-muted)] opacity-60" />
-                <h4 className="text-base font-bold font-sans uppercase text-[var(--text-main)]">No novels available</h4>
-                <p className="text-xs text-[var(--text-muted)] font-mono max-w-sm mx-auto">
-                  No novels found in this library shelf. Upload a novel or switch channels to browse.
-                </p>
-                {isWriterOrAdmin && onOpenAddNovel && (
-                  <button
-                    onClick={onOpenAddNovel}
-                    className="boxed-btn-primary px-5 py-2.5 text-xs font-mono uppercase inline-flex items-center gap-2 cursor-pointer active:scale-95 transition-transform rounded-full mt-2 hover:scale-105"
-                  >
-                    <IconPlus className="w-4 h-4" />
-                    <span>Upload First Novel</span>
-                  </button>
+                {searchQuery.trim() !== '' ? (
+                  <IconSearch className="w-8 h-8 mx-auto text-[var(--text-muted)] opacity-60" />
+                ) : (
+                  <IconBook className="w-8 h-8 mx-auto text-[var(--text-muted)] opacity-60" />
                 )}
+                <h4 className="text-base font-bold font-sans uppercase text-[var(--text-main)]">
+                  {searchQuery.trim() !== '' ? 'No novels found' : 'No novels available'}
+                </h4>
+                <p className="text-xs text-[var(--text-muted)] font-mono max-w-sm mx-auto">
+                  {searchQuery.trim() !== ''
+                    ? `No novels match “${searchQuery}”. Try adjusting your search query or filters.`
+                    : 'No novels found in this library shelf. Upload a novel or switch channels to browse.'}
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                  {(selectedGenre !== 'ALL' || searchQuery.trim() !== '') && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedGenre('ALL');
+                        setSearchQuery('');
+                      }}
+                      className="boxed-btn px-4 py-2.5 text-xs font-mono uppercase cursor-pointer rounded-full active:scale-95 transition-all hover:scale-105"
+                    >
+                      Clear Filters
+                    </button>
+                  )}
+                  {isWriterOrAdmin && onOpenAddNovel && (
+                    <button
+                      type="button"
+                      onClick={onOpenAddNovel}
+                      className="boxed-btn-primary px-5 py-2.5 text-xs font-mono uppercase inline-flex items-center gap-2 cursor-pointer active:scale-95 transition-transform rounded-full hover:scale-105"
+                    >
+                      <IconPlus className="w-4 h-4" />
+                      <span>Upload First Novel</span>
+                    </button>
+                  )}
+                </div>
               </div>
             )}
 
@@ -1091,8 +1163,8 @@ export default function NovelCatalog({
                   </button>
                   <button
                     onClick={() => {
-                      setChannel('community');
-                      window.scrollTo({ top: 600, behavior: 'smooth' });
+                      handleSelectChannel('community');
+                      document.getElementById('archive-catalog')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }}
                     className="boxed-btn px-6 py-2.5 text-xs font-mono uppercase text-[var(--text-main)] hover:border-[var(--text-main)] cursor-pointer active:scale-95 transition-colors rounded-full hover:scale-105"
                   >

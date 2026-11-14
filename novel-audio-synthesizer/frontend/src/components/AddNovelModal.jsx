@@ -4,6 +4,7 @@ import { api, ApiError } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 import { extractChaptersFromText, parseNovelFileClientSide } from '../utils/ebookParser';
 import { sanitizeChaptersWithTtsDomCleaner } from '../utils/ttsSanitizer';
+import ParserConnectionPanel, { readStoredParserConfig } from './ParserConnectionPanel';
 import {
   IconPlus,
   IconX,
@@ -63,6 +64,7 @@ export default function AddNovelModal({
       return initialParserEngine || 'heuristic';
     }
   }); // 'heuristic' | 'gemini' | 'unlimited-ocr' | 'ollama'
+  const [parserConfig, setParserConfig] = useState(readStoredParserConfig);
   const [useTtsSanitizer, setUseTtsSanitizer] = useState(false);
 
   const parsedChapters = useMemo(
@@ -75,6 +77,20 @@ export default function AddNovelModal({
   const fileInputRef = useRef(null);
   const customCoverInputRef = useRef(null);
   const triggerRef = useRef(null);
+  const parserConfigRef = useRef(parserConfig);
+  parserConfigRef.current = parserConfig;
+
+  const handleSelectParserEngine = (nextEngine) => {
+    setParserEngine(nextEngine);
+    try {
+      localStorage.setItem('synctone_parser_engine', nextEngine);
+    } catch (_) {}
+  };
+
+  const handleParserConfigChange = (nextConfig) => {
+    setParserConfig(nextConfig);
+    parserConfigRef.current = nextConfig;
+  };
   const prefersReduced = useReducedMotion();
 
   const backdropVariants = { hidden: { opacity: 0 }, visible: { opacity: 1 } };
@@ -160,13 +176,17 @@ export default function AddNovelModal({
 
     try {
       let parsedResult = null;
+      const activeParserConfig = parserConfigRef.current || readStoredParserConfig();
 
       // Strategy 1: Fast Multipart FormData stream to backend parser across all 4 engines
       try {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('parser_engine', parserEngine);
-        parsedResult = await api.novels.parseFile(formData, parserEngine);
+        if (activeParserConfig) {
+          formData.append('parser_config', JSON.stringify(activeParserConfig));
+        }
+        parsedResult = await api.novels.parseFile(formData, parserEngine, activeParserConfig);
       } catch (uploadErr) {
         console.warn('[Upload Parse API Warning]:', uploadErr);
         // Strategy 2: If multipart failed (e.g. proxy issue), try base64 fallback for files < 50MB
@@ -178,8 +198,10 @@ export default function AddNovelModal({
                 file_name: file.name,
                 file_base64: base64,
                 parser_engine: parserEngine,
+                ...(activeParserConfig ? { parser_config: activeParserConfig } : {}),
               },
-              parserEngine
+              parserEngine,
+              activeParserConfig
             );
           } catch (b64Err) {
             console.error('[Base64 Parse Fallback Error]:', b64Err);
@@ -310,14 +332,17 @@ export default function AddNovelModal({
     setError(null);
     try {
       let parsedResult = null;
+      const activeParserConfig = parserConfigRef.current || readStoredParserConfig();
       try {
         parsedResult = await api.novels.parseFile(
           {
             file_name: `${(title || 'pasted_manuscript').trim().replace(/\s+/g, '_')}.txt`,
             file_base64: encodeUtf8Base64(pastedText),
             parser_engine: parserEngine,
+            ...(activeParserConfig ? { parser_config: activeParserConfig } : {}),
           },
-          parserEngine
+          parserEngine,
+          activeParserConfig
         );
       } catch (err) {
         console.warn('[Pasted Text Parse API Warning]:', err);
@@ -398,6 +423,7 @@ export default function AddNovelModal({
           ? extractChaptersFromText(pastedText, title.trim() || 'Manuscript')
           : [];
 
+      const activeParserConfig = parserConfigRef.current || readStoredParserConfig();
       const res = await api.novels.create({
         title: title.trim(),
         synopsis: synopsis.trim(),
@@ -405,6 +431,7 @@ export default function AddNovelModal({
         global_tone: globalTone.trim(),
         cover_object: coverObject || null,
         parser_engine: parserEngine,
+        ...(activeParserConfig ? { parser_config: activeParserConfig } : {}),
         characters: parsedCharacters,
         chapters: chaptersToSubmit,
       });
@@ -565,13 +592,7 @@ export default function AddNovelModal({
               aria-label="Select Manuscript Parser Engine"
               data-testid="parser-engine-selector"
               value={parserEngine}
-              onChange={(e) => {
-                const val = e.target.value;
-                setParserEngine(val);
-                try {
-                  localStorage.setItem('synctone_parser_engine', val);
-                } catch (_) {}
-              }}
+              onChange={(e) => handleSelectParserEngine(e.target.value)}
               className="w-full px-3 py-2 text-xs theme-surface border rounded-xl focus:outline-none focus:border-[var(--border-focus)] transition font-mono font-semibold"
             >
               <option value="heuristic">
@@ -597,6 +618,14 @@ export default function AddNovelModal({
                 ? 'Uses your local Ollama model for private offline speaker attribution and dialogue splitting.'
                 : 'Zero-latency local extraction via foliate-js / pdfjs-dist / pypdf with deterministic regex and alternation speaker attribution.'}
             </p>
+
+            <ParserConnectionPanel
+              compact
+              engine={parserEngine}
+              config={parserConfig}
+              onEngineChange={handleSelectParserEngine}
+              onConfigChange={handleParserConfigChange}
+            />
           </div>
 
           {/* ================================================================= */}

@@ -80,7 +80,7 @@ export default function UploadChapterModal({ isOpen, novel, onClose, onChapterUp
         exit="hidden"
         transition={{ duration: 0.2 }}
         onClick={(e) => {
-          if (e.target === e.currentTarget && !isUploading) onClose();
+          if (e.target === e.currentTarget && !isSubmitting) onClose();
         }}
       >
         <m.div

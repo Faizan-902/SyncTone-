@@ -673,6 +673,18 @@ function scanPairedQuotes(para, startIndex, effectiveQuoteStyle, allowUnclosedOp
 
     // 1. Double quotes ("..." or “...”)
     if (allowDouble && (ch === '"' || ch === '\u201c')) {
+      const prevCh = i > 0 ? para[i - 1] : '';
+      const nextCh = para[i + 1] || '';
+      // Skip mid-word OCR quote glitch (e.g. `Ed"'ware`) when letter precedes and quote/letter follows directly
+      if (isLetter(prevCh) && (isLetter(nextCh) || nextCh === '\'' || nextCh === '\u2019')) {
+        i++;
+        continue;
+      }
+      // Never treat an orphan closing quote (e.g. `attention." Next sentence`) as an opening quote
+      if (prevCh && !/[\s(\[—–\-:,"'\u201c\u2018]/.test(prevCh) && (!nextCh || /\s/.test(nextCh))) {
+        i++;
+        continue;
+      }
       const openIdx = i;
       let closeIdx = -1;
       for (let j = i + 1; j < para.length; j++) {
@@ -927,6 +939,217 @@ function detectFirstPersonIdentity(rawText) {
 }
 
 /**
+ * Clean scanned-book / Internet Archive OCR artifacts (running page headers,
+ * mid-sentence page breaks, scanner glyphs, ALL-CAPS captions, broken quotes)
+ * before quote scanning and dialogue attribution.
+ */
+function cleanLiteraryOcrNoise(rawText) {
+  let text = String(rawText || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  if (!text.trim()) return '';
+
+  // Mask [IMAGE:...] and markdown image tags so OCR regexes never corrupt URLs
+  const imagePlaceholders = [];
+  text = text.replace(/(\[IMAGE:[^\]]+\]|!\[[^\]]*\]\([^\)]+\))/g, (match) => {
+    const idx = imagePlaceholders.length;
+    imagePlaceholders.push(match);
+    return `\n\n<<<SYNCTONE_IMG_${idx}>>>\n\n`;
+  });
+
+  // Strip common Internet Archive / hOCR boilerplate notices
+  text = text
+    .replace(/^.*(?:Generated|Created) with hocr-to-epub.*$/gim, '')
+    .replace(/^.*The text on this page is estimated to be only \d+(?:\.\d+)?% accurate.*$/gim, '')
+    .replace(/^.*Internet Archive.*(?:working to improve|founded in 1996|EPUB format).*$/gim, '')
+    .replace(/^.*Notice:\s*The book may not offer the correct reading sequence.*$/gim, '');
+
+  // Drop pure divider lines & standalone page number lines
+  text = text
+    .replace(/^[ \t]*(?:[*_\-=~][ \t]*){3,}$/gm, '')
+    .replace(/^[ \t]*(?:Page[ \t]+)?\d{1,4}[ \t]*[»›]*[ \t]*$/gm, '');
+
+  // Remove OCR geometric box glyphs and graphic caret/underscore noise
+  text = text
+    .replace(/[■□▪▫◊◆▲▼►◄❖]+/g, ' ')
+    .replace(/(?:^|\s)\^(?:[ \t]+\^)+[ \t]+[A-Za-z](?=\s|$)/g, ' ')
+    .replace(/['"“”‘’*]*\^[A-Za-z0-9_^'"*]*|['"“”‘’*]*[\^_]{2,}[A-Za-z0-9_^'"*]*/g, ' ')
+    .replace(/(?:^|\s)\^+(?=\s|$)/g, ' ');
+
+  // Remove trailing page-break numbers like `in 2 »` at end of line/paragraph
+  text = text.replace(/[ \t]+\d{1,4}[ \t]*[»›]+(?=[ \t]*(?:\n|$))/g, '');
+
+  // Strip leading repeated story/chapter header banner & ornamented drop-cap glitch ("I. THE ADVENTURES... I. O Sherlock Holmes")
+  text = text
+    .replace(/^(?:[IVXLC]+\.[ \t]+)?(?:THE[ \t]+)?[A-Z]{2,}(?:[ \t]+[A-Z'’\-]{1,}){3,}\.[ \t]+(?:[IVXLC]+\.[ \t]+)?(?=[A-Za-z“"'])/, '')
+    .replace(/(^|\n)[ \t]*(?:[IVXLC]+\.[ \t]+)?O\s+Sherlock\s+Holmes\b/g, '$1To Sherlock Holmes');
+
+  // Strip numbered running headers on scanned pages (handles OCR variants like `2`, `lo`, `i6`, `1 3`, `OE`, `AD VENTURES`)
+  text = text.replace(
+    /((?:^|\n)[ \t]*)(?:\d{1,3}|[il]o|[il]\d|\d[ \t]+\d)[ \t]+([A-Z][A-Z/'’\-]*(?:[ \t]+[A-Z/'’\-]+){2,8})[.,][ \t]*(?=\S|\n|$)/g,
+    (full, lead, hdr) => (hdr.replace(/\s+/g, ' ').trim().length >= 12 ? lead : full)
+  );
+
+  // Strip unnumbered ALL-CAPS running page headers at start of lines/paragraphs (with optional trailing page # / noise)
+  // Exclude CHAPTER/PART/BOOK/SECTION/ACT/SCENE structural titles.
+  const headerPrefixCounts = new Map();
+  const unnumberedHeaderRe = /^[ \t]*((?!CHAPTER\b|PART\b|BOOK\b|SECTION\b|ACT\b|SCENE\b)[A-Z][A-Z/'’\-]*(?:[ \t]+[A-Z/'’\-]+){2,8}[.,])[ \t]+/gm;
+  for (const m of text.matchAll(unnumberedHeaderRe)) {
+    const key = m[1].replace(/[.,]$/, '').replace(/\s+/g, ' ').trim();
+    if (key.length >= 12) {
+      headerPrefixCounts.set(key, (headerPrefixCounts.get(key) || 0) + 1);
+    }
+  }
+  text = text.replace(
+    /((?:^|\n)[ \t]*)((?!CHAPTER\b|PART\b|BOOK\b|SECTION\b|ACT\b|SCENE\b)[A-Z][A-Z/'’\-]*(?:[ \t]+[A-Z/'’\-]+){2,8}[.,])(?:[ \t]+(?:\d{1,3}|[il]{2}|[il]\d|[il]o)(?:[ \t]+[A-Z]\.?(?:[ \t]+[A-Z]\.?)?)?)?[ \t]+(?=\S)/g,
+    (full, lead, hdr, offset) => {
+      const key = hdr.replace(/[.,]$/, '').replace(/\s+/g, ' ').trim();
+      if (key.length < 12) return full;
+      const afterHdr = full.slice(lead.length + hdr.length);
+      const hasPageNumAfter = /^[ \t]+(?:\d{1,3}|[il]{2}|[il]\d|[il]o)\b/.test(afterHdr);
+      const nextChar = text[offset + full.length] || '';
+      if (hasPageNumAfter || (headerPrefixCounts.get(key) || 0) >= 2 || /^[a-z“"'\*]/.test(nextChar)) {
+        return lead;
+      }
+      return full;
+    }
+  );
+
+  // Strip standalone ALL-CAPS quoted engraving/illustration captions like `"THEN HE STOOD BEFORE THE FIRE."`,
+  // unclosed inline caption interruptions like `" HE GAVE A CRY AND DROPPED. dropped`,
+  // or trailing caption suffixes like `** THIS PHOTOGRAPH I "` at line end
+  text = text
+    .replace(
+      /["\u201c][ \t]*[A-Z][A-Z'’\-]*(?:[ \t]+[A-Z'’\-]+){3,12}\.[ \t]*(?:["\u201d][ \t]*(?=\s|$)|(?=[a-z]))/g,
+      ' '
+    )
+    .replace(
+      /[ \t]+(?:\*\*|["\u201c])[ \t]*[A-Z]{3,}(?:[ \t]+[A-Z'’\-]{2,}){1,8}(?:[ \t]+I)?[ \t]*[!.?]?[ \t]*["\u201d]?(?=[ \t]*(?:\n|$))/g,
+      ''
+    );
+
+  // Repair OCR-corrupted quotation marks (*', '*, **, '') and common OCR typos
+  text = text
+    .replace(/([?!.])[ \t]+\*{2}[ \t]+(?=[A-Za-z“"'])/g, '$1" "')
+    .replace(/(^|\n|[ \t])(?:\*['\u2018\u2019"]|['\u2018\u2019"]\*)[ \t]*(?=[A-Za-z])/g, '$1"')
+    .replace(/(^|\n|[ \t])\*{2}[ \t]+(?=[A-Za-z“"'])/g, '$1"')
+    .replace(/([A-Za-z])[ \t]+(?:\*['\u2018\u2019]|['\u2018\u2019]\*)[ \t]*(?=["\u201c])/g, '$1." ')
+    .replace(/(^|[^'])''([^']|$)/g, '$1"$2')
+    .replace(/\b5'ou\b/g, 'you')
+    .replace(/\bKolmes\b/g, 'Holmes')
+    .replace(/\bestablishmient\b/g, 'establishment')
+    .replace(/\bbafifled\b/g, 'baffled')
+    .replace(/\bidioform\b/g, 'iodoform')
+    .replace(/(\s)\.(you|your|the|that|this|these|those|then|there|and|but|for|with|from|into|have|had|has|was|were|are|not|his|her|she|he|we|they|my|our|it|in|on|at|to|of|by|as|is|be)\b/g, '$1$2')
+    .replace(/\b([a-zA-Z]+)[’']\s+([tsm]|ll|re|ve|d)\b/g, "$1'$2")
+    .replace(/([A-Za-z0-9"'”’\)\]])[ \t]+([?;:!])(?=\s|$|["”'\)\]])/g, '$1$2')
+    .replace(/(^|\n)[ \t]*"[ \t]+(?=[A-Za-z])/g, '$1"')
+    .replace(/([.!?:;][ \t]+)"[ \t]+(?=[A-Za-z])/g, '$1"')
+    .replace(/([A-Za-z][.!?])[ \t]+"(?=\s|$)/g, '$1"');
+
+  // Rejoin paragraphs broken mid-sentence across scanned page boundaries
+  const rawParas = text
+    .split(/\n{2,}/)
+    .map((p) => p.replace(/[ \t]{2,}/g, ' ').trim())
+    .filter(Boolean);
+
+  const mergedParas = [];
+  for (const curr of rawParas) {
+    if (mergedParas.length > 0) {
+      const prev = mergedParas[mergedParas.length - 1];
+      const isImgPrev = /^<<<SYNCTONE_IMG_\d+>>>$/.test(prev);
+      const isImgCurr = /^<<<SYNCTONE_IMG_\d+>>>$/.test(curr);
+      const endsMidSentence = prev.length >= 35 && !/[.!?:"'”’…—]$/.test(prev);
+      const currStartsContinuation =
+        !/^["'“‘]/.test(curr) &&
+        (/^[a-z]/.test(curr) ||
+          /(?:,|;|-|\b(?:in|on|at|to|of|for|by|with|from|into|the|a|an|and|or|but|as|that|which|who|whom|whose|my|his|her|their|our|your))$/i.test(prev));
+      if (!isImgPrev && !isImgCurr && endsMidSentence && currStartsContinuation) {
+        mergedParas[mergedParas.length - 1] = `${prev} ${curr}`;
+        continue;
+      }
+    }
+    mergedParas.push(curr);
+  }
+
+  let rebuilt = mergedParas.join('\n\n');
+  rebuilt = rebuilt.replace(/<<<SYNCTONE_IMG_(\d+)>>>/g, (_m, idx) => imagePlaceholders[Number(idx)] || '');
+  return rebuilt.replace(/\n{3,}/g, '\n\n').trim();
+}
+
+const SPLIT_ABBREV_SET = new Set([
+  'mr', 'mrs', 'ms', 'miss', 'dr', 'st', 'prof', 'rev', 'hon',
+  'col', 'gen', 'maj', 'capt', 'lt', 'sgt', 'insp', 'supt', 'det',
+  'sr', 'jr', 'vs', 'etc', 'no', 'vol', 'fig', 'ch', 'pp', 'p',
+]);
+
+/**
+ * Split oversized narration blocks at sentence boundaries so TTS synthesis stays
+ * fast (typically < 2s per segment) and avoids worker timeouts on giant paragraphs.
+ */
+function splitLongNarrationText(text, maxChars = 380) {
+  const clean = String(text || '').trim();
+  if (!clean || clean.length <= maxChars) return clean ? [clean] : [];
+
+  const sentences = [];
+  let start = 0;
+  for (let i = 0; i < clean.length - 1; i++) {
+    const ch = clean[i];
+    if (ch !== '.' && ch !== '!' && ch !== '?') continue;
+
+    // Advance past closing quotes / parentheses
+    let endIdx = i + 1;
+    while (endIdx < clean.length && /["'”’\)\]]/.test(clean[endIdx])) {
+      endIdx++;
+    }
+    if (endIdx >= clean.length || !/\s/.test(clean[endIdx])) continue;
+
+    // Avoid splitting after known abbreviations or single-letter initials (e.g. "Mr. Holmes", "J. K.")
+    if (ch === '.') {
+      const before = clean.slice(start, i);
+      const tokenMatch = before.match(/([A-Za-z]+)$/);
+      const token = tokenMatch ? tokenMatch[1] : '';
+      if (token.length === 1 || SPLIT_ABBREV_SET.has(token.toLowerCase())) {
+        continue;
+      }
+    }
+
+    let nextNonWs = endIdx;
+    while (nextNonWs < clean.length && /\s/.test(clean[nextNonWs])) {
+      nextNonWs++;
+    }
+    if (nextNonWs < clean.length && /[A-Z"“'‘(\[]/.test(clean[nextNonWs])) {
+      const sent = clean.slice(start, endIdx).trim();
+      if (sent) sentences.push(sent);
+      start = nextNonWs;
+      i = nextNonWs - 1;
+    }
+  }
+  const tail = clean.slice(start).trim();
+  if (tail) sentences.push(tail);
+
+  if (sentences.length <= 1 && clean.length > 520) {
+    const clauseParts = clean.split(/(?<=[;—])\s+/);
+    if (clauseParts.length > 1) {
+      sentences.splice(0, sentences.length, ...clauseParts);
+    }
+  }
+
+  const chunks = [];
+  let current = '';
+  for (const s of sentences) {
+    if (!current) {
+      current = s;
+    } else if (current.length + 1 + s.length <= maxChars) {
+      current = `${current} ${s}`;
+    } else {
+      chunks.push(current);
+      current = s;
+    }
+  }
+  if (current) chunks.push(current);
+  return chunks.length > 0 ? chunks : [clean];
+}
+
+/**
  * Parse raw chapter text into narration, dialogue, and image segments.
  *
  * @param {string} rawText
@@ -946,7 +1169,7 @@ function parseChapter(rawText, title = 'Untitled Chapter', chapterId = 'ch-1', o
     ? options.quoteStyle
     : 'auto';
 
-  const normalizedText = String(rawText || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const normalizedText = cleanLiteraryOcrNoise(rawText);
   const effectiveQuoteStyle = resolveEffectiveQuoteStyle(normalizedText, quoteStyle);
   const firstPersonIdentity = detectFirstPersonIdentity(normalizedText);
 
@@ -982,7 +1205,11 @@ function parseChapter(rawText, title = 'Untitled Chapter', chapterId = 'ch-1', o
       continue;
     }
 
-    const allowUnclosedNext = hasMultiParaContinuation && pIdx < paragraphs.length - 1;
+    const nextPara = pIdx < paragraphs.length - 1 ? paragraphs[pIdx + 1] : '';
+    const nextQuoteCount = (nextPara.match(/["\u201c\u201d]/g) || []).length;
+    const allowUnclosedNext =
+      pIdx < paragraphs.length - 1 &&
+      (hasMultiParaContinuation || (nextQuoteCount % 2 === 1 && !/^["\u201c]/.test(nextPara.trimStart())));
     const quotes = extractQuotesFromParagraph(
       para,
       effectiveQuoteStyle,
@@ -1145,6 +1372,12 @@ function parseChapter(rawText, title = 'Untitled Chapter', chapterId = 'ch-1', o
     attribution_source: 'narrator_default',
   });
 
+  const pushNarrationText = (text) => {
+    for (const chunk of splitLongNarrationText(text, 380)) {
+      segments.push(makeNarrationSeg(chunk));
+    }
+  };
+
   for (let pIdx = 0; pIdx < pass1Paragraphs.length; pIdx++) {
     const pNode = pass1Paragraphs[pIdx];
 
@@ -1169,7 +1402,7 @@ function parseChapter(rawText, title = 'Untitled Chapter', chapterId = 'ch-1', o
     const quotes = pNode.quotes;
 
     if (quotes.length === 0) {
-      segments.push(makeNarrationSeg(para));
+      pushNarrationText(para);
       unclosedContinuationSpeaker = null;
       continue;
     }
@@ -1184,7 +1417,7 @@ function parseChapter(rawText, title = 'Untitled Chapter', chapterId = 'ch-1', o
       if (q.start > cursor) {
         const narrBefore = para.slice(cursor, q.start).trim();
         if (narrBefore.length > 0) {
-          segments.push(makeNarrationSeg(narrBefore));
+          pushNarrationText(narrBefore);
         }
       }
 
@@ -1361,7 +1594,7 @@ function parseChapter(rawText, title = 'Untitled Chapter', chapterId = 'ch-1', o
     if (cursor < para.length) {
       const narrAfter = para.slice(cursor).trim();
       if (narrAfter.length > 0) {
-        segments.push(makeNarrationSeg(narrAfter));
+        pushNarrationText(narrAfter);
       }
     }
   }
@@ -1859,6 +2092,8 @@ function unifyCharacterEntities(segments = [], characters = []) {
 
 module.exports = {
   parseChapter,
+  cleanLiteraryOcrNoise,
+  splitLongNarrationText,
   unifyCharacterEntities,
   cleanSpeakerName,
   extractTagAfter,

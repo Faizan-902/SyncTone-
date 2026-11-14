@@ -160,15 +160,22 @@ function dedupeParagraphsList(paragraphs) {
 export function cleanOcrArtifacts(text) {
   if (!text || typeof text !== 'string') return '';
   return text
-    // 1. Remove isolated punctuation noise patterns (e.g. * ^, `>, |, ^, =)
+    // 1. Remove OCR box/geometric glyph noise (e.g. ■, □, ▪) and caret/underscore scribble runs
+    .replace(/[■□▪▫◊◆▲▼►◄❖]+/g, ' ')
+    .replace(/(?:^|\s)\^(?:\s+\^)+\s+[A-Za-z](?=\s|$)/g, ' ')
+    .replace(/['"“”‘’*]*\^[A-Za-z0-9_^'"*]*|['"“”‘’*]*[\^_]{2,}[A-Za-z0-9_^'"*]*/g, ' ')
+    // 2. Remove isolated punctuation noise patterns (e.g. * ^, `>, |, ^, =)
     .replace(/(?:^|\s)[`>|~^=*\\]+(?:\s+[`>|~^=*\\]+)*(?=\s|$)/g, ' ')
-    // 2. Remove OCR junk symbol clusters like `> * 1 s : i Lx`, `EN /`, `ww ZW =`, `a e 00 pe SE E PN`
+    // 3. Remove OCR junk symbol clusters like `> * 1 s : i Lx`, `EN /`, `ww ZW =`, `a e 00 pe SE E PN`
     .replace(/(?:^|\s)(?:[`*^>|~=:\/\\]|\b[a-zA-Z0-9]\b|\b[A-Z]{2,}\b|\b\d+\b)(?:\s+[`*^>|~=:\/\\]|\s+\b[a-zA-Z0-9]\b|\s+\b[A-Z]{2,}\b|\s+\b\d+\b){2,}(?=\s|$)/g, ' ')
-    // 3. Fix broken apostrophes and split contractions like "hadn’ t" -> "hadn’t"
+    // 4. Fix common OCR word glitches & broken apostrophes/contractions like "hadn’ t" -> "hadn’t", "5'ou" -> "you"
+    .replace(/\b5'ou\b/g, 'you')
     .replace(/\b([a-zA-Z]+)[’\x27]\s+([a-zA-Z]+)\b/g, '$1’$2')
-    // 4. Remove floating lone punctuation like isolated backticks, carats, asterisks
+    // 5. Remove floating lone punctuation like isolated backticks, carats, asterisks
     .replace(/\s+[`^*|~=]\s+/g, ' ')
-    // 5. Clean up extra spaces
+    // 6. Normalize French/OCR spacing before ; : ? !
+    .replace(/([A-Za-z0-9"'”’\)\]])[ \t]+([?;:!])(?=\s|$|["”'\)\]])/g, '$1$2')
+    // 7. Clean up extra spaces
     .replace(/[ \t]{2,}/g, ' ')
     .trim();
 }

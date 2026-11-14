@@ -100,12 +100,12 @@ export default function SynthesisProgressBar({
       </div>
 
       {/* Segment Counter */}
-      {currentSegment !== null && totalSegments !== null && (
+      {Number(totalSegments) > 0 && currentSegment !== null && (
         <div className="flex items-center justify-between text-[11px] text-[var(--text-muted)] font-mono pt-0.5">
           <span>
             Synthesizing audio segment <strong className="text-[var(--text-main)] font-bold">{currentSegment}</strong> of {totalSegments}
           </span>
-          <span>{totalSegments - currentSegment} remaining</span>
+          <span>{Math.max(0, Number(totalSegments) - Number(currentSegment))} remaining</span>
         </div>
       )}
     </div>

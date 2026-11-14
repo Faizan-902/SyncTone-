@@ -36,6 +36,30 @@ function formatTotalDuration(ms) {
   return `${String(minutes).padStart(2, '0')}M ${String(seconds).padStart(2, '0')}S`;
 }
 
+const DEFAULT_ACOUSTIC_SETTINGS = {
+  emotionalRange: 78,
+  breathRate: 42,
+  reverb: 15,
+  pacing: 100,
+};
+
+function readNovelAcoustics(novelId) {
+  try {
+    if (typeof window === 'undefined' || !novelId) return { ...DEFAULT_ACOUSTIC_SETTINGS };
+    const raw = localStorage.getItem(`synctone_novel_acoustics_${novelId}`);
+    if (!raw) return { ...DEFAULT_ACOUSTIC_SETTINGS };
+    const parsed = JSON.parse(raw);
+    return {
+      emotionalRange: Number.isFinite(Number(parsed.emotionalRange)) ? Number(parsed.emotionalRange) : 78,
+      breathRate: Number.isFinite(Number(parsed.breathRate)) ? Number(parsed.breathRate) : 42,
+      reverb: Number.isFinite(Number(parsed.reverb)) ? Number(parsed.reverb) : 15,
+      pacing: Number.isFinite(Number(parsed.pacing)) ? Number(parsed.pacing) : 100,
+    };
+  } catch (_) {
+    return { ...DEFAULT_ACOUSTIC_SETTINGS };
+  }
+}
+
 export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenUploadChapter, initialTab }) {
   const { isWriterOrAdmin } = useAuth();
   const [data, setData] = useState(null);
@@ -63,6 +87,33 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
   // Voices sub-tab Assign-to-Character state
   const [voiceCharTargets, setVoiceCharTargets] = useState({});
   const [assigningModelId, setAssigningModelId] = useState(null);
+
+  // Controlled acoustic settings persisted per novel
+  const [acousticSettings, setAcousticSettings] = useState(() => readNovelAcoustics(novelId));
+  const [selectedGenerateChapterId, setSelectedGenerateChapterId] = useState('');
+
+  useEffect(() => {
+    setAcousticSettings(readNovelAcoustics(novelId));
+  }, [novelId]);
+
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined' && novelId) {
+        localStorage.setItem(`synctone_novel_acoustics_${novelId}`, JSON.stringify(acousticSettings));
+      }
+    } catch (_) {}
+  }, [novelId, acousticSettings]);
+
+  useEffect(() => {
+    const chList = data?.chapters || [];
+    if (chList.length === 0) {
+      setSelectedGenerateChapterId('');
+      return;
+    }
+    setSelectedGenerateChapterId((prev) =>
+      prev && chList.some((c) => c.id === prev) ? prev : chList[0].id
+    );
+  }, [data?.chapters]);
 
   const {
     playingId: auditionPlayingId,
@@ -354,6 +405,18 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
 
   const { novel, characters = [], chapters = [] } = data;
   const castCharacters = buildNovelCastList(novel, characters);
+  const completedChapters = chapters.filter(
+    (ch) => ch.status === 'completed' || ch.has_studio_audio || (ch.total_duration_ms || ch.duration_ms || 0) > 0
+  ).length;
+  const assignedVoicesCount = castCharacters.filter((c) => Boolean(c.voice_id)).length;
+  const synthesisPct =
+    chapters.length > 0
+      ? Math.round((completedChapters / chapters.length) * 100)
+      : assignedVoicesCount > 0
+      ? 100
+      : 0;
+  const selectedGenerateChapter =
+    chapters.find((c) => c.id === selectedGenerateChapterId) || chapters[0] || null;
   const isVerified = novel.channel === 'verified';
   const narratorDisplay =
     novel.narrator ||
@@ -673,17 +736,21 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
                   <span className="badge">
                     {/* Section 9.4: Neutral dot when ready/complete, signal dot strictly when synthesizing */}
                     <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-main)]" />
-                    <span>AUDIO ENSEMBLE READY</span>
+                    <span>
+                      {completedChapters === chapters.length && chapters.length > 0
+                        ? 'AUDIO ENSEMBLE READY'
+                        : `${completedChapters}/${chapters.length} CHAPTERS SYNTHESIZED`}
+                    </span>
                   </span>
                 </div>
 
                 <div className="synthesis-progress-track">
-                  <div className="synthesis-progress-fill" style={{ width: '100%' }} />
+                  <div className="synthesis-progress-fill" style={{ width: `${synthesisPct}%` }} />
                 </div>
 
                 <div className="flex justify-between items-center flex-wrap gap-2 mono-xs">
                   <span className="text-[var(--text-muted)]">
-                    PROGRESS: 100% COMPLETE // {characters.length} OF {characters.length} VOICES ASSIGNED
+                    PROGRESS: {synthesisPct}% COMPLETE // {assignedVoicesCount} OF {castCharacters.length} VOICES ASSIGNED
                   </span>
                   <span className="text-[var(--text-main)]">
                     MULTI-VOICE ENSEMBLE // 48KHZ READY
@@ -821,8 +888,20 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
                                   <VoiceOptionGroups groups={charVoiceGroups} />
                                 </select>
                               </div>
-                              <div>PITCH OFFSET: +0.00 ST</div>
-                              <div>CADENCE PACE: 1.00×</div>
+                              <div>
+                                VOICE ENGINE:{' '}
+                                {charVoice.startsWith('af_') ||
+                                charVoice.startsWith('am_') ||
+                                charVoice.startsWith('bf_') ||
+                                charVoice.startsWith('bm_')
+                                  ? 'KOKORO / PARADEE ONNX'
+                                  : charVoice.startsWith('mac_')
+                                  ? 'DEVICE SPEECH'
+                                  : 'EDGE NEURAL'}
+                              </div>
+                              <div>
+                                CADENCE PACE: {Number(char.speed_multiplier || acousticSettings.pacing / 100 || 1).toFixed(2)}×
+                              </div>
                               <div className="flex items-center justify-between gap-2 pt-1">
                                 <span>
                                   STATUS: <span className="text-[var(--text-main)]">● ASSIGNED</span>
@@ -979,59 +1058,80 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
 
               {/* Sub-Tab 3: Settings */}
               {studioTab === 'settings' && (
-                <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] p-5 flex flex-col gap-5">
-                  <span className="mono-xs text-[var(--text-muted)] block">
-                    // SYNTHESIS TIMBRE PARAMETERS
-                  </span>
+                <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] p-5 flex flex-col gap-5 rounded-2xl">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <span className="mono-xs text-[var(--text-muted)] block">
+                      // SYNTHESIS TIMBRE PARAMETERS
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setAcousticSettings({ ...DEFAULT_ACOUSTIC_SETTINGS })}
+                      className="px-3 py-1 rounded-full text-[10px] font-mono uppercase bg-[var(--bg-card)] border border-[var(--border-subtle)] text-[var(--text-sub)] hover:text-[var(--text-main)] hover:border-[var(--border-strong)] cursor-pointer transition"
+                    >
+                      Reset Defaults
+                    </button>
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                     <div>
                       <label className="mono-xs text-[var(--text-sub)] block mb-2">
-                        EMOTIONAL RANGE [78%]
+                        EMOTIONAL RANGE [{acousticSettings.emotionalRange}%]
                       </label>
                       <input
                         type="range"
                         min="0"
                         max="100"
-                        defaultValue="78"
+                        value={acousticSettings.emotionalRange}
+                        onChange={(e) =>
+                          setAcousticSettings((prev) => ({ ...prev, emotionalRange: Number(e.target.value) }))
+                        }
                         className="w-full accent-[var(--accent)] cursor-pointer"
                         aria-label="Emotional Range"
                       />
                     </div>
                     <div>
                       <label className="mono-xs text-[var(--text-sub)] block mb-2">
-                        BREATH PHONEME RATE [42%]
+                        BREATH PHONEME RATE [{acousticSettings.breathRate}%]
                       </label>
                       <input
                         type="range"
                         min="0"
                         max="100"
-                        defaultValue="42"
+                        value={acousticSettings.breathRate}
+                        onChange={(e) =>
+                          setAcousticSettings((prev) => ({ ...prev, breathRate: Number(e.target.value) }))
+                        }
                         className="w-full accent-[var(--accent)] cursor-pointer"
                         aria-label="Breath Phoneme Rate"
                       />
                     </div>
                     <div>
                       <label className="mono-xs text-[var(--text-sub)] block mb-2">
-                        ACOUSTIC REVERB [15%]
+                        ACOUSTIC REVERB [{acousticSettings.reverb}%]
                       </label>
                       <input
                         type="range"
                         min="0"
                         max="100"
-                        defaultValue="15"
+                        value={acousticSettings.reverb}
+                        onChange={(e) =>
+                          setAcousticSettings((prev) => ({ ...prev, reverb: Number(e.target.value) }))
+                        }
                         className="w-full accent-[var(--accent)] cursor-pointer"
                         aria-label="Acoustic Reverb"
                       />
                     </div>
                     <div>
                       <label className="mono-xs text-[var(--text-sub)] block mb-2">
-                        PACING MULTIPLIER [1.00×]
+                        PACING MULTIPLIER [{(acousticSettings.pacing / 100).toFixed(2)}×]
                       </label>
                       <input
                         type="range"
                         min="80"
                         max="140"
-                        defaultValue="100"
+                        value={acousticSettings.pacing}
+                        onChange={(e) =>
+                          setAcousticSettings((prev) => ({ ...prev, pacing: Number(e.target.value) }))
+                        }
                         className="w-full accent-[var(--accent)] cursor-pointer"
                         aria-label="Pacing Multiplier"
                       />
@@ -1049,14 +1149,35 @@ export default function NovelDetails({ novelId, onBack, onSelectChapter, onOpenU
                   <p className="text-xs text-[var(--text-sub)] leading-relaxed">
                     Synthesize multi-voice audio for uploaded chapters. Audio segments are generated according to character voice assignments above.
                   </p>
-                  <div className="flex items-center gap-3 pt-2">
+                  <div className="flex flex-wrap items-center gap-3 pt-2">
+                    <select
+                      aria-label="Select chapter to generate"
+                      value={selectedGenerateChapter?.id || ''}
+                      disabled={chapters.length === 0}
+                      onChange={(e) => setSelectedGenerateChapterId(e.target.value)}
+                      className="px-3 py-2 rounded-xl text-xs font-mono bg-[var(--bg-card)] text-[var(--text-main)] border border-[var(--border-subtle)] focus:outline-none focus:border-[var(--border-strong)] disabled:opacity-50 max-w-full"
+                    >
+                      {chapters.length === 0 ? (
+                        <option value="">No chapters uploaded</option>
+                      ) : (
+                        chapters.map((ch, idx) => (
+                          <option key={ch.id || idx} value={ch.id}>
+                            Ch. {ch.chapter_number || idx + 1}: {ch.title || `Chapter ${ch.chapter_number || idx + 1}`}
+                          </option>
+                        ))
+                      )}
+                    </select>
                     <button
                       type="button"
-                      onClick={() => chapters.length > 0 && onSelectChapter(novel, chapters[0])}
-                      className="boxed-btn-primary px-4 py-2 text-xs font-mono cursor-pointer flex items-center gap-2 rounded-full active:scale-[0.96] hover:scale-[1.03] hover:-translate-y-0.5 transition-all shadow-md"
+                      disabled={!selectedGenerateChapter}
+                      onClick={() => selectedGenerateChapter && onSelectChapter(novel, selectedGenerateChapter)}
+                      className="boxed-btn-primary px-4 py-2 text-xs font-mono cursor-pointer flex items-center gap-2 rounded-full active:scale-[0.96] hover:scale-[1.03] hover:-translate-y-0.5 transition-all shadow-md disabled:opacity-50 disabled:pointer-events-none"
                     >
                       <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                      <span>GENERATE AUDIO FOR CH. 01</span>
+                      <span>
+                        OPEN &amp; SYNTHESIZE CH.{' '}
+                        {String(selectedGenerateChapter?.chapter_number || 1).padStart(2, '0')}
+                      </span>
                     </button>
                   </div>
                 </div>

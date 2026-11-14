@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import AudioVisualizer from './AudioVisualizer';
+import { formatNovelAuthor } from '../utils/authorDisplay';
 import {
   IconPlay,
   IconPause,
@@ -372,7 +373,7 @@ export default function AudioPlayer({
   }, [currentNovel, currentChapter, currentTimeMs, totalDurationMs]);
 
   const novelObj = currentNovel?.novel || currentNovel;
-  const authorDisplay = novelObj?.author_username || novelObj?.author || '';
+  const authorDisplay = formatNovelAuthor(novelObj);
   const narratorDisplay =
     novelObj?.narrator ||
     novelObj?.narrator_name ||
@@ -498,7 +499,7 @@ export default function AudioPlayer({
         </div>
 
         {/* Center: Playback Transport Buttons & Scrubber */}
-        <div className="audio-central-cluster hidden sm:flex flex-1 max-w-xl mx-auto flex-col justify-center gap-1 min-w-0">
+        <div className="audio-central-cluster hidden sm:flex shrink-0 w-[230px] lg:w-full lg:max-w-md xl:max-w-xl mx-auto flex-col justify-center gap-1 px-2">
           {/* Transport Buttons Row */}
           <div className="audio-control-buttons flex items-center justify-center gap-1.5 sm:gap-2">
             {/* Skip -10s */}

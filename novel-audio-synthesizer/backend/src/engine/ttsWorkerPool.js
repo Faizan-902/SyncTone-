@@ -128,7 +128,7 @@ class PersistentWorker {
     this.rl = null;
   }
 
-  async sendRequest(payload, timeoutMs = 25000) {
+  async sendRequest(payload, timeoutMs = 90000) {
     await this.start();
 
     const id = ++this.reqSeq;
@@ -239,7 +239,16 @@ class TTSWorkerPool {
       '--out', tmpOut,
     ];
 
-    await execFileAsync(pythonBin, args, { timeout: 25000 });
+    try {
+      await execFileAsync(pythonBin, args, { timeout: 90000 });
+    } catch (err) {
+      const detail = (err?.stderr || err?.message || '').toString().trim().split('\n').slice(-1)[0];
+      throw new Error(
+        err?.killed || err?.signal === 'SIGTERM'
+          ? 'TTS synthesis timed out after 90s.'
+          : `TTS synthesis failed: ${detail.replace(/Command failed:[^\n]*/i, '').trim() || 'worker exited with non-zero status'}`
+      );
+    }
 
     if (fs.existsSync(tmpOut)) {
       const wavBuf = fs.readFileSync(tmpOut);
@@ -307,7 +316,16 @@ class TTSWorkerPool {
       args.push('--lang', lang);
     }
 
-    await execFileAsync(pythonBin, args, { timeout: 25000 });
+    try {
+      await execFileAsync(pythonBin, args, { timeout: 90000 });
+    } catch (err) {
+      const detail = (err?.stderr || err?.message || '').toString().trim().split('\n').slice(-1)[0];
+      throw new Error(
+        err?.killed || err?.signal === 'SIGTERM'
+          ? 'TTS synthesis timed out after 90s.'
+          : `TTS synthesis failed: ${detail.replace(/Command failed:[^\n]*/i, '').trim() || 'worker exited with non-zero status'}`
+      );
+    }
 
     if (fs.existsSync(tmpOut)) {
       const wavBuf = fs.readFileSync(tmpOut);

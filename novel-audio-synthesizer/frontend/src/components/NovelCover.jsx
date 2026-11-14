@@ -103,9 +103,15 @@ export default function NovelCover({
 
   useEffect(() => { setImgError(false); }, [coverUrl]);
 
+  const classTokens = String(className || '');
+  const hasExplicitWidth = /\bw-(?!auto\b)\S+/.test(classTokens);
+  const hasExplicitHeight = /\b(?:h-\S+|aspect-\S+|min-h-\S+)\b/.test(classTokens);
+  const isCompactCover = /\bw-(?:12|14|16|20|24|28)\b/.test(classTokens);
+  const sizeFallbackClasses = `${hasExplicitWidth ? '' : 'w-full'} ${hasExplicitHeight ? '' : 'h-full'}`.trim();
+
   if (coverUrl && !imgError) {
     return (
-      <div className={`relative overflow-hidden ${className}`}>
+      <div className={`relative overflow-hidden ${sizeFallbackClasses} ${className}`}>
         <img
           src={coverUrl}
           alt={title}
@@ -121,7 +127,7 @@ export default function NovelCover({
   const light = style.isLight;
   return (
     <div
-      className={`volume-cover-img relative w-full h-full ${style.bg} border border-l-[6px] ${style.border} flex flex-col justify-between p-3.5 sm:p-5 select-none overflow-hidden ${className}`}
+      className={`volume-cover-img relative ${sizeFallbackClasses} ${style.bg} border ${isCompactCover ? 'border-l-[4px]' : 'border-l-[6px]'} ${style.border} flex flex-col justify-between ${isCompactCover ? 'p-2.5' : 'p-3.5 sm:p-5'} select-none overflow-hidden ${className}`}
       style={{ boxShadow: `inset 4px 0 12px rgba(0,0,0,${light ? '0.2' : '0.7'}),0 8px 24px ${style.glow}` }}
       aria-hidden="true"
     >

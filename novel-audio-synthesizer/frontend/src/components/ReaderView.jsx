@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { getSpeakerColor } from '../utils/speakerColors';
 import { parseSegmentImage } from '../utils/segmentUtils';
+import { formatNovelAuthor } from '../utils/authorDisplay';
 import { useTheme } from '../context/ThemeContext';
 import { sanitizeSegmentsWithTtsDomCleaner } from '../utils/ttsSanitizer';
 import { process4PassSegment } from '../utils/readerLayoutEngine';
@@ -64,7 +65,22 @@ export default function ReaderView({
   }, [chapters, currentChapterIdx]);
 
   // Reader mode: 'normal' (WTR-Lab scroll) vs 'opengl' (Moon+ Reader Pro 3D book)
-  const [readerMode, setReaderMode] = useState('normal');
+  const [readerMode, setReaderMode] = useState(() => {
+    try {
+      const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('synctone_reader_mode') : null;
+      return saved === 'opengl' || saved === 'normal' ? saved : 'normal';
+    } catch (_) {
+      return 'normal';
+    }
+  });
+
+  useEffect(() => {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('synctone_reader_mode', readerMode);
+      }
+    } catch (_) {}
+  }, [readerMode]);
 
   // Experience modal available if triggered (defaults to closed for pristine reading surface)
   const [showExperiencePopup, setShowExperiencePopup] = useState(false);
@@ -882,7 +898,13 @@ export default function ReaderView({
             <header className="reader-book-header select-none">
               <div className="mono-xs" style={{ color: 'var(--text-muted)', marginBottom: '8px' }}>
                 {currentNovel?.title ? currentNovel.title.toUpperCase() : 'THE ADVENTURES OF SHERLOCK HOLMES'}
-                {currentNovel?.author_username ? ` // ${currentNovel.author_username.toUpperCase()}` : ' // SIR ARTHUR CONAN DOYLE'}
+                {(() => {
+                  const displayAuthor = formatNovelAuthor(
+                    currentNovel,
+                    currentNovel?.title ? '' : 'SIR ARTHUR CONAN DOYLE'
+                  );
+                  return displayAuthor ? ` // ${displayAuthor.toUpperCase()}` : '';
+                })()}
               </div>
               <h1 className="reader-chapter-title">
                 {currentChapter?.title || 'Chapter I. A Scandal in Bohemia'}

@@ -843,7 +843,7 @@ function AppContent() {
           />
 
           {/* Content Body Area */}
-          <main key={view} className={`flex-1 w-full motion-view-route ${view === 'reader' ? 'p-0' : 'px-4 sm:px-8 py-6'}`}>
+          <main key={view === 'archive' ? 'catalog' : view} className={`flex-1 w-full motion-view-route ${view === 'reader' ? 'p-0' : 'px-4 sm:px-8 py-6'}`}>
             {/* Playback Resume Toast */}
             {view === 'reader' && playbackProgress.resumedAtMs !== null && (
               <div className="mx-4 sm:mx-8 mb-4 p-3.5 rounded-2xl bg-[var(--accent)] text-[var(--on-accent)] shadow-xl flex items-center justify-between text-xs animate-slideDown">
@@ -910,30 +910,21 @@ function AppContent() {
               </div>
             )}
 
-            {/* VIEW 1: NOVEL CATALOG (Library - Verified Works) */}
-            {view === 'catalog' && (
-              <ErrorBoundary resetKey={pathname} friendlyMessage="Couldn't load library catalog.">
+            {/* VIEW 1 & 1B: NOVEL CATALOG (Library & Archive unified instance) */}
+            {(view === 'catalog' || view === 'archive') && (
+              <ErrorBoundary resetKey={view === 'catalog' || view === 'archive' ? 'catalog' : pathname} friendlyMessage="Couldn't load library catalog.">
                 <NovelCatalog
-                  initialChannel="verified"
+                  initialChannel={view === 'archive' ? 'community' : 'verified'}
+                  onChannelChange={(ch) => {
+                    if (ch === 'community' && view !== 'archive') navigate('/archive');
+                    else if (ch === 'verified' && view !== 'catalog') navigate('/');
+                  }}
                   onSelectNovel={handleSelectNovel}
                   onSelectChapter={handleSelectChapter}
                   onOpenAddNovel={() => setShowAddNovelModal(true)}
                   onOpenSettings={() => setShowSettings(true)}
                   onOpenAuth={handleOpenAuth}
-                />
-              </ErrorBoundary>
-            )}
-
-            {/* VIEW 1B: ARCHIVE CATALOG (Community & Public Domain) */}
-            {view === 'archive' && (
-              <ErrorBoundary resetKey={pathname} friendlyMessage="Couldn't load archive catalog.">
-                <NovelCatalog
-                  initialChannel="community"
-                  onSelectNovel={handleSelectNovel}
-                  onSelectChapter={handleSelectChapter}
-                  onOpenAddNovel={() => setShowAddNovelModal(true)}
-                  onOpenSettings={() => setShowSettings(true)}
-                  onOpenAuth={handleOpenAuth}
+                  onNavigate={handleNavigate}
                 />
               </ErrorBoundary>
             )}

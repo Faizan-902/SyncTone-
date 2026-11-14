@@ -451,13 +451,22 @@ export default function CharacterRoster({
                   </div>
 
                   <div className="flex items-center justify-between text-[11px] font-mono text-[var(--text-sub)]">
-                    <span className="text-[10px] text-[var(--text-muted)] font-bold">PITCH:</span>
-                    <span>+0.00 ST</span>
+                    <span className="text-[10px] text-[var(--text-muted)] font-bold">ENGINE:</span>
+                    <span>
+                      {String(char.voiceId || '').startsWith('af_') ||
+                      String(char.voiceId || '').startsWith('am_') ||
+                      String(char.voiceId || '').startsWith('bf_') ||
+                      String(char.voiceId || '').startsWith('bm_')
+                        ? 'ONNX NEURAL'
+                        : String(char.voiceId || '').startsWith('mac_')
+                        ? 'OS SPEECH'
+                        : 'CLOUD NEURAL'}
+                    </span>
                   </div>
 
                   <div className="flex items-center justify-between text-[11px] font-mono text-[var(--text-sub)]">
                     <span className="text-[10px] text-[var(--text-muted)] font-bold">PACE:</span>
-                    <span>1.00×</span>
+                    <span>{Number(char.speedMultiplier || char.speed_multiplier || 1.0).toFixed(2)}×</span>
                   </div>
 
                   <div className="flex items-center justify-between text-[11px] font-mono text-[var(--text-sub)]">

@@ -29,7 +29,7 @@ export default function TopHeader({
     <header className="sticky top-0 z-40 bg-[var(--bg-bar)] border-b border-[var(--border-subtle)] h-14 backdrop-blur-md bg-opacity-95">
       <div className="max-w-7xl mx-auto px-2 sm:px-8 h-full flex items-center justify-between gap-2 sm:gap-4">
         {/* Brand & Primary Navigation Links */}
-        <div className="flex items-center gap-4 sm:gap-6 min-w-0">
+        <div className="flex items-center gap-3 sm:gap-5 min-w-0 flex-1">
           {/* Brand Logo */}
           <button
             onClick={() => onNavigate('catalog')}
@@ -43,14 +43,14 @@ export default function TopHeader({
               <span className="text-[13px] font-mono font-bold tracking-[0.18em] uppercase text-[var(--text-main)] group-hover:opacity-90 transition-opacity leading-none">
                 SYNCTONE
               </span>
-              <span className="text-[8px] font-mono tracking-[0.22em] uppercase text-[var(--text-sub)] leading-tight mt-0.5 hidden xs:inline">
+              <span className="text-[8px] font-mono tracking-[0.22em] uppercase text-[var(--text-sub)] leading-tight mt-0.5 hidden lg:inline">
                 AUDIO STUDIO
               </span>
             </div>
           </button>
 
           {/* Monospace Editorial Nav Links */}
-          <nav className="hidden sm:flex items-center gap-1.5 text-xs font-mono tracking-wider min-w-0" aria-label="Main Navigation">
+          <nav className="hidden sm:flex items-center gap-1 lg:gap-1.5 text-[11px] lg:text-xs font-mono tracking-wider min-w-0 flex-1 overflow-x-auto no-scrollbar whitespace-nowrap" aria-label="Main Navigation">
             <button
               onClick={() => onNavigate?.('catalog')}
               aria-current={view === 'catalog' ? 'page' : undefined}
@@ -108,7 +108,7 @@ export default function TopHeader({
             <button
               onClick={() => onNavigate?.('upload')}
               aria-current={view === 'upload' ? 'page' : undefined}
-              className={`transition-all duration-200 px-3 py-1 rounded-full cursor-pointer uppercase ${
+              className={`transition-all duration-200 px-2.5 lg:px-3 py-1 rounded-full cursor-pointer uppercase shrink-0 ${
                 view === 'upload'
                   ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold shadow-xs'
                   : 'text-[var(--text-sub)] hover:text-[var(--text-main)] hover:bg-[var(--bg-hover)]'
@@ -151,7 +151,7 @@ export default function TopHeader({
             aria-pressed={theme === 'dark'}
           >
             <span className="w-1.5 h-1.5 rounded-full bg-current" />
-            <span className="hidden sm:inline">THEME: </span>
+            <span className="hidden xl:inline">THEME: </span>
             <span>{theme.toUpperCase()}</span>
           </button>
 

@@ -9,6 +9,8 @@ import {
   encodeUtf8Base64,
   useVoiceAudition,
 } from './VoicesView';
+import ParserConnectionPanel from './ParserConnectionPanel';
+import NovelCover from './NovelCover';
 import {
   IconUpload,
   IconBook,
@@ -21,11 +23,23 @@ import {
   IconPause,
 } from './icons';
 
+const PRESET_GENRES = [
+  'Victorian Mystery',
+  'British Fantasy',
+  'High Fantasy',
+  'Gothic Horror',
+  'Dystopian Political Fiction',
+  'Jazz Age Fiction',
+  'Regency Romance',
+  'Philosophical Fable',
+  'Epic Maritime Fiction',
+];
+
 const PARSER_ENGINE_OPTIONS = [
-  { id: 'heuristic', label: 'Heuristic (Fast Local Rules)' },
-  { id: 'gemini', label: 'Gemini AI (Cloud Dialogue LLM)' },
-  { id: 'ollama', label: 'Ollama (Local LLM Attribution)' },
-  { id: 'unlimited-ocr', label: 'Vision OCR (Scanned PDF / vLLM)' },
+  { id: 'heuristic', label: 'Heuristic (Local Rules)' },
+  { id: 'gemini', label: 'Gemini AI (Cloud LLM)' },
+  { id: 'ollama', label: 'Ollama (Local LLM)' },
+  { id: 'unlimited-ocr', label: 'Vision OCR (Scanned / vLLM)' },
 ];
 
 function readFileAsBase64(file) {
@@ -82,10 +96,13 @@ export default function UploadView({
   const [synopsis, setSynopsis] = useState('');
   const [pastedText, setPastedText] = useState('');
   const [globalTone, setGlobalTone] = useState('Victorian Mystery');
+  const [customGenreMode, setCustomGenreMode] = useState(false);
   const [channel, setChannel] = useState('community');
   const [parsedChapters, setParsedChapters] = useState([]);
   const [parsedCharacters, setParsedCharacters] = useState([]);
   const [coverUrl, setCoverUrl] = useState('');
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [coverUploadError, setCoverUploadError] = useState(null);
 
   const {
     playingId: auditionPlayingId,
@@ -102,6 +119,7 @@ export default function UploadView({
   const [quickLoginLoading, setQuickLoginLoading] = useState(false);
 
   const fileInputRef = useRef(null);
+  const coverInputRef = useRef(null);
   const parserEngineRef = useRef(parserEngine);
   const parserConfigRef = useRef(parserConfig);
   parserEngineRef.current = parserEngine;
@@ -135,6 +153,33 @@ export default function UploadView({
       }
     } catch (_) {}
     onSelectParserEngine?.(nextEngine);
+  };
+
+  const handleParserConfigChange = (nextConfig) => {
+    setParserConfig(nextConfig);
+    parserConfigRef.current = nextConfig;
+  };
+
+  const handleCoverUpload = async (e) => {
+    const coverFile = e.target.files?.[0];
+    if (!coverFile) return;
+    setIsUploadingCover(true);
+    setCoverUploadError(null);
+    try {
+      const formData = new FormData();
+      formData.append('file', coverFile);
+      const res = await api.novels.uploadAsset(formData);
+      if (res?.url) {
+        setCoverUrl(res.url);
+      } else {
+        setCoverUploadError('Upload succeeded but no cover URL was returned.');
+      }
+    } catch (err) {
+      setCoverUploadError(err?.message || 'Failed to upload cover image.');
+    } finally {
+      setIsUploadingCover(false);
+      if (coverInputRef.current) coverInputRef.current.value = '';
+    }
   };
 
   // Quick 1-click Demo Writer Login for testing/guest access (auto-registers if account missing)
@@ -445,9 +490,9 @@ export default function UploadView({
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-fadeIn pb-20">
+    <div className="max-w-5xl mx-auto space-y-8 animate-fadeIn pb-20 pt-2 sm:pt-4">
       {/* 1. Header Banner */}
-      <section className="p-6 sm:p-8 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-subtle)] shadow-xl relative overflow-hidden">
+      <section className="scroll-mt-20 p-6 sm:p-8 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-subtle)] shadow-xl relative overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
@@ -501,7 +546,7 @@ export default function UploadView({
       </section>
 
       {/* 2. Drag & Drop File Upload Zone */}
-      <section className="space-y-4">
+      <section className="scroll-mt-20 space-y-4">
         <div
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
@@ -579,7 +624,7 @@ export default function UploadView({
       </section>
 
       {/* 3. Manuscript Metadata & Chapter Configuration Form */}
-      <form onSubmit={handleSubmit} className="p-6 sm:p-8 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-subtle)] shadow-xl space-y-6">
+      <form onSubmit={handleSubmit} className="scroll-mt-20 p-6 sm:p-8 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-subtle)] shadow-xl space-y-6">
         <div className="space-y-1">
           <span className="mono-xs text-[var(--text-muted)]">// MANUSCRIPT SPECIFICATIONS</span>
           <h2 className="text-lg font-bold font-sans uppercase text-[var(--text-main)]">
@@ -615,24 +660,43 @@ export default function UploadView({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-mono uppercase text-[var(--text-sub)]">
+            <label htmlFor="upload-genre-select" className="text-xs font-mono uppercase text-[var(--text-sub)]">
               Dramatic Genre / Global Tone
             </label>
             <select
-              value={globalTone}
-              onChange={(e) => setGlobalTone(e.target.value)}
+              id="upload-genre-select"
+              value={customGenreMode || !PRESET_GENRES.includes(globalTone) ? '__custom__' : globalTone}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === '__custom__') {
+                  setCustomGenreMode(true);
+                  if (PRESET_GENRES.includes(globalTone)) {
+                    setGlobalTone('');
+                  }
+                } else {
+                  setCustomGenreMode(false);
+                  setGlobalTone(val);
+                }
+              }}
               className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-sm text-[var(--text-main)] focus:outline-none focus:border-[var(--text-main)] font-mono"
             >
-              <option value="Victorian Mystery">Victorian Mystery</option>
-              <option value="British Fantasy">British Fantasy</option>
-              <option value="High Fantasy">High Fantasy</option>
-              <option value="Gothic Horror">Gothic Horror</option>
-              <option value="Dystopian Political Fiction">Dystopian Political Fiction</option>
-              <option value="Jazz Age Fiction">Jazz Age Fiction</option>
-              <option value="Regency Romance">Regency Romance</option>
-              <option value="Philosophical Fable">Philosophical Fable</option>
-              <option value="Epic Maritime Fiction">Epic Maritime Fiction</option>
+              {PRESET_GENRES.map((genre) => (
+                <option key={genre} value={genre}>
+                  {genre}
+                </option>
+              ))}
+              <option value="__custom__">Custom Genre...</option>
             </select>
+            {(customGenreMode || !PRESET_GENRES.includes(globalTone)) && (
+              <input
+                type="text"
+                aria-label="Custom Genre"
+                value={globalTone}
+                onChange={(e) => setGlobalTone(e.target.value)}
+                placeholder="e.g. Cyberpunk Noir, Historical Epistolary"
+                className="w-full px-4 py-2 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-sm text-[var(--text-main)] focus:outline-none focus:border-[var(--text-main)] font-sans mt-1.5"
+              />
+            )}
           </div>
         </div>
 
@@ -649,25 +713,87 @@ export default function UploadView({
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <div className="space-y-1.5">
-            <label className="text-xs font-mono uppercase text-[var(--text-sub)]">
+        {/* Cover Image Upload & Live Preview */}
+        <div className="p-4 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col sm:flex-row items-start sm:items-center gap-5">
+          <div className="w-28 h-40 sm:w-32 sm:h-44 shrink-0 rounded-xl overflow-hidden shadow-sm border border-[var(--border-subtle)]">
+            <NovelCover
+              title={title || 'Untitled Novel'}
+              author={user?.username || user?.name || ''}
+              coverUrl={coverUrl || null}
+              className="w-full h-full"
+            />
+          </div>
+          <div className="flex-1 min-w-0 w-full space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <span className="text-xs font-mono uppercase text-[var(--text-main)] font-semibold block">
+                  Edition Cover Art (Optional)
+                </span>
+                <span className="text-[11px] font-mono text-[var(--text-muted)]">
+                  Upload artwork or paste an image URL. Falls back to typeset monochrome foil.
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  ref={coverInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCoverUpload}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => coverInputRef.current?.click()}
+                  disabled={isUploadingCover}
+                  className="px-3 py-1.5 rounded-lg text-[11px] font-mono uppercase font-semibold bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] text-[var(--text-main)] border border-[var(--border-strong)] transition cursor-pointer disabled:opacity-50 inline-flex items-center gap-1.5"
+                >
+                  <IconUpload className="w-3.5 h-3.5" />
+                  <span>{isUploadingCover ? 'Uploading...' : 'Upload Cover'}</span>
+                </button>
+                {coverUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setCoverUrl('')}
+                    className="px-2.5 py-1.5 rounded-lg text-[11px] font-mono uppercase bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] text-[var(--text-muted)] hover:text-[var(--text-main)] border border-[var(--border-subtle)] transition cursor-pointer"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
+            <input
+              type="url"
+              aria-label="Cover Image URL"
+              value={coverUrl}
+              onChange={(e) => setCoverUrl(e.target.value)}
+              placeholder="https://... or upload an image file"
+              className="w-full px-3 py-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] text-xs font-mono text-[var(--text-main)] focus:outline-none focus:border-[var(--border-strong)]"
+            />
+            {coverUploadError && (
+              <p className="text-[11px] font-mono text-[var(--text-sub)]">{coverUploadError}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
+          <div className="space-y-1.5 md:col-span-4">
+            <label className="text-xs font-mono uppercase text-[var(--text-sub)] whitespace-nowrap">
               Catalog Channel
             </label>
             <select
               value={channel}
               onChange={(e) => setChannel(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-sm text-[var(--text-main)] focus:outline-none focus:border-[var(--text-main)] font-mono"
+              className="w-full h-[42px] px-3.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-sm text-[var(--text-main)] focus:outline-none focus:border-[var(--text-main)] font-mono truncate"
             >
-              <option value="community">Community Archive (Open Access)</option>
-              <option value="verified">Verified Repertory (Curated Classics)</option>
+              <option value="community">Community Archive</option>
+              <option value="verified">Verified Repertory</option>
             </select>
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 md:col-span-5">
             <label
               htmlFor="upload-parser-engine"
-              className="text-xs font-mono uppercase text-[var(--text-sub)]"
+              className="text-xs font-mono uppercase text-[var(--text-sub)] whitespace-nowrap"
             >
               AI Manuscript Parser
             </label>
@@ -676,7 +802,7 @@ export default function UploadView({
               aria-label="AI Manuscript Parser"
               value={parserEngine}
               onChange={(e) => handleParserEngineChange(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-sm text-[var(--text-main)] focus:outline-none focus:border-[var(--text-main)] font-mono"
+              className="w-full h-[42px] px-3.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-sm text-[var(--text-main)] focus:outline-none focus:border-[var(--text-main)] font-mono truncate"
             >
               {PARSER_ENGINE_OPTIONS.map((opt) => (
                 <option key={opt.id} value={opt.id}>
@@ -686,16 +812,25 @@ export default function UploadView({
             </select>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-mono uppercase text-[var(--text-sub)]">
-              Extracted Chapters ({parsedChapters.length})
+          <div className="space-y-1.5 md:col-span-3">
+            <label className="text-xs font-mono uppercase text-[var(--text-sub)] whitespace-nowrap">
+              Chapters ({parsedChapters.length})
             </label>
-            <div className="px-4 py-2.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-xs font-mono text-[var(--text-sub)] flex items-center justify-between">
-              <span>{parsedChapters.length} Tracks Ready</span>
-              <span className="text-[10px] text-[var(--text-main)] font-bold">● PARSED</span>
+            <div className="h-[42px] px-3.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-xs font-mono text-[var(--text-sub)] flex items-center justify-between gap-2 whitespace-nowrap overflow-hidden">
+              <span>{parsedChapters.length} {parsedChapters.length === 1 ? 'Track' : 'Tracks'}</span>
+              <span className="text-[10px] text-[var(--text-main)] font-bold">
+                {isParsing ? '● PARSING...' : parsedChapters.length > 0 ? '● PARSED' : '● EMPTY'}
+              </span>
             </div>
           </div>
         </div>
+
+        <ParserConnectionPanel
+          engine={parserEngine}
+          config={parserConfig}
+          onEngineChange={handleParserEngineChange}
+          onConfigChange={handleParserConfigChange}
+        />
 
         {/* Paste Manuscript Text & Parse Characters */}
         <div className="space-y-2 pt-2 border-t border-[var(--border-subtle)]">

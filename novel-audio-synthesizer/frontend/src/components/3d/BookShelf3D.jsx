@@ -1,11 +1,11 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import NovelCover from '../NovelCover';
 import {
   IconChevronLeft,
   IconChevronRight,
   IconPlay,
   IconBook,
   IconX,
-  IconSoundwave,
 } from '../icons';
 
 // Sophisticated cloth/leather spine color palette matching classic luxury editions
@@ -255,18 +255,23 @@ export default function BookShelf3D({
           {/* Left: 3D Turned Book Showcase */}
           <div className="flex-shrink-0 flex flex-col items-center">
             <div
-              className="relative w-48 sm:w-56 aspect-[2/3] rounded-xl overflow-hidden shadow-2xl cursor-pointer group"
+              className="relative rounded-xl overflow-hidden shadow-2xl cursor-pointer group"
               style={{
                 boxShadow: '-18px 22px 35px rgba(0, 0, 0, 0.85)',
               }}
               onClick={() => onSelectNovel && onSelectNovel(selectedNovel.id)}
               title="Click to view full novel details"
             >
-              <img
-                src={selectedNovel.cover_object}
-                alt={selectedNovel.title}
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-              />
+              <div className="w-24 sm:w-28 aspect-[2/3] rounded shadow-md border border-[var(--border-subtle)] flex-shrink-0 overflow-hidden">
+                <NovelCover
+                  coverUrl={selectedNovel.cover_object}
+                  title={selectedNovel.title}
+                  author={selectedNovel.author_username || 'Author'}
+                  genre={selectedNovel.global_tone}
+                  size="md"
+                  className="w-full h-full"
+                />
+              </div>
               {/* Spine highlight overlay */}
               <div className="absolute top-0 left-0 bottom-0 w-3 bg-gradient-to-r from-white/30 via-white/10 to-transparent pointer-events-none" />
             </div>

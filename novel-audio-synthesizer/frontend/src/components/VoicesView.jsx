@@ -484,6 +484,8 @@ export default function VoicesView({
   const [ensembleStatus, setEnsembleStatus] = useState(null);
   const [isLoadingNovels, setIsLoadingNovels] = useState(false);
   const [modelsStatus, setModelsStatus] = useState(null);
+  const [isProbingEngines, setIsProbingEngines] = useState(false);
+  const [probeError, setProbeError] = useState(null);
   const [localEngine, setLocalEngine] = useState(() => {
     try {
       return (typeof localStorage !== 'undefined' && localStorage.getItem('synctone_tts_engine')) || 'msedge-tts';
@@ -592,6 +594,21 @@ export default function VoicesView({
     } catch (_) {}
     onSelectTtsEngine?.(nextEngine);
     stopActivePreview();
+  };
+
+  const handleProbeEngines = async () => {
+    setIsProbingEngines(true);
+    setProbeError(null);
+    try {
+      const res = await api.status.models({ probe: true });
+      if (res) {
+        setModelsStatus(res);
+      }
+    } catch (err) {
+      setProbeError(err?.message || 'Failed to probe engines');
+    } finally {
+      setIsProbingEngines(false);
+    }
   };
 
   // Real audio audition using /api/voices/speak + Audio + blob/object URL
@@ -729,7 +746,7 @@ export default function VoicesView({
                 SYNCTONE AUDIO STUDIO
               </span>
               <span className="px-2.5 py-0.5 text-[10px] font-mono uppercase bg-[var(--bg-surface)] text-[var(--text-sub)] border border-[var(--border-subtle)] rounded-full">
-                7 HIGH-FIDELITY MODELS
+                {NEURAL_VOICES.length} NEURAL VOICE PROFILES • {AUDITION_ENGINES.length} ENGINES
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold font-sans uppercase tracking-tight text-[var(--text-main)]">
@@ -1206,57 +1223,147 @@ export default function VoicesView({
       )}
 
       {/* 5. TAB 4: HARDWARE & ENGINES */}
-      {activeTab === 'engines' && (
-        <section className="p-6 sm:p-8 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-subtle)] shadow-xl space-y-6">
-          <div className="space-y-1">
-            <span className="mono-xs text-[var(--text-muted)]">// NEURAL ENGINE STACK</span>
-            <h2 className="text-lg font-bold font-sans uppercase text-[var(--text-main)]">
-              Synthesis Hardware & Backend Engines
-            </h2>
-            <p className="text-xs text-[var(--text-sub)] font-mono">
-              Real-time hardware pipeline status for multi-speaker neural audio synthesis.
-            </p>
-          </div>
+      {activeTab === 'engines' && (() => {
+        const tts = modelsStatus?.tts || {};
+        const kokoroReady = Boolean(modelsStatus?.kokoro?.available || (tts.model_exists && tts.voices_exists));
+        const edgeReady = Boolean(tts.cloud_ready);
+        const paradeeReady = Boolean(modelsStatus?.paradee?.available || tts.paradee_ready);
+        const machineReady = Boolean(tts.machine_ready);
+        const mixedBadge = paradeeReady && machineReady ? 'ONLINE' : machineReady ? 'FALLBACK' : 'OFFLINE';
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-2">
-            <div className="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-xs font-mono font-bold text-[var(--text-main)]">1. Kokoro v1.0 ONNX</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[var(--accent)] text-[var(--on-accent)] font-bold">
-                  ACTIVE
-                </span>
+        const parsers = modelsStatus?.parsers || {};
+        const geminiReady = Boolean(parsers.gemini?.available || parsers.gemini?.configured);
+        const ollamaReady = Boolean(parsers.ollama?.available || modelsStatus?.llm?.available);
+        const ocrObj = parsers['unlimited-ocr'] || parsers.unlimited_ocr || {};
+        const ocrReady = Boolean(ocrObj.available || ocrObj.reachable);
+
+        const engineCards = [
+          {
+            title: '1. Kokoro v1.0 ONNX',
+            badge: kokoroReady ? 'MODEL READY' : 'OFFLINE',
+            active: kokoroReady,
+            detail: kokoroReady
+              ? 'Local 82M micro-model weights & voice embeddings loaded for offline multi-voice synthesis.'
+              : 'Local Kokoro ONNX weights or voices bundle not detected on disk.',
+          },
+          {
+            title: '2. Microsoft Edge Neural',
+            badge: edgeReady ? 'CLOUD READY' : 'FALLBACK',
+            active: edgeReady,
+            detail: edgeReady
+              ? 'High-definition cloud neural voices (RyanNeural, SoniaNeural, GuyNeural) reachable.'
+              : 'Cloud probe unavailable; cascades automatically to local ONNX or Device Speech.',
+          },
+          {
+            title: '3. Paradee-8M Micro ONNX',
+            badge: paradeeReady ? 'MODEL READY' : 'OFFLINE',
+            active: paradeeReady,
+            detail: paradeeReady
+              ? `Compact 8M-parameter ONNX model ready (${(modelsStatus?.paradee?.voices || tts.paradee_voices || []).length || 4} cast voices).`
+              : 'Paradee-8M ONNX model checkpoint not detected locally.',
+          },
+          {
+            title: '4. Paradee + Machine Mixed',
+            badge: mixedBadge,
+            active: mixedBadge === 'ONLINE',
+            detail: 'Assigns Paradee-8M ONNX to Narrator + top cast and Device Speech to extra cast.',
+          },
+          {
+            title: '5. Device Speech',
+            badge: machineReady ? 'ONLINE' : 'OFFLINE',
+            active: machineReady,
+            detail: machineReady
+              ? 'Host OS speech synthesizer available for zero-dependency offline playback.'
+              : 'Host OS speech binary unavailable in current runtime environment.',
+          },
+          {
+            title: '6. Gemini AI',
+            badge: geminiReady ? 'CLOUD READY' : 'FALLBACK',
+            active: geminiReady,
+            detail: geminiReady
+              ? `Configured (${parsers.gemini?.model || 'gemini-2.5-flash'}) for multimodal chapter parsing & cast detection.`
+              : 'No Gemini API key configured; parser falls back to local Heuristic attribution.',
+          },
+          {
+            title: '7. Ollama',
+            badge: ollamaReady ? 'ONLINE' : 'OFFLINE',
+            active: ollamaReady,
+            detail: ollamaReady
+              ? `Local Ollama server reachable (${parsers.ollama?.model || modelsStatus?.llm?.model || 'llama3:8b'}).`
+              : `Local Ollama endpoint unreachable (${parsers.ollama?.url || modelsStatus?.llm?.url || 'http://localhost:11434'}).`,
+          },
+          {
+            title: '8. Vision OCR',
+            badge: ocrReady ? 'ONLINE' : 'OFFLINE',
+            active: ocrReady,
+            detail: ocrReady
+              ? `Unlimited-OCR vLLM reachable (${ocrObj.model || 'baidu/Unlimited-OCR'}).`
+              : `Vision OCR vLLM endpoint unreachable (${ocrObj.url || 'http://localhost:8000/v1'}).`,
+          },
+        ];
+
+        return (
+          <section className="p-6 sm:p-8 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-subtle)] shadow-xl space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <span className="mono-xs text-[var(--text-muted)]">// NEURAL ENGINE STACK</span>
+                <h2 className="text-lg font-bold font-sans uppercase text-[var(--text-main)]">
+                  Synthesis Hardware & Backend Engines
+                </h2>
+                <p className="text-xs text-[var(--text-sub)] font-mono">
+                  Live backend probe status across all 5 TTS synthesis engines and 3 AI manuscript parsers.
+                </p>
               </div>
-              <p className="text-[11px] text-[var(--text-sub)] font-mono leading-relaxed">
-                Local 82M micro-model delivering multi-voice dialogue synthesis with sub-50ms latency.
-              </p>
+
+              <button
+                type="button"
+                onClick={handleProbeEngines}
+                disabled={isProbingEngines}
+                className="boxed-btn px-4 py-2 text-xs font-mono uppercase inline-flex items-center gap-2 rounded-full cursor-pointer active:scale-95 transition-all shrink-0 disabled:opacity-50"
+              >
+                <IconRefresh className={`w-3.5 h-3.5 ${isProbingEngines ? 'animate-spin' : ''}`} />
+                <span>{isProbingEngines ? 'Probing...' : 'Probe Engines'}</span>
+              </button>
             </div>
 
-            <div className="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-xs font-mono font-bold text-[var(--text-main)]">2. Microsoft Edge Neural</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[var(--bg-card)] border border-[var(--border-strong)] text-[var(--text-main)]">
-                  READY
-                </span>
+            {probeError && (
+              <div
+                role="alert"
+                className="p-3 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-strong)] text-xs font-mono text-[var(--text-main)]"
+              >
+                {probeError}
               </div>
-              <p className="text-[11px] text-[var(--text-sub)] font-mono leading-relaxed">
-                High-definition cloud neural voices (*RyanNeural*, *SoniaNeural*, *GuyNeural*).
-              </p>
-            </div>
+            )}
 
-            <div className="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-xs font-mono font-bold text-[var(--text-main)]">3. vLLM / Ollama LLM</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[var(--bg-card)] border border-[var(--border-strong)] text-[var(--text-main)]">
-                  CONNECTED
-                </span>
-              </div>
-              <p className="text-[11px] text-[var(--text-sub)] font-mono leading-relaxed">
-                Dialogue attribution, speaker emotion tagger, and natural phrasing engine.
-              </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+              {engineCards.map((card) => (
+                <div
+                  key={card.title}
+                  className="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-2"
+                >
+                  <div className="flex justify-between items-center gap-2">
+                    <span className="text-xs font-mono font-bold text-[var(--text-main)]">
+                      {card.title}
+                    </span>
+                    <span
+                      className={`text-[10px] font-mono px-2 py-0.5 rounded-full shrink-0 ${
+                        card.active
+                          ? 'bg-[var(--accent)] text-[var(--on-accent)] font-bold'
+                          : 'bg-[var(--bg-card)] border border-[var(--border-strong)] text-[var(--text-sub)]'
+                      }`}
+                    >
+                      {card.badge}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[var(--text-sub)] font-mono leading-relaxed">
+                    {card.detail}
+                  </p>
+                </div>
+              ))}
             </div>
-          </div>
-        </section>
-      )}
+          </section>
+        );
+      })()}
     </div>
   );
 }
