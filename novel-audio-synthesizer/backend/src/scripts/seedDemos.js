@@ -18,6 +18,7 @@ const { Chapter } = require('../models');
 const { audioStitcher } = require('../engine/audioStitcher');
 const { ttsEngine } = require('../engine/ttsEngine');
 const { validateAudioBuffer } = require('../engine/audioValidator');
+const { storageService } = require('../services/storageService');
 const { config } = require('../config');
 
 // Voice Catalog fallback seeds to ensure all 20 unified voice IDs exist
@@ -99,6 +100,16 @@ async function ensureChapterAudio(chapterId, segments, { maxSynthesizeCount = 0 
       (fs.existsSync(wavPath) && fs.statSync(wavPath).size > 0)) {
     const isWav = fs.existsSync(wavPath) && (!fs.existsSync(mp3Path) || fs.statSync(wavPath).mtimeMs > fs.statSync(mp3Path).mtimeMs);
     const format = isWav ? 'wav' : 'mp3';
+    if (storageService.isS3Configured()) {
+      const existingPath = isWav ? wavPath : mp3Path;
+      const existingBuffer = fs.readFileSync(existingPath);
+      await storageService.putObject({
+        bucketType: 'audio',
+        key: `${chapterId}.${format}`,
+        body: existingBuffer,
+        contentType: format === 'mp3' ? 'audio/mpeg' : 'audio/wav',
+      }).catch((e) => console.warn(`  [Storage Warning] S3 demo upload skipped for ${chapterId}:`, e.message));
+    }
     return {
       chapter_id: chapterId,
       audio_stream_url: `/api/stream/${chapterId}`,
@@ -186,6 +197,14 @@ async function ensureChapterAudio(chapterId, segments, { maxSynthesizeCount = 0 
     const audioFmt = savedAudioPath.endsWith('.mp3') ? 'mp3' : 'wav';
     if (!validateAudioBuffer(savedBuffer, audioFmt)) {
       console.warn(`  [Audio Warning] Audio buffer validation warning for ${savedAudioPath}`);
+    }
+    if (storageService.isS3Configured()) {
+      await storageService.putObject({
+        bucketType: 'audio',
+        key: `${chapterId}.${audioFmt}`,
+        body: savedBuffer,
+        contentType: audioFmt === 'mp3' ? 'audio/mpeg' : 'audio/wav',
+      }).catch((e) => console.warn(`  [Storage Warning] S3 demo upload skipped for ${chapterId}:`, e.message));
     }
   }
 

@@ -1,7 +1,7 @@
 const http = require('http');
 const { createApp } = require('./app');
 const { setupWebSocketServer } = require('./websocket');
-const { connectMongo, connectPostgres } = require('./db');
+const { pool, connectMongo, connectPostgres } = require('./db');
 const { config } = require('./config');
 
 async function bootstrap() {
@@ -20,10 +20,20 @@ async function bootstrap() {
   connectPostgres()
     .then(async () => {
       try {
-        const { ensureVoiceCatalog } = require('./scripts/seedDemos');
+        const { ensureVoiceCatalog, seedDemos } = require('./scripts/seedDemos');
         await ensureVoiceCatalog();
+
+        if (process.env.AUTO_SEED_DEMOS !== 'false') {
+          const { rows } = await pool.query('SELECT COUNT(*)::int AS cnt FROM novels');
+          if ((rows[0]?.cnt || 0) === 0) {
+            console.log('[DB] Empty novels catalog detected — running initial demo seeder in background...');
+            seedDemos({ closeConnections: false }).catch((err) =>
+              console.warn('[DB] Background demo seed warning:', err.message)
+            );
+          }
+        }
       } catch (e) {
-        console.warn('[DB] Voice catalog auto-upsert warning:', e.message);
+        console.warn('[DB] Voice catalog / auto-seed warning:', e.message);
       }
     })
     .catch((e) => console.warn('[DB] Postgres connect warning:', e.message));
