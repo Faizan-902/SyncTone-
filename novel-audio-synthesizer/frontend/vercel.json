@@ -6,11 +6,11 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://synctone-api.hf.space/api/:path*"
+      "destination": "https://mars424-synctone-api.hf.space/api/:path*"
     },
     {
       "source": "/static/:path*",
-      "destination": "https://synctone-api.hf.space/static/:path*"
+      "destination": "https://mars424-synctone-api.hf.space/static/:path*"
     },
     {
       "source": "/((?!api/|static/|assets/|models/|.*\\..*).*)",
