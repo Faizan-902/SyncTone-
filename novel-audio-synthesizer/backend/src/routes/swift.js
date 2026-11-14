@@ -2,6 +2,7 @@ const { Router } = require('express');
 const axios = require('axios');
 const { pool } = require('../db');
 const { config } = require('../config');
+const { storageService } = require('../services/storageService');
 
 const router = Router();
 
@@ -60,6 +61,32 @@ router.get('/chapters/:id/audio', async (req, res) => {
     const { swift_audio_object } = dbRes.rows[0];
     if (!swift_audio_object) {
       return res.status(400).json({ error: 'Audio not synthesized yet' });
+    }
+
+    if (storageService.isS3Configured()) {
+      const s3Obj = await storageService.getObjectStream({
+        bucketType: 'audio',
+        key: swift_audio_object,
+        range: req.headers.range,
+      });
+      if (s3Obj) {
+        res.status(s3Obj.status);
+        Object.entries(s3Obj.headers || {}).forEach(([k, v]) => {
+          if (v !== undefined) res.setHeader(k, String(v));
+        });
+        if (!res.getHeader('Content-Type')) {
+          const ct = swift_audio_object.endsWith('.mp3')
+            ? 'audio/mpeg'
+            : swift_audio_object.endsWith('.wav')
+              ? 'audio/wav'
+              : 'audio/opus';
+          res.setHeader('Content-Type', ct);
+        }
+        if (s3Obj.status === 416 || !s3Obj.stream) {
+          return res.end();
+        }
+        return s3Obj.stream.pipe(res);
+      }
     }
 
     const fetchSwiftStream = async (forceTokenRefresh = false) => {

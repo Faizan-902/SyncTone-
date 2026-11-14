@@ -5,6 +5,10 @@ const { prisma, getPrismaClient } = require('./prisma');
 
 const pool = new Pool({
   connectionString: config.databaseUrl,
+  connectionTimeoutMillis: 15000,
+  ...(config.pgSsl
+    ? { ssl: { rejectUnauthorized: Boolean(config.pgSslRejectUnauthorized) } }
+    : {}),
 });
 
 pool.on('error', (err) => {

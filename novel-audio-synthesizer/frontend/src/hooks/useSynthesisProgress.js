@@ -14,33 +14,136 @@ export function useSynthesisProgress(chapterId) {
   });
 
   const wsRef = useRef(null);
+  const sseRef = useRef(null);
+  const pollIntervalRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
   const pingIntervalRef = useRef(null);
   const isMountedRef = useRef(true);
 
+  const applyProgressPayload = useCallback((data) => {
+    if (!isMountedRef.current || !data || typeof data !== 'object') return;
+    const status = (data.status || 'synthesizing').toLowerCase();
+    const percent = typeof data.percent_complete === 'number' ? data.percent_complete : 0;
+    const currentSeg = data.current_segment !== undefined ? data.current_segment : null;
+    const totalSegs = data.total_segments !== undefined ? data.total_segments : null;
+    const errorMsg = data.error || (status === 'failed' ? 'Synthesis encountered an error' : null);
+
+    let msg = '';
+    if (status === 'parsing') {
+      msg = 'Parsing text & attributing character voices...';
+    } else if (status === 'synthesizing') {
+      msg = currentSeg && totalSegs
+        ? `Synthesizing audio segment ${currentSeg} of ${totalSegs} (${percent}%)`
+        : `Synthesizing audio (${percent}%)`;
+    } else if (status === 'stitching') {
+      msg = 'Stitching audio segments with 250ms silence frames...';
+    } else if (status === 'complete') {
+      msg = 'Audio synthesis completed successfully!';
+    } else if (status === 'failed') {
+      msg = errorMsg || 'Synthesis failed';
+    }
+
+    setProgressState({
+      status,
+      percentComplete: percent,
+      currentSegment: currentSeg,
+      totalSegments: totalSegs,
+      message: msg,
+      error: errorMsg,
+      isConnected: status !== 'complete' && status !== 'failed',
+      isComplete: status === 'complete',
+      isFailed: status === 'failed',
+    });
+
+    if (status === 'complete' || status === 'failed') {
+      clearInterval(pingIntervalRef.current);
+      clearInterval(pollIntervalRef.current);
+      if (sseRef.current) {
+        try { sseRef.current.close(); } catch (_) {}
+      }
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        try { wsRef.current.close(); } catch (_) {}
+      }
+    }
+  }, []);
+
+  const startHttpFallback = useCallback((id) => {
+    if (!id || typeof window === 'undefined') return;
+    const apiBase = (
+      (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) ||
+      '/api'
+    ).replace(/\/$/, '');
+
+    if (typeof EventSource !== 'undefined' && !sseRef.current) {
+      try {
+        const es = new EventSource(`${apiBase}/chapters/${id}/progress/sse`, { withCredentials: true });
+        sseRef.current = es;
+        es.onmessage = (evt) => {
+          try {
+            const payload = JSON.parse(evt.data);
+            applyProgressPayload(payload);
+          } catch (_) {}
+        };
+        es.onerror = () => {
+          try { es.close(); } catch (_) {}
+          sseRef.current = null;
+        };
+      } catch (_) {}
+    }
+
+    if (!pollIntervalRef.current) {
+      pollIntervalRef.current = setInterval(async () => {
+        if (!isMountedRef.current) return;
+        try {
+          const resp = await fetch(`${apiBase}/chapters/${id}/progress`, { credentials: 'include' });
+          if (resp.ok) {
+            const payload = await resp.json();
+            if (payload && payload.status && payload.status !== 'idle' && payload.status !== 'draft') {
+              applyProgressPayload(payload);
+            }
+          }
+        } catch (_) {}
+      }, 2500);
+    }
+  }, [applyProgressPayload]);
+
   const connect = useCallback(() => {
     if (!chapterId || typeof window === 'undefined') return;
 
-    // Clean up any existing connection
     if (wsRef.current) {
       try {
         wsRef.current.close();
       } catch (_) {}
     }
+    if (sseRef.current) {
+      try {
+        sseRef.current.close();
+      } catch (_) {}
+      sseRef.current = null;
+    }
+    clearInterval(pollIntervalRef.current);
+    pollIntervalRef.current = null;
 
+    const envWsBase =
+      typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_WS_BASE_URL
+        ? String(import.meta.env.VITE_WS_BASE_URL).trim().replace(/\/$/, '')
+        : '';
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.host;
-    const wsUrl = `${protocol}//${host}/api/ws/progress/${chapterId}`;
+    const wsUrl = envWsBase
+      ? `${envWsBase.replace(/^http/i, 'ws')}/api/ws/progress/${chapterId}`
+      : `${protocol}//${host}/api/ws/progress/${chapterId}`;
 
+    let openedOnce = false;
     try {
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
       ws.onopen = () => {
+        openedOnce = true;
         if (!isMountedRef.current) return;
         setProgressState((prev) => ({ ...prev, isConnected: true }));
 
-        // Send ping every 15s to keep connection alive
         pingIntervalRef.current = setInterval(() => {
           if (ws.readyState === WebSocket.OPEN) {
             try {
@@ -56,57 +159,16 @@ export function useSynthesisProgress(chapterId) {
 
         try {
           const data = JSON.parse(event.data);
-          if (!data || typeof data !== 'object') return;
-
-          const status = (data.status || 'synthesizing').toLowerCase();
-          const percent = typeof data.percent_complete === 'number' ? data.percent_complete : 0;
-          const currentSeg = data.current_segment !== undefined ? data.current_segment : null;
-          const totalSegs = data.total_segments !== undefined ? data.total_segments : null;
-          const errorMsg = data.error || (status === 'failed' ? 'Synthesis encountered an error' : null);
-
-          // Construct descriptive status message from actual backend payload
-          let msg = '';
-          if (status === 'parsing') {
-            msg = 'Parsing text & attributing character voices...';
-          } else if (status === 'synthesizing') {
-            msg = currentSeg && totalSegs
-              ? `Synthesizing audio segment ${currentSeg} of ${totalSegs} (${percent}%)`
-              : `Synthesizing audio (${percent}%)`;
-          } else if (status === 'stitching') {
-            msg = 'Stitching audio segments with 250ms silence frames...';
-          } else if (status === 'complete') {
-            msg = 'Audio synthesis completed successfully!';
-          } else if (status === 'failed') {
-            msg = errorMsg || 'Synthesis failed';
-          }
-
-          setProgressState({
-            status,
-            percentComplete: percent,
-            currentSegment: currentSeg,
-            totalSegments: totalSegs,
-            message: msg,
-            error: errorMsg,
-            isConnected: true,
-            isComplete: status === 'complete',
-            isFailed: status === 'failed',
-          });
-
-          // Close connection if complete or failed
-          if (status === 'complete' || status === 'failed') {
-            clearInterval(pingIntervalRef.current);
-            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-              try {
-                wsRef.current.close();
-              } catch (_) {}
-            }
-          }
+          applyProgressPayload(data);
         } catch (_) {}
       };
 
       ws.onerror = () => {
         if (!isMountedRef.current) return;
         setProgressState((prev) => ({ ...prev, isConnected: false }));
+        if (!openedOnce) {
+          startHttpFallback(chapterId);
+        }
       };
 
       ws.onclose = () => {
@@ -114,8 +176,10 @@ export function useSynthesisProgress(chapterId) {
         clearInterval(pingIntervalRef.current);
         setProgressState((prev) => ({ ...prev, isConnected: false }));
       };
-    } catch (_) {}
-  }, [chapterId]);
+    } catch (_) {
+      startHttpFallback(chapterId);
+    }
+  }, [chapterId, applyProgressPayload, startHttpFallback]);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -126,7 +190,13 @@ export function useSynthesisProgress(chapterId) {
     return () => {
       isMountedRef.current = false;
       clearInterval(pingIntervalRef.current);
+      clearInterval(pollIntervalRef.current);
       clearTimeout(reconnectTimeoutRef.current);
+      if (sseRef.current) {
+        try {
+          sseRef.current.close();
+        } catch (_) {}
+      }
       if (wsRef.current) {
         try {
           wsRef.current.close();

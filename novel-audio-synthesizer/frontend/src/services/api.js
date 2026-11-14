@@ -15,7 +15,24 @@ export class ApiError extends Error {
   }
 }
 
-const API_BASE = '/api';
+const ENV_API_BASE =
+  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) || '';
+const ENV_UPLOAD_API_BASE =
+  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_UPLOAD_API_BASE_URL) || '';
+const ENV_BACKEND_ORIGIN =
+  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_BACKEND_ORIGIN) || '';
+
+const API_BASE = (ENV_API_BASE || '/api').replace(/\/$/, '');
+const UPLOAD_API_BASE = (ENV_UPLOAD_API_BASE || API_BASE).replace(/\/$/, '');
+
+export function resolveMediaUrl(url) {
+  if (!url || typeof url !== 'string') return url;
+  if (/^(https?:|data:|blob:)/i.test(url)) return url;
+  if (ENV_BACKEND_ORIGIN && url.startsWith('/')) {
+    return `${ENV_BACKEND_ORIGIN.replace(/\/$/, '')}${url}`;
+  }
+  return url;
+}
 
 function getFriendlyError(status, data) {
   const serverMsg = data && typeof data === 'object' && (data.error || data.detail || data.message);
@@ -35,19 +52,23 @@ function getFriendlyError(status, data) {
 }
 
 async function request(endpoint, options = {}) {
-  const url = endpoint.startsWith('http') ? endpoint : `${API_BASE}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
+  const { apiBaseOverride, ...fetchOptions } = options;
+  const activeBase = apiBaseOverride || API_BASE;
+  const url = endpoint.startsWith('http')
+    ? endpoint
+    : `${activeBase}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
 
   const headers = {
     Accept: 'application/json',
-    ...(options.headers || {}),
+    ...(fetchOptions.headers || {}),
   };
 
-  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
+  const isFormData = typeof FormData !== 'undefined' && fetchOptions.body instanceof FormData;
   if (!isFormData) {
-    if (options.body && typeof options.body === 'object') {
+    if (fetchOptions.body && typeof fetchOptions.body === 'object') {
       headers['Content-Type'] = 'application/json';
-      options.body = JSON.stringify(options.body);
-    } else if (typeof options.body === 'string' && !headers['Content-Type']) {
+      fetchOptions.body = JSON.stringify(fetchOptions.body);
+    } else if (typeof fetchOptions.body === 'string' && !headers['Content-Type']) {
       headers['Content-Type'] = 'application/json';
     }
   }
@@ -55,11 +76,11 @@ async function request(endpoint, options = {}) {
   const config = {
     method: 'GET',
     credentials: 'include', // Non-negotiable Cookie Rule
-    ...options,
+    ...fetchOptions,
     headers,
   };
 
-  const isGet = !options.method || options.method === 'GET';
+  const isGet = !fetchOptions.method || fetchOptions.method === 'GET';
   const maxRetries = isGet ? 2 : 0;
   let lastError;
 
@@ -87,9 +108,9 @@ async function request(endpoint, options = {}) {
         }
       }
 
-      // If 503 and retries remain, keep trying
-      if (response.status === 503 && attempt < maxRetries) {
-        lastError = new ApiError(getFriendlyError(503, null), 503, null);
+      // Retry transient free-tier cold-wake gateway codes (502, 503, 504) on idempotent GETs
+      if ((response.status === 502 || response.status === 503 || response.status === 504) && attempt < maxRetries) {
+        lastError = new ApiError(getFriendlyError(response.status, null), response.status, null);
         continue;
       }
 
@@ -168,7 +189,7 @@ export const api = {
         const resolvedEngine = payload.get('parser_engine') || parserEngine || 'heuristic';
         return request(
           `/novels/parse-file?parser_engine=${encodeURIComponent(resolvedEngine)}`,
-          { method: 'POST', body: payload }
+          { method: 'POST', body: payload, apiBaseOverride: UPLOAD_API_BASE }
         );
       }
       const bodyPayload =
@@ -179,13 +200,17 @@ export const api = {
               ...payload,
             }
           : payload;
-      return api.post('/novels/parse-file', bodyPayload);
+      return api.post('/novels/parse-file', bodyPayload, { apiBaseOverride: UPLOAD_API_BASE });
     },
     uploadAsset: (payload) => {
       if (typeof FormData !== 'undefined' && payload instanceof FormData) {
-        return request('/novels/upload-asset', { method: 'POST', body: payload });
+        return request('/novels/upload-asset', {
+          method: 'POST',
+          body: payload,
+          apiBaseOverride: UPLOAD_API_BASE,
+        });
       }
-      return api.post('/novels/upload-asset', payload);
+      return api.post('/novels/upload-asset', payload, { apiBaseOverride: UPLOAD_API_BASE });
     },
   },
 

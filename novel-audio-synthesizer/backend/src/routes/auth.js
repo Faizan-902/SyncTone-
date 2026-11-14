@@ -139,11 +139,17 @@ router.post('/auth/login', async (req, res) => {
       expiresIn: '7d',
     });
 
-    // Rule 1: Issue JWT as httpOnly, Secure (in production), SameSite=Lax cookie
+    const sameSiteMode = ['lax', 'none', 'strict'].includes(config.cookieSameSite)
+      ? config.cookieSameSite
+      : 'lax';
+    const isSecureCookie = config.nodeEnv === 'production' || sameSiteMode === 'none';
+
+    // Rule 1: Issue JWT as httpOnly, Secure (in production or SameSite=None), configured SameSite cookie
     res.cookie('token', token, {
       httpOnly: true,
-      secure: config.nodeEnv === 'production',
-      sameSite: 'lax',
+      secure: isSecureCookie,
+      sameSite: sameSiteMode,
+      ...(config.cookieDomain ? { domain: config.cookieDomain } : {}),
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
@@ -163,10 +169,16 @@ router.post('/auth/login', async (req, res) => {
  * Clears the authentication cookie.
  */
 router.post('/auth/logout', (_req, res) => {
+  const sameSiteMode = ['lax', 'none', 'strict'].includes(config.cookieSameSite)
+    ? config.cookieSameSite
+    : 'lax';
+  const isSecureCookie = config.nodeEnv === 'production' || sameSiteMode === 'none';
+
   res.clearCookie('token', {
     httpOnly: true,
-    secure: config.nodeEnv === 'production',
-    sameSite: 'lax',
+    secure: isSecureCookie,
+    sameSite: sameSiteMode,
+    ...(config.cookieDomain ? { domain: config.cookieDomain } : {}),
   });
   return res.json({ message: 'Logged out successfully' });
 });

@@ -349,6 +349,7 @@ class TTSWorkerPool {
   }
 
   isKokoroAvailable() {
+    if (config.lowMemoryMode) return false;
     const modelFile = path.resolve(config.paths.modelsDir, 'kokoro-v0_19.onnx');
     const voicesFile = path.resolve(config.paths.modelsDir, 'voices.bin');
     return fs.existsSync(modelFile) && fs.existsSync(voicesFile);

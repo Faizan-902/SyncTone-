@@ -9,7 +9,7 @@ import { useAuth } from './hooks/useAuth';
 import { useAudioSync } from './hooks/useAudioSync';
 import { usePlaybackProgress } from './hooks/usePlaybackProgress';
 import { useSynthesisProgress } from './hooks/useSynthesisProgress';
-import { api } from './services/api';
+import { api, resolveMediaUrl } from './services/api';
 
 import SidebarNav from './components/SidebarNav';
 import TopHeader from './components/TopHeader';
@@ -414,10 +414,11 @@ function AppContent() {
 
   const buildChapterManifestState = useCallback((chapterId, details, segments, manifest) => {
     if (manifest) {
-      const streamUrl =
+      const streamUrl = resolveMediaUrl(
         manifest.audio_url ||
         manifest.audio_stream_url ||
-        `/api/stream/${chapterId}`;
+        `/api/stream/${chapterId}`
+      );
       const enrichedTimeline = (manifest.timeline || []).map((t, idx) => {
         const seg =
           segments.find(
@@ -445,7 +446,7 @@ function AppContent() {
     }
 
     return {
-      audio_stream_url: `/api/stream/${chapterId}`,
+      audio_stream_url: resolveMediaUrl(`/api/stream/${chapterId}`),
       total_duration_ms: details?.total_duration_ms || 0,
       timeline: (segments || []).map((s, idx) => ({
         order: s.order || idx + 1,
@@ -787,7 +788,7 @@ function AppContent() {
         setHasStudioAudio(true);
         setChapterManifest({
           ...manifest,
-          audio_stream_url: `${manifest.audio_url || `/api/stream/${currentChapter.id}`}?t=${Date.now()}`,
+          audio_stream_url: resolveMediaUrl(`${manifest.audio_url || `/api/stream/${currentChapter.id}`}?t=${Date.now()}`),
         });
       }
       try {

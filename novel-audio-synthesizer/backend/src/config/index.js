@@ -55,18 +55,62 @@ const modelsDir = findFirstExistingDir(
   path.resolve(PARENT_DIR, 'kokoro-tts-backend/models_cache')
 );
 
+const DEFAULT_CORS_ORIGINS = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:3000',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:5174',
+  'http://10.0.2.2:5173',
+];
+
+function parseCorsOrigins(rawOrigins) {
+  if (!rawOrigins || typeof rawOrigins !== 'string') return [...DEFAULT_CORS_ORIGINS];
+  const extras = rawOrigins
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return Array.from(new Set([...DEFAULT_CORS_ORIGINS, ...extras]));
+}
+
 const config = {
   port: parseInt(process.env.PORT || '4000', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
   jwtSecret: process.env.JWT_SECRET || 'synctone_super_secret_jwt_key_2026_dev_mode',
+  lowMemoryMode: process.env.LOW_MEMORY_MODE === 'true',
+  corsOrigins: parseCorsOrigins(process.env.CORS_ORIGINS),
+  allowVercelPreviews: process.env.ALLOW_VERCEL_PREVIEWS !== 'false',
+  cookieSameSite: (process.env.COOKIE_SAMESITE || 'lax').toLowerCase(),
+  cookieDomain: process.env.COOKIE_DOMAIN || undefined,
 
   // Database
   databaseUrl:
     process.env.DATABASE_URL ||
     'postgresql://synctone_user:synctone_pass@localhost:5432/synctone',
+  pgSsl:
+    process.env.PG_SSL === 'true' ||
+    /[?&]sslmode=(require|verify-full|verify-ca)/i.test(process.env.DATABASE_URL || ''),
+  pgSslRejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED === 'true',
   mongoUri:
     process.env.MONGO_URI ||
     'mongodb://synctone_user:synctone_pass@localhost:27017/synctone?authSource=admin',
+
+  // Unified Object Storage (S3-compatible: Supabase Storage S3, Backblaze B2, Cloudflare R2, MinIO, Swift, or Local)
+  storage: {
+    provider: (
+      process.env.STORAGE_PROVIDER ||
+      (process.env.S3_ENDPOINT || process.env.S3_ACCESS_KEY_ID ? 's3' : 'swift')
+    ).toLowerCase(),
+    s3Endpoint: process.env.S3_ENDPOINT || '',
+    s3Region: process.env.S3_REGION || 'auto',
+    s3AccessKeyId: process.env.S3_ACCESS_KEY_ID || '',
+    s3SecretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
+    s3ForcePathStyle: process.env.S3_FORCE_PATH_STYLE !== 'false',
+    bucketAudio: process.env.S3_BUCKET_AUDIO || process.env.SWIFT_CONTAINER_AUDIO || 'synctone-audio',
+    bucketCovers: process.env.S3_BUCKET_COVERS || process.env.SWIFT_CONTAINER_COVERS || 'synctone-covers',
+    publicAudioUrl: (process.env.STORAGE_PUBLIC_AUDIO_URL || '').replace(/\/$/, ''),
+    publicCoversUrl: (process.env.STORAGE_PUBLIC_COVERS_URL || '').replace(/\/$/, ''),
+  },
 
   // OpenStack Swift
   swift: {

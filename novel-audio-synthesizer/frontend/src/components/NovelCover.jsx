@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { resolveMediaUrl } from '../services/api';
 
 const EDITIONS = [
   {
@@ -97,11 +98,12 @@ export default function NovelCover({
   hideEyebrow = false,
 }) {
   const [imgError, setImgError] = useState(false);
+  const resolvedCoverUrl = resolveMediaUrl(coverUrl);
   const displayTitle = typeof title === 'string' && title.trim() ? title : 'Untitled Novel';
   const displayAuthor = typeof author === 'string' ? author.trim() : '';
   const style = getCoverStyle(displayTitle, id, index);
 
-  useEffect(() => { setImgError(false); }, [coverUrl]);
+  useEffect(() => { setImgError(false); }, [resolvedCoverUrl]);
 
   const classTokens = String(className || '');
   const hasExplicitWidth = /\bw-(?!auto\b)\S+/.test(classTokens);
@@ -109,11 +111,11 @@ export default function NovelCover({
   const isCompactCover = /\bw-(?:12|14|16|20|24|28)\b/.test(classTokens);
   const sizeFallbackClasses = `${hasExplicitWidth ? '' : 'w-full'} ${hasExplicitHeight ? '' : 'h-full'}`.trim();
 
-  if (coverUrl && !imgError) {
+  if (resolvedCoverUrl && !imgError) {
     return (
       <div className={`relative overflow-hidden ${sizeFallbackClasses} ${className}`}>
         <img
-          src={coverUrl}
+          src={resolvedCoverUrl}
           alt={title}
           className="volume-cover-img w-full h-full object-cover"
           onError={() => setImgError(true)}

@@ -44,27 +44,31 @@ download_file() {
   echo "✓ Successfully saved ${filename} ($(du -h "${filename}" | cut -f1))."
 }
 
-# 1. Kokoro-82M v1.0 ONNX model weights (~330 MB)
-download_file \
-  "kokoro-v1.0.onnx" \
-  "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx" \
-  100000000
+# 1 & 2. Kokoro-82M v1.0 ONNX weights (~330 MB + ~21 MB)
+# Skip when SKIP_HEAVY_MODELS=true or LOW_MEMORY_MODE=true (512MB free containers)
+if [ "${SKIP_HEAVY_MODELS:-false}" != "true" ] && [ "${LOW_MEMORY_MODE:-false}" != "true" ]; then
+  download_file \
+    "kokoro-v1.0.onnx" \
+    "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx" \
+    100000000
 
-# 2. Kokoro-82M v1.0 voice vectors (~21 MB)
-download_file \
-  "voices-v1.0.bin" \
-  "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin" \
-  10000000
+  download_file \
+    "voices-v1.0.bin" \
+    "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin" \
+    10000000
 
-# Backward compatibility symlinks / aliases for existing codebase references (v0.19)
-if [ ! -f "kokoro-v0_19.onnx" ]; then
-  ln -sf "kokoro-v1.0.onnx" "kokoro-v0_19.onnx"
-  echo "✓ Created backward-compatibility symlink: kokoro-v0_19.onnx -> kokoro-v1.0.onnx"
-fi
+  # Backward compatibility symlinks / aliases for existing codebase references (v0.19)
+  if [ ! -f "kokoro-v0_19.onnx" ]; then
+    ln -sf "kokoro-v1.0.onnx" "kokoro-v0_19.onnx"
+    echo "✓ Created backward-compatibility symlink: kokoro-v0_19.onnx -> kokoro-v1.0.onnx"
+  fi
 
-if [ ! -f "voices.bin" ]; then
-  ln -sf "voices-v1.0.bin" "voices.bin"
-  echo "✓ Created backward-compatibility symlink: voices.bin -> voices-v1.0.bin"
+  if [ ! -f "voices.bin" ]; then
+    ln -sf "voices-v1.0.bin" "voices.bin"
+    echo "✓ Created backward-compatibility symlink: voices.bin -> voices-v1.0.bin"
+  fi
+else
+  echo "⚡ LOW_MEMORY_MODE / SKIP_HEAVY_MODELS active: skipping 351MB Kokoro-82M weights (using Paradee-8M INT8 + Edge Neural TTS)."
 fi
 
 # 3. Paradee-8M-v1.2 int8 quantized ONNX model weights (~8.5 MB)

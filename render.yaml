@@ -1,0 +1,51 @@
+# ==============================================================================
+# SyncTone — Render.com 100% Free Blueprint (512 MB RAM Low-Memory Fallback)
+# Runs Paradee-8M INT8 (8.5 MB) + Microsoft Edge Neural TTS (<300 MB peak RSS)
+# ==============================================================================
+services:
+  - type: web
+    name: synctone-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./novel-audio-synthesizer/backend/Dockerfile
+    dockerContext: ./novel-audio-synthesizer/backend
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: NODE_OPTIONS
+        value: --max-old-space-size=256
+      - key: LOW_MEMORY_MODE
+        value: "true"
+      - key: SKIP_HEAVY_MODELS
+        value: "true"
+      - key: PG_SSL
+        value: "true"
+      - key: STORAGE_PROVIDER
+        value: s3
+      - key: S3_REGION
+        value: auto
+      - key: S3_BUCKET_AUDIO
+        value: synctone-audio
+      - key: S3_BUCKET_COVERS
+        value: synctone-covers
+      - key: COOKIE_SAMESITE
+        value: none
+      - key: ALLOW_VERCEL_PREVIEWS
+        value: "true"
+      - key: DATABASE_URL
+        sync: false
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: S3_ENDPOINT
+        sync: false
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false

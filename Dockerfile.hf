@@ -1,0 +1,74 @@
+# ==============================================================================
+# SyncTone — 100% Free Cloud Backend Dockerfile (Hugging Face Spaces Docker)
+# Free CPU Tier: 2 vCPU, 16 GB RAM, 50 GB Ephemeral Disk, Port 7860
+# Runs all 3 TTS engines (Kokoro-82M + Paradee-8M INT8 + Microsoft Edge-TTS)
+# ==============================================================================
+FROM node:20-bookworm-slim
+
+ARG BAKE_MODELS=true
+ENV NODE_ENV=production \
+    PORT=7860 \
+    HOME=/home/user \
+    PATH="/opt/venv/bin:$PATH" \
+    PYTHON_BIN="/opt/venv/bin/python3" \
+    KOKORO_MODEL_PATH="/app/kokoro-tts-backend/models_cache/kokoro-v1.0.onnx" \
+    KOKORO_VOICES_PATH="/app/kokoro-tts-backend/models_cache/voices-v1.0.bin" \
+    PARADEE_MODEL_PATH="/app/kokoro-tts-backend/models_cache/paradee-v1.2-int8.onnx" \
+    PARADEE_VOICES_PATH="/app/kokoro-tts-backend/models_cache/paradee-voices.json"
+
+WORKDIR /app
+
+# Create non-root user UID 1000 required by Hugging Face Spaces Docker
+RUN useradd -m -u 1000 user
+
+# System runtime dependencies for ONNX neural TTS, audio stitching, and PDF/EPUB parsing
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    python3-pip \
+    python3-venv \
+    python3-dev \
+    ffmpeg \
+    espeak-ng \
+    curl \
+    ca-certificates \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Python virtualenv for Kokoro-ONNX, Paradee, and PDF/OCR extraction
+RUN python3 -m venv /opt/venv && \
+    pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir \
+      pypdf \
+      pypdfium2 \
+      onnxruntime \
+      kokoro-onnx \
+      soundfile \
+      numpy && \
+    ln -sf /opt/venv/bin/python3 /usr/bin/python3 && \
+    ln -sf /opt/venv/bin/python /usr/bin/python
+
+# Install backend Node dependencies & generate Prisma Client
+COPY novel-audio-synthesizer/backend/package*.json ./
+COPY novel-audio-synthesizer/backend/prisma ./prisma
+RUN npm install --omit=dev && npx prisma generate
+
+# Copy backend source and model bootstrap script
+COPY novel-audio-synthesizer/backend/src ./src
+COPY scripts/download-models.sh ./scripts/download-models.sh
+RUN chmod +x ./scripts/download-models.sh
+
+# Prepare runtime directories and optionally bake ONNX model weights into the image
+RUN mkdir -p /app/output/covers /app/chapters /app/models_cache /app/kokoro-tts-backend/models_cache && \
+    if [ "${BAKE_MODELS}" = "true" ]; then \
+      bash ./scripts/download-models.sh /app/kokoro-tts-backend/models_cache; \
+    fi && \
+    chown -R user:user /app
+
+USER user
+
+EXPOSE 7860
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD curl -f http://localhost:7860/api/health || exit 1
+
+CMD ["sh", "-c", "bash ./scripts/download-models.sh /app/kokoro-tts-backend/models_cache && exec node src/index.js"]

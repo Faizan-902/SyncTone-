@@ -10,6 +10,7 @@ const { parseChapter } = require('../engine/textParser');
 const { voiceProfiler } = require('../engine/voiceProfiler');
 const { parseUploadedManuscript } = require('../engine/parsers');
 const { optionalAuth } = require('../middleware/auth');
+const { storageService } = require('../services/storageService');
 const statusRouter = require('./status');
 const chaptersRouter = require('./chapters');
 
@@ -233,7 +234,26 @@ router.post('/novels/upload-asset', upload.single('file'), async (req, res) => {
       } catch (_) {}
     }
 
-    return res.json({ url: `/static/covers/${fileName}` });
+    const mimeType =
+      ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg';
+    let finalCoverUrl = `/static/covers/${fileName}`;
+    if (storageService.isS3Configured()) {
+      try {
+        const uploaded = await storageService.putObject({
+          bucketType: 'covers',
+          key: fileName,
+          body: buffer,
+          contentType: mimeType,
+        });
+        if (uploaded && uploaded.url) {
+          finalCoverUrl = uploaded.url;
+        }
+      } catch (storageErr) {
+        console.warn('[Upload Asset S3 Warning]:', storageErr.message);
+      }
+    }
+
+    return res.json({ url: finalCoverUrl });
   } catch (err) {
     console.error('[Upload Asset Error]:', err.message);
     return res.status(500).json({ error: 'Failed to save asset.' });

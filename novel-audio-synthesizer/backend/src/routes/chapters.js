@@ -15,6 +15,7 @@ const { broadcastProgress } = require('../websocket');
 const { config } = require('../config');
 const { authenticateUser, optionalAuth, requireRole } = require('../middleware/auth');
 const { getSwiftAuth } = require('./swift');
+const { storageService } = require('../services/storageService');
 const statusRouter = require('./status');
 const voicesRouter = require('./voices');
 
@@ -1442,28 +1443,49 @@ router.post('/synthesize/:chapter_id', optionalAuth, async (req, res) => {
     const swiftAudioObject = `${chapter_id}.${manifest.audio_format || 'mp3'}`;
     const audioFilePath = path.join(config.paths.outputDir, swiftAudioObject);
 
-    // Optional non-blocking upload of synthesized audio to OpenStack Swift
-    try {
-      if (getSwiftAuth && fs.existsSync(audioFilePath)) {
-        const { token, storageUrl } = await getSwiftAuth();
-        if (token && storageUrl) {
+    // Upload synthesized audio to S3-compatible bucket (Supabase / B2 / R2) or OpenStack Swift
+    if (fs.existsSync(audioFilePath)) {
+      const contentType = swiftAudioObject.endsWith('.mp3')
+        ? 'audio/mpeg'
+        : swiftAudioObject.endsWith('.opus')
+          ? 'audio/opus'
+          : 'audio/wav';
+      if (storageService.isS3Configured()) {
+        try {
           const audioData = fs.readFileSync(audioFilePath);
-          const axios = require('axios');
-          await axios.put(
-            `${storageUrl}/${config.swift.containerAudio}/${swiftAudioObject}`,
-            audioData,
-            {
-              headers: {
-                'X-Auth-Token': token,
-                'Content-Type': swiftAudioObject.endsWith('.mp3') ? 'audio/mpeg' : 'audio/wav',
-              },
-              timeout: 5000,
+          await storageService.putObject({
+            bucketType: 'audio',
+            key: swiftAudioObject,
+            body: audioData,
+            contentType,
+          });
+        } catch (s3Err) {
+          console.warn('[Synthesize S3 Upload Warning]: Failed uploading chapter audio to bucket:', s3Err.message);
+        }
+      } else {
+        try {
+          if (getSwiftAuth) {
+            const { token, storageUrl } = await getSwiftAuth();
+            if (token && storageUrl) {
+              const audioData = fs.readFileSync(audioFilePath);
+              const axios = require('axios');
+              await axios.put(
+                `${storageUrl}/${config.swift.containerAudio}/${swiftAudioObject}`,
+                audioData,
+                {
+                  headers: {
+                    'X-Auth-Token': token,
+                    'Content-Type': contentType,
+                  },
+                  timeout: 5000,
+                }
+              );
             }
-          );
+          }
+        } catch (swiftErr) {
+          console.warn('[Synthesize Swift Upload Warning]: Swift offline or upload failed, continuing locally:', swiftErr.message);
         }
       }
-    } catch (swiftErr) {
-      console.warn('[Synthesize Swift Upload Warning]: Swift offline or upload failed, continuing locally:', swiftErr.message);
     }
 
     // Update PostgreSQL chapters table
@@ -1532,7 +1554,7 @@ router.post('/synthesize/:chapter_id', optionalAuth, async (req, res) => {
  * Audio stream proxy: supports both Edge TTS MP3 and Kokoro WAV fallback.
  * Gracefully handles GET, HEAD, byte ranges, and track status checks.
  */
-router.all('/stream/:chapter_id', (req, res, next) => {
+router.all('/stream/:chapter_id', async (req, res, next) => {
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     return next();
   }
@@ -1545,16 +1567,6 @@ router.all('/stream/:chapter_id', (req, res, next) => {
     return res.status(400).json({ detail: 'Invalid chapter ID' });
   }
 
-  const audioPathMp3 = path.join(config.paths.outputDir, `${chapter_id}.mp3`);
-  const audioPathWav = path.join(config.paths.outputDir, `${chapter_id}.wav`);
-  const hasMp3 = fs.existsSync(audioPathMp3) && fs.statSync(audioPathMp3).size > 0;
-  const hasWav = fs.existsSync(audioPathWav) && fs.statSync(audioPathWav).size > 0;
-  const audioPath = hasMp3 ? audioPathMp3 : (hasWav ? audioPathWav : null);
-
-  if (!audioPath) {
-    return res.status(404).json({ detail: 'Audio file not found' });
-  }
-
   let studioEngine = null;
   try {
     const diskManifestPath = path.join(config.paths.chaptersDir, cleanId, 'manifest.json');
@@ -1564,6 +1576,58 @@ router.all('/stream/:chapter_id', (req, res, next) => {
       studioEngine = parsed?.engine || parsed?.studio_engine || null;
     }
   } catch (_) {}
+
+  const audioPathMp3 = path.join(config.paths.outputDir, `${cleanId}.mp3`);
+  const audioPathWav = path.join(config.paths.outputDir, `${cleanId}.wav`);
+  const hasMp3 = fs.existsSync(audioPathMp3) && fs.statSync(audioPathMp3).size > 0;
+  const hasWav = fs.existsSync(audioPathWav) && fs.statSync(audioPathWav).size > 0;
+  const audioPath = hasMp3 ? audioPathMp3 : (hasWav ? audioPathWav : null);
+
+  if (!audioPath) {
+    if (storageService.isS3Configured()) {
+      try {
+        let dbKey = null;
+        if (UUID_REGEX.test(cleanId)) {
+          const pgRes = await pool.query('SELECT swift_audio_object FROM chapters WHERE id = $1', [cleanId]);
+          dbKey = pgRes.rows?.[0]?.swift_audio_object || null;
+        }
+        const candidates = Array.from(
+          new Set([dbKey, `${cleanId}.mp3`, `${cleanId}.opus`, `${cleanId}.wav`].filter(Boolean))
+        );
+        for (const key of candidates) {
+          const s3Obj = await storageService.getObjectStream({
+            bucketType: 'audio',
+            key,
+            range: req.method === 'HEAD' ? undefined : req.headers.range,
+          });
+          if (!s3Obj) continue;
+
+          const ct = key.endsWith('.mp3')
+            ? 'audio/mpeg'
+            : key.endsWith('.opus')
+              ? 'audio/opus'
+              : 'audio/wav';
+          const outHeaders = {
+            ...s3Obj.headers,
+            'Content-Type': s3Obj.headers['Content-Type'] || ct,
+          };
+          if (studioEngine) {
+            outHeaders['X-Studio-Engine'] = studioEngine;
+            outHeaders['X-TTS-Engine'] = studioEngine;
+          }
+          res.writeHead(req.method === 'HEAD' ? 200 : (s3Obj.status || 200), outHeaders);
+          if (req.method === 'HEAD' || s3Obj.status === 416 || !s3Obj.stream) {
+            if (s3Obj.stream && typeof s3Obj.stream.destroy === 'function') s3Obj.stream.destroy();
+            return res.end();
+          }
+          return s3Obj.stream.pipe(res);
+        }
+      } catch (s3Err) {
+        console.warn('[Stream S3 Fallback Warning]:', s3Err.message);
+      }
+    }
+    return res.status(404).json({ detail: 'Audio file not found' });
+  }
 
   const isMp3 = audioPath === audioPathMp3;
   const stat = fs.statSync(audioPath);
@@ -1717,6 +1781,26 @@ router.get('/chapters/:id/progress', async (req, res) => {
   }
 });
 
+async function hasPersistedChapterAudio(chapterId, swiftAudioObject) {
+  const audioPathMp3 = path.join(config.paths.outputDir, `${chapterId}.mp3`);
+  const audioPathWav = path.join(config.paths.outputDir, `${chapterId}.wav`);
+  const hasMp3 = fs.existsSync(audioPathMp3) && fs.statSync(audioPathMp3).size > 0;
+  const hasWav = fs.existsSync(audioPathWav) && fs.statSync(audioPathWav).size > 0;
+  if (hasMp3 || hasWav) return true;
+
+  if (storageService.isS3Configured()) {
+    const candidates = Array.from(
+      new Set([swiftAudioObject, `${chapterId}.mp3`, `${chapterId}.opus`, `${chapterId}.wav`].filter(Boolean))
+    );
+    for (const key of candidates) {
+      if (await storageService.objectExists({ bucketType: 'audio', key })) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 /**
  * 6b. GET /api/chapters/:id
  * Fetches combined PostgreSQL metadata and MongoDB document details.
@@ -1743,11 +1827,7 @@ router.get('/chapters/:id', async (req, res) => {
     }
 
     const docData = chapterDoc ? (chapterDoc.toObject ? chapterDoc.toObject() : chapterDoc) : {};
-    const audioPathMp3 = path.join(config.paths.outputDir, `${id}.mp3`);
-    const audioPathWav = path.join(config.paths.outputDir, `${id}.wav`);
-    const hasMp3 = fs.existsSync(audioPathMp3) && fs.statSync(audioPathMp3).size > 0;
-    const hasWav = fs.existsSync(audioPathWav) && fs.statSync(audioPathWav).size > 0;
-    const hasStudioAudio = hasMp3 || hasWav;
+    const hasStudioAudio = await hasPersistedChapterAudio(id, pgData.swift_audio_object);
 
     let studioEngine = docData?.manifest?.engine || docData?.manifest?.studio_engine || null;
     if (!studioEngine) {
@@ -1802,11 +1882,7 @@ router.get('/chapters/:id/track-status', async (req, res) => {
       }
     }
 
-    const audioPathMp3 = path.join(config.paths.outputDir, `${id}.mp3`);
-    const audioPathWav = path.join(config.paths.outputDir, `${id}.wav`);
-    const hasMp3 = fs.existsSync(audioPathMp3) && fs.statSync(audioPathMp3).size > 0;
-    const hasWav = fs.existsSync(audioPathWav) && fs.statSync(audioPathWav).size > 0;
-    const hasStudioAudio = hasMp3 || hasWav;
+    const hasStudioAudio = await hasPersistedChapterAudio(id, pgData.swift_audio_object);
 
     let studioEngine = null;
     try {
