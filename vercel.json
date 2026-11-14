@@ -1,20 +1,26 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
-  "installCommand": "npm --prefix novel-audio-synthesizer/frontend install",
+  "installCommand": "npm install --no-audit --no-fund && npm --prefix novel-audio-synthesizer/frontend install --no-audit --no-fund",
   "buildCommand": "npm --prefix novel-audio-synthesizer/frontend run build",
   "outputDirectory": "novel-audio-synthesizer/frontend/dist",
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "novel-audio-synthesizer/backend/src/**",
+      "maxDuration": 60
+    }
+  },
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://mars424-synctone-api.hf.space/api/:path*"
+      "destination": "/api/index.js"
     },
     {
       "source": "/static/:path*",
-      "destination": "https://mars424-synctone-api.hf.space/static/:path*"
+      "destination": "/api/index.js"
     },
     {
-      "source": "/((?!api/|static/|assets/|models/|.*\\..*).*)",
+      "source": "/((?!api/|static/|assets/|models/|covers/|cursors/|.*\\..*).*)",
       "destination": "/index.html"
     }
   ],

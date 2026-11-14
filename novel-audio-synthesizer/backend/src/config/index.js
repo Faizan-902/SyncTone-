@@ -1,11 +1,13 @@
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 
 // Robust .env resolution: checks repo root, parent dir, and backend dir
 const BACKEND_DIR = path.resolve(__dirname, '../..');
 const PARENT_DIR = path.resolve(BACKEND_DIR, '..');
 const REPO_ROOT = path.resolve(PARENT_DIR, '..');
 const ROOT_DIR = REPO_ROOT;
+const IS_VERCEL = Boolean(process.env.VERCEL);
 
 const envCandidates = [
   path.resolve(REPO_ROOT, '.env'),
@@ -27,24 +29,28 @@ function findFirstExistingDir(candidates, fallback) {
   return fallback;
 }
 
-// Storage Directories: safely resolves output, chapters, and models both locally and in Docker container
-const outputDir = findFirstExistingDir(
-  [
-    path.resolve(REPO_ROOT, 'output'),
-    path.resolve(PARENT_DIR, 'output'),
-    path.resolve(BACKEND_DIR, 'output'),
-  ],
-  path.resolve(PARENT_DIR, 'output')
-);
+// Storage Directories: safely resolves output, chapters, and models both locally, in Docker, and on Vercel (/tmp)
+const outputDir = IS_VERCEL
+  ? path.join(os.tmpdir(), 'synctone-output')
+  : findFirstExistingDir(
+      [
+        path.resolve(REPO_ROOT, 'output'),
+        path.resolve(PARENT_DIR, 'output'),
+        path.resolve(BACKEND_DIR, 'output'),
+      ],
+      path.resolve(PARENT_DIR, 'output')
+    );
 
-const chaptersDir = findFirstExistingDir(
-  [
-    path.resolve(REPO_ROOT, 'chapters'),
-    path.resolve(PARENT_DIR, 'chapters'),
-    path.resolve(BACKEND_DIR, 'chapters'),
-  ],
-  path.resolve(PARENT_DIR, 'chapters')
-);
+const chaptersDir = IS_VERCEL
+  ? path.join(os.tmpdir(), 'synctone-chapters')
+  : findFirstExistingDir(
+      [
+        path.resolve(REPO_ROOT, 'chapters'),
+        path.resolve(PARENT_DIR, 'chapters'),
+        path.resolve(BACKEND_DIR, 'chapters'),
+      ],
+      path.resolve(PARENT_DIR, 'chapters')
+    );
 
 const modelsDir = findFirstExistingDir(
   [
@@ -77,7 +83,7 @@ const config = {
   port: parseInt(process.env.PORT || '4000', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
   jwtSecret: process.env.JWT_SECRET || 'synctone_super_secret_jwt_key_2026_dev_mode',
-  lowMemoryMode: process.env.LOW_MEMORY_MODE === 'true',
+  lowMemoryMode: process.env.LOW_MEMORY_MODE === 'true' || IS_VERCEL,
   corsOrigins: parseCorsOrigins(process.env.CORS_ORIGINS),
   allowVercelPreviews: process.env.ALLOW_VERCEL_PREVIEWS !== 'false',
   cookieSameSite: (process.env.COOKIE_SAMESITE || 'lax').toLowerCase(),
@@ -88,8 +94,10 @@ const config = {
     process.env.DATABASE_URL ||
     'postgresql://synctone_user:synctone_pass@localhost:5432/synctone',
   pgSsl:
-    process.env.PG_SSL === 'true' ||
-    /[?&]sslmode=(require|verify-full|verify-ca)/i.test(process.env.DATABASE_URL || ''),
+    process.env.PG_SSL !== 'false' &&
+    (process.env.PG_SSL === 'true' ||
+      /[?&]sslmode=(require|verify-full|verify-ca)/i.test(process.env.DATABASE_URL || '') ||
+      /\.(supabase\.(co|com)|neon\.tech)/i.test(process.env.DATABASE_URL || '')),
   pgSslRejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED === 'true',
   mongoUri:
     process.env.MONGO_URI ||
